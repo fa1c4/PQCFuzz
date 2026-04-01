@@ -11,7 +11,8 @@
   ],
   "allowed_primitive_types": [
     "kem",
-    "sig"
+    "sig",
+    "kpke"
   ],
   "allowed_status": [
     "enabled"
@@ -26,22 +27,30 @@
       "keygen",
       "sign",
       "verify"
+    ],
+    "kpke": [
+      "kpke_keygen",
+      "kpke_encrypt",
+      "kpke_decrypt"
     ]
   },
   "allowed_implementations": {
     "liboqs": [
       "liboqs_mlkem768_wrapper_generic",
-      "liboqs_mldsa65_wrapper_generic"
+      "liboqs_mldsa65_wrapper_generic",
+      "liboqs_mlkem768_kpke_native_ref"
     ],
     "pqclean": [
       "pqclean_mlkem768_clean",
-      "pqclean_mldsa65_clean"
+      "pqclean_mldsa65_clean",
+      "pqclean_mlkem768_kpke_clean"
     ]
   },
   "allowed_backend_variants": {
     "liboqs": [
       "generic",
-      "clean"
+      "clean",
+      "native-ref"
     ],
     "pqclean": [
       "clean"
@@ -50,7 +59,8 @@
   "variant_priority": {
     "liboqs": [
       "generic",
-      "clean"
+      "clean",
+      "native-ref"
     ],
     "pqclean": [
       "clean"
@@ -76,6 +86,18 @@
         "no-cross-exchange"
       ],
       "signature_exchange": [
+        "declared-compatible",
+        "same-project-only",
+        "no-cross-exchange"
+      ]
+    },
+    "kpke": {
+      "public_key_exchange": [
+        "declared-compatible",
+        "same-project-only",
+        "no-cross-exchange"
+      ],
+      "ciphertext_exchange": [
         "declared-compatible",
         "same-project-only",
         "no-cross-exchange"

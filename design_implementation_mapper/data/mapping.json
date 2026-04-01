@@ -29,7 +29,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -71,7 +72,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -114,7 +116,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -156,7 +159,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -199,7 +203,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -241,7 +246,8 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309
+          "sig_max_len": 3309,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -284,7 +290,8 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -326,7 +333,8 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -369,7 +377,8 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -411,7 +420,8 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -454,7 +464,8 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -496,13 +507,266 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null
+          "sig_max_len": null,
+          "msg_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
           "supports_encaps_derand": false,
           "supports_sign_derand": false,
           "wire_format_class": "mlkem-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ]
+  },
+  "ML-KEM-768/kpke_decrypt": {
+    "liboqs": [
+      {
+        "project_id": "liboqs",
+        "project_name": "liboqs",
+        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
+        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
+        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_dec",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "native-ref",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
+          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "src/common/pqclean_shims",
+            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ],
+    "pqclean": [
+      {
+        "project_id": "pqclean",
+        "project_name": "PQClean",
+        "implementation_id": "pqclean_mlkem768_kpke_clean",
+        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
+        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_dec",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "clean",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "crypto_kem/ml-kem-768/clean",
+          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "common",
+            "crypto_kem/ml-kem-768/clean"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ]
+  },
+  "ML-KEM-768/kpke_encrypt": {
+    "liboqs": [
+      {
+        "project_id": "liboqs",
+        "project_name": "liboqs",
+        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
+        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
+        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_enc",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "native-ref",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
+          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "src/common/pqclean_shims",
+            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ],
+    "pqclean": [
+      {
+        "project_id": "pqclean",
+        "project_name": "PQClean",
+        "implementation_id": "pqclean_mlkem768_kpke_clean",
+        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
+        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_enc",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "clean",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "crypto_kem/ml-kem-768/clean",
+          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "common",
+            "crypto_kem/ml-kem-768/clean"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ]
+  },
+  "ML-KEM-768/kpke_keygen": {
+    "liboqs": [
+      {
+        "project_id": "liboqs",
+        "project_name": "liboqs",
+        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
+        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
+        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_keypair_derand",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "native-ref",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
+          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "src/common/pqclean_shims",
+            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
+          "interop_class": "declared-compatible"
+        },
+        "provenance_hint": "manual"
+      }
+    ],
+    "pqclean": [
+      {
+        "project_id": "pqclean",
+        "project_name": "PQClean",
+        "implementation_id": "pqclean_mlkem768_kpke_clean",
+        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
+        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_keypair_derand",
+        "primitive_type": "kpke",
+        "api_variant": "direct",
+        "backend_variant": "clean",
+        "status": "enabled",
+        "build": {
+          "build_mode": "source",
+          "implementation_dir": "crypto_kem/ml-kem-768/clean",
+          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
+          "implementation_files": [],
+          "include_dirs": [
+            "common",
+            "crypto_kem/ml-kem-768/clean"
+          ],
+          "common_deps": [],
+          "defines": []
+        },
+        "abi": {
+          "pk_len": 1184,
+          "sk_len": 1152,
+          "ct_len": 1088,
+          "ss_len": null,
+          "sig_max_len": null,
+          "msg_len": 32
+        },
+        "capabilities": {
+          "supports_keygen_derand": true,
+          "supports_encaps_derand": false,
+          "supports_sign_derand": false,
+          "wire_format_class": "mlkem-kpke-standard",
           "interop_class": "declared-compatible"
         },
         "provenance_hint": "manual"

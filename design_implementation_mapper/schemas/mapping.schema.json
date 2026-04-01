@@ -60,7 +60,8 @@
         "primitive_type": {
           "enum": [
             "kem",
-            "sig"
+            "sig",
+            "kpke"
           ]
         },
         "api_variant": {
@@ -115,6 +116,9 @@
                   },
                   "sig_max_len": {
                     "type": "null"
+                  },
+                  "msg_len": {
+                    "type": "null"
                   }
                 }
               }
@@ -140,6 +144,40 @@
                     "type": "null"
                   },
                   "sig_max_len": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "msg_len": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "primitive_type": {
+                "const": "kpke"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "abi": {
+                "properties": {
+                  "ct_len": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "ss_len": {
+                    "type": "null"
+                  },
+                  "sig_max_len": {
+                    "type": "null"
+                  },
+                  "msg_len": {
                     "type": "integer",
                     "minimum": 1
                   }
@@ -219,7 +257,8 @@
         "sk_len",
         "ct_len",
         "ss_len",
-        "sig_max_len"
+        "sig_max_len",
+        "msg_len"
       ],
       "properties": {
         "pk_len": {
@@ -243,6 +282,12 @@
           ]
         },
         "sig_max_len": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "msg_len": {
           "type": [
             "integer",
             "null"

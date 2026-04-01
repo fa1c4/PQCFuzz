@@ -23,6 +23,7 @@ ALLOWED_STATUSES = {"enabled", "todo", "manual-review"}
 EXPECTED_OPERATIONS = {
     "kem": {"keygen", "encaps", "decaps"},
     "sig": {"keygen", "sign", "verify"},
+    "kpke": {"kpke_keygen", "kpke_encrypt", "kpke_decrypt"},
 }
 PROJECT_DISPLAY_NAMES = {
     "liboqs": "liboqs",
@@ -180,7 +181,7 @@ def validate_build_metadata(build: Any, descriptor_id: str) -> dict[str, Any]:
 
 def validate_abi_metadata(abi: Any, primitive_type: str, descriptor_id: str) -> dict[str, Any]:
     require(isinstance(abi, dict), f"{descriptor_id}: abi must be an object")
-    required = {"pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len"}
+    required = {"pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len", "msg_len"}
     missing = required.difference(abi)
     require(not missing, f"{descriptor_id}: missing abi fields {sorted(missing)}")
 
@@ -197,14 +198,21 @@ def validate_abi_metadata(abi: Any, primitive_type: str, descriptor_id: str) -> 
         require(isinstance(normalized["ct_len"], int) and normalized["ct_len"] > 0, f"{descriptor_id}: kem abi.ct_len must be a positive integer")
         require(isinstance(normalized["ss_len"], int) and normalized["ss_len"] > 0, f"{descriptor_id}: kem abi.ss_len must be a positive integer")
         require(normalized["sig_max_len"] is None, f"{descriptor_id}: kem abi.sig_max_len must be null")
+        require(normalized["msg_len"] is None, f"{descriptor_id}: kem abi.msg_len must be null")
     elif primitive_type == "sig":
         require(normalized["ct_len"] is None, f"{descriptor_id}: sig abi.ct_len must be null")
         require(normalized["ss_len"] is None, f"{descriptor_id}: sig abi.ss_len must be null")
         require(isinstance(normalized["sig_max_len"], int) and normalized["sig_max_len"] > 0, f"{descriptor_id}: sig abi.sig_max_len must be a positive integer")
+        require(normalized["msg_len"] is None, f"{descriptor_id}: sig abi.msg_len must be null")
+    elif primitive_type == "kpke":
+        require(isinstance(normalized["ct_len"], int) and normalized["ct_len"] > 0, f"{descriptor_id}: kpke abi.ct_len must be a positive integer")
+        require(normalized["ss_len"] is None, f"{descriptor_id}: kpke abi.ss_len must be null")
+        require(normalized["sig_max_len"] is None, f"{descriptor_id}: kpke abi.sig_max_len must be null")
+        require(isinstance(normalized["msg_len"], int) and normalized["msg_len"] > 0, f"{descriptor_id}: kpke abi.msg_len must be a positive integer")
     else:
         raise ValidationError(f"{descriptor_id}: unsupported primitive_type '{primitive_type}'")
 
-    return {key: normalized[key] for key in ("pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len")}
+    return {key: normalized[key] for key in ("pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len", "msg_len")}
 
 
 def validate_capabilities_metadata(capabilities: Any, primitive_type: str, descriptor_id: str) -> dict[str, Any]:
@@ -235,6 +243,10 @@ def validate_capabilities_metadata(capabilities: Any, primitive_type: str, descr
         require(not normalized["supports_sign_derand"], f"{descriptor_id}: KEM descriptors cannot support sign derandomization")
     if primitive_type == "sig":
         require(not normalized["supports_encaps_derand"], f"{descriptor_id}: SIG descriptors cannot support encaps derandomization")
+    if primitive_type == "kpke":
+        require(normalized["supports_keygen_derand"], f"{descriptor_id}: KPKE descriptors must support keygen derandomization")
+        require(not normalized["supports_encaps_derand"], f"{descriptor_id}: KPKE descriptors cannot expose encaps derandomization")
+        require(not normalized["supports_sign_derand"], f"{descriptor_id}: KPKE descriptors cannot support sign derandomization")
 
     return normalized
 

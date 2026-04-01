@@ -23,6 +23,17 @@ IMPLEMENTATION_ID_RE = re.compile(r"^[a-z0-9_]+$")
 PAIR_STATUS_VALUES = {"enabled", "manual-review"}
 PROVENANCE_VALUES = {"unknown", "shared-upstream-likely", "distinct-likely"}
 INTEROP_VALUES = {"declared-compatible", "same-project-only", "no-cross-exchange", "manual-review"}
+SUPPORTED_PRIMITIVES = {"kem", "sig", "kpke"}
+REQUIRED_OPERATIONS_BY_PRIMITIVE = {
+    "kem": {"keygen", "encaps", "decaps"},
+    "sig": {"keygen", "sign", "verify"},
+    "kpke": {"kpke_keygen", "kpke_encrypt", "kpke_decrypt"},
+}
+INTEROP_FIELDS_BY_PRIMITIVE = {
+    "kem": ("public_key_exchange", "ciphertext_exchange"),
+    "sig": ("public_key_exchange", "signature_exchange"),
+    "kpke": ("public_key_exchange", "ciphertext_exchange"),
+}
 
 
 class ValidationError(RuntimeError):
@@ -79,7 +90,7 @@ def load_config() -> dict[str, Any]:
         for project_id in pair:
             require(project_id in config["enabled_projects"], f"allowed project pair uses unknown project '{project_id}'")
     for primitive_type in config["allowed_primitive_types"]:
-        require(primitive_type in {"kem", "sig"}, f"unsupported primitive type '{primitive_type}'")
+        require(primitive_type in SUPPORTED_PRIMITIVES, f"unsupported primitive type '{primitive_type}'")
         require(primitive_type in config["required_operations"], f"missing required_operations entry for '{primitive_type}'")
         require(primitive_type in config["interop_requirements"], f"missing interop_requirements entry for '{primitive_type}'")
 
@@ -314,11 +325,10 @@ def is_allowed_project_pair(left_project: str, right_project: str, config: dict[
 
 
 def interop_fields_for_primitive(primitive_type: str) -> tuple[str, ...]:
-    if primitive_type == "kem":
-        return ("public_key_exchange", "ciphertext_exchange")
-    if primitive_type == "sig":
-        return ("public_key_exchange", "signature_exchange")
-    raise ValidationError(f"unsupported primitive type '{primitive_type}'")
+    try:
+        return INTEROP_FIELDS_BY_PRIMITIVE[primitive_type]
+    except KeyError as exc:
+        raise ValidationError(f"unsupported primitive type '{primitive_type}'") from exc
 
 
 def derive_interop_policy(left: dict[str, Any], right: dict[str, Any], config: dict[str, Any]) -> dict[str, str]:
@@ -469,7 +479,7 @@ def validate_bundle_shape(bundle: dict[str, Any], primitive_type: str, label: st
     require(not missing, f"{label}: missing bundle fields {sorted(missing)}")
     require(PROJECT_ID_RE.fullmatch(bundle["project_id"]) is not None, f"{label}: invalid project_id")
     require(IMPLEMENTATION_ID_RE.fullmatch(bundle["implementation_id"]) is not None, f"{label}: invalid implementation_id")
-    actual_required = {"keygen", "encaps", "decaps"} if primitive_type == "kem" else {"keygen", "sign", "verify"}
+    actual_required = REQUIRED_OPERATIONS_BY_PRIMITIVE[primitive_type]
     require(actual_required.issubset(bundle["operations"]), f"{label}: missing required operations")
 
 

@@ -1,11 +1,13 @@
 {
   "template_by_primitive": {
     "kem": "differential_fuzzer/templates/kem_pair_fuzzer.cpp",
-    "sig": "differential_fuzzer/templates/sig_pair_fuzzer.cpp"
+    "sig": "differential_fuzzer/templates/sig_pair_fuzzer.cpp",
+    "kpke": "differential_fuzzer/templates/kpke_pair_fuzzer.cpp"
   },
   "default_oracle_mode": {
     "kem": "kem_cross_impl_shared_semantics",
-    "sig": "sig_cross_impl_verify_semantics"
+    "sig": "sig_cross_impl_verify_semantics",
+    "kpke": "kpke_cross_impl_encrypt_semantics"
   },
   "default_determinism_policy": {
     "prefer_seeded_keygen": true,
@@ -30,6 +32,12 @@
       "mutated_signature_negative",
       "mutated_message_negative",
       "mutated_public_key_negative"
+    ],
+    "kpke": [
+      "kpke_keygen_consistency",
+      "kpke_encrypt_compare",
+      "kpke_decrypt_roundtrip",
+      "kpke_corrupt_ciphertext_consistency"
     ]
   },
   "mismatch_labels": {
@@ -46,6 +54,15 @@
       "cross_verify_failure",
       "unexpected_acceptance",
       "unexpected_rejection",
+      "interop_policy_violation",
+      "sanitizer_crash"
+    ],
+    "kpke": [
+      "return_code_mismatch",
+      "keygen_mismatch",
+      "ciphertext_mismatch",
+      "decrypt_mismatch",
+      "mutated_decrypt_mismatch",
       "interop_policy_violation",
       "sanitizer_crash"
     ]

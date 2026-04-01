@@ -15,7 +15,12 @@ PAIRS_PATH = ROOT / "pairing_differential_targets/data/pairs.json"
 OUTPUT_PATH = ROOT / "differential_fuzzer/data/fuzzer_jobs.json"
 
 REQUIRED_JOB_STATUS = "pending"
-SUPPORTED_PRIMITIVES = {"kem", "sig"}
+SUPPORTED_PRIMITIVES = {"kem", "sig", "kpke"}
+REQUIRED_OPERATIONS_BY_PRIMITIVE = {
+    "kem": {"keygen", "encaps", "decaps"},
+    "sig": {"keygen", "sign", "verify"},
+    "kpke": {"kpke_keygen", "kpke_encrypt", "kpke_decrypt"},
+}
 
 
 class ValidationError(RuntimeError):
@@ -102,12 +107,12 @@ def validate_bundle(bundle: Any, primitive_type: str, context: str) -> dict[str,
 
     operations = bundle["operations"]
     require(isinstance(operations, dict), f"{context}: operations must be an object")
-    required_ops = {"keygen", "encaps", "decaps"} if primitive_type == "kem" else {"keygen", "sign", "verify"}
+    required_ops = REQUIRED_OPERATIONS_BY_PRIMITIVE[primitive_type]
     require(required_ops.issubset(operations), f"{context}: missing required operations {sorted(required_ops.difference(operations))}")
 
     abi = bundle["abi"]
     require(isinstance(abi, dict), f"{context}: abi must be an object")
-    for key in ("pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len"):
+    for key in ("pk_len", "sk_len", "ct_len", "ss_len", "sig_max_len", "msg_len"):
         require(key in abi, f"{context}: abi missing '{key}'")
     if primitive_type == "kem":
         require(isinstance(abi["pk_len"], int) and abi["pk_len"] > 0, f"{context}: invalid abi.pk_len")
@@ -115,12 +120,21 @@ def validate_bundle(bundle: Any, primitive_type: str, context: str) -> dict[str,
         require(isinstance(abi["ct_len"], int) and abi["ct_len"] > 0, f"{context}: invalid abi.ct_len")
         require(isinstance(abi["ss_len"], int) and abi["ss_len"] > 0, f"{context}: invalid abi.ss_len")
         require(abi["sig_max_len"] is None, f"{context}: kem sig_max_len must be null")
-    else:
+        require(abi["msg_len"] is None, f"{context}: kem msg_len must be null")
+    elif primitive_type == "sig":
         require(isinstance(abi["pk_len"], int) and abi["pk_len"] > 0, f"{context}: invalid abi.pk_len")
         require(isinstance(abi["sk_len"], int) and abi["sk_len"] > 0, f"{context}: invalid abi.sk_len")
         require(abi["ct_len"] is None, f"{context}: sig ct_len must be null")
         require(abi["ss_len"] is None, f"{context}: sig ss_len must be null")
         require(isinstance(abi["sig_max_len"], int) and abi["sig_max_len"] > 0, f"{context}: invalid abi.sig_max_len")
+        require(abi["msg_len"] is None, f"{context}: sig msg_len must be null")
+    else:
+        require(isinstance(abi["pk_len"], int) and abi["pk_len"] > 0, f"{context}: invalid abi.pk_len")
+        require(isinstance(abi["sk_len"], int) and abi["sk_len"] > 0, f"{context}: invalid abi.sk_len")
+        require(isinstance(abi["ct_len"], int) and abi["ct_len"] > 0, f"{context}: invalid abi.ct_len")
+        require(abi["ss_len"] is None, f"{context}: kpke ss_len must be null")
+        require(abi["sig_max_len"] is None, f"{context}: kpke sig_max_len must be null")
+        require(isinstance(abi["msg_len"], int) and abi["msg_len"] > 0, f"{context}: invalid abi.msg_len")
 
     capabilities = bundle["capabilities"]
     require(isinstance(capabilities, dict), f"{context}: capabilities must be an object")
@@ -238,7 +252,7 @@ def make_job_record(pair: dict[str, Any], config: dict[str, Any]) -> dict[str, A
 
 def make_generated_config(job: dict[str, Any]) -> dict[str, Any]:
     primitive_type = job["primitive_type"]
-    required_operations = ["keygen", "encaps", "decaps"] if primitive_type == "kem" else ["keygen", "sign", "verify"]
+    required_operations = sorted(REQUIRED_OPERATIONS_BY_PRIMITIVE[primitive_type])
     cross_exchange_values = [value for value in job["interop_policy"].values() if value == "declared-compatible"]
     generated = {
         "job_id": job["job_id"],
@@ -391,9 +405,14 @@ def render_harness(job: dict[str, Any], generated_config: dict[str, Any]) -> str
         replacements["{{LEFT_SS_LEN}}"] = str(job["left"]["abi"]["ss_len"])
         replacements["{{RIGHT_CT_LEN}}"] = str(job["right"]["abi"]["ct_len"])
         replacements["{{RIGHT_SS_LEN}}"] = str(job["right"]["abi"]["ss_len"])
-    else:
+    elif primitive_type == "sig":
         replacements["{{LEFT_SIG_MAX_LEN}}"] = str(job["left"]["abi"]["sig_max_len"])
         replacements["{{RIGHT_SIG_MAX_LEN}}"] = str(job["right"]["abi"]["sig_max_len"])
+    else:
+        replacements["{{LEFT_CT_LEN}}"] = str(job["left"]["abi"]["ct_len"])
+        replacements["{{LEFT_MSG_LEN}}"] = str(job["left"]["abi"]["msg_len"])
+        replacements["{{RIGHT_CT_LEN}}"] = str(job["right"]["abi"]["ct_len"])
+        replacements["{{RIGHT_MSG_LEN}}"] = str(job["right"]["abi"]["msg_len"])
     rendered = template_text
     for placeholder, value in replacements.items():
         rendered = rendered.replace(placeholder, value)

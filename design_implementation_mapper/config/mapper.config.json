@@ -9,7 +9,8 @@
   },
   "enabled_primitive_types": [
     "kem",
-    "sig"
+    "sig",
+    "kpke"
   ],
   "enabled_algorithms": [
     "ML-KEM-512",

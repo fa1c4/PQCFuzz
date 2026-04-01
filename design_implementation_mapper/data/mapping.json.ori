@@ -13,7 +13,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/sig/ml_dsa",
           "declaration_file": "src/sig/sig.h",
           "implementation_files": [],
@@ -22,15 +21,15 @@
             "src/sig"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1952,
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -59,8 +58,8 @@
           "declaration_file": "crypto_sign/ml-dsa-65/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_sign/ml-dsa-65/clean",
-            "common"
+            "common",
+            "crypto_sign/ml-dsa-65/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -72,8 +71,7 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -100,7 +98,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/sig/ml_dsa",
           "declaration_file": "src/sig/sig.h",
           "implementation_files": [],
@@ -109,15 +106,15 @@
             "src/sig"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1952,
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -146,8 +143,8 @@
           "declaration_file": "crypto_sign/ml-dsa-65/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_sign/ml-dsa-65/clean",
-            "common"
+            "common",
+            "crypto_sign/ml-dsa-65/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -159,8 +156,7 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -187,7 +183,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/sig/ml_dsa",
           "declaration_file": "src/sig/sig.h",
           "implementation_files": [],
@@ -196,15 +191,15 @@
             "src/sig"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1952,
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -233,8 +228,8 @@
           "declaration_file": "crypto_sign/ml-dsa-65/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_sign/ml-dsa-65/clean",
-            "common"
+            "common",
+            "crypto_sign/ml-dsa-65/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -246,8 +241,7 @@
           "sk_len": 4032,
           "ct_len": null,
           "ss_len": null,
-          "sig_max_len": 3309,
-          "msg_len": null
+          "sig_max_len": 3309
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -274,7 +268,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/kem/ml_kem",
           "declaration_file": "src/kem/kem.h",
           "implementation_files": [],
@@ -283,15 +276,15 @@
             "src/kem"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1184,
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -320,8 +313,8 @@
           "declaration_file": "crypto_kem/ml-kem-768/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
+            "common",
+            "crypto_kem/ml-kem-768/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -333,8 +326,7 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -361,7 +353,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/kem/ml_kem",
           "declaration_file": "src/kem/kem.h",
           "implementation_files": [],
@@ -370,15 +361,15 @@
             "src/kem"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1184,
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -407,8 +398,8 @@
           "declaration_file": "crypto_kem/ml-kem-768/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
+            "common",
+            "crypto_kem/ml-kem-768/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -420,8 +411,7 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
@@ -448,7 +438,6 @@
         "status": "enabled",
         "build": {
           "build_mode": "library",
-          "library_name": "oqs",
           "implementation_dir": "src/kem/ml_kem",
           "declaration_file": "src/kem/kem.h",
           "implementation_files": [],
@@ -457,15 +446,15 @@
             "src/kem"
           ],
           "common_deps": [],
-          "defines": []
+          "defines": [],
+          "library_name": "oqs"
         },
         "abi": {
           "pk_len": 1184,
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": true,
@@ -494,8 +483,8 @@
           "declaration_file": "crypto_kem/ml-kem-768/clean/api.h",
           "implementation_files": [],
           "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
+            "common",
+            "crypto_kem/ml-kem-768/clean"
           ],
           "common_deps": [
             "randombytes"
@@ -507,266 +496,13 @@
           "sk_len": 2400,
           "ct_len": 1088,
           "ss_len": 32,
-          "sig_max_len": null,
-          "msg_len": null
+          "sig_max_len": null
         },
         "capabilities": {
           "supports_keygen_derand": false,
           "supports_encaps_derand": false,
           "supports_sign_derand": false,
           "wire_format_class": "mlkem-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ]
-  },
-  "ML-KEM-768/kpke_decrypt": {
-    "liboqs": [
-      {
-        "project_id": "liboqs",
-        "project_name": "liboqs",
-        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
-        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
-        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_dec",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "native-ref",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
-          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref",
-            "src/common/pqclean_shims"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ],
-    "pqclean": [
-      {
-        "project_id": "pqclean",
-        "project_name": "PQClean",
-        "implementation_id": "pqclean_mlkem768_kpke_clean",
-        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
-        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_dec",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "clean",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "crypto_kem/ml-kem-768/clean",
-          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ]
-  },
-  "ML-KEM-768/kpke_encrypt": {
-    "liboqs": [
-      {
-        "project_id": "liboqs",
-        "project_name": "liboqs",
-        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
-        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
-        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_enc",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "native-ref",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
-          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref",
-            "src/common/pqclean_shims"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ],
-    "pqclean": [
-      {
-        "project_id": "pqclean",
-        "project_name": "PQClean",
-        "implementation_id": "pqclean_mlkem768_kpke_clean",
-        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
-        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_enc",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "clean",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "crypto_kem/ml-kem-768/clean",
-          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ]
-  },
-  "ML-KEM-768/kpke_keygen": {
-    "liboqs": [
-      {
-        "project_id": "liboqs",
-        "project_name": "liboqs",
-        "implementation_id": "liboqs_mlkem768_kpke_native_ref",
-        "source_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.c",
-        "function": "PQCP_MLKEM_NATIVE_MLKEM768_C_indcpa_keypair_derand",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "native-ref",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src",
-          "declaration_file": "src/kem/ml_kem/mlkem-native_ml-kem-768_ref/mlkem/src/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "src/kem/ml_kem/mlkem-native_ml-kem-768_ref",
-            "src/common/pqclean_shims"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
-          "interop_class": "declared-compatible"
-        },
-        "provenance_hint": "manual"
-      }
-    ],
-    "pqclean": [
-      {
-        "project_id": "pqclean",
-        "project_name": "PQClean",
-        "implementation_id": "pqclean_mlkem768_kpke_clean",
-        "source_file": "crypto_kem/ml-kem-768/clean/indcpa.c",
-        "function": "PQCLEAN_MLKEM768_CLEAN_indcpa_keypair_derand",
-        "primitive_type": "kpke",
-        "api_variant": "direct",
-        "backend_variant": "clean",
-        "status": "enabled",
-        "build": {
-          "build_mode": "source",
-          "implementation_dir": "crypto_kem/ml-kem-768/clean",
-          "declaration_file": "crypto_kem/ml-kem-768/clean/indcpa.h",
-          "implementation_files": [],
-          "include_dirs": [
-            "crypto_kem/ml-kem-768/clean",
-            "common"
-          ],
-          "common_deps": [],
-          "defines": []
-        },
-        "abi": {
-          "pk_len": 1184,
-          "sk_len": 1152,
-          "ct_len": 1088,
-          "ss_len": null,
-          "sig_max_len": null,
-          "msg_len": 32
-        },
-        "capabilities": {
-          "supports_keygen_derand": true,
-          "supports_encaps_derand": false,
-          "supports_sign_derand": false,
-          "wire_format_class": "mlkem-kpke-standard",
           "interop_class": "declared-compatible"
         },
         "provenance_hint": "manual"
