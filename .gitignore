@@ -1,16 +1,25 @@
-# ignore fuzzing files & dirs
-
-
-
+# Python / local caches
 __pycache__/
 *.pyc
 *.pyo
-*.swp
-.codex
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
+# Editor / OS
+*.swp
+.DS_Store
+
+# Local Codex / agent state
+.codex
+.codex/
+
+# Local upstream project checkouts
 projects/*
 !projects/download_pqlibs.sh
+!projects/.gitkeep
 
+# PQC-DF runtime workspace artifacts
 workspace/build/*
 workspace/runs/*
 workspace/results/*
@@ -22,3 +31,15 @@ workspace/tmp/*
 !workspace/results/.gitkeep
 !workspace/crashes/.gitkeep
 !workspace/tmp/.gitkeep
+
+# Baseline build/run artifacts
+workspace/*/targets-build/*
+workspace/*/targets-run/*
+
+!workspace/*/targets-build/.gitkeep
+!workspace/*/targets-run/.gitkeep
+
+# Logs and crash byproducts
+*.log
+core
+core.*

@@ -22,9 +22,10 @@ Adapter implementations, semantic oracle execution, native compilation, fuzz run
 ## Layout
 
 ```text
-/design_implementation_mapper
-/pairing_differential_targets
-/differential_fuzzer
+/src/design_implementation_mapper
+/src/pairing_differential_targets
+/src/differential_fuzzer
+/baselines
 /eval
 /projects
 /workspace
@@ -35,19 +36,45 @@ Adapter implementations, semantic oracle execution, native compilation, fuzz run
 Generate normalized mappings:
 
 ```bash
-python3 design_implementation_mapper/mapper.py
+python3 src/design_implementation_mapper/mapper.py
 ```
 
 Generate flow pairs:
 
 ```bash
-python3 pairing_differential_targets/pairing.py
+python3 src/pairing_differential_targets/pairing.py
 ```
 
 Generate job records and runtime harness/config artifacts:
 
 ```bash
-python3 differential_fuzzer/diff_fuzzer.py
+python3 src/differential_fuzzer/diff_fuzzer.py
+```
+
+## Baseline fuzzers
+
+PQC-DF vendors several external baseline fuzzers under `baselines/`.
+
+They are tracked as ordinary source directories, not as Git submodules. The nested upstream `.git` directories are removed.
+
+Use the dispatcher to build and run them:
+
+```bash
+scripts/run_baseline.sh cryptofuzz build
+scripts/run_baseline.sh cryptofuzz run
+
+scripts/run_baseline.sh CLFuzz build
+scripts/run_baseline.sh CLFuzz run
+
+scripts/run_baseline.sh cryptoTesting build
+scripts/run_baseline.sh cryptoTesting run
+```
+
+Build and run artifacts are isolated under:
+
+```text
+workspace/<baseline>/targets-build/
+workspace/<baseline>/targets-run/
 ```
 
 ## Current scope
@@ -62,6 +89,5 @@ python3 differential_fuzzer/diff_fuzzer.py
 
 - `projects/` is reserved for upstream source trees only.
 - `workspace/` is reserved for runtime outputs only.
-- Checked-in templates live under `differential_fuzzer/templates/`.
+- Checked-in templates live under `src/differential_fuzzer/templates/`.
 - Generated harnesses never live in source-of-truth directories.
-

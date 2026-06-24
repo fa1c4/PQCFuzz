@@ -1,0 +1,24 @@
+baselines:
+  cryptofuzz:
+    path: baselines/cryptofuzz
+    dockerfile: baselines/cryptofuzz/Dockerfile
+    build_dir: workspace/cryptofuzz/targets-build
+    run_dir: workspace/cryptofuzz/targets-run
+    dispatcher_name: cryptofuzz
+    notes: "Vendored baseline fuzzer. Upstream Git metadata removed."
+
+  CLFuzz:
+    path: baselines/CLFuzz
+    dockerfile: baselines/CLFuzz/Dockerfile
+    build_dir: workspace/CLFuzz/targets-build
+    run_dir: workspace/CLFuzz/targets-run
+    dispatcher_name: CLFuzz
+    notes: "Vendored baseline fuzzer. Upstream Git metadata removed."
+
+  cryptoTesting:
+    path: baselines/cryptoTesting
+    dockerfile: baselines/cryptoTesting/Dockerfile
+    build_dir: workspace/cryptoTesting/targets-build
+    run_dir: workspace/cryptoTesting/targets-run
+    dispatcher_name: cryptoTesting
+    notes: "Vendored baseline fuzzer. Upstream Git metadata removed."
