@@ -43,3 +43,5 @@ workspace/*/targets-run/*
 *.log
 core
 core.*
+
+plans/
