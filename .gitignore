@@ -20,24 +20,7 @@ projects/*
 !projects/.gitkeep
 
 # PQC-DF runtime workspace artifacts
-workspace/build/*
-workspace/runs/*
-workspace/results/*
-workspace/crashes/*
-workspace/tmp/*
-
-!workspace/build/.gitkeep
-!workspace/runs/.gitkeep
-!workspace/results/.gitkeep
-!workspace/crashes/.gitkeep
-!workspace/tmp/.gitkeep
-
-# Baseline build/run artifacts
-workspace/*/targets-build/*
-workspace/*/targets-run/*
-
-!workspace/*/targets-build/.gitkeep
-!workspace/*/targets-run/.gitkeep
+workspace/
 
 # Logs and crash byproducts
 *.log

@@ -180,12 +180,37 @@ if [ "${PQCDF_CRYPTOFUZZ_IN_DOCKER:-0}" != "1" ]; then
 
   HOST_UID="$(id -u)"
   HOST_GID="$(id -g)"
+  FORWARDED_ARGS=(
+    scripts/baselines/cryptofuzz/run.sh
+    "$BASELINE_DIR"
+    "$BUILD_DIR"
+    "$RUN_DIR"
+    --version "$VERSION"
+    --mode "$MODE"
+  )
+  if [ -n "$MAX_TOTAL_TIME" ]; then
+    FORWARDED_ARGS+=(--max-total-time "$MAX_TOTAL_TIME")
+  fi
+  if [ -n "$RUNS" ]; then
+    FORWARDED_ARGS+=(--runs "$RUNS")
+  fi
+  FORWARDED_ARGS+=(--jobs "$JOBS" --workers "$WORKERS")
+  if [ -n "$SEED" ]; then
+    FORWARDED_ARGS+=(--seed "$SEED")
+  fi
+  FORWARDED_ARGS+=("${EXTRA_ARGS[@]}")
+
   docker run --rm \
     -e PQCDF_CRYPTOFUZZ_IN_DOCKER=1 \
+    -e HOST_UID="$HOST_UID" \
+    -e HOST_GID="$HOST_GID" \
+    -e PQCDF_CHOWN_BUILD_DIR="$BUILD_DIR" \
+    -e PQCDF_CHOWN_RUN_DIR="$RUN_DIR" \
     -v "$(pwd)":/workspace/PQC-DF \
     -w /workspace/PQC-DF \
     "$IMAGE_NAME" \
-    bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} workspace/cryptofuzz 2>/dev/null || true' EXIT; scripts/baselines/cryptofuzz/run.sh '$BASELINE_DIR' '$BUILD_DIR' '$RUN_DIR' --version '$VERSION' --mode '$MODE' ${MAX_TOTAL_TIME:+--max-total-time '$MAX_TOTAL_TIME'} ${RUNS:+--runs '$RUNS'} --jobs '$JOBS' --workers '$WORKERS' ${SEED:+--seed '$SEED'} ${EXTRA_ARGS[*]:-}"
+    bash -lc 'trap "chown -R ${HOST_UID}:${HOST_GID} \"${PQCDF_CHOWN_BUILD_DIR}\" \"${PQCDF_CHOWN_RUN_DIR}\" 2>/dev/null || true" EXIT; "$@"' \
+    bash "${FORWARDED_ARGS[@]}"
   exit $?
 fi
 

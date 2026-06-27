@@ -204,10 +204,12 @@ if [ "${PQCDF_CLFUZZ_IN_DOCKER:-0}" != "1" ]; then
     -e PQCDF_CLFUZZ_IN_DOCKER=1 \
     -e HOST_UID="$HOST_UID" \
     -e HOST_GID="$HOST_GID" \
+    -e PQCDF_CHOWN_BUILD_DIR="$BUILD_DIR" \
+    -e PQCDF_CHOWN_RUN_DIR="$RUN_DIR" \
     -v "$(pwd)":/workspace/PQC-DF \
     -w /workspace/PQC-DF \
     "$IMAGE_NAME" \
-    bash -lc 'trap "chown -R ${HOST_UID}:${HOST_GID} workspace/CLFuzz 2>/dev/null || true" EXIT; "$@"' \
+    bash -lc 'trap "chown -R ${HOST_UID}:${HOST_GID} \"${PQCDF_CHOWN_BUILD_DIR}\" \"${PQCDF_CHOWN_RUN_DIR}\" 2>/dev/null || true" EXIT; "$@"' \
     bash "${FORWARDED_ARGS[@]}"
   exit $?
 fi

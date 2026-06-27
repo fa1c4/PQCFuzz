@@ -13,11 +13,14 @@ Baselines:
   cryptoTesting
 
 Commands:
-  build         Build the baseline into workspace/<baseline>/targets-build
-  run           Run the baseline with outputs under workspace/<baseline>/targets-run
-  clean         Remove workspace/<baseline>/targets-build and workspace/<baseline>/targets-run
+  build         Build the baseline into <workspace-root>/<baseline>/targets-build
+  run           Run the baseline with outputs under <workspace-root>/<baseline>/targets-run
+  clean         Remove <workspace-root>/<baseline>/targets-build and <workspace-root>/<baseline>/targets-run
   docker-build  Build the baseline Docker image
   docker-run    Start an interactive container for the baseline
+
+Environment:
+  PQCDF_WORKSPACE_ROOT  Override the workspace root. Default: workspace.
 
 Examples:
   scripts/run_baseline.sh cryptofuzz build
@@ -65,8 +68,14 @@ case "$BASELINE" in
     ;;
 esac
 
-BUILD_DIR="workspace/${BASELINE}/targets-build"
-RUN_DIR="workspace/${BASELINE}/targets-run"
+WORKSPACE_ROOT="${PQCDF_WORKSPACE_ROOT:-workspace}"
+WORKSPACE_ROOT="${WORKSPACE_ROOT%/}"
+if [ -z "$WORKSPACE_ROOT" ]; then
+  WORKSPACE_ROOT="."
+fi
+
+BUILD_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-build"
+RUN_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-run"
 
 mkdir -p "$BUILD_DIR" "$RUN_DIR"
 
