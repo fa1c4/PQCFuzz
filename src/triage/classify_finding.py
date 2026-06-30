@@ -11,6 +11,11 @@ from typing import Any
 
 
 FINDING_CLASSES = {
+    "malleability",
+    "non_malleability",
+    "crash",
+    "hang",
+    "unsupported",
     "confirmed_semantic_bug",
     "potential_crypto_vuln",
     "memory_safety",
@@ -27,16 +32,22 @@ def classify_trace(trace: dict[str, Any]) -> str | None:
         for call in subtest.get("calls", [])
         if isinstance(call, dict)
     ]
+    for item in trace.get("findings", []):
+        finding_class = item.get("class")
+        if finding_class in FINDING_CLASSES:
+            return finding_class
+    if trace.get("finding_class") in FINDING_CLASSES:
+        return str(trace["finding_class"])
     if "CRASH" in statuses:
         return "memory_safety"
     if "TIMEOUT" in statuses:
-        return "timeout"
-    if any(item.get("class") == "ub" for item in trace.get("findings", [])):
-        return "ub"
-    if any(item.get("class") == "potential_crypto_vuln" for item in trace.get("findings", [])):
-        return "potential_crypto_vuln"
-    if any(item.get("class") == "api_policy_difference" for item in trace.get("findings", [])):
-        return "api_policy_difference"
+        return "hang"
+    expected = trace.get("expected_relation")
+    observed = trace.get("observed_relation")
+    if expected == "EXPECT_DIFFERENT" and observed == "OBSERVED_EQUAL":
+        return "malleability"
+    if expected == "EXPECT_EQUAL" and observed == "OBSERVED_DIFFERENT":
+        return "non_malleability"
     if any(not subtest.get("passed", True) for subtest in trace.get("subtests", [])):
         return "confirmed_semantic_bug"
     return None

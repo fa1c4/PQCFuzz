@@ -1,0 +1,62 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "sig_keygen_badrng",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "rng",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "keygen_rng_ignored",
+      "requires_rng_injection": true
+    },
+    {
+      "oracle_id": "sig_sign_badrng",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "rng",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "sign_rng_ignored",
+      "requires_rng_injection": true
+    },
+    {
+      "oracle_id": "sig_sign_m",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "message",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "message_not_bound_in_signature_generation"
+    },
+    {
+      "oracle_id": "sig_sign_sk",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "secret_key",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "secret_key_ignored_or_malleable"
+    },
+    {
+      "oracle_id": "sig_verify_m",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "message",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "message_binding_failure"
+    },
+    {
+      "oracle_id": "sig_verify_sig",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "signature",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "signature_malleability"
+    },
+    {
+      "oracle_id": "sig_verify_pk",
+      "algorithm_family": "ML-DSA",
+      "primitive_type": "sig",
+      "field": "public_key",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "public_key_binding_failure"
+    }
+  ]
+}

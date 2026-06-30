@@ -176,6 +176,10 @@
         "secret_key_exchange": {
           "type": "boolean"
         },
+        "secret_key_format_compatible": {
+          "type": "boolean",
+          "default": false
+        },
         "signature_exchange": {
           "type": "boolean"
         }

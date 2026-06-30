@@ -1,0 +1,54 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "kem_decaps_c",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "ciphertext",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "ciphertext_malleability"
+    },
+    {
+      "oracle_id": "kem_decaps_sk",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "secret_key",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "secret_key_malleability"
+    },
+    {
+      "oracle_id": "kem_encaps_badrng",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "rng",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "encaps_rng_ignored",
+      "requires_rng_injection": true
+    },
+    {
+      "oracle_id": "kem_encaps_pk_0",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "public_key",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "zero_public_key_equivalence"
+    },
+    {
+      "oracle_id": "kem_encaps_pk",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "public_key",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "public_key_ignored_or_malleable"
+    },
+    {
+      "oracle_id": "kem_keygen_badrng",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "field": "rng",
+      "expected_relation": "EXPECT_DIFFERENT",
+      "finding_subclass": "keygen_rng_ignored",
+      "requires_rng_injection": true
+    }
+  ]
+}

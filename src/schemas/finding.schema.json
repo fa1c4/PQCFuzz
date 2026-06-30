@@ -20,6 +20,11 @@
     },
     "finding_class": {
       "enum": [
+        "malleability",
+        "non_malleability",
+        "crash",
+        "hang",
+        "unsupported",
         "confirmed_semantic_bug",
         "potential_crypto_vuln",
         "memory_safety",

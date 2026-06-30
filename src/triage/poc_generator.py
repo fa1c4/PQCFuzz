@@ -24,6 +24,10 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "This reproducer is intentionally minimal. It rebuilds the PQCFuzz replay oracle",
                 "and replays the saved `structured_input.bin` against the generated config.",
                 "",
+                "Replay command:",
+                "",
+                f"`{finding.get('replay_command', '')}`",
+                "",
             ]
         ),
         encoding="utf-8",
@@ -48,11 +52,15 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "set -euo pipefail",
                 "c++ -std=c++17 -Isrc src/replay/replay_oracle.cc \\",
                 "  src/adapters/status.cc \\",
+                "  src/adapters/rng_control.cc \\",
+                "  src/adapters/liboqs/rng_control.cc \\",
                 "  src/adapters/liboqs/kem_adapter.cc \\",
                 "  src/adapters/liboqs/sig_adapter.cc \\",
+                "  src/adapters/pqclean/randombytes_override.cc \\",
                 "  src/adapters/pqclean/kem_adapter.cc \\",
                 "  src/adapters/pqclean/sig_adapter.cc \\",
                 "  src/mutators/envelope.cc \\",
+                "  src/mutators/maul.cc \\",
                 "  src/mutators/ml_kem_layout.cc \\",
                 "  src/mutators/ml_kem_mutator.cc \\",
                 "  src/mutators/ml_dsa_layout.cc \\",
@@ -63,6 +71,11 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "  src/oracles/oracle_spec.cc \\",
                 "  src/oracles/oracle_spec_loader.cc \\",
                 "  src/oracles/oracle_executor.cc \\",
+                "  src/oracles/metamorphic_observation.cc \\",
+                "  src/oracles/metamorphic_spec.cc \\",
+                "  src/oracles/metamorphic_executor.cc \\",
+                "  src/runtime/adapter_registry.cc \\",
+                "  src/runtime/replay_args.cc \\",
                 "  src/triage/finding_writer.cc \\",
                 "  -o pqcfuzz_replay_oracle",
                 "",
@@ -76,7 +89,14 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "#!/usr/bin/env bash",
                 "set -euo pipefail",
                 "./poc/build.sh",
-                "./pqcfuzz_replay_oracle generated_config.json structured_input.bin oracle_trace.json",
+                finding.get(
+                    "replay_command",
+                    "./pqcfuzz_replay_oracle --generated-config generated_config.json --input structured_input.bin --trace oracle_trace.json "
+                    "--job-id unknown --pair-id unknown --algorithm ML-KEM-768 --primitive-type kem --oracle-id mlkem_local_roundtrip "
+                    "--oracle-suite fips --relation-mode cross-implementation --left-project-id liboqs --left-implementation-id liboqs_mlkem768_wrapper_generic "
+                    "--right-project-id pqclean --right-implementation-id pqclean_mlkem768_clean --public-key-exchange 1 --ciphertext-exchange 1 "
+                    "--secret-key-exchange 0 --secret-key-format-compatible 0 --signature-exchange 0",
+                ),
                 "",
             ]
         ),

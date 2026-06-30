@@ -16,6 +16,8 @@ enum class ExpectedRelation {
   kDecodeReject,
   kVerifyFalseOrDecodeRejectOrApiInvalidInput,
   kVerifyFalseOrApiUnsupported,
+  kExpectEqual,
+  kExpectDifferent,
   kUnknown,
 };
 

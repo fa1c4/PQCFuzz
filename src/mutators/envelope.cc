@@ -105,6 +105,32 @@ const char *OracleName(OracleId oracle_id) {
       return "slhdsa_mutated_context_negative";
     case OracleId::kSlhDsaBadRandomnessSanity:
       return "slhdsa_bad_randomness_sanity";
+    case OracleId::kKemDecapsCiphertext:
+      return "kem_decaps_c";
+    case OracleId::kKemDecapsSecretKey:
+      return "kem_decaps_sk";
+    case OracleId::kKemEncapsBadRng:
+      return "kem_encaps_badrng";
+    case OracleId::kKemEncapsZeroPublicKey:
+      return "kem_encaps_pk_0";
+    case OracleId::kKemEncapsPublicKey:
+      return "kem_encaps_pk";
+    case OracleId::kKemKeygenBadRng:
+      return "kem_keygen_badrng";
+    case OracleId::kSigKeygenBadRng:
+      return "sig_keygen_badrng";
+    case OracleId::kSigSignBadRng:
+      return "sig_sign_badrng";
+    case OracleId::kSigSignMessage:
+      return "sig_sign_m";
+    case OracleId::kSigSignSecretKey:
+      return "sig_sign_sk";
+    case OracleId::kSigVerifyMessage:
+      return "sig_verify_m";
+    case OracleId::kSigVerifySignature:
+      return "sig_verify_sig";
+    case OracleId::kSigVerifyPublicKey:
+      return "sig_verify_pk";
     case OracleId::kUnknown:
       return "unknown";
   }
@@ -220,6 +246,45 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "slhdsa_bad_randomness_sanity") {
     return OracleId::kSlhDsaBadRandomnessSanity;
+  }
+  if (name == "kem_decaps_c") {
+    return OracleId::kKemDecapsCiphertext;
+  }
+  if (name == "kem_decaps_sk") {
+    return OracleId::kKemDecapsSecretKey;
+  }
+  if (name == "kem_encaps_badrng") {
+    return OracleId::kKemEncapsBadRng;
+  }
+  if (name == "kem_encaps_pk_0") {
+    return OracleId::kKemEncapsZeroPublicKey;
+  }
+  if (name == "kem_encaps_pk") {
+    return OracleId::kKemEncapsPublicKey;
+  }
+  if (name == "kem_keygen_badrng") {
+    return OracleId::kKemKeygenBadRng;
+  }
+  if (name == "sig_keygen_badrng") {
+    return OracleId::kSigKeygenBadRng;
+  }
+  if (name == "sig_sign_badrng") {
+    return OracleId::kSigSignBadRng;
+  }
+  if (name == "sig_sign_m") {
+    return OracleId::kSigSignMessage;
+  }
+  if (name == "sig_sign_sk") {
+    return OracleId::kSigSignSecretKey;
+  }
+  if (name == "sig_verify_m") {
+    return OracleId::kSigVerifyMessage;
+  }
+  if (name == "sig_verify_sig") {
+    return OracleId::kSigVerifySignature;
+  }
+  if (name == "sig_verify_pk") {
+    return OracleId::kSigVerifyPublicKey;
   }
   return OracleId::kUnknown;
 }

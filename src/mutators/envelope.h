@@ -49,6 +49,19 @@ enum class OracleId : uint8_t {
   kSlhDsaMutatedMessageNegative = 15,
   kSlhDsaMutatedContextNegative = 16,
   kSlhDsaBadRandomnessSanity = 17,
+  kKemDecapsCiphertext = 18,
+  kKemDecapsSecretKey = 19,
+  kKemEncapsBadRng = 20,
+  kKemEncapsZeroPublicKey = 21,
+  kKemEncapsPublicKey = 22,
+  kKemKeygenBadRng = 23,
+  kSigKeygenBadRng = 24,
+  kSigSignBadRng = 25,
+  kSigSignMessage = 26,
+  kSigSignSecretKey = 27,
+  kSigVerifyMessage = 28,
+  kSigVerifySignature = 29,
+  kSigVerifyPublicKey = 30,
 };
 
 struct Envelope {

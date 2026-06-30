@@ -45,7 +45,16 @@ bool IsUnsupportedOnly(const OracleSubtestTrace &subtest) {
 }
 
 void AddCall(OracleSubtestTrace *subtest, const std::string &adapter, const std::string &api, pqcfuzz_status status) {
-  subtest->calls.push_back({adapter, api, status});
+  subtest->calls.push_back({adapter, api, status, false, false});
+}
+
+void AddBoolCall(
+    OracleSubtestTrace *subtest,
+    const std::string &adapter,
+    const std::string &api,
+    pqcfuzz_status status,
+    bool bool_result) {
+  subtest->calls.push_back({adapter, api, status, true, bool_result});
 }
 
 KEMKeyPair Keygen(const pqcfuzz_kem_adapter *adapter, const std::string &label, OracleSubtestTrace *subtest) {
@@ -251,15 +260,15 @@ void AddFindingsForFailures(KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
       if (call.status == PQCFUZZ_CRASH) {
-        trace->findings.push_back({"memory_safety", "adapter call crashed"});
+        trace->findings.push_back({"memory_safety", "", "adapter call crashed"});
       } else if (call.status == PQCFUZZ_TIMEOUT) {
-        trace->findings.push_back({"timeout", "adapter call timed out"});
+        trace->findings.push_back({"timeout", "", "adapter call timed out"});
       }
     }
     if (!subtest.passed && subtest.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
-      trace->findings.push_back({"potential_crypto_vuln", subtest.note});
+      trace->findings.push_back({"potential_crypto_vuln", "", subtest.note});
     } else if (!subtest.passed) {
-      trace->findings.push_back({"confirmed_semantic_bug", subtest.note});
+      trace->findings.push_back({"confirmed_semantic_bug", "", subtest.note});
     }
   }
 }
@@ -332,7 +341,7 @@ SIGVerifyResult SigVerify(
   const uint8_t *ctx = context.empty() ? nullptr : context.data();
   out.status = adapter->verify(signature.data(), signature.size(), message.data(), message.size(), pk.data(), ctx, context.size());
   out.accepted = out.status == PQCFUZZ_OK;
-  AddCall(subtest, label, "verify", out.status);
+  AddBoolCall(subtest, label, "verify", out.status, out.accepted);
   return out;
 }
 
@@ -495,9 +504,9 @@ void AddSigFindingsForFailures(KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
       if (call.status == PQCFUZZ_CRASH) {
-        trace->findings.push_back({"memory_safety", "adapter call crashed"});
+        trace->findings.push_back({"memory_safety", "", "adapter call crashed"});
       } else if (call.status == PQCFUZZ_TIMEOUT) {
-        trace->findings.push_back({"timeout", "adapter call timed out"});
+        trace->findings.push_back({"timeout", "", "adapter call timed out"});
       }
     }
     if (subtest.passed) {
@@ -506,9 +515,9 @@ void AddSigFindingsForFailures(KEMOracleTrace *trace) {
     if (subtest.oracle_id.find("_mutated_signature_negative") != std::string::npos ||
         subtest.oracle_id.find("_mutated_message_negative") != std::string::npos ||
         subtest.oracle_id.find("_mutated_context_negative") != std::string::npos) {
-      trace->findings.push_back({"potential_crypto_vuln", subtest.note});
+      trace->findings.push_back({"potential_crypto_vuln", "", subtest.note});
     } else {
-      trace->findings.push_back({"confirmed_semantic_bug", subtest.note});
+      trace->findings.push_back({"confirmed_semantic_bug", "", subtest.note});
     }
   }
 }
@@ -531,7 +540,8 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
       trace.subtests.push_back(CrossEncapsRoundtrip(
           "right_keygen_left_encaps_right_decaps", "right", config.right, "left", config.left));
     }
-    if (config.exchange_contract.ciphertext_exchange && config.exchange_contract.secret_key_exchange) {
+    if (config.exchange_contract.ciphertext_exchange && config.exchange_contract.secret_key_exchange &&
+        config.exchange_contract.secret_key_format_compatible) {
       trace.subtests.push_back(CrossDecapsRoundtrip(
           "left_keygen_left_encaps_right_decaps", "left", config.left, "right", config.right));
       trace.subtests.push_back(CrossDecapsRoundtrip(
@@ -612,15 +622,56 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
   std::ostringstream out;
   out << "{\n";
   out << "  \"version\": 1,\n";
+  out << "  \"oracle_suite\": \"" << JsonEscape(trace.oracle_suite) << "\",\n";
+  out << "  \"relation_mode\": \"" << JsonEscape(trace.relation_mode) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(trace.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(trace.pair_id) << "\",\n";
   out << "  \"algorithm\": \"" << JsonEscape(trace.algorithm) << "\",\n";
   out << "  \"oracle_id\": \"" << JsonEscape(trace.oracle_id) << "\",\n";
+  if (!trace.field.empty()) {
+    out << "  \"field\": \"" << JsonEscape(trace.field) << "\",\n";
+  }
+  if (!trace.expected_relation.empty()) {
+    out << "  \"expected_relation\": \"" << JsonEscape(trace.expected_relation) << "\",\n";
+  }
+  if (!trace.observed_relation.empty()) {
+    out << "  \"observed_relation\": \"" << JsonEscape(trace.observed_relation) << "\",\n";
+  }
+  if (!trace.finding_class.empty()) {
+    out << "  \"finding_class\": \"" << JsonEscape(trace.finding_class) << "\",\n";
+  }
+  if (!trace.finding_subclass.empty()) {
+    out << "  \"finding_subclass\": \"" << JsonEscape(trace.finding_subclass) << "\",\n";
+  }
   out << "  \"mutation_target\": \"" << JsonEscape(trace.mutation_target) << "\",\n";
   out << "  \"left_status\": \"" << pqcfuzz_status_to_string(trace.left_status) << "\",\n";
   out << "  \"right_status\": \"" << pqcfuzz_status_to_string(trace.right_status) << "\",\n";
   out << "  \"verify_result\": " << (trace.verify_result ? "true" : "false") << ",\n";
   out << "  \"legal_negative_outcome\": " << (trace.legal_negative_outcome ? "true" : "false") << ",\n";
+  if (!trace.baseline.output_sha256.empty() || trace.baseline.has_bool ||
+      trace.baseline.status != PQCFUZZ_INVALID_INPUT) {
+    out << "  \"baseline\": {\"status\":\"" << pqcfuzz_status_to_string(trace.baseline.status) << "\"";
+    if (trace.baseline.has_bool) {
+      out << ",\"accepted\":" << (trace.baseline.bool_value ? "true" : "false");
+    }
+    if (!trace.baseline.output_sha256.empty()) {
+      out << ",\"output_sha256\":\"" << JsonEscape(trace.baseline.output_sha256) << "\"";
+      out << ",\"output_size\":" << trace.baseline.output_size;
+    }
+    out << "},\n";
+  }
+  if (!trace.mutated.output_sha256.empty() || trace.mutated.has_bool ||
+      trace.mutated.status != PQCFUZZ_INVALID_INPUT) {
+    out << "  \"mutated\": {\"status\":\"" << pqcfuzz_status_to_string(trace.mutated.status) << "\"";
+    if (trace.mutated.has_bool) {
+      out << ",\"accepted\":" << (trace.mutated.bool_value ? "true" : "false");
+    }
+    if (!trace.mutated.output_sha256.empty()) {
+      out << ",\"output_sha256\":\"" << JsonEscape(trace.mutated.output_sha256) << "\"";
+      out << ",\"output_size\":" << trace.mutated.output_size;
+    }
+    out << "},\n";
+  }
   out << "  \"subtests\": [\n";
   for (size_t i = 0; i < trace.subtests.size(); ++i) {
     const auto &subtest = trace.subtests[i];
@@ -638,7 +689,11 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
         out << ", ";
       }
       out << "{\"adapter\":\"" << JsonEscape(call.adapter) << "\",\"api\":\"" << JsonEscape(call.api)
-          << "\",\"status\":\"" << pqcfuzz_status_to_string(call.status) << "\"}";
+          << "\",\"status\":\"" << pqcfuzz_status_to_string(call.status) << "\"";
+      if (call.has_bool_result) {
+        out << ",\"accepted\":" << (call.bool_result ? "true" : "false");
+      }
+      out << "}";
     }
     out << "]\n";
     out << "    }" << (i + 1 == trace.subtests.size() ? "\n" : ",\n");
@@ -658,8 +713,12 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
   out << "  \"findings\": [\n";
   for (size_t i = 0; i < trace.findings.size(); ++i) {
     const auto &finding = trace.findings[i];
-    out << "    {\"class\":\"" << JsonEscape(finding.finding_class) << "\",\"summary\":\""
-        << JsonEscape(finding.summary) << "\"}" << (i + 1 == trace.findings.size() ? "\n" : ",\n");
+    out << "    {\"class\":\"" << JsonEscape(finding.finding_class) << "\"";
+    if (!finding.finding_subclass.empty()) {
+      out << ",\"subclass\":\"" << JsonEscape(finding.finding_subclass) << "\"";
+    }
+    out << ",\"summary\":\"" << JsonEscape(finding.summary) << "\"}"
+        << (i + 1 == trace.findings.size() ? "\n" : ",\n");
   }
   out << "  ]\n";
   out << "}\n";

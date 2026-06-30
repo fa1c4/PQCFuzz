@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pqcfuzz.local/schemas/pqcfuzz_report.schema.json",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "version",
+      "algorithm",
+      "primitive",
+      "oracle_suite",
+      "relation_mode",
+      "oracle_id",
+      "field",
+      "expected_relation",
+      "observed_relation",
+      "finding_class",
+      "finding_subclass",
+      "baseline_status",
+      "mutated_status",
+      "baseline_accepted",
+      "mutated_accepted",
+      "crash_signal",
+      "timeout_seconds",
+      "artifact_path",
+      "replay_command"
+    ],
+    "properties": {
+      "version": {
+        "type": "string"
+      },
+      "algorithm": {
+        "type": "string"
+      },
+      "primitive": {
+        "enum": [
+          "",
+          "kem",
+          "sig"
+        ]
+      },
+      "oracle_suite": {
+        "enum": [
+          "",
+          "fips",
+          "metamorphic"
+        ]
+      },
+      "relation_mode": {
+        "type": "string"
+      },
+      "finding_class": {
+        "type": "string"
+      }
+    }
+  }
+}

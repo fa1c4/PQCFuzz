@@ -57,7 +57,8 @@ build_dir="$repo_root/$build_dir_rel"
 run_dir="$repo_root/$run_dir_rel"
 result_dir="$repo_root/$result_dir_rel"
 crash_dir="$repo_root/$crash_dir_rel"
-timeout_seconds="${PQCFUZZ_TIMEOUT_SECONDS:-30}"
+input_timeout_seconds="${PQCFUZZ_INPUT_TIMEOUT_SECONDS:-${PQCFUZZ_TIMEOUT_SECONDS:-30}}"
+fuzzing_seconds="${PQCFUZZ_FUZZING_SECONDS:-$input_timeout_seconds}"
 rss_mb="${PQCFUZZ_RSS_MB:-2048}"
 
 binary_path="$build_dir/fuzzer"
@@ -84,7 +85,8 @@ fuzzer_args=(
   "$binary_path"
   "$run_dir/corpus"
   "-artifact_prefix=$crash_dir/"
-  "-max_total_time=$timeout_seconds"
+  "-max_total_time=$fuzzing_seconds"
+  "-timeout=$input_timeout_seconds"
   "-rss_limit_mb=$rss_mb"
 )
 

@@ -101,6 +101,13 @@ std::string StructuredInputJson(const FindingArtifactInput &input) {
 std::string FindingJson(const FindingArtifactInput &input, const std::string &finding_id, const std::string &artifact_dir) {
   const std::string finding_class = FindingClass(input.trace);
   const std::string summary = FindingSummary(input.trace);
+  std::string finding_subclass;
+  for (const auto &finding : input.trace.findings) {
+    if (!finding.finding_subclass.empty()) {
+      finding_subclass = finding.finding_subclass;
+      break;
+    }
+  }
   std::ostringstream out;
   out << "{\n";
   out << "  \"version\": 1,\n";
@@ -108,11 +115,17 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   out << "  \"job_id\": \"" << JsonEscape(input.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(input.pair_id) << "\",\n";
   out << "  \"algorithm\": \"" << JsonEscape(input.algorithm) << "\",\n";
+  out << "  \"oracle_suite\": \"" << JsonEscape(input.trace.oracle_suite) << "\",\n";
+  out << "  \"relation_mode\": \"" << JsonEscape(input.trace.relation_mode) << "\",\n";
   out << "  \"oracle_id\": \"" << JsonEscape(input.oracle_id) << "\",\n";
   out << "  \"finding_class\": \"" << JsonEscape(finding_class) << "\",\n";
+  out << "  \"finding_subclass\": \"" << JsonEscape(finding_subclass) << "\",\n";
   out << "  \"summary\": \"" << JsonEscape(summary) << "\",\n";
   out << "  \"trace_path\": \"" << JsonEscape(artifact_dir + "/oracle_trace.json") << "\",\n";
-  out << "  \"artifact_dir\": \"" << JsonEscape(artifact_dir) << "\"\n";
+  out << "  \"artifact_dir\": \"" << JsonEscape(artifact_dir) << "\",\n";
+  out << "  \"replay_command\": \"python3 src/replay/replay_one.py --job workspace/jobs/"
+      << JsonEscape(input.job_id) << ".json --input " << JsonEscape(artifact_dir)
+      << "/structured_input.bin --timeout-seconds 30\"\n";
   out << "}\n";
   return out.str();
 }
@@ -149,6 +162,7 @@ bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artif
       !WriteText(dir / "generated_config.json", input.generated_config_json, error) ||
       !WriteText(dir / "stdout.txt", "", error) ||
       !WriteText(dir / "stderr.txt", "", error) ||
+      !WriteText(dir / "exit_code.txt", "70\n", error) ||
       !WriteText(dir / "oracle_trace.json", TraceToJson(input.trace), error) ||
       !WriteBinary(dir / "minimized_seed.bin", input.structured_input, error) ||
       !WriteText(dir / "finding.json", FindingJson(input, finding_id, dir.string()), error) ||
@@ -159,11 +173,15 @@ bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artif
       !WriteText(poc_dir / "build.sh",
                  "#!/usr/bin/env bash\nset -euo pipefail\nc++ -std=c++17 -Isrc src/replay/replay_oracle.cc \\\n"
                  "  src/adapters/status.cc \\\n"
+                 "  src/adapters/rng_control.cc \\\n"
+                 "  src/adapters/liboqs/rng_control.cc \\\n"
                  "  src/adapters/liboqs/kem_adapter.cc \\\n"
                  "  src/adapters/liboqs/sig_adapter.cc \\\n"
+                 "  src/adapters/pqclean/randombytes_override.cc \\\n"
                  "  src/adapters/pqclean/kem_adapter.cc \\\n"
                  "  src/adapters/pqclean/sig_adapter.cc \\\n"
                  "  src/mutators/envelope.cc \\\n"
+                 "  src/mutators/maul.cc \\\n"
                  "  src/mutators/ml_kem_layout.cc \\\n"
                  "  src/mutators/ml_kem_mutator.cc \\\n"
                  "  src/mutators/ml_dsa_layout.cc \\\n"
@@ -174,11 +192,17 @@ bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artif
                  "  src/oracles/oracle_spec.cc \\\n"
                  "  src/oracles/oracle_spec_loader.cc \\\n"
                  "  src/oracles/oracle_executor.cc \\\n"
+                 "  src/oracles/metamorphic_observation.cc \\\n"
+                 "  src/oracles/metamorphic_spec.cc \\\n"
+                 "  src/oracles/metamorphic_executor.cc \\\n"
+                 "  src/runtime/adapter_registry.cc \\\n"
+                 "  src/runtime/replay_args.cc \\\n"
                  "  src/triage/finding_writer.cc \\\n"
                  "  -o pqcfuzz_replay_oracle\n",
                  error) ||
       !WriteText(poc_dir / "run.sh",
-                 "#!/usr/bin/env bash\nset -euo pipefail\n./build.sh\n./pqcfuzz_replay_oracle generated_config.json structured_input.bin oracle_trace.json\n",
+                 "#!/usr/bin/env bash\nset -euo pipefail\npython3 src/replay/replay_one.py --job workspace/jobs/" +
+                     input.job_id + ".json --input structured_input.bin --timeout-seconds 30\n",
                  error) ||
       !WriteText(poc_dir / "reproduce.cc", "#include \"replay/replay_oracle.cc\"\n", error)) {
     return false;

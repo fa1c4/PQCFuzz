@@ -12,13 +12,23 @@ Options:
   --progress-interval SECONDS   Seconds between progress reports. Default: 3600.
   --session-prefix NAME         Prefix for tmux session names. Default: pqcfuzz.
   --versions CSV                Comma-separated liboqs versions. Default: 0.14.0,0.8.0,0.4.0.
+  --oracle-suite fips|metamorphic
+                                Oracle suite. Default: metamorphic.
+  --relation-mode single-target|self-reference|cross-implementation
+                                Relation mode. Default: single-target.
+  --target-runtime liboqs       Target runtime. Default: liboqs.
+  --sanitizers CSV              Sanitizers: address,undefined, memory, or none.
+                                Default: address,undefined.
+  --input-timeout-seconds N     Per-input timeout. Default: 30.
+  --rss-mb N                    RSS limit. Default: 2048.
+  --report-formats CSV          Report formats. Default: json,tsv.
+  --report-timeout DURATION     Maximum time for finding report generation. Default: 10m.
   --base-image IMAGE            Docker base image. Default: ubuntu:22.04.
   --dry-run                     Print campaigns and commands without starting tmux.
   -h, --help                    Show this help.
 
-This launches one tmux campaign per liboqs version. PQCFuzz v1 evaluation uses
-self-reference mode: liboqs generic adapters are used on both sides so older
-liboqs tags can be evaluated for harness and compatibility coverage.
+This launches one tmux campaign per liboqs version. The default workflow is the
+PQ crypto semantic sanitizer: metamorphic single-target oracles plus ASan/UBSan.
 
 Outputs are written under:
   workspace/pqcfuzz_eval/
@@ -148,6 +158,10 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: clone/update liboqs $version into $workspace/build/liboqs-${version}/liboqs-src"
   echo "docker run pqcfuzz-eval: build static liboqs.a for $version"
   echo "docker run pqcfuzz-eval: generate self-reference compatibility adapter"
+  echo "docker run pqcfuzz-eval: oracle_suite: ${ORACLE_SUITE}"
+  echo "docker run pqcfuzz-eval: relation_mode: ${RELATION_MODE}"
+  echo "docker run pqcfuzz-eval: target_runtime: ${TARGET_RUNTIME}"
+  echo "docker run pqcfuzz-eval: sanitizers: ${SANITIZERS}"
   echo "docker run pqcfuzz-eval: build pqcfuzz_kem and pqcfuzz_sig"
   echo "docker run pqcfuzz-eval: run pqcfuzz_kem for ${kem_seconds}s"
   if [ "$version" = "0.14.0" ]; then
@@ -224,6 +238,12 @@ write_launcher() {
     printf 'FUZZING_SECONDS=%q\n' "$seconds"
     printf 'KEM_SECONDS=%q\n' "$kem_seconds"
     printf 'SIG_SECONDS=%q\n\n' "$sig_seconds"
+    printf 'ORACLE_SUITE=%q\n' "$ORACLE_SUITE"
+    printf 'RELATION_MODE=%q\n' "$RELATION_MODE"
+    printf 'TARGET_RUNTIME=%q\n' "$TARGET_RUNTIME"
+    printf 'SANITIZERS=%q\n' "$SANITIZERS"
+    printf 'INPUT_TIMEOUT_SECONDS=%q\n' "$INPUT_TIMEOUT_SECONDS"
+    printf 'RSS_MB=%q\n\n' "$RSS_MB"
     cat <<'EOF'
 if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" = "1" ]; then
   WORKSPACE_ROOT_ABS="${ROOT_DIR}/${WORKSPACE_ROOT_REL}"
@@ -261,7 +281,12 @@ FINAL_STATUS="${FINAL_STATUS:-}"
 RESULT="${RESULT:-}"
 ENDED_AT="${ENDED_AT:-}"
 FAILURE_REASON="${FAILURE_REASON:-}"
-RELATION_MODE="self_reference"
+ORACLE_SUITE="${ORACLE_SUITE:-metamorphic}"
+RELATION_MODE="${RELATION_MODE:-single-target}"
+TARGET_RUNTIME="${TARGET_RUNTIME:-liboqs}"
+SANITIZERS="${SANITIZERS:-address,undefined}"
+INPUT_TIMEOUT_SECONDS="${INPUT_TIMEOUT_SECONDS:-30}"
+RSS_MB="${RSS_MB:-2048}"
 SKIPPED_FAMILIES_JSON='["SLH-DSA"]'
 
 write_status() {
@@ -290,7 +315,9 @@ write_status() {
   EVAL_FINAL_STATUS="$FINAL_STATUS" \
   EVAL_RESULT="$RESULT" \
   EVAL_FAILURE_REASON="$FAILURE_REASON" \
+  EVAL_ORACLE_SUITE="$ORACLE_SUITE" \
   EVAL_RELATION_MODE="$RELATION_MODE" \
+  EVAL_TARGET_RUNTIME="$TARGET_RUNTIME" \
   EVAL_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
 import json
@@ -343,7 +370,9 @@ doc.update({
     "final_status": int_or_none(os.environ["EVAL_FINAL_STATUS"]),
     "result": os.environ["EVAL_RESULT"] or None,
     "failure_reason": os.environ["EVAL_FAILURE_REASON"] or None,
+    "oracle_suite": os.environ["EVAL_ORACLE_SUITE"],
     "relation_mode": os.environ["EVAL_RELATION_MODE"],
+    "target_runtime": os.environ["EVAL_TARGET_RUNTIME"],
     "skipped_families": json.loads(os.environ["EVAL_SKIPPED_FAMILIES_JSON"]),
 })
 if os.environ["EVAL_ENDED_AT"]:
@@ -763,7 +792,9 @@ write_generated_configs() {
   "job_id": "pqcfuzz_eval_kem_liboqs_${VERSION}",
   "pair_id": "liboqs_${VERSION}_self_reference_kem",
   "primitive_type": "kem",
-  "relation_mode": "self_reference",
+  "oracle_suite": "${ORACLE_SUITE}",
+  "relation_mode": "${RELATION_MODE}",
+  "target_runtime": "${TARGET_RUNTIME}",
   "liboqs_version": "${VERSION}",
   "skipped_families": ["SLH-DSA"]
 }
@@ -774,7 +805,9 @@ JSON
   "job_id": "pqcfuzz_eval_sig_liboqs_${VERSION}",
   "pair_id": "liboqs_${VERSION}_self_reference_sig",
   "primitive_type": "sig",
-  "relation_mode": "self_reference",
+  "oracle_suite": "${ORACLE_SUITE}",
+  "relation_mode": "${RELATION_MODE}",
+  "target_runtime": "${TARGET_RUNTIME}",
   "liboqs_version": "${VERSION}",
   "skipped_families": ["SLH-DSA"]
 }
@@ -1038,7 +1071,11 @@ build_pqcfuzz() {
 
   local common_sources=(
     src/adapters/status.cc
+    src/adapters/rng_control.cc
+    src/adapters/liboqs/rng_control.cc
+    src/adapters/pqclean/randombytes_override.cc
     src/mutators/envelope.cc
+    src/mutators/maul.cc
     src/mutators/ml_kem_layout.cc
     src/mutators/ml_kem_mutator.cc
     src/mutators/ml_dsa_layout.cc
@@ -1049,6 +1086,11 @@ build_pqcfuzz() {
     src/oracles/oracle_spec.cc
     src/oracles/oracle_spec_loader.cc
     src/oracles/oracle_executor.cc
+    src/oracles/metamorphic_observation.cc
+    src/oracles/metamorphic_spec.cc
+    src/oracles/metamorphic_executor.cc
+    src/runtime/adapter_registry.cc
+    src/runtime/replay_args.cc
     src/triage/finding_writer.cc
     "$adapter_src"
   )
@@ -1059,6 +1101,16 @@ build_pqcfuzz() {
     -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_self_reference_kem\"" \
     -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/kem\"" \
     -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${tmp_root}/generated_config_kem.json\"" \
+    -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
+    -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
+    -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"liboqs_mlkem768_wrapper_generic\"" \
+    -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"selfref_mlkem768_via_liboqs\"" \
+    -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 \
+    -DPQCFUZZ_CIPHERTEXT_EXCHANGE=1 \
+    -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 \
+    -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
     src/fuzzers/kem_pair_fuzzer.cc "${common_sources[@]}" "$liboqs_archive" \
     -lcrypto -ldl -lpthread -lm \
     -o "${pqcfuzz_build_dir}/pqcfuzz_kem"
@@ -1069,6 +1121,14 @@ build_pqcfuzz() {
     -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_self_reference_sig\"" \
     -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/sig\"" \
     -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${tmp_root}/generated_config_sig.json\"" \
+    -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
+    -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
+    -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"liboqs_mldsa44_wrapper_generic\"" \
+    -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"selfref_mldsa44_via_liboqs\"" \
+    -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 \
+    -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
     src/fuzzers/sig_pair_fuzzer.cc "${common_sources[@]}" "$liboqs_archive" \
     -lcrypto -ldl -lpthread -lm \
     -o "${pqcfuzz_build_dir}/pqcfuzz_sig"
@@ -1101,7 +1161,8 @@ run_fuzzer() {
     "$binary" "$corpus_dir" \
     "-artifact_prefix=${crash_dir}/" \
     "-max_total_time=${seconds}" \
-    "-rss_limit_mb=${PQCFUZZ_RSS_MB:-2048}" \
+    "-timeout=${INPUT_TIMEOUT_SECONDS}" \
+    "-rss_limit_mb=${RSS_MB}" \
     > >(tee "$log_file") 2>&1
   status="$?"
   write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir"
@@ -1203,8 +1264,15 @@ if [ "$PQCFUZZ_BUILD_STATUS" -ne 0 ]; then
   finish_campaign "pqcfuzz-build-failed" "$PQCFUZZ_BUILD_STATUS" "PQCFuzz target compilation failed"
 fi
 
+KEM_ORACLE_ENUM=1
+SIG_ORACLE_ENUM=5
+if [ "$ORACLE_SUITE" = "metamorphic" ]; then
+  KEM_ORACLE_ENUM=18
+  SIG_ORACLE_ENUM=29
+fi
+
 write_status "run-kem" "running"
-run_fuzzer "kem" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_kem" 2 1
+run_fuzzer "kem" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_kem" 2 "$KEM_ORACLE_ENUM"
 KEM_STATUS="$?"
 echo "[pqcfuzz-eval] kem exited with status $KEM_STATUS"
 echo
@@ -1212,7 +1280,7 @@ echo
 write_status "run-sig" "running"
 case "$VERSION" in
   0.14.0)
-    run_fuzzer "sig" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_sig" 5 5
+    run_fuzzer "sig" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_sig" 5 "$SIG_ORACLE_ENUM"
     ;;
   *)
     skip_fuzzer "sig" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_sig" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
@@ -1409,7 +1477,8 @@ for campaign in campaigns:
         "aggregate_status": aggregate_status,
         "result": result,
         "failure_reason": status.get("failure_reason"),
-        "relation_mode": status.get("relation_mode") or "self_reference",
+        "oracle_suite": status.get("oracle_suite") or os.environ.get("ORACLE_SUITE", "metamorphic"),
+        "relation_mode": status.get("relation_mode") or os.environ.get("RELATION_MODE", "single-target"),
         "skipped_families": status.get("skipped_families") or ["SLH-DSA"],
         "skipped_targets": skipped_targets,
         "log": campaign["log_file_abs"],
@@ -1426,7 +1495,8 @@ summary = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "fuzzing_seconds": fuzzing_seconds,
     "overall_status": overall_status,
-    "relation_mode": "self_reference",
+    "oracle_suite": os.environ.get("ORACLE_SUITE", "metamorphic"),
+    "relation_mode": os.environ.get("RELATION_MODE", "single-target"),
     "skipped_families": ["SLH-DSA"],
     "campaigns": rows,
 }
@@ -1480,6 +1550,15 @@ PROGRESS_INTERVAL="3600"
 SESSION_PREFIX="pqcfuzz"
 VERSIONS_CSV="0.14.0,0.8.0,0.4.0"
 BASE_IMAGE="ubuntu:22.04"
+ORACLE_SUITE="metamorphic"
+RELATION_MODE="single-target"
+TARGET_RUNTIME="liboqs"
+SANITIZERS="address,undefined"
+INPUT_TIMEOUT_SECONDS="30"
+RSS_MB="2048"
+REPORT_FORMATS="json,tsv"
+REPORT_TIMEOUT="10m"
+PAIR_ALG="src/config/pair_alg.default.json"
 DRY_RUN=0
 
 while [ "$#" -gt 0 ]; do
@@ -1528,6 +1607,105 @@ while [ "$#" -gt 0 ]; do
       VERSIONS_CSV="${1#--versions=}"
       shift
       ;;
+    --oracle-suite)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --oracle-suite"
+      fi
+      ORACLE_SUITE="$2"
+      shift 2
+      ;;
+    --oracle-suite=*)
+      ORACLE_SUITE="${1#--oracle-suite=}"
+      shift
+      ;;
+    --relation-mode)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --relation-mode"
+      fi
+      RELATION_MODE="$2"
+      shift 2
+      ;;
+    --relation-mode=*)
+      RELATION_MODE="${1#--relation-mode=}"
+      shift
+      ;;
+    --target-runtime)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --target-runtime"
+      fi
+      TARGET_RUNTIME="$2"
+      shift 2
+      ;;
+    --target-runtime=*)
+      TARGET_RUNTIME="${1#--target-runtime=}"
+      shift
+      ;;
+    --sanitizers)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --sanitizers"
+      fi
+      SANITIZERS="$2"
+      shift 2
+      ;;
+    --sanitizers=*)
+      SANITIZERS="${1#--sanitizers=}"
+      shift
+      ;;
+    --input-timeout-seconds)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --input-timeout-seconds"
+      fi
+      INPUT_TIMEOUT_SECONDS="$2"
+      shift 2
+      ;;
+    --input-timeout-seconds=*)
+      INPUT_TIMEOUT_SECONDS="${1#--input-timeout-seconds=}"
+      shift
+      ;;
+    --rss-mb)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --rss-mb"
+      fi
+      RSS_MB="$2"
+      shift 2
+      ;;
+    --rss-mb=*)
+      RSS_MB="${1#--rss-mb=}"
+      shift
+      ;;
+    --report-formats)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --report-formats"
+      fi
+      REPORT_FORMATS="$2"
+      shift 2
+      ;;
+    --report-formats=*)
+      REPORT_FORMATS="${1#--report-formats=}"
+      shift
+      ;;
+    --report-timeout)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --report-timeout"
+      fi
+      REPORT_TIMEOUT="$2"
+      shift 2
+      ;;
+    --report-timeout=*)
+      REPORT_TIMEOUT="${1#--report-timeout=}"
+      shift
+      ;;
+    --pair-alg)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --pair-alg"
+      fi
+      PAIR_ALG="$2"
+      shift 2
+      ;;
+    --pair-alg=*)
+      PAIR_ALG="${1#--pair-alg=}"
+      shift
+      ;;
     --base-image)
       if [ "$#" -lt 2 ]; then
         die "missing value for --base-image"
@@ -1553,8 +1731,31 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+case "$ORACLE_SUITE" in
+  fips|metamorphic) ;;
+  *) die "--oracle-suite must be fips or metamorphic" ;;
+esac
+case "$RELATION_MODE" in
+  single-liboqs) RELATION_MODE="single-target" ;;
+  liboqs-vs-pqclean) RELATION_MODE="cross-implementation" ;;
+esac
+case "$RELATION_MODE" in
+  single-target|self-reference|cross-implementation) ;;
+  *) die "--relation-mode must be single-target, self-reference, or cross-implementation" ;;
+esac
+if [ "$TARGET_RUNTIME" != "liboqs" ]; then
+  die "--target-runtime currently supports liboqs"
+fi
+if [[ ! "$INPUT_TIMEOUT_SECONDS" =~ ^[0-9]+$ ]] || [ "$INPUT_TIMEOUT_SECONDS" -le 0 ]; then
+  die "--input-timeout-seconds must be a positive integer"
+fi
+if [[ ! "$RSS_MB" =~ ^[0-9]+$ ]] || [ "$RSS_MB" -le 0 ]; then
+  die "--rss-mb must be a positive integer"
+fi
+
 validate_session_prefix "$SESSION_PREFIX"
 FUZZING_SECONDS="$(parse_duration_seconds "$FUZZING_TIME")"
+REPORT_TIMEOUT_SECONDS="$(parse_duration_seconds "$REPORT_TIMEOUT")"
 if [[ ! "$PROGRESS_INTERVAL" =~ ^[0-9]+$ ]] || [ "$PROGRESS_INTERVAL" -le 0 ]; then
   die "--progress-interval must be a positive integer number of seconds"
 fi
@@ -1623,7 +1824,14 @@ echo "[pqcfuzz-eval] progress interval: ${PROGRESS_INTERVAL}s"
 echo "[pqcfuzz-eval] session prefix: $SESSION_PREFIX"
 echo "[pqcfuzz-eval] versions: ${VERSIONS[*]}"
 echo "[pqcfuzz-eval] base image: $BASE_IMAGE"
-echo "[pqcfuzz-eval] relation mode: self_reference"
+echo "[pqcfuzz-eval] oracle_suite: $ORACLE_SUITE"
+echo "[pqcfuzz-eval] relation_mode: $RELATION_MODE"
+echo "[pqcfuzz-eval] target_runtime: $TARGET_RUNTIME"
+echo "[pqcfuzz-eval] sanitizers: $SANITIZERS"
+echo "[pqcfuzz-eval] input timeout: ${INPUT_TIMEOUT_SECONDS}s"
+echo "[pqcfuzz-eval] rss mb: $RSS_MB"
+echo "[pqcfuzz-eval] report formats: $REPORT_FORMATS"
+echo "[pqcfuzz-eval] report timeout: ${REPORT_TIMEOUT_SECONDS}s"
 echo "[pqcfuzz-eval] skipped families: SLH-DSA"
 echo "[pqcfuzz-eval] dry run: $DRY_RUN"
 echo
@@ -1763,9 +1971,47 @@ SUMMARY_OUTPUT="$(write_final_summary)"
 SUMMARY_STATUS="$?"
 set -e
 echo "$SUMMARY_OUTPUT"
+declare -a REPORT_INPUT_ARGS=()
+for campaign in "${CAMPAIGN_IDS[@]}"; do
+  result_root="${WORKSPACE_ABS_BY_ID[$campaign]}/results"
+  if [ -d "$result_root" ]; then
+    REPORT_INPUT_ARGS+=(--input-root "$result_root")
+  fi
+done
+
+REPORT_STATUS=0
+if [ "${#REPORT_INPUT_ARGS[@]}" -gt 0 ]; then
+  echo "[pqcfuzz-eval] writing finding reports"
+  set +e
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$REPORT_TIMEOUT_SECONDS" python3 src/reporting/write_report.py \
+      "${REPORT_INPUT_ARGS[@]}" \
+      --output-root "$EVAL_ROOT" \
+      --formats "$REPORT_FORMATS" \
+      --trace-mode exemplar \
+      --findings-mode fast-summary
+  else
+    python3 src/reporting/write_report.py \
+      "${REPORT_INPUT_ARGS[@]}" \
+      --output-root "$EVAL_ROOT" \
+      --formats "$REPORT_FORMATS" \
+      --trace-mode exemplar \
+      --findings-mode fast-summary
+  fi
+  REPORT_STATUS="$?"
+  set -e
+  if [ "$REPORT_STATUS" -ne 0 ]; then
+    echo "[pqcfuzz-eval] finding report generation failed with status $REPORT_STATUS" >&2
+  fi
+else
+  echo "[pqcfuzz-eval] no finding result directories found; skipping finding reports"
+fi
 
 if [ "$START_FAILURE" -ne 0 ] && [ "$SUMMARY_STATUS" -eq 0 ]; then
   SUMMARY_STATUS=1
+fi
+if [ "$REPORT_STATUS" -ne 0 ] && [ "$SUMMARY_STATUS" -eq 0 ]; then
+  SUMMARY_STATUS="$REPORT_STATUS"
 fi
 
 if [ "$SUMMARY_STATUS" -eq 0 ]; then

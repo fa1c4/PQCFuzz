@@ -112,6 +112,8 @@
       "oracle_id": "mldsa_oid_field_mutation_sanity",
       "algorithm_family": "ML-DSA",
       "primitive_type": "sig",
+      "enabled_by_default": false,
+      "requires_api": "HashML-DSA",
       "api_surface": [
         "sign",
         "verify"

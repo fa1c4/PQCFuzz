@@ -232,7 +232,7 @@ ABI_FIELDS_BY_PRIMITIVE = {
     "sig": ("pk_len", "sk_len", "sig_max_len"),
 }
 EXCHANGE_FIELDS_BY_PRIMITIVE = {
-    "kem": ("public_key_exchange", "ciphertext_exchange", "secret_key_exchange"),
+    "kem": ("public_key_exchange", "ciphertext_exchange", "secret_key_exchange", "secret_key_format_compatible"),
     "sig": ("public_key_exchange", "signature_exchange"),
 }
 SIG_CAPABILITY_FIELDS = ("supports_context", "supports_seeded_sign", "supports_deterministic_sign")
@@ -328,7 +328,7 @@ def validate_exchange_contract(contract: Any, primitive_type: str, context: str)
     require(isinstance(contract, dict), f"{context}: exchange_contract must be an object")
     normalized = {}
     for field in EXCHANGE_FIELDS_BY_PRIMITIVE[primitive_type]:
-        value = contract.get(field)
+        value = contract.get(field, False) if field == "secret_key_format_compatible" else contract.get(field)
         require(isinstance(value, bool), f"{context}: exchange_contract.{field} must be boolean")
         normalized[field] = value
     return normalized

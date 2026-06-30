@@ -24,6 +24,10 @@ const char *ExpectedRelationName(ExpectedRelation relation) {
       return "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT";
     case ExpectedRelation::kVerifyFalseOrApiUnsupported:
       return "VERIFY_FALSE_OR_API_UNSUPPORTED";
+    case ExpectedRelation::kExpectEqual:
+      return "EXPECT_EQUAL";
+    case ExpectedRelation::kExpectDifferent:
+      return "EXPECT_DIFFERENT";
     case ExpectedRelation::kUnknown:
       return "UNKNOWN";
   }
@@ -60,6 +64,12 @@ ExpectedRelation ExpectedRelationFromName(const std::string &name) {
   }
   if (name == "VERIFY_FALSE_OR_API_UNSUPPORTED") {
     return ExpectedRelation::kVerifyFalseOrApiUnsupported;
+  }
+  if (name == "EXPECT_EQUAL") {
+    return ExpectedRelation::kExpectEqual;
+  }
+  if (name == "EXPECT_DIFFERENT") {
+    return ExpectedRelation::kExpectDifferent;
   }
   return ExpectedRelation::kUnknown;
 }

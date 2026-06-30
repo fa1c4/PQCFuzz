@@ -6,10 +6,11 @@
     "version",
     "job_id",
     "pair_id",
+    "oracle_suite",
+    "relation_mode",
     "algorithm",
     "primitive_type",
     "algorithm_metadata",
-    "pair",
     "oracles",
     "paths"
   ],
@@ -22,6 +23,21 @@
     },
     "pair_id": {
       "type": "string"
+    },
+    "oracle_suite": {
+      "enum": [
+        "fips",
+        "metamorphic"
+      ]
+    },
+    "relation_mode": {
+      "enum": [
+        "single-target",
+        "self-reference",
+        "cross-implementation",
+        "single-liboqs",
+        "liboqs-vs-pqclean"
+      ]
     },
     "algorithm": {
       "type": "string"
@@ -37,6 +53,15 @@
     },
     "pair": {
       "type": "object"
+    },
+    "target": {
+      "type": "object"
+    },
+    "target_runtime": {
+      "type": "string"
+    },
+    "liboqs_version": {
+      "type": "string"
     },
     "oracles": {
       "type": "array"
