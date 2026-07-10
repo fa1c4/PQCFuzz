@@ -117,3 +117,42 @@
 - Changed: `baselines/cryptoTesting/Makefile`
 - Reason: make liboqs checkout/configure/build recipes fail-fast so a failed `git checkout` cannot continue into CMake/Ninja on the wrong revision.
 - Behavior preserved: upstream fuzzing logic unchanged.
+- Changed: `scripts/baselines/cryptoTesting/run.sh`, `reproduce.sh`, both
+  liboqs drivers, their report scripts, and
+  `scripts/compact_baseline_results.py`.
+- Reason: mount a durable raw AFL root before fuzzing starts; route each
+  algorithm/property's live `fuzzinputs` and `fuzzoutputs` there; emit an
+  checksummed raw manifest plus per-task schedule/state records; and compact
+  from that mounted root instead of from the disposable liboqs checkout.
+  Functional cryptoTesting and its vanilla AFL workflow are explicit,
+  separately named modes (`cryptoTesting-functional` and
+  `cryptoTesting-vanilla`).
+- Behavior preserved: the functional driver still invokes `fuzz_liboqs.py`
+  and `report.py`; vanilla invokes `fuzz_liboqs_baseline.py` and
+  `report_baseline.py`.  The local wrapper only changes output ownership,
+  accounting, and invocation selection.
+- Changed: functional liboqs property Makefiles.
+- Reason: a `GenInput` deadline now creates a structured
+  `setup-timeout/GenInput.json` diagnostic with the command, timeout,
+  algorithm index, elapsed allocation, and exit code.  It is not written as
+  an AFL target hang.
+- Behavior preserved: the original independent `GenInput` deadline remains
+  configurable as `--geninput-timeout` / `CRYPTO_TESTING_GENINPUT_TIMEOUT`.
+  A target hang enters validated comparison accounting only after its raw
+  reproducer's replay status is `reproduced`.
+- Replay procedure: every raw manifest item includes a one-artifact
+  `crypto_testing_replay.py` command.  It rebuilds the matching cloned target
+  and records a normalized `target-hang`, `crash`, `operation-error`, or
+  `unreproduced` result (or a property-specific `accepted-mutation` /
+  `mismatch` clean-exit classification) beneath
+  `raw/.../metadata/replays/`.  Re-run the manifest helper (or the compactor)
+  after recording replay evidence; only a replayed `target-hang` contributes
+  to the validated hang count.
+- Changed: `scripts/eval_baselines_fuzzing.sh`.
+- Reason: cryptoTesting evaluation fixes its worker budget at one unless the
+  experiment is deliberately configured otherwise, treats outer timeout as
+  `timed-out-partial` with a nonzero result, and requires a summary for every
+  baseline rather than exempting cryptoTesting.  The final evaluation summary
+  labels the functional mode explicitly and includes per-version shared
+  algorithm/property coverage intersections alongside each campaign's full
+  scheduled matrix.

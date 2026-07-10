@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPACTOR = ROOT / "scripts" / "compact_baseline_results.py"
+CRYPTOTESTING_MANIFEST = ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"
 
 
 def write_json(path: Path, data: dict) -> None:
@@ -675,36 +676,135 @@ def test_shared_liboqs_oracle_module_policy_is_enforced() -> None:
     ).read_bytes()
 
 
-def test_cryptotesting_compaction_copies_afl_crashes_and_hangs(tmp_path: Path) -> None:
+def test_cryptotesting_compaction_retains_mounted_afl_output_without_flattening(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     root = workspace / "cryptoTesting"
-    build_target = root / "targets-build" / "ches_liboqs"
     run_root = root / "targets-run"
+    raw_root = run_root / "raw" / "cryptoTesting-0.14.0" / "functional"
+    crash = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "crashes" / "id:000000"
+    hang = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "hangs" / "id:000001"
+    setup_timeout = raw_root / "afl" / "SIGN" / "Verify" / "m" / "1" / "fuzzoutputs" / "default" / "setup-timeout" / "GenInput.json"
 
-    touch(build_target / "alg1" / "fuzzoutputs" / "default" / "crashes" / "id:000000", "crash")
-    touch(build_target / "alg1" / "fuzzoutputs" / "default" / "crashes" / "README.txt", "readme")
-    touch(build_target / "alg1" / "fuzzoutputs" / "default" / "hangs" / "id:000001", "hang")
-    touch(run_root / "reports" / "crash_report_ches_liboqs_python.xlsx", "report")
+    touch(root / "targets-build" / "ches_liboqs" / "object.o", "object")
+    touch(crash, "crash")
+    touch(hang, "hang")
+    touch(setup_timeout, '{"category":"setup-timeout"}')
+    touch(crash.parents[3] / "alg.txt", "ML-KEM-512")
+    touch(setup_timeout.parents[3] / "alg.txt", "ML-DSA-44")
+    touch(run_root / "reports" / "cryptoTesting-0.14.0-functional" / "crash_report_ches_liboqs_python.xlsx", "report")
     touch(run_root / "logs" / "ches_liboqs.functional.log", "log")
+    write_json(
+        raw_root / "manifest.json",
+        {
+            "mode": "functional",
+            "version": "0.14.0",
+            "tasks_terminal": True,
+            "task_states": {"completed": 1, "setup-timeout": 1},
+            "reported_groups": 0,
+            "groups_with_reproducer": 0,
+            "groups_replayed": 0,
+            "groups_missing_reproducer": 0,
+            "report_files": ["crash_report_ches_liboqs_python.xlsx"],
+            "artifacts": [
+                {
+                    "algorithm": "ML-KEM-512", "property": "KEM/Decaps/c", "kind": "crash",
+                    "relative_artifact_path": str(crash.relative_to(raw_root)),
+                    "size": len("crash"),
+                    "sha256": hashlib.sha256(b"crash").hexdigest(),
+                },
+                {
+                    "algorithm": "ML-KEM-512", "property": "KEM/Decaps/c", "kind": "hang",
+                    "relative_artifact_path": str(hang.relative_to(raw_root)),
+                    "size": len("hang"),
+                    "sha256": hashlib.sha256(b"hang").hexdigest(),
+                    "replay": {"status": "not-run"},
+                },
+                {
+                    "algorithm": "ML-DSA-44", "property": "SIGN/Verify/m", "kind": "setup-timeout",
+                    "relative_artifact_path": str(setup_timeout.relative_to(raw_root)),
+                    "size": len('{"category":"setup-timeout"}'),
+                    "sha256": hashlib.sha256(b'{"category":"setup-timeout"}').hexdigest(),
+                },
+            ],
+        },
+    )
 
     run_compactor(workspace, "cryptoTesting", version="0.14.0")
 
-    artifact_root = run_root / "artifacts" / "ches_liboqs" / "alg1" / "fuzzoutputs" / "default"
     assert not (root / "targets-build").exists()
-    assert (run_root / "reports" / "crash_report_ches_liboqs_python.xlsx").is_file()
+    assert (run_root / "reports" / "cryptoTesting-0.14.0-functional" / "crash_report_ches_liboqs_python.xlsx").is_file()
     assert (run_root / "logs" / "ches_liboqs.functional.log").is_file()
-    assert (artifact_root / "crashes" / "id:000000").read_text(encoding="utf-8") == "crash"
-    assert (artifact_root / "hangs" / "id:000001").read_text(encoding="utf-8") == "hang"
-    assert not (artifact_root / "crashes" / "README.txt").exists()
+    assert crash.read_text(encoding="utf-8") == "crash"
+    assert hang.read_text(encoding="utf-8") == "hang"
+    assert setup_timeout.is_file()
 
     manifest = load_manifest(workspace, "cryptoTesting")
-    assert manifest["retained_artifact_counts"]["crash"] == 1
-    assert manifest["retained_artifact_counts"]["hang"] == 1
+    # The generic field is intentionally not populated from a cryptoTesting
+    # mode: functional and vanilla evidence must never be merged.
+    assert manifest["retained_artifact_counts"]["crash"] == 0
+    assert manifest["retained_artifact_counts"]["hang"] == 0
+    assert manifest["cryptoTesting_campaigns"]["functional"]["retained_artifact_counts_by_property"] == {
+        "KEM/Decaps/c": {"crash": 1, "hang": 1, "leak": 0, "oom": 0, "timeout": 0},
+        "SIGN/Verify/m": {"crash": 0, "hang": 0, "leak": 0, "oom": 0, "timeout": 1},
+    }
 
-    summary = json.loads((run_root / "summary.json").read_text(encoding="utf-8"))
+    summary = json.loads((raw_root / "summary.json").read_text(encoding="utf-8"))
     assert summary["baseline"] == "cryptoTesting"
     assert summary["target"] == "ches_liboqs"
+    assert summary["label"] == "cryptoTesting-functional"
     assert summary["compacted"] is True
+
+
+def test_cryptotesting_compaction_rejects_report_group_without_raw_reproducer(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    root = workspace / "cryptoTesting"
+    raw_root = root / "targets-run" / "raw" / "cryptoTesting-0.14.0" / "functional"
+    touch(root / "targets-build" / "ches_liboqs" / "object.o", "object")
+    write_json(
+        raw_root / "manifest.json",
+        {
+            "mode": "functional", "version": "0.14.0", "tasks_terminal": True,
+            "reported_groups": 1, "groups_with_reproducer": 0, "groups_replayed": 0,
+            "groups_missing_reproducer": 1, "artifacts": [],
+        },
+    )
+
+    result = run_compactor(workspace, "cryptoTesting", check=False)
+
+    assert result.returncode != 0
+    assert (root / "targets-build" / "ches_liboqs" / "object.o").is_file()
+    manifest = load_manifest(workspace, "cryptoTesting")
+    assert manifest["status"] == "failed"
+    assert "without retained raw reproducers" in manifest["reason"]
+
+
+def test_cryptotesting_raw_manifest_classifies_geninput_as_setup_timeout(tmp_path: Path) -> None:
+    raw_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    hang = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "hangs" / "id:000001"
+    setup_timeout = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "setup-timeout" / "GenInput.json"
+    touch(hang, "hang")
+    touch(setup_timeout, "setup")
+    touch(hang.parents[3] / "alg.txt", "ML-KEM-512")
+    write_json(raw_root / "metadata" / "tasks.json", [{"state": "completed"}])
+
+    result = subprocess.run(
+        [
+            sys.executable, str(CRYPTOTESTING_MANIFEST), "--output-root", str(raw_root),
+            "--mode", "functional", "--version", "0.14.0", "--reports-dir", str(reports),
+        ],
+        check=True, text=True, capture_output=True,
+    )
+
+    assert result.returncode == 0
+    manifest = json.loads((raw_root / "manifest.json").read_text(encoding="utf-8"))
+    records = {record["kind"]: record for record in manifest["artifacts"]}
+    assert records["setup-timeout"]["classification"] == "setup-timeout"
+    assert records["setup-timeout"]["replay"]["required"] is False
+    assert records["hang"]["classification"] == "unvalidated"
+    assert records["hang"]["replay"]["command"][1] == "crypto_testing_replay.py"
+    summary = json.loads((raw_root / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "completed"
 
 
 def test_all_mode_leaves_tree_untouched(tmp_path: Path) -> None:

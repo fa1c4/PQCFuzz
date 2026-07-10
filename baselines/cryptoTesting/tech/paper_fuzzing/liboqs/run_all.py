@@ -57,10 +57,26 @@ def run_algo(alg, alg_name, mutator_tool, base_path, run_inside_clone=False, ver
     if run_inside_clone:
         base_path = os.path.normpath(os.path.join('..', base_path))
 
+    # The normal upstream layout places these directories below the cloned
+    # working tree.  When an output root is supplied, direct AFL writes into
+    # the mounted campaign tree instead.  This matters while afl-fuzz is still
+    # running: a Docker timeout must not be able to discard its findings.
+    full_path = os.path.abspath(os.path.join(base_path, str(alg)))
+    fuzz_inputs = os.path.join(full_path, "fuzzinputs")
+    fuzz_outputs = os.path.join(full_path, "fuzzoutputs")
+    pathlib.Path(full_path).mkdir(parents=True, exist_ok=True)
+
     # build and fuzz
     my_env = os.environ.copy()
     my_env['DESIRED_ALG_TO_FUZZ'] = str(alg)
-    res = subprocess.run(['make', f'run_{mutator_tool}'], env=my_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    my_env['CRYPTO_TESTING_CURRENT_INPUT'] = fuzz_inputs
+    my_env['CRYPTO_TESTING_CURRENT_OUTPUT'] = fuzz_outputs
+    res = subprocess.run(
+        ['make', f'run_{mutator_tool}', f'FUZZINPUTS={fuzz_inputs}', f'FUZZOUTPUTS={fuzz_outputs}'],
+        env=my_env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     stdout = res.stdout
     if verbose:
         print(stdout)
@@ -73,14 +89,6 @@ def run_algo(alg, alg_name, mutator_tool, base_path, run_inside_clone=False, ver
         with open(problematic_file_path, 'a') as f:
             f.write(f"{alg} {alg_name}\n")
 
-    # prepare a directory to store crashes from _this_ algorithm
-    dir_name = str(alg)
-    full_path = os.path.join(base_path, dir_name)
-    if run_inside_clone:
-        cleanup_fuzzing_outputs(full_path)
-    else:
-        os.mkdir(full_path)
-
     # make name of algorithm available
     if alg_name:
         with open(os.path.join(full_path, "alg.txt"), "w") as f:
@@ -91,22 +99,19 @@ def run_algo(alg, alg_name, mutator_tool, base_path, run_inside_clone=False, ver
         f.write(stdout)
 
     # count crashes nad if any, add this algorithm to the list of problematic ones
-    crash_files = os.listdir("fuzzoutputs/default/crashes/")
+    crash_dir = os.path.join(fuzz_outputs, "default", "crashes")
+    crash_files = os.listdir(crash_dir) if os.path.isdir(crash_dir) else []
     if len(crash_files) > 0:
         with open(problematic_file_path, 'a') as f:
             f.write(f"{alg} {alg_name}\n")
-    hang_files = os.listdir("fuzzoutputs/default/hangs/")
+    hang_dir = os.path.join(fuzz_outputs, "default", "hangs")
+    hang_files = os.listdir(hang_dir) if os.path.isdir(hang_dir) else []
     if len(hang_files) > 0:
         with open(problematic_file_path, 'a') as f:
             f.write(f"{alg} {alg_name}\n")
 
-    # copy the outputs of fuzzing for later inspection
-    try:
-        shutil.move('fuzzinputs/', os.path.join(full_path, 'fuzzinputs'))
-        shutil.move('fuzzoutputs/', os.path.join(full_path, 'fuzzoutputs'))
-    except:
-        with open(problematic_file_path, 'a') as f:
-            f.write(f"{alg} {alg_name}\n")
+    # Inputs and outputs are already in ``full_path``.  Do not move them at
+    # shutdown: that would lose live AFL artifacts if the container is killed.
 
 
 def main():
@@ -120,6 +125,7 @@ def main():
     parser.add_argument("--n_algs_only", action="store_true")
     parser.add_argument("--run_specific_alg_only", type=int, default=-1)
     parser.add_argument("--run_inside_clone", action="store_true")
+    parser.add_argument("--geninput-timeout", type=int, default=int(os.environ.get("CRYPTO_TESTING_GENINPUT_TIMEOUT", "10")))
     args = parser.parse_args()
 
     base_path = args.base_path
@@ -129,6 +135,7 @@ def main():
     n_algs_only = args.n_algs_only
     run_specific_alg_only = args.run_specific_alg_only
     run_inside_clone = args.run_inside_clone
+    os.environ["GITIMEOUT"] = str(args.geninput_timeout)
     cwd = os.getcwd()
 
     # check if we are running from inside the generic source directory by mistake,

@@ -114,7 +114,7 @@ print_campaign_commands() {
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline run --version $version --mode full --max-total-time $seconds"
       ;;
     cryptoTesting)
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> timeout ${seconds}s scripts/run_baseline.sh cryptoTesting run --version $version --skip-core-pattern-check"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=1 timeout ${seconds}s scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers 1 --skip-core-pattern-check"
       ;;
     *)
       die "unknown baseline '$baseline'"
@@ -209,6 +209,8 @@ if "start_epoch" not in doc:
 doc.update({
     "campaign": os.environ["EVAL_CAMPAIGN"],
     "baseline": os.environ["EVAL_BASELINE"],
+    "fuzzer_mode": "functional" if os.environ["EVAL_BASELINE"] == "cryptoTesting" else None,
+    "baseline_label": "cryptoTesting-functional" if os.environ["EVAL_BASELINE"] == "cryptoTesting" else os.environ["EVAL_BASELINE"],
     "version": os.environ["EVAL_VERSION"],
     "session_name": os.environ["EVAL_SESSION_NAME"],
     "workspace_root": os.environ["EVAL_WORKSPACE_ROOT"],
@@ -399,6 +401,8 @@ if os.path.exists(path):
 doc.update({
     "campaign": os.environ["EVAL_CAMPAIGN"],
     "baseline": os.environ["EVAL_BASELINE"],
+    "fuzzer_mode": "functional" if os.environ["EVAL_BASELINE"] == "cryptoTesting" else None,
+    "baseline_label": "cryptoTesting-functional" if os.environ["EVAL_BASELINE"] == "cryptoTesting" else os.environ["EVAL_BASELINE"],
     "version": os.environ["EVAL_VERSION"],
     "session_name": os.environ["EVAL_SESSION_NAME"],
     "workspace_root": os.environ["EVAL_WORKSPACE_ROOT"],
@@ -627,12 +631,12 @@ case "$BASELINE" in
   cryptoTesting)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    echo "[eval] command: timeout ${FUZZING_SECONDS}s $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --skip-core-pattern-check"
-    timeout "${FUZZING_SECONDS}s" "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --skip-core-pattern-check
+    echo "[eval] command: CRYPTO_TESTING_WORKERS=1 timeout ${FUZZING_SECONDS}s $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers 1 --skip-core-pattern-check"
+    CRYPTO_TESTING_WORKERS=1 timeout "${FUZZING_SECONDS}s" "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers 1 --skip-core-pattern-check
     FUZZ_STATUS="$?"
     if [ "$FUZZ_STATUS" -eq 124 ]; then
       echo "[eval] cryptoTesting reached the configured fuzzing-time limit"
-      finish_campaign "timed-out" 0
+      finish_campaign "timed-out-partial" 124
     fi
     ;;
 esac
@@ -888,7 +892,11 @@ for campaign in campaigns:
     version_root = run_root / f"liboqs-{campaign['version']}"
     profile_summary_path = version_root / "full" / "summary.json"
     version_summary_path = version_root / "summary.json"
-    if profile_summary_path.is_file():
+    if baseline == "cryptoTesting":
+        root_summary = load_json(
+            run_root / "raw" / f"cryptoTesting-{campaign['version']}" / "functional" / "summary.json"
+        )
+    elif profile_summary_path.is_file():
         root_summary = load_json(profile_summary_path)
     else:
         root_summary = load_json(version_summary_path if version_summary_path.is_file() else run_root / "summary.json")
@@ -896,8 +904,8 @@ for campaign in campaigns:
 
     reports_dir = run_root / "reports"
     logs_dir = run_root / "logs"
-    reports = sorted(rel(path) for path in reports_dir.glob("*") if path.is_file()) if reports_dir.is_dir() else []
-    logs = sorted(rel(path) for path in logs_dir.glob("*") if path.is_file()) if logs_dir.is_dir() else []
+    reports = sorted(rel(path) for path in reports_dir.rglob("*") if path.is_file()) if reports_dir.is_dir() else []
+    logs = sorted(rel(path) for path in logs_dir.rglob("*") if path.is_file()) if logs_dir.is_dir() else []
     counts = artifact_counts(run_root)
     manifest_path = workspace_root / baseline / "compaction_manifest.json"
     manifest = load_json(manifest_path) if manifest_path.is_file() else None
@@ -922,7 +930,7 @@ for campaign in campaigns:
         aggregate_status = int(final_status)
 
     missing_expected_summary = False
-    if baseline != "cryptoTesting" and aggregate_status == 0 and not baseline_summaries:
+    if aggregate_status == 0 and not baseline_summaries:
         missing_expected_summary = True
         aggregate_status = 1
         result = "missing-summary"
@@ -933,6 +941,8 @@ for campaign in campaigns:
     row = {
         "campaign": campaign["campaign"],
         "baseline": baseline,
+        "baseline_label": status.get("baseline_label") or baseline,
+        "fuzzer_mode": status.get("fuzzer_mode"),
         "version": campaign["version"],
         "session_name": campaign["session_name"],
         "workspace_root": campaign["workspace_root"],
@@ -1006,12 +1016,35 @@ totals = {
     "hang_count": sum(row["hang_count"] for row in rows),
 }
 
+coverage_by_version = {}
+for version in sorted({row["version"] for row in rows}):
+    version_rows = [row for row in rows if row["version"] == version]
+    algorithm_sets = [set(row["algorithm_list"] or []) for row in version_rows if row["algorithm_list"]]
+    property_sets = [set(row["property_list"] or []) for row in version_rows if row["property_list"]]
+    coverage_by_version[version] = {
+        "shared_algorithms": sorted(set.intersection(*algorithm_sets)) if algorithm_sets else [],
+        "shared_properties": sorted(set.intersection(*property_sets)) if property_sets else [],
+        # Keep each campaign's complete scheduled matrix alongside the shared
+        # intersection; consumers must not confuse the latter with full-run
+        # totals when baselines exercise different properties.
+        "full_matrix_campaigns": [
+            {
+                "campaign": row["campaign"],
+                "baseline_label": row.get("baseline_label", row["baseline"]),
+                "algorithms": row["algorithm_list"] or [],
+                "properties": row["property_list"] or [],
+            }
+            for row in version_rows
+        ],
+    }
+
 summary = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "fuzzing_seconds": fuzzing_seconds,
     "result_save_mode": result_save_mode,
     "overall_status": overall_status,
     "totals": totals,
+    "coverage_matrix": coverage_by_version,
     "campaigns": rows,
 }
 
@@ -1023,6 +1056,8 @@ with open(summary_json, "w", encoding="utf-8") as f:
 columns = [
     "campaign",
     "baseline",
+    "baseline_label",
+    "fuzzer_mode",
     "version",
     "result",
     "aggregate_status",

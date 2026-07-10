@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EVAL_SCRIPT = ROOT / "scripts" / "eval_baselines_fuzzing.sh"
 CRYPTOFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "cryptofuzz" / "run.sh"
 CLFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "CLFuzz" / "run.sh"
+CRYPTOTESTING_RUNNER = ROOT / "scripts" / "baselines" / "cryptoTesting" / "run.sh"
 CLFUZZ_OV_REPLAY_FIXTURE = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.input.b64"
 CLFUZZ_OV_REPLAY_MANIFEST = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.replay.json"
 
@@ -186,6 +187,125 @@ def test_campaign_filter_rejects_unknown_campaign(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     assert "unknown campaign 'unknown-0.14.0'" in result.stderr
+
+
+def test_cryptotesting_timeout_is_timed_out_partial_not_success(tmp_path: Path) -> None:
+    root = make_root(
+        tmp_path,
+        """#!/usr/bin/env bash
+if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
+  sleep 5
+fi
+exit 0
+""",
+    )
+    make_tmux(
+        tmp_path,
+        """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+""",
+    )
+
+    result = run_eval(
+        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "all",
+        "--fuzzing-time", "1s", "--progress-interval", "1",
+    )
+
+    assert result.returncode == 1
+    status = load_status(root, "cryptoTesting-0.14.0")
+    assert status["result"] == "timed-out-partial"
+    assert status["final_status"] == 124
+
+
+def test_cryptotesting_success_without_summary_is_failure(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    make_tmux(
+        tmp_path,
+        """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+""",
+    )
+
+    result = run_eval(
+        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "all",
+        "--fuzzing-time", "1s", "--progress-interval", "1",
+    )
+
+    assert result.returncode == 1
+    summary = load_summary(root)
+    assert summary["campaigns"][0]["result"] == "missing-summary"
+    assert summary["campaigns"][0]["missing_expected_summary"] is True
+
+
+def test_cryptotesting_reproduce_selects_functional_and_vanilla_drivers(tmp_path: Path) -> None:
+    source_dir = ROOT / "baselines" / "cryptoTesting"
+    work = tmp_path / "cryptoTesting"
+    work.mkdir()
+    write_executable(work / "reproduce.sh", (source_dir / "reproduce.sh").read_text(encoding="utf-8"))
+    (work / "crypto_testing_manifest.py").write_text(
+        (source_dir / "crypto_testing_manifest.py").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    write_executable(tmp_path / "bin" / "make", "#!/usr/bin/env bash\nexit 0\n")
+    driver = """from pathlib import Path
+import json
+import sys
+
+root = Path(sys.argv[sys.argv.index('--output-root') + 1])
+root.mkdir(parents=True, exist_ok=True)
+(root / 'metadata').mkdir(exist_ok=True)
+(root / 'metadata' / 'tasks.json').write_text(json.dumps([{'state': 'completed'}]))
+(root / 'metadata' / 'schedule.json').write_text(json.dumps({'tasks': []}))
+(root / ('driver-' + Path(__file__).stem + '.txt')).write_text('ran')
+"""
+    report = """from pathlib import Path
+import sys
+
+directory = Path(sys.argv[sys.argv.index('--report-dir') + 1])
+directory.mkdir(parents=True, exist_ok=True)
+(directory / 'report.xlsx').write_text('report')
+"""
+    for name in ("fuzz_liboqs.py", "fuzz_liboqs_baseline.py"):
+        (work / name).write_text(driver, encoding="utf-8")
+    for name in ("report.py", "report_baseline.py"):
+        (work / name).write_text(report, encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path / 'bin'}{os.pathsep}{env['PATH']}"
+    for mode, baseline_token, marker in (
+        ("functional", [], "driver-fuzz_liboqs.txt"),
+        ("vanilla", ["baseline"], "driver-fuzz_liboqs_baseline.txt"),
+    ):
+        raw = tmp_path / f"raw-{mode}"
+        reports = tmp_path / f"reports-{mode}"
+        result = subprocess.run(
+            [
+                "bash", "reproduce.sh", "ches_liboqs", *baseline_token,
+                "--output-root", str(raw), "--reports-dir", str(reports),
+                "--workers", "1", "--version", "0.14.0",
+            ],
+            cwd=work, env=env, text=True, capture_output=True,
+        )
+        assert result.returncode == 0, result.stderr
+        assert (raw / marker).is_file()
+        assert json.loads((raw / "manifest.json").read_text(encoding="utf-8"))["mode"] == mode
+
+
+def test_cryptotesting_runner_rejects_nonpositive_worker_count(tmp_path: Path) -> None:
+    result = subprocess.run(
+        ["bash", str(CRYPTOTESTING_RUNNER), "baseline", str(tmp_path / "build"), str(tmp_path / "run"), "--workers", "0"],
+        cwd=ROOT, text=True, capture_output=True,
+    )
+
+    assert result.returncode == 2
+    assert "positive integer" in result.stderr
 
 
 def test_launch_failure_writes_finished_status_and_summary(tmp_path: Path) -> None:

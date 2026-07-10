@@ -140,6 +140,7 @@ class Compactor:
         self.single_style_validation: dict[str, Any] = {"status": "passed", "targets": {}}
         self._single_style_target_records: dict[str, dict[str, list[Path]]] = {}
         self._single_style_logical_hang_paths: dict[str, set[str]] = {}
+        self.crypto_testing_campaigns: dict[str, dict[str, Any]] = {}
 
     def require_safe_path(self, path: Path) -> None:
         if not is_within(path, self.baseline_root):
@@ -1272,36 +1273,141 @@ class Compactor:
     def crypto_testing_target(self) -> str:
         return CRYPTOTESTING_TARGETS.get(self.version, f"liboqs-{self.version}")
 
-    def copy_crypto_testing_artifacts(self) -> None:
-        target = self.crypto_testing_target()
-        build_target = self.build_root / target
-        artifact_root = self.run_root / "artifacts" / target
-        if not build_target.is_dir():
-            return
-
-        for kind in ("crashes", "hangs"):
-            for source_dir in sorted(build_target.rglob(f"fuzzoutputs/default/{kind}")):
-                if not source_dir.is_dir():
+    def crypto_testing_roots(self) -> list[tuple[str, Path]]:
+        raw_root = self.run_root / "raw"
+        prefix = f"cryptoTesting-{self.version}-"
+        roots: list[tuple[str, Path]] = []
+        canonical_root = raw_root / f"cryptoTesting-{self.version}"
+        for mode in ("functional", "vanilla"):
+            candidate = canonical_root / mode
+            if candidate.is_dir():
+                roots.append((mode, candidate))
+        if raw_root.is_dir():
+            for path in sorted(raw_root.glob(f"{prefix}*")):
+                if not path.is_dir():
                     continue
-                for source in sorted(source_dir.iterdir()):
-                    if not source.is_file() or source.name == "README.txt":
-                        continue
-                    relative = source.relative_to(build_target)
-                    destination = artifact_root / relative
-                    self.require_safe_path(destination)
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(source, destination)
-                    self.retain(destination)
-                    if kind == "hangs":
-                        self.retained_artifact_counts["hang"] += 1
-                    else:
-                        self.retained_artifact_counts["crash"] += 1
+                mode = path.name[len(prefix) :]
+                if mode in {"functional", "vanilla"} and all(existing_mode != mode for existing_mode, _ in roots):
+                    roots.append((mode, path))
+        return roots
+
+    @staticmethod
+    def crypto_testing_checksum(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as source:
+            for block in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(block)
+        return digest.hexdigest()
+
+    def compact_crypto_testing_campaign(self, mode: str, raw_root: Path) -> None:
+        manifest_path = raw_root / "manifest.json"
+        source_manifest = self.read_json_object(manifest_path)
+        if source_manifest is None:
+            raise ReplayValidationError(f"cryptoTesting raw output has no valid manifest: {manifest_path}")
+        if source_manifest.get("mode") != mode or source_manifest.get("version") != self.version:
+            raise ReplayValidationError(f"cryptoTesting raw manifest does not match {mode}/{self.version}")
+        artifacts = source_manifest.get("artifacts")
+        if not isinstance(artifacts, list):
+            raise ReplayValidationError(f"cryptoTesting raw manifest has no artifact list: {manifest_path}")
+
+        property_counts: dict[str, dict[str, int]] = {}
+        raw_counts = empty_artifact_counts()
+        validated_target_hangs = 0
+        for item in artifacts:
+            if not isinstance(item, dict):
+                raise ReplayValidationError(f"invalid cryptoTesting artifact record in {manifest_path}")
+            relative_path = item.get("relative_artifact_path")
+            kind = item.get("kind")
+            prop = item.get("property")
+            if not isinstance(relative_path, str) or not isinstance(kind, str) or not isinstance(prop, str):
+                raise ReplayValidationError(f"incomplete cryptoTesting artifact record in {manifest_path}")
+            source = raw_root / relative_path
+            if not source.is_file() or not is_within(source, raw_root):
+                raise ReplayValidationError(f"cryptoTesting manifest references missing raw artifact: {source}")
+            expected_size = item.get("size")
+            if not isinstance(expected_size, int) or source.stat().st_size != expected_size:
+                raise ReplayValidationError(f"cryptoTesting raw artifact size changed: {source}")
+            expected_digest = item.get("sha256")
+            if not isinstance(expected_digest, str) or self.crypto_testing_checksum(source) != expected_digest:
+                raise ReplayValidationError(f"cryptoTesting raw artifact checksum changed: {source}")
+            self.retain(source)
+            counts = property_counts.setdefault(prop, empty_artifact_counts())
+            if kind == "crash":
+                counts["crash"] += 1
+                raw_counts["crash"] += 1
+            elif kind == "hang":
+                counts["hang"] += 1
+                raw_counts["hang"] += 1
+                replay = item.get("replay")
+                if (
+                    isinstance(replay, dict)
+                    and replay.get("status") == "reproduced"
+                    and replay.get("result") == "target-hang"
+                ):
+                    validated_target_hangs += 1
+            elif kind == "setup-timeout":
+                counts["timeout"] += 1
+                raw_counts["timeout"] += 1
+
+        reported_groups = source_manifest.get("reported_groups", 0)
+        groups_missing = source_manifest.get("groups_missing_reproducer", 0)
+        if not isinstance(reported_groups, int) or not isinstance(groups_missing, int):
+            raise ReplayValidationError(f"invalid cryptoTesting report-group accounting: {manifest_path}")
+        if reported_groups and groups_missing:
+            raise ReplayValidationError(
+                f"cryptoTesting reports {groups_missing} group(s) without retained raw reproducers"
+            )
+
+        self.retain_tree_files(raw_root)
+        self.crypto_testing_campaigns[mode] = {
+            "raw_root": raw_root,
+            "source_manifest": source_manifest,
+            "target": self.crypto_testing_target(),
+            "raw_artifact_counts": raw_counts,
+            "retained_artifact_counts_by_property": {
+                prop: dict(counts) for prop, counts in sorted(property_counts.items())
+            },
+            "reported_groups": reported_groups,
+            "groups_with_reproducer": source_manifest.get("groups_with_reproducer", 0),
+            "groups_replayed": source_manifest.get("groups_replayed", 0),
+            "groups_missing_reproducer": groups_missing,
+            "validated_target_hangs": validated_target_hangs,
+            "tasks_terminal": bool(source_manifest.get("tasks_terminal")),
+        }
 
     def compact_crypto_testing(self) -> None:
+        roots = self.crypto_testing_roots()
+        if not roots:
+            raise ReplayValidationError(
+                f"cryptoTesting compaction requires mounted raw output under {self.run_root / 'raw'}"
+            )
+        for mode, raw_root in roots:
+            self.compact_crypto_testing_campaign(mode, raw_root)
         self.retain_tree_files(self.run_root / "reports")
         self.retain_tree_files(self.run_root / "logs")
-        self.copy_crypto_testing_artifacts()
         self.remove_path(self.build_root)
+
+    def crypto_testing_manifest_updates(self) -> dict[str, Any]:
+        return {
+            "cryptoTesting_campaigns": {
+                mode: {
+                    "raw_output_root": rel(info["raw_root"]),
+                    "target": info["target"],
+                    "raw_artifact_counts": dict(info["raw_artifact_counts"]),
+                    "retained_artifact_counts_by_property": info["retained_artifact_counts_by_property"],
+                    "retained_artifact_counts_by_target": {
+                        info["target"]: info["retained_artifact_counts_by_property"]
+                    },
+                    "reported_groups": info["reported_groups"],
+                    "groups_with_reproducer": info["groups_with_reproducer"],
+                    "groups_replayed": info["groups_replayed"],
+                    "groups_missing_reproducer": info["groups_missing_reproducer"],
+                    "validated_target_hangs": info["validated_target_hangs"],
+                    "tasks_terminal": info["tasks_terminal"],
+                }
+                for mode, info in sorted(self.crypto_testing_campaigns.items())
+            },
+        }
 
     def libfuzzer_artifact_counts_by_target(self) -> dict[str, dict[str, int]]:
         return {
@@ -1412,6 +1518,8 @@ class Compactor:
             manifest.update(self.libfuzzer_manifest_updates())
         elif self.baseline in {"cryptofuzz", "CLFuzz"}:
             manifest.update(self.single_style_manifest_updates())
+        elif self.baseline == "cryptoTesting":
+            manifest.update(self.crypto_testing_manifest_updates())
         self.update_summaries(manifest)
         self.retained_paths.add(rel(self.manifest_path))
         manifest["retained_paths"] = sorted(self.retained_paths)
@@ -1748,34 +1856,56 @@ class Compactor:
             f.write("\n")
         self.retain(path)
 
-    def create_crypto_testing_summary(self, manifest: dict[str, Any], updates: dict[str, Any]) -> None:
-        summary_path = self.run_root / "summary.json"
-        if summary_path.exists():
-            return
-        reports_dir = self.run_root / "reports"
-        logs_dir = self.run_root / "logs"
-        artifacts_dir = self.run_root / "artifacts" / self.crypto_testing_target()
-        data: dict[str, Any] = {
-            "baseline": "cryptoTesting",
-            "version": self.version,
-            "target": self.crypto_testing_target(),
-            "mode": "functional",
-            "reports": sorted(rel(path) for path in reports_dir.glob("*") if path.is_file())
-            if reports_dir.is_dir()
-            else [],
-            "logs": sorted(rel(path) for path in logs_dir.glob("*") if path.is_file())
-            if logs_dir.is_dir()
-            else [],
-            "artifacts": sorted(rel(path) for path in artifacts_dir.rglob("*") if path.is_file())
-            if artifacts_dir.is_dir()
-            else [],
-        }
-        data.update(updates)
-        summary_path.parent.mkdir(parents=True, exist_ok=True)
-        with summary_path.open("w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, sort_keys=True)
-            f.write("\n")
-        self.retain(summary_path)
+    def update_crypto_testing_summaries(self, manifest: dict[str, Any]) -> None:
+        """Write one isolated summary per workflow mode.
+
+        Functional cryptoTesting and the vanilla AFL baseline exercise
+        different properties.  Keeping their summaries under their respective
+        mounted raw roots makes a later aggregate unable to double-count one
+        mode as evidence for the other.
+        """
+
+        for mode, info in sorted(self.crypto_testing_campaigns.items()):
+            raw_root = info["raw_root"]
+            source = info["source_manifest"]
+            summary_path = raw_root / "summary.json"
+            data: dict[str, Any] = {
+                "baseline": "cryptoTesting",
+                "label": f"cryptoTesting-{mode}",
+                "version": self.version,
+                "target": self.crypto_testing_target(),
+                "mode": mode,
+                "status": "completed" if info["tasks_terminal"] else "timed-out-partial",
+                "raw_output_root": rel(raw_root),
+                "reports": source.get("report_files", []),
+                "task_states": source.get("task_states", {}),
+                "scheduled_tasks": source.get("scheduled_tasks", 0),
+                "worker_count": source.get("resource_allocation", {}).get("effective_workers"),
+                "requested_workers": source.get("resource_allocation", {}).get("requested_workers"),
+                "cpu_allocation": source.get("resource_allocation", {}).get("cpu_allocation"),
+                "schedule": source.get("schedule", {}),
+                "algorithm_list": source.get("algorithm_list", []),
+                "property_list": source.get("property_list", []),
+                "skipped_tasks": [
+                    task for task in source.get("schedule", {}).get("tasks", [])
+                    if isinstance(task, dict) and not task.get("enabled", True)
+                ] if isinstance(source.get("schedule"), dict) else [],
+                "retained_raw_artifact_counts": dict(info["raw_artifact_counts"]),
+                "retained_artifact_counts_by_property": info["retained_artifact_counts_by_property"],
+                "retained_artifact_counts_by_target": {
+                    info["target"]: info["retained_artifact_counts_by_property"]
+                },
+                "reported_groups": info["reported_groups"],
+                "groups_with_reproducer": info["groups_with_reproducer"],
+                "groups_replayed": info["groups_replayed"],
+                "groups_missing_reproducer": info["groups_missing_reproducer"],
+                "validated_target_hang_count": info["validated_target_hangs"],
+            }
+            data.update(self.compaction_common_updates(manifest))
+            with summary_path.open("w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, sort_keys=True)
+                f.write("\n")
+            self.retain(summary_path)
 
     def single_style_summary_updates(self, manifest: dict[str, Any], target: str | None) -> dict[str, Any]:
         updates = self.compaction_common_updates(manifest)
@@ -1849,9 +1979,10 @@ class Compactor:
         if self.baseline in {"cryptofuzz", "CLFuzz"}:
             self.update_single_style_summaries(manifest)
             return
-        updates = self.summary_updates(manifest)
         if self.baseline == "cryptoTesting":
-            self.create_crypto_testing_summary(manifest, updates)
+            self.update_crypto_testing_summaries(manifest)
+            return
+        updates = self.summary_updates(manifest)
         for summary in sorted(self.run_root.rglob("summary.json")):
             self.update_summary_file(summary, updates)
 

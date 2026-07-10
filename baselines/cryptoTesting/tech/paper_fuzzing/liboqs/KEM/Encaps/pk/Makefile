@@ -162,7 +162,8 @@ run_python: dirs all
 	if [ $$? -eq 137 ]; then \
 		mkdir -p $(FUZZOUTPUTS)/default/crashes; \
 		mkdir -p $(FUZZOUTPUTS)/default/hangs; \
-		touch $(FUZZOUTPUTS)/default/hangs/GenInput; \
+		mkdir -p $(FUZZOUTPUTS)/default/setup-timeout; \
+		printf '%s\n' '{"category":"setup-timeout","phase":"GenInput","command":"GenInput.out","timeout_seconds":$(GITIMEOUT),"elapsed_seconds":$(GITIMEOUT),"algorithm_index":$(DESIRED_ALG_TO_FUZZ),"exit_code":137,"cpu_allocation":"$(CRYPTO_TESTING_WORKERS)"}' > $(FUZZOUTPUTS)/default/setup-timeout/GenInput.json; \
 	else \
 		$(FUZZCMD) ; \
 	fi
@@ -186,7 +187,8 @@ run_c: dirs all
 	if [ $$? -eq 137 ]; then \
 		mkdir -p $(FUZZOUTPUTS)/default/crashes; \
 		mkdir -p $(FUZZOUTPUTS)/default/hangs; \
-		touch $(FUZZOUTPUTS)/default/hangs/GenInput; \
+		mkdir -p $(FUZZOUTPUTS)/default/setup-timeout; \
+		printf '%s\n' '{"category":"setup-timeout","phase":"GenInput","command":"GenInput.out","timeout_seconds":$(GITIMEOUT),"elapsed_seconds":$(GITIMEOUT),"algorithm_index":$(DESIRED_ALG_TO_FUZZ),"exit_code":137,"cpu_allocation":"$(CRYPTO_TESTING_WORKERS)"}' > $(FUZZOUTPUTS)/default/setup-timeout/GenInput.json; \
 	else \
 		$(FUZZCMD) ; \
 	fi

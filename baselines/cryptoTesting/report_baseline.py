@@ -5,16 +5,21 @@ from fuzz_liboqs_baseline import TESTPATHS
 import collections
 from report import XLSXReport, SQLiteReport
 import signal
+from pathlib import Path
 
 
-def main(mutator, liboqs, report_fn="crash_report"):
+def main(mutator, liboqs, report_fn="crash_report", output_root=None):
     xlsreport = XLSXReport()
     sqlreport = SQLiteReport()
     # texreport = TexReport()
 
     for testpath in TESTPATHS:
         no_entry_in_path = True
-        aggr_dir = os.path.join(testpath, f'aggr_{liboqs}_{mutator}')
+        property_path = os.path.join(*testpath.split("/")[-3:])
+        aggr_dir = (
+            os.path.join(output_root, "afl", property_path)
+            if output_root else os.path.join(testpath, f'aggr_{liboqs}_{mutator}')
+        )
         if not os.path.isdir(aggr_dir):
             print(f"{aggr_dir} doesn't exist, skipping")
             continue
@@ -126,6 +131,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--liboqs', type=str, default="cur_liboqs")
     parser.add_argument('--mutator', type=str, default="python")
+    parser.add_argument('--output-root', type=Path, default=None)
+    parser.add_argument('--report-dir', type=Path, default=Path("reports"))
 
     args = parser.parse_args()
     mutator = args.mutator
@@ -133,4 +140,10 @@ if __name__ == "__main__":
 
     # print (args)
 
-    main(mutator, liboqs, report_fn=f"reports/crash_report_{liboqs}_vanilla")
+    args.report_dir.mkdir(parents=True, exist_ok=True)
+    main(
+        mutator,
+        liboqs,
+        report_fn=str(args.report_dir / f"crash_report_{liboqs}_vanilla"),
+        output_root=str(args.output_root) if args.output_root else None,
+    )
