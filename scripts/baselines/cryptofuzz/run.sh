@@ -162,6 +162,7 @@ fi
 mkdir -p "$BUILD_DIR" "$RUN_DIR"
 
 IMAGE_NAME="pqcdf-baseline-cryptofuzz"
+WRAPPER_ROOT="${PQCDF_BASELINE_WRAPPER_ROOT:-scripts/baselines}"
 
 if [ "${PQCDF_CRYPTOFUZZ_IN_DOCKER:-0}" != "1" ]; then
   if ! command -v docker >/dev/null 2>&1; then
@@ -181,7 +182,7 @@ if [ "${PQCDF_CRYPTOFUZZ_IN_DOCKER:-0}" != "1" ]; then
   HOST_UID="$(id -u)"
   HOST_GID="$(id -g)"
   FORWARDED_ARGS=(
-    scripts/baselines/cryptofuzz/run.sh
+    "${WRAPPER_ROOT}/cryptofuzz/run.sh"
     "$BASELINE_DIR"
     "$BUILD_DIR"
     "$RUN_DIR"

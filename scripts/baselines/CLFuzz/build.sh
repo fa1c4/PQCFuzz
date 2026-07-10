@@ -62,6 +62,7 @@ esac
 mkdir -p "$BUILD_DIR" "$RUN_DIR"
 
 IMAGE_NAME="pqcdf-baseline-clfuzz"
+WRAPPER_ROOT="${PQCDF_BASELINE_WRAPPER_ROOT:-scripts/baselines}"
 
 if [ "${PQCDF_CLFUZZ_IN_DOCKER:-0}" != "1" ]; then
   if ! command -v docker >/dev/null 2>&1; then
@@ -90,7 +91,7 @@ if [ "${PQCDF_CLFUZZ_IN_DOCKER:-0}" != "1" ]; then
     -w /workspace/PQC-DF \
     "$IMAGE_NAME" \
     bash -lc 'trap "chown -R ${HOST_UID}:${HOST_GID} \"${PQCDF_CHOWN_BUILD_DIR}\" \"${PQCDF_CHOWN_RUN_DIR}\" 2>/dev/null || true" EXIT; "$@"' \
-    bash scripts/baselines/CLFuzz/build.sh "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" --version "$VERSION" "${MAKE_ARGS[@]}"
+    bash "${WRAPPER_ROOT}/CLFuzz/build.sh" "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" --version "$VERSION" "${MAKE_ARGS[@]}"
   exit $?
 fi
 

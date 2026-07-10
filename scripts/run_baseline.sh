@@ -73,6 +73,7 @@ WORKSPACE_ROOT="${WORKSPACE_ROOT%/}"
 if [ -z "$WORKSPACE_ROOT" ]; then
   WORKSPACE_ROOT="."
 fi
+BASELINE_WRAPPER_ROOT="${PQCDF_BASELINE_WRAPPER_ROOT:-scripts/baselines}"
 
 BUILD_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-build"
 RUN_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-run"
@@ -81,19 +82,19 @@ mkdir -p "$BUILD_DIR" "$RUN_DIR"
 
 case "$COMMAND" in
   build)
-    if [ -x "scripts/baselines/${BASELINE}/build.sh" ]; then
-      "scripts/baselines/${BASELINE}/build.sh" "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" "$@"
+    if [ -x "${BASELINE_WRAPPER_ROOT}/${BASELINE}/build.sh" ]; then
+      "${BASELINE_WRAPPER_ROOT}/${BASELINE}/build.sh" "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" "$@"
     else
-      echo "Missing build wrapper: scripts/baselines/${BASELINE}/build.sh" >&2
+      echo "Missing build wrapper: ${BASELINE_WRAPPER_ROOT}/${BASELINE}/build.sh" >&2
       exit 1
     fi
     ;;
 
   run)
-    if [ -x "scripts/baselines/${BASELINE}/run.sh" ]; then
-      "scripts/baselines/${BASELINE}/run.sh" "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" "$@"
+    if [ -x "${BASELINE_WRAPPER_ROOT}/${BASELINE}/run.sh" ]; then
+      "${BASELINE_WRAPPER_ROOT}/${BASELINE}/run.sh" "$BASELINE_DIR" "$BUILD_DIR" "$RUN_DIR" "$@"
     else
-      echo "Missing run wrapper: scripts/baselines/${BASELINE}/run.sh" >&2
+      echo "Missing run wrapper: ${BASELINE_WRAPPER_ROOT}/${BASELINE}/run.sh" >&2
       exit 1
     fi
     ;;

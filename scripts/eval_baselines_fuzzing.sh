@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [ -z "${PQCDF_EVAL_BASELINES_SNAPSHOT_ACTIVE:-}" ]; then
+  ORIGINAL_SCRIPT="${BASH_SOURCE[0]}"
+  ORIGINAL_ROOT="${PQCDF_ROOT_DIR:-$(cd "$(dirname "$ORIGINAL_SCRIPT")/.." && pwd)}"
+  SNAPSHOT_PARENT="${TMPDIR:-/tmp}/pqcdf-eval-baselines-${USER:-user}-$$"
+  SNAPSHOT_SCRIPT="${SNAPSHOT_PARENT}/eval_baselines_fuzzing.sh"
+  mkdir -p "$SNAPSHOT_PARENT"
+  cp "$ORIGINAL_SCRIPT" "$SNAPSHOT_SCRIPT"
+  chmod +x "$SNAPSHOT_SCRIPT"
+  export PQCDF_EVAL_BASELINES_SNAPSHOT_ACTIVE=1
+  export PQCDF_EVAL_BASELINES_SNAPSHOT_FILE="$SNAPSHOT_SCRIPT"
+  export PQCDF_ROOT_DIR="$ORIGINAL_ROOT"
+  exec bash "$SNAPSHOT_SCRIPT" "$@"
+fi
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -13,6 +27,8 @@ Options:
   --session-prefix NAME         Prefix for tmux session names. Default: pqcdf.
   --result-save-mode compact|all
                                 Result retention policy. Default: compact.
+  --campaign BASELINE-VERSION   Run only one campaign. May be repeated.
+                                Example: --campaign libFuzzer-0.14.0
   --dry-run                     Print the sessions and commands without starting tmux.
   -h, --help                    Show this help.
 
@@ -110,6 +126,153 @@ print_campaign_commands() {
   fi
 }
 
+hash_file() {
+  python3 - "$1" <<'PY'
+import hashlib
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+h = hashlib.sha256()
+with path.open("rb") as f:
+    for chunk in iter(lambda: f.read(1024 * 1024), b""):
+        h.update(chunk)
+print(h.hexdigest())
+PY
+}
+
+write_parent_status() {
+  local status_file="$1"
+  local campaign="$2"
+  local baseline="$3"
+  local version="$4"
+  local session_name="$5"
+  local workspace_root_rel="$6"
+  local workspace_root_abs="$7"
+  local log_file="$8"
+  local launcher_file="$9"
+  local phase="${10}"
+  local state="${11}"
+  local result="${12}"
+  local final_status="${13}"
+
+  EVAL_STATUS_FILE="$status_file" \
+  EVAL_CAMPAIGN="$campaign" \
+  EVAL_BASELINE="$baseline" \
+  EVAL_VERSION="$version" \
+  EVAL_SESSION_NAME="$session_name" \
+  EVAL_WORKSPACE_ROOT="$workspace_root_rel" \
+  EVAL_WORKSPACE_ROOT_ABS="$workspace_root_abs" \
+  EVAL_LOG_FILE="$log_file" \
+  EVAL_LAUNCHER_FILE="$launcher_file" \
+  EVAL_PHASE="$phase" \
+  EVAL_STATE="$state" \
+  EVAL_RESULT="$result" \
+  EVAL_FINAL_STATUS="$final_status" \
+  EVAL_REPO_COMMIT="$REPO_COMMIT" \
+  EVAL_SCRIPT_SNAPSHOT="$RUNNER_SNAPSHOT_DIR_REL" \
+  EVAL_SCRIPT_SNAPSHOT_HASH="$RUNNER_SNAPSHOT_HASH" \
+  EVAL_RESULT_SAVE_MODE="$RESULT_SAVE_MODE" \
+  python3 - <<'PY'
+import json
+import os
+import tempfile
+import time
+from datetime import datetime, timezone
+
+def int_or_none(value):
+    if value == "":
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+path = os.environ["EVAL_STATUS_FILE"]
+os.makedirs(os.path.dirname(path), exist_ok=True)
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+now_epoch = int(time.time())
+
+doc = {}
+if os.path.exists(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            doc = json.load(f)
+    except json.JSONDecodeError:
+        doc = {}
+
+if "queued_at" not in doc:
+    doc["queued_at"] = now
+if "start_epoch" not in doc:
+    doc["start_epoch"] = now_epoch
+
+doc.update({
+    "campaign": os.environ["EVAL_CAMPAIGN"],
+    "baseline": os.environ["EVAL_BASELINE"],
+    "version": os.environ["EVAL_VERSION"],
+    "session_name": os.environ["EVAL_SESSION_NAME"],
+    "workspace_root": os.environ["EVAL_WORKSPACE_ROOT"],
+    "workspace_root_abs": os.environ["EVAL_WORKSPACE_ROOT_ABS"],
+    "log": os.environ["EVAL_LOG_FILE"],
+    "launcher": os.environ["EVAL_LAUNCHER_FILE"],
+    "phase": os.environ["EVAL_PHASE"],
+    "state": os.environ["EVAL_STATE"],
+    "updated_at": now,
+    "repo_commit": os.environ["EVAL_REPO_COMMIT"],
+    "script_snapshot": os.environ["EVAL_SCRIPT_SNAPSHOT"],
+    "script_snapshot_hash": os.environ["EVAL_SCRIPT_SNAPSHOT_HASH"],
+    "result": os.environ["EVAL_RESULT"] or None,
+    "final_status": int_or_none(os.environ["EVAL_FINAL_STATUS"]),
+    "result_save_mode": os.environ["EVAL_RESULT_SAVE_MODE"],
+})
+
+if os.environ["EVAL_STATE"] == "finished" and "ended_at" not in doc:
+    doc["ended_at"] = now
+if doc.get("start_epoch") is not None:
+    doc["elapsed_seconds"] = now_epoch - int(doc["start_epoch"])
+
+fd, tmp = tempfile.mkstemp(prefix=".status.", dir=os.path.dirname(path))
+with os.fdopen(fd, "w", encoding="utf-8") as f:
+    json.dump(doc, f, indent=2, sort_keys=True)
+    f.write("\n")
+os.replace(tmp, path)
+PY
+}
+
+create_runner_snapshot() {
+  RUNNER_SNAPSHOT_DIR_REL="${EVAL_ROOT_REL}/script_snapshot"
+  RUNNER_SNAPSHOT_DIR="${ROOT_DIR}/${RUNNER_SNAPSHOT_DIR_REL}"
+  RUNNER_SNAPSHOT_SCRIPTS_DIR="${RUNNER_SNAPSHOT_DIR}/scripts"
+  RUNNER_SNAPSHOT_BASELINES_DIR="${RUNNER_SNAPSHOT_SCRIPTS_DIR}/baselines"
+  RUNNER_SNAPSHOT_RUN_BASELINE="${RUNNER_SNAPSHOT_SCRIPTS_DIR}/run_baseline.sh"
+  RUNNER_SNAPSHOT_COMPACTOR="${RUNNER_SNAPSHOT_SCRIPTS_DIR}/compact_baseline_results.py"
+  RUNNER_SNAPSHOT_EVAL="${RUNNER_SNAPSHOT_SCRIPTS_DIR}/eval_baselines_fuzzing.sh"
+  RUNNER_SNAPSHOT_BASELINES_DIR_REL="${RUNNER_SNAPSHOT_DIR_REL}/scripts/baselines"
+  RUNNER_SNAPSHOT_RUN_BASELINE_REL="${RUNNER_SNAPSHOT_DIR_REL}/scripts/run_baseline.sh"
+  RUNNER_SNAPSHOT_COMPACTOR_REL="${RUNNER_SNAPSHOT_DIR_REL}/scripts/compact_baseline_results.py"
+
+  mkdir -p "$RUNNER_SNAPSHOT_BASELINES_DIR"
+  cp -p "${PQCDF_EVAL_BASELINES_SNAPSHOT_FILE:-${ROOT_DIR}/scripts/eval_baselines_fuzzing.sh}" "$RUNNER_SNAPSHOT_EVAL"
+  cp -p "${ROOT_DIR}/scripts/run_baseline.sh" "$RUNNER_SNAPSHOT_RUN_BASELINE"
+  if [ -f "${ROOT_DIR}/scripts/compact_baseline_results.py" ]; then
+    cp -p "${ROOT_DIR}/scripts/compact_baseline_results.py" "$RUNNER_SNAPSHOT_COMPACTOR"
+  fi
+
+  local baseline wrapper
+  for baseline in "${BASELINES[@]}"; do
+    mkdir -p "${RUNNER_SNAPSHOT_BASELINES_DIR}/${baseline}"
+    for wrapper in build run; do
+      if [ -f "${ROOT_DIR}/scripts/baselines/${baseline}/${wrapper}.sh" ]; then
+        cp -p "${ROOT_DIR}/scripts/baselines/${baseline}/${wrapper}.sh" \
+          "${RUNNER_SNAPSHOT_BASELINES_DIR}/${baseline}/${wrapper}.sh"
+      fi
+    done
+  done
+
+  find "$RUNNER_SNAPSHOT_SCRIPTS_DIR" -type f -name '*.sh' -exec chmod +x {} +
+  RUNNER_SNAPSHOT_HASH="$(hash_file "$RUNNER_SNAPSHOT_EVAL")"
+}
+
 write_launcher() {
   local launcher_file="$1"
   local baseline="$2"
@@ -124,6 +287,12 @@ write_launcher() {
   local kem_seconds="${11}"
   local sig_seconds="${12}"
   local result_save_mode="${13}"
+  local run_baseline_script="${14}"
+  local compactor_script="${15}"
+  local baseline_wrapper_root="${16}"
+  local script_snapshot_dir="${17}"
+  local script_snapshot_hash="${18}"
+  local repo_commit="${19}"
 
   {
     printf '#!/usr/bin/env bash\n'
@@ -140,7 +309,14 @@ write_launcher() {
     printf 'FUZZING_SECONDS=%q\n' "$seconds"
     printf 'KEM_SECONDS=%q\n' "$kem_seconds"
     printf 'SIG_SECONDS=%q\n' "$sig_seconds"
-    printf 'RESULT_SAVE_MODE=%q\n\n' "$result_save_mode"
+    printf 'RESULT_SAVE_MODE=%q\n' "$result_save_mode"
+    printf 'RUN_BASELINE_SCRIPT=%q\n' "$run_baseline_script"
+    printf 'COMPACTOR_SCRIPT=%q\n' "$compactor_script"
+    printf 'BASELINE_WRAPPER_ROOT=%q\n' "$baseline_wrapper_root"
+    printf 'SCRIPT_SNAPSHOT_DIR=%q\n' "$script_snapshot_dir"
+    printf 'SCRIPT_SNAPSHOT_HASH=%q\n' "$script_snapshot_hash"
+    printf 'REPO_COMMIT=%q\n' "$repo_commit"
+    printf 'LAUNCHER_FILE=%q\n\n' "$launcher_file"
     cat <<'EOF'
 mkdir -p "$(dirname "$LOG_FILE")" "$(dirname "$STATUS_FILE")" "$WORKSPACE_ROOT_REL"
 : > "$LOG_FILE"
@@ -159,6 +335,7 @@ COMPACTION_ELIGIBLE=0
 FINAL_STATUS=""
 RESULT=""
 ENDED_AT=""
+FINISHED=0
 
 write_status() {
   local phase="$1"
@@ -172,6 +349,7 @@ write_status() {
   EVAL_WORKSPACE_ROOT="$WORKSPACE_ROOT_REL" \
   EVAL_WORKSPACE_ROOT_ABS="$WORKSPACE_ROOT_ABS" \
   EVAL_LOG_FILE="$LOG_FILE" \
+  EVAL_LAUNCHER_FILE="$LAUNCHER_FILE" \
   EVAL_PHASE="$phase" \
   EVAL_STATE="$state" \
   EVAL_STARTED_AT="$STARTED_AT" \
@@ -187,6 +365,9 @@ write_status() {
   EVAL_FINAL_STATUS="$FINAL_STATUS" \
   EVAL_RESULT="$RESULT" \
   EVAL_RESULT_SAVE_MODE="$RESULT_SAVE_MODE" \
+  EVAL_REPO_COMMIT="$REPO_COMMIT" \
+  EVAL_SCRIPT_SNAPSHOT="$SCRIPT_SNAPSHOT_DIR" \
+  EVAL_SCRIPT_SNAPSHOT_HASH="$SCRIPT_SNAPSHOT_HASH" \
   python3 - <<'PY'
 import json
 import os
@@ -223,9 +404,11 @@ doc.update({
     "workspace_root": os.environ["EVAL_WORKSPACE_ROOT"],
     "workspace_root_abs": os.environ["EVAL_WORKSPACE_ROOT_ABS"],
     "log": os.environ["EVAL_LOG_FILE"],
+    "launcher": os.environ["EVAL_LAUNCHER_FILE"],
     "phase": os.environ["EVAL_PHASE"],
     "state": os.environ["EVAL_STATE"],
     "started_at": os.environ["EVAL_STARTED_AT"],
+    "start_epoch": start_epoch,
     "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "elapsed_seconds": now - start_epoch,
     "docker_build_status": int_or_none(os.environ["EVAL_DOCKER_BUILD_STATUS"]),
@@ -238,6 +421,9 @@ doc.update({
     "final_status": int_or_none(os.environ["EVAL_FINAL_STATUS"]),
     "result": os.environ["EVAL_RESULT"] or None,
     "result_save_mode": os.environ["EVAL_RESULT_SAVE_MODE"],
+    "repo_commit": os.environ["EVAL_REPO_COMMIT"],
+    "script_snapshot": os.environ["EVAL_SCRIPT_SNAPSHOT"],
+    "script_snapshot_hash": os.environ["EVAL_SCRIPT_SNAPSHOT_HASH"],
 })
 if os.environ["EVAL_ENDED_AT"]:
     doc["ended_at"] = os.environ["EVAL_ENDED_AT"]
@@ -250,6 +436,20 @@ os.replace(tmp, path)
 PY
 }
 
+unexpected_exit() {
+  local status="$?"
+  if [ "$FINISHED" != "1" ]; then
+    if [ "$status" -eq 0 ]; then
+      status=1
+    fi
+    RESULT="launcher-exited-unexpectedly"
+    FINAL_STATUS="$status"
+    ENDED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    write_status "finished" "finished" || true
+  fi
+}
+trap unexpected_exit EXIT
+
 finish_campaign() {
   RESULT="$1"
   FINAL_STATUS="$2"
@@ -258,14 +458,14 @@ finish_campaign() {
     COMPACTION_MANIFEST="${WORKSPACE_ROOT_REL}/${BASELINE}/compaction_manifest.json"
     if [ "$COMPACTION_ELIGIBLE" = "1" ]; then
       write_status "compact-results" "running"
-      run_step python3 scripts/compact_baseline_results.py \
+      run_step python3 "$COMPACTOR_SCRIPT" \
         --workspace-root "$WORKSPACE_ROOT_REL" \
         --baseline "$BASELINE" \
         --version "$VERSION" \
         --mode compact
     else
       write_status "compact-results" "skipped"
-      run_step python3 scripts/compact_baseline_results.py \
+      run_step python3 "$COMPACTOR_SCRIPT" \
         --workspace-root "$WORKSPACE_ROOT_REL" \
         --baseline "$BASELINE" \
         --version "$VERSION" \
@@ -287,6 +487,7 @@ finish_campaign() {
   echo "[eval] elapsed: $(( $(date +%s) - START_EPOCH ))s"
   echo "[eval] result: $RESULT"
   echo "[eval] final status: $FINAL_STATUS"
+  FINISHED=1
   exit "$FINAL_STATUS"
 }
 
@@ -297,6 +498,7 @@ run_step() {
 }
 
 export PQCDF_WORKSPACE_ROOT="$WORKSPACE_ROOT_REL"
+export PQCDF_BASELINE_WRAPPER_ROOT="$BASELINE_WRAPPER_ROOT"
 
 echo "[eval] session: $SESSION_NAME"
 echo "[eval] campaign: $CAMPAIGN"
@@ -309,9 +511,10 @@ echo "[eval] started: $STARTED_AT"
 echo "[eval] log: $LOG_FILE"
 echo "[eval] status: $STATUS_FILE"
 echo
+write_status "launcher-started" "running"
 
 write_status "docker-build" "running"
-run_step scripts/run_baseline.sh "$BASELINE" docker-build
+run_step "$RUN_BASELINE_SCRIPT" "$BASELINE" docker-build
 DOCKER_BUILD_STATUS="$?"
 echo "[eval] docker-build exited with status $DOCKER_BUILD_STATUS"
 if [ "$DOCKER_BUILD_STATUS" -ne 0 ]; then
@@ -321,7 +524,7 @@ fi
 case "$BASELINE" in
   libFuzzer|cryptofuzz|CLFuzz)
     write_status "target-build" "running"
-    run_step scripts/run_baseline.sh "$BASELINE" build --version "$VERSION"
+    run_step "$RUN_BASELINE_SCRIPT" "$BASELINE" build --version "$VERSION"
     TARGET_BUILD_STATUS="$?"
     echo "[eval] target-build exited with status $TARGET_BUILD_STATUS"
     if [ "$TARGET_BUILD_STATUS" -ne 0 ]; then
@@ -340,13 +543,13 @@ case "$BASELINE" in
   libFuzzer)
     COMPACTION_ELIGIBLE=1
     write_status "run-kem" "running"
-    run_step scripts/run_baseline.sh libFuzzer run --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS"
     KEM_STATUS="$?"
     echo "[eval] libFuzzer kem exited with status $KEM_STATUS"
     echo
 
     write_status "run-sig" "running"
-    run_step scripts/run_baseline.sh libFuzzer run --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS"
     SIG_STATUS="$?"
     echo "[eval] libFuzzer sig exited with status $SIG_STATUS"
 
@@ -360,22 +563,22 @@ case "$BASELINE" in
   cryptofuzz)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    run_step scripts/run_baseline.sh cryptofuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" cryptofuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
     FUZZ_STATUS="$?"
     ;;
 
   CLFuzz)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    run_step scripts/run_baseline.sh CLFuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" CLFuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
     FUZZ_STATUS="$?"
     ;;
 
   cryptoTesting)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    echo "[eval] command: timeout ${FUZZING_SECONDS}s scripts/run_baseline.sh cryptoTesting run --version $VERSION --skip-core-pattern-check"
-    timeout "${FUZZING_SECONDS}s" scripts/run_baseline.sh cryptoTesting run --version "$VERSION" --skip-core-pattern-check
+    echo "[eval] command: timeout ${FUZZING_SECONDS}s $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --skip-core-pattern-check"
+    timeout "${FUZZING_SECONDS}s" "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --skip-core-pattern-check
     FUZZ_STATUS="$?"
     if [ "$FUZZ_STATUS" -eq 124 ]; then
       echo "[eval] cryptoTesting reached the configured fuzzing-time limit"
@@ -444,12 +647,16 @@ print_progress() {
       tmux_state="dead"
     fi
 
-    if [ "$state" = "pending" ] && [ "$tmux_state" = "alive" ]; then
+    if { [ "$state" = "pending" ] || [ "$state" = "queued" ]; } && [ "$tmux_state" = "alive" ]; then
       phase="starting"
       state="running"
       elapsed=0
     elif [ "$state" != "finished" ] && [ "$tmux_state" = "dead" ]; then
-      state="exited-no-status"
+      if [ "$result" != "-" ]; then
+        state="$result"
+      else
+        state="launcher-exited-no-status"
+      fi
     elif [ "$state" = "finished" ]; then
       state="$result"
     fi
@@ -489,7 +696,7 @@ def rel(path):
         return str(path)
 
 def artifact_counts(run_root):
-    counts = {"crash": 0, "timeout": 0, "leak": 0, "oom": 0}
+    counts = {"crash": 0, "timeout": 0, "leak": 0, "oom": 0, "hang": 0}
     if not run_root.is_dir():
         return counts
     for path in run_root.rglob("*"):
@@ -500,6 +707,12 @@ def artifact_counts(run_root):
             if name.startswith(prefix + "-"):
                 counts[prefix] += 1
                 break
+        else:
+            parts = set(path.parts)
+            if "artifacts" in parts and "crashes" in parts and name != "README.txt":
+                counts["crash"] += 1
+            elif "artifacts" in parts and "hangs" in parts and name != "README.txt":
+                counts["hang"] += 1
     return counts
 
 campaigns = []
@@ -544,8 +757,15 @@ for campaign in campaigns:
     )
 
     final_status = status.get("final_status")
-    result = status.get("result") or "missing-status"
-    aggregate_status = 1 if final_status is None else int(final_status)
+    if not status:
+        result = "missing-status"
+        aggregate_status = 1
+    elif final_status is None:
+        result = status.get("result") or "launcher-exited-no-status"
+        aggregate_status = 1
+    else:
+        result = status.get("result") or "unknown"
+        aggregate_status = int(final_status)
 
     missing_expected_summary = False
     if baseline != "cryptoTesting" and aggregate_status == 0 and not baseline_summaries:
@@ -574,7 +794,10 @@ for campaign in campaigns:
         "aggregate_status": aggregate_status,
         "result": result,
         "log": campaign["log_file"],
+        "launcher": campaign.get("launcher_file"),
         "status_file": campaign["status_file"],
+        "script_snapshot": campaign.get("script_snapshot") or status.get("script_snapshot"),
+        "script_snapshot_hash": campaign.get("script_snapshot_hash") or status.get("script_snapshot_hash"),
         "baseline_summaries": baseline_summaries,
         "missing_expected_summary": missing_expected_summary,
         "crash_count": counts["crash"],
@@ -591,7 +814,7 @@ for campaign in campaigns:
         "build_retained": manifest.get("build_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "corpus_retained": manifest.get("corpus_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "retained_artifact_counts": retained_counts,
-        "hang_count": retained_counts.get("hang", 0),
+        "hang_count": max(counts["hang"], retained_counts.get("hang", 0)),
     }
     rows.append(row)
 
@@ -625,10 +848,13 @@ columns = [
     "leak_count",
     "oom_count",
     "log",
+    "launcher",
     "result_save_mode",
     "compacted",
     "compaction_status",
     "compaction_manifest",
+    "script_snapshot",
+    "script_snapshot_hash",
     "removed_bytes_estimate",
     "build_retained",
     "corpus_retained",
@@ -672,12 +898,13 @@ archive_existing_eval_root() {
   echo "[eval] archived previous results: $EVAL_ROOT -> $archive_root"
 }
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="${PQCDF_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 FUZZING_TIME="24h"
 PROGRESS_INTERVAL="3600"
 SESSION_PREFIX="pqcdf"
 RESULT_SAVE_MODE="compact"
 DRY_RUN=0
+declare -a REQUESTED_CAMPAIGNS=()
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -725,6 +952,17 @@ while [ "$#" -gt 0 ]; do
       RESULT_SAVE_MODE="${1#--result-save-mode=}"
       shift
       ;;
+    --campaign)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --campaign"
+      fi
+      REQUESTED_CAMPAIGNS+=("$2")
+      shift 2
+      ;;
+    --campaign=*)
+      REQUESTED_CAMPAIGNS+=("${1#--campaign=}")
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -760,6 +998,21 @@ fi
 BASELINES=(libFuzzer cryptofuzz CLFuzz cryptoTesting)
 VERSIONS=(0.14.0 0.8.0 0.4.0)
 
+declare -A VALID_CAMPAIGN_BY_ID
+for baseline in "${BASELINES[@]}"; do
+  for version in "${VERSIONS[@]}"; do
+    VALID_CAMPAIGN_BY_ID["${baseline}-${version}"]=1
+  done
+done
+
+declare -A REQUESTED_CAMPAIGN_BY_ID
+for campaign in "${REQUESTED_CAMPAIGNS[@]}"; do
+  if [ -z "${VALID_CAMPAIGN_BY_ID[$campaign]+x}" ]; then
+    die "unknown campaign '$campaign' (expected BASELINE-VERSION, e.g. libFuzzer-0.14.0)"
+  fi
+  REQUESTED_CAMPAIGN_BY_ID["$campaign"]=1
+done
+
 EVAL_ROOT_REL="workspace/baselines_eval"
 EVAL_ROOT="${ROOT_DIR}/${EVAL_ROOT_REL}"
 CAMPAIGN_ROOT="${EVAL_ROOT}/campaigns"
@@ -783,6 +1036,9 @@ declare -A STATUS_FILE_BY_ID
 for baseline in "${BASELINES[@]}"; do
   for version in "${VERSIONS[@]}"; do
     campaign="${baseline}-${version}"
+    if [ "${#REQUESTED_CAMPAIGNS[@]}" -gt 0 ] && [ -z "${REQUESTED_CAMPAIGN_BY_ID[$campaign]+x}" ]; then
+      continue
+    fi
     safe_version="${version//./_}"
     session_name="${SESSION_PREFIX}-${baseline}-${safe_version}"
     workspace_root_rel="${EVAL_ROOT_REL}/campaigns/${campaign}/workspace"
@@ -803,12 +1059,21 @@ for baseline in "${BASELINES[@]}"; do
   done
 done
 
+if [ "${#CAMPAIGN_IDS[@]}" -eq 0 ]; then
+  die "no campaigns selected"
+fi
+
 echo "[eval] repository: $ROOT_DIR"
 echo "[eval] output root: $EVAL_ROOT"
 echo "[eval] fuzzing time: ${FUZZING_SECONDS}s"
 echo "[eval] progress interval: ${PROGRESS_INTERVAL}s"
 echo "[eval] session prefix: $SESSION_PREFIX"
 echo "[eval] result save mode: $RESULT_SAVE_MODE"
+if [ "${#REQUESTED_CAMPAIGNS[@]}" -gt 0 ]; then
+  echo "[eval] selected campaigns: ${REQUESTED_CAMPAIGNS[*]}"
+else
+  echo "[eval] selected campaigns: all"
+fi
 echo "[eval] dry run: $DRY_RUN"
 echo
 
@@ -853,11 +1118,13 @@ fi
 
 archive_existing_eval_root
 mkdir -p "$CAMPAIGN_ROOT" "$LOG_DIR" "$LAUNCHER_DIR" "$STATUS_DIR"
+REPO_COMMIT="$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
+create_runner_snapshot
 
 {
-  printf 'campaign\tbaseline\tversion\tsession_name\tworkspace_root\tworkspace_root_abs\tlog_file\tstatus_file\tresult_save_mode\n'
+  printf 'campaign\tbaseline\tversion\tsession_name\tworkspace_root\tworkspace_root_abs\tlog_file\tlauncher_file\tstatus_file\tresult_save_mode\tscript_snapshot\tscript_snapshot_hash\n'
   for campaign in "${CAMPAIGN_IDS[@]}"; do
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
       "$campaign" \
       "${BASELINE_BY_ID[$campaign]}" \
       "${VERSION_BY_ID[$campaign]}" \
@@ -865,8 +1132,11 @@ mkdir -p "$CAMPAIGN_ROOT" "$LOG_DIR" "$LAUNCHER_DIR" "$STATUS_DIR"
       "${WORKSPACE_REL_BY_ID[$campaign]}" \
       "${WORKSPACE_ABS_BY_ID[$campaign]}" \
       "${LOG_FILE_BY_ID[$campaign]}" \
+      "${LAUNCHER_FILE_BY_ID[$campaign]}" \
       "${STATUS_FILE_BY_ID[$campaign]}" \
-      "$RESULT_SAVE_MODE"
+      "$RESULT_SAVE_MODE" \
+      "$RUNNER_SNAPSHOT_DIR_REL" \
+      "$RUNNER_SNAPSHOT_HASH"
   done
 } > "$INDEX_FILE"
 
@@ -885,7 +1155,48 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
     "$FUZZING_SECONDS" \
     "$KEM_SECONDS" \
     "$SIG_SECONDS" \
-    "$RESULT_SAVE_MODE"
+    "$RESULT_SAVE_MODE" \
+    "$RUNNER_SNAPSHOT_RUN_BASELINE_REL" \
+    "$RUNNER_SNAPSHOT_COMPACTOR_REL" \
+    "$RUNNER_SNAPSHOT_BASELINES_DIR_REL" \
+    "$RUNNER_SNAPSHOT_DIR_REL" \
+    "$RUNNER_SNAPSHOT_HASH" \
+    "$REPO_COMMIT"
+
+  write_parent_status \
+    "${STATUS_FILE_BY_ID[$campaign]}" \
+    "$campaign" \
+    "${BASELINE_BY_ID[$campaign]}" \
+    "${VERSION_BY_ID[$campaign]}" \
+    "${SESSION_BY_ID[$campaign]}" \
+    "${WORKSPACE_REL_BY_ID[$campaign]}" \
+    "${WORKSPACE_ABS_BY_ID[$campaign]}" \
+    "${LOG_FILE_BY_ID[$campaign]}" \
+    "${LAUNCHER_FILE_BY_ID[$campaign]}" \
+    "queued" \
+    "queued" \
+    "" \
+    ""
+
+  if ! bash -n "${LAUNCHER_FILE_BY_ID[$campaign]}"; then
+    echo "[eval] generated launcher failed syntax check: ${LAUNCHER_FILE_BY_ID[$campaign]}" >&2
+    write_parent_status \
+      "${STATUS_FILE_BY_ID[$campaign]}" \
+      "$campaign" \
+      "${BASELINE_BY_ID[$campaign]}" \
+      "${VERSION_BY_ID[$campaign]}" \
+      "${SESSION_BY_ID[$campaign]}" \
+      "${WORKSPACE_REL_BY_ID[$campaign]}" \
+      "${WORKSPACE_ABS_BY_ID[$campaign]}" \
+      "${LOG_FILE_BY_ID[$campaign]}" \
+      "${LAUNCHER_FILE_BY_ID[$campaign]}" \
+      "finished" \
+      "finished" \
+      "launch-failed" \
+      "1"
+    START_FAILURE=1
+    continue
+  fi
 
   if tmux new-session -d -s "${SESSION_BY_ID[$campaign]}" -c "$ROOT_DIR" "${LAUNCHER_FILE_BY_ID[$campaign]}"; then
     echo "[eval] started: ${SESSION_BY_ID[$campaign]}"
@@ -894,6 +1205,20 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
     echo
   else
     echo "[eval] failed to start tmux session: ${SESSION_BY_ID[$campaign]}" >&2
+    write_parent_status \
+      "${STATUS_FILE_BY_ID[$campaign]}" \
+      "$campaign" \
+      "${BASELINE_BY_ID[$campaign]}" \
+      "${VERSION_BY_ID[$campaign]}" \
+      "${SESSION_BY_ID[$campaign]}" \
+      "${WORKSPACE_REL_BY_ID[$campaign]}" \
+      "${WORKSPACE_ABS_BY_ID[$campaign]}" \
+      "${LOG_FILE_BY_ID[$campaign]}" \
+      "${LAUNCHER_FILE_BY_ID[$campaign]}" \
+      "finished" \
+      "finished" \
+      "launch-failed" \
+      "1"
     START_FAILURE=1
   fi
 done
