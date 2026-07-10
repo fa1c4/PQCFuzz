@@ -17,6 +17,10 @@ struct RngTape {
 pqcfuzz_status pqcfuzz_rng_push_tape(const RngTape &tape);
 void pqcfuzz_rng_pop_tape();
 bool pqcfuzz_rng_is_active();
+// Number of bytes read from the innermost active tape.  This is intentionally
+// observable so an RNG metamorphic oracle can prove that its intervention
+// reached the adapter without exposing the tape itself.
+size_t pqcfuzz_rng_bytes_consumed();
 void pqcfuzz_install_liboqs_rng_hook();
 
 class ScopedRngOverride {
@@ -24,6 +28,7 @@ class ScopedRngOverride {
   explicit ScopedRngOverride(const RngTape &tape);
   ~ScopedRngOverride();
   bool active() const;
+  size_t bytes_consumed() const;
 
  private:
   bool active_ = false;

@@ -48,10 +48,12 @@ MutationRecord ApplyRegionMutation(
     const std::string &fallback_target,
     std::vector<uint8_t> *buffer) {
   MutationRecord record;
+  const std::vector<uint8_t> original = buffer == nullptr ? std::vector<uint8_t>{} : *buffer;
   record.field_parse_status = "parsed";
   if (buffer == nullptr) {
     record.skipped = true;
     record.reason = "missing buffer";
+    RecordMutationEffect(&record, original, original);
     return record;
   }
   if (buffer->empty()) {
@@ -102,15 +104,18 @@ MutationRecord ApplyRegionMutation(
     case 3:
       (*buffer)[offset] = 0xff;
       break;
-    case 4:
-      buffer->resize(offset);
-      record.length = 0;
+    case 4: {
+      const size_t new_size = ByteFromPlan(plan, 2, 0) % (buffer->size() + 1);
+      record.length = buffer->size() - new_size;
+      buffer->resize(new_size);
       break;
+    }
     case 5:
       buffer->push_back(value);
       record.offset = buffer->size() - 1;
       break;
   }
+  RecordMutationEffect(&record, original, *buffer);
   return record;
 }
 

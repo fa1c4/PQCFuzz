@@ -221,8 +221,11 @@ std::string GroupKey(const FindingArtifactInput &input) {
   const KEMOracleTrace &trace = input.trace;
   const std::string finding_class = FindingClass(trace);
   const std::string finding_subclass = FindingSubclass(trace);
+  const MutationRecord *mutation = trace.mutations.empty() ? nullptr : &trace.mutations.front();
   const std::string fields[] = {
+      std::to_string(trace.oracle_semantics_version),
       input.algorithm,
+      trace.implementation_id,
       Primitive(input),
       trace.oracle_suite,
       trace.relation_mode,
@@ -232,8 +235,12 @@ std::string GroupKey(const FindingArtifactInput &input) {
       trace.observed_relation,
       finding_class,
       finding_subclass,
+      mutation == nullptr ? "" : mutation->target,
+      mutation == nullptr ? "" : mutation->operation,
       pqcfuzz_status_to_string(trace.baseline.status),
       pqcfuzz_status_to_string(trace.mutated.status),
+      trace.baseline.output_sha256,
+      trace.mutated.output_sha256,
   };
   std::ostringstream out;
   for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); ++i) {
@@ -311,7 +318,8 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   const std::string finding_subclass = FindingSubclass(input.trace);
   std::ostringstream out;
   out << "{\n";
-  out << "  \"version\": 1,\n";
+  out << "  \"version\": 2,\n";
+  out << "  \"oracle_semantics_version\": " << input.trace.oracle_semantics_version << ",\n";
   out << "  \"finding_id\": \"" << JsonEscape(finding_id) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(input.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(input.pair_id) << "\",\n";
@@ -324,7 +332,10 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   out << "  \"summary\": \"" << JsonEscape(summary) << "\",\n";
   out << "  \"trace_path\": \"" << JsonEscape(artifact_dir + "/oracle_trace.json") << "\",\n";
   out << "  \"artifact_dir\": \"" << JsonEscape(artifact_dir) << "\",\n";
-  out << "  \"replay_command\": \"" << JsonEscape(ReplayCommand(input, artifact_dir)) << "\"\n";
+  out << "  \"replay_command\": \"" << JsonEscape(ReplayCommand(input, artifact_dir)) << "\",\n";
+  out << "  \"validated\": false,\n";
+  out << "  \"validation_attempts\": 0,\n";
+  out << "  \"validation_failure_reason\": \"pending_deterministic_replay\"\n";
   out << "}\n";
   return out.str();
 }

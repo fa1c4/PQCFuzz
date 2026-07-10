@@ -8,8 +8,7 @@
   "fuzzer_source": "src/fuzzers/kem_pair_fuzzer.cc",
   "enabled_algorithm_families": [
     "ML-KEM",
-    "ML-DSA",
-    "SLH-DSA"
+    "ML-DSA"
   ],
   "enabled_primitive_types": [
     "kem",

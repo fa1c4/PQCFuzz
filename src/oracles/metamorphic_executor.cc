@@ -209,11 +209,81 @@ KEMOracleTrace BaseTrace(const std::string &job_id, const std::string &pair_id, 
   trace.job_id = job_id;
   trace.pair_id = pair_id;
   trace.algorithm = algorithm;
+  trace.configured_algorithm = algorithm;
   trace.oracle_id = spec.oracle_id;
   trace.field = spec.field;
   trace.mutation_target = spec.field;
   trace.expected_relation = spec.expected_relation;
   return trace;
+}
+
+void RecordMutationEvidence(
+    MutationRecord *record,
+    const std::vector<uint8_t> &original,
+    const std::vector<uint8_t> &mutated) {
+  if (record == nullptr) {
+    return;
+  }
+  RecordMutationEffect(record, original, mutated);
+  record->original_sha256 = Sha256Hex(original);
+  record->mutated_sha256 = Sha256Hex(mutated);
+}
+
+void FinalizeNoEffect(
+    KEMOracleTrace *trace,
+    OracleSubtestTrace *subtest,
+    const MetamorphicSpec &spec,
+    const Observation &baseline,
+    MutationRecord *mutation) {
+  trace->observed_relation = "OBSERVED_INTERVENTION_NOT_EFFECTIVE";
+  trace->baseline = ToObservationTrace(baseline);
+  trace->mutated = ToObservationTrace(baseline);
+  trace->valid_setup = baseline.status == PQCFUZZ_OK;
+  trace->intervention_effective = false;
+  trace->diagnostic_event = "no_effect";
+  subtest->skipped = true;
+  subtest->passed = true;
+  subtest->note = "no_effect";
+  trace->mutations.push_back(*mutation);
+  trace->subtests.push_back(*subtest);
+}
+
+void FinalizeRngInterventionNotObserved(
+    KEMOracleTrace *trace,
+    OracleSubtestTrace *subtest,
+    const Observation &baseline,
+    const Observation &mutated,
+    const std::string &reason) {
+  trace->observed_relation = "OBSERVED_INTERVENTION_NOT_OBSERVED";
+  trace->baseline = ToObservationTrace(baseline);
+  trace->mutated = ToObservationTrace(mutated);
+  trace->valid_setup = baseline.status == PQCFUZZ_OK && mutated.status == PQCFUZZ_OK;
+  trace->intervention_supported = false;
+  trace->intervention_effective = false;
+  trace->diagnostic_event = reason;
+  subtest->skipped = true;
+  subtest->passed = true;
+  subtest->note = reason;
+  trace->subtests.push_back(*subtest);
+}
+
+bool RequireDistinctRngTapes(
+    KEMOracleTrace *trace,
+    OracleSubtestTrace *subtest,
+    const RngInterventionTrace &rng_trace) {
+  if (rng_trace.tapes_distinct) {
+    return true;
+  }
+  trace->rng_interventions.push_back(rng_trace);
+  trace->observed_relation = "OBSERVED_INTERVENTION_NOT_EFFECTIVE";
+  trace->intervention_supported = false;
+  trace->intervention_effective = false;
+  trace->diagnostic_event = "rng_tapes_not_distinct";
+  subtest->skipped = true;
+  subtest->passed = true;
+  subtest->note = "rng_tapes_not_distinct";
+  trace->subtests.push_back(*subtest);
+  return false;
 }
 
 std::string FindingClassFor(const std::string &expected, ObservedRelation observed) {
@@ -248,7 +318,9 @@ void FinalizeTrace(
   trace->mutated = ToObservationTrace(mutated);
   if (mutation != nullptr) {
     trace->mutations.push_back(*mutation);
+    trace->intervention_effective = mutation->effective;
   }
+  trace->valid_setup = baseline.status == PQCFUZZ_OK && mutated.status == PQCFUZZ_OK;
 
   const std::string finding_class = FindingClassFor(spec.expected_relation, observed);
   if (finding_class == "unsupported") {
@@ -281,6 +353,8 @@ void FinalizeSetupFailure(
   subtest->skipped = true;
   subtest->passed = true;
   subtest->note = note;
+  trace->valid_setup = false;
+  trace->diagnostic_event = note;
   trace->subtests.push_back(*subtest);
 }
 
@@ -318,23 +392,41 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
   bool setup_failed = false;
   std::string setup_failure_note;
   MutationRecord mutation_record;
-  const bool reused_seed = !config.mutation.empty() && (config.mutation[0] & 1u) != 0;
-
   if (config.oracle_id == "kem_keygen_badrng") {
     const auto baseline_tape = MakeTape(config.seed, "kem-keygen-baseline", false);
-    const auto mutated_tape = MakeTape(config.seed, "kem-keygen-mutated", !reused_seed);
+    const auto mutated_tape = MakeTape(config.seed, "kem-keygen-mutated", false);
+    RngInterventionTrace rng_trace;
+    rng_trace.baseline_tape_id = "kem-keygen-baseline";
+    rng_trace.mutated_tape_id = "kem-keygen-mutated";
+    rng_trace.baseline_tape_sha256 = Sha256Hex(baseline_tape);
+    rng_trace.mutated_tape_sha256 = Sha256Hex(mutated_tape);
+    rng_trace.tapes_distinct = baseline_tape != mutated_tape;
+    if (!RequireDistinctRngTapes(&trace, &subtest, rng_trace)) return trace;
     KEMKeyPair baseline_keypair;
     KEMKeyPair mutated_keypair;
     {
       ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+      rng_trace.baseline_override_active = rng.active();
       baseline_keypair = Keygen(config.target, &subtest);
+      rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
     }
     {
-      ScopedRngOverride rng({(reused_seed ? baseline_tape : mutated_tape).data(), (reused_seed ? baseline_tape : mutated_tape).size(), true});
+      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+      rng_trace.mutated_override_active = rng.active();
       mutated_keypair = Keygen(config.target, &subtest);
+      rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
     }
     baseline = BytesObservation(baseline_keypair.status, PublicAndSecretDigest(baseline_keypair.pk, baseline_keypair.sk));
     mutated = BytesObservation(mutated_keypair.status, PublicAndSecretDigest(mutated_keypair.pk, mutated_keypair.sk));
+    trace.rng_interventions.push_back(rng_trace);
+    if (!rng_trace.tapes_distinct || !rng_trace.baseline_override_active || !rng_trace.mutated_override_active) {
+      FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "rng_override_unavailable");
+      return trace;
+    }
+    if (rng_trace.baseline_bytes_consumed == 0 || rng_trace.mutated_bytes_consumed == 0) {
+      FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "intervention_not_observed");
+      return trace;
+    }
     observations_ready = true;
   } else {
     KEMKeyPair keypair = Keygen(config.target, &subtest);
@@ -343,16 +435,27 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
     if (keypair.status == PQCFUZZ_OK) {
       if (config.oracle_id == "kem_encaps_badrng") {
         const auto baseline_tape = MakeTape(config.seed, "kem-encaps-baseline", false);
-        const auto mutated_tape = MakeTape(config.seed, "kem-encaps-mutated", !reused_seed);
+        const auto mutated_tape = MakeTape(config.seed, "kem-encaps-mutated", false);
+        RngInterventionTrace rng_trace;
+        rng_trace.baseline_tape_id = "kem-encaps-baseline";
+        rng_trace.mutated_tape_id = "kem-encaps-mutated";
+        rng_trace.baseline_tape_sha256 = Sha256Hex(baseline_tape);
+        rng_trace.mutated_tape_sha256 = Sha256Hex(mutated_tape);
+        rng_trace.tapes_distinct = baseline_tape != mutated_tape;
+        if (!RequireDistinctRngTapes(&trace, &subtest, rng_trace)) return trace;
         KEMSharedSecret mutated_ss;
         KEMCiphertext mutated_ct;
         {
           ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+          rng_trace.baseline_override_active = rng.active();
           ciphertext = Encaps(config.target, keypair.pk, &subtest, &encaps_ss);
+          rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
         }
         {
-          ScopedRngOverride rng({(reused_seed ? baseline_tape : mutated_tape).data(), (reused_seed ? baseline_tape : mutated_tape).size(), true});
+          ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+          rng_trace.mutated_override_active = rng.active();
           mutated_ct = Encaps(config.target, keypair.pk, &subtest, &mutated_ss);
+          rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
         }
         std::vector<uint8_t> baseline_bytes = ciphertext.ct;
         baseline_bytes.insert(baseline_bytes.end(), encaps_ss.ss.begin(), encaps_ss.ss.end());
@@ -360,6 +463,15 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
         mutated_bytes.insert(mutated_bytes.end(), mutated_ss.ss.begin(), mutated_ss.ss.end());
         baseline = BytesObservation(ciphertext.status, baseline_bytes);
         mutated = BytesObservation(mutated_ct.status, mutated_bytes);
+        trace.rng_interventions.push_back(rng_trace);
+        if (!rng_trace.tapes_distinct || !rng_trace.baseline_override_active || !rng_trace.mutated_override_active) {
+          FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "rng_override_unavailable");
+          return trace;
+        }
+        if (rng_trace.baseline_bytes_consumed == 0 || rng_trace.mutated_bytes_consumed == 0) {
+          FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "intervention_not_observed");
+          return trace;
+        }
         observations_ready = true;
       } else {
         ciphertext = Encaps(config.target, keypair.pk, &subtest, &encaps_ss);
@@ -386,10 +498,16 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
     if (config.oracle_id == "kem_encaps_pk" && keypair.status == PQCFUZZ_OK && ciphertext.status == PQCFUZZ_OK) {
       MaulResult maul = MaulBytes(keypair.pk, config.mutation, "public_key");
       mutation_record = maul.record;
-      KEMSharedSecret mutated_ss;
-      KEMCiphertext mutated_ct = Encaps(config.target, maul.mutated, &subtest, &mutated_ss);
+      RecordMutationEvidence(&mutation_record, keypair.pk, maul.mutated);
       std::vector<uint8_t> baseline_bytes = ciphertext.ct;
       baseline_bytes.insert(baseline_bytes.end(), encaps_ss.ss.begin(), encaps_ss.ss.end());
+      baseline = BytesObservation(ciphertext.status, baseline_bytes);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      KEMSharedSecret mutated_ss;
+      KEMCiphertext mutated_ct = Encaps(config.target, maul.mutated, &subtest, &mutated_ss);
       std::vector<uint8_t> mutated_bytes = mutated_ct.ct;
       mutated_bytes.insert(mutated_bytes.end(), mutated_ss.ss.begin(), mutated_ss.ss.end());
       baseline = BytesObservation(ciphertext.status, baseline_bytes);
@@ -400,10 +518,17 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
       mutation_record.operation = "replace_with_all_zero";
       mutation_record.target = "public_key";
       mutation_record.length = zero_pk.size();
-      KEMSharedSecret mutated_ss;
-      KEMCiphertext mutated_ct = Encaps(config.target, zero_pk, &subtest, &mutated_ss);
+      mutation_record.field_parse_status = "generic_byte_field";
+      RecordMutationEvidence(&mutation_record, keypair.pk, zero_pk);
       std::vector<uint8_t> baseline_bytes = ciphertext.ct;
       baseline_bytes.insert(baseline_bytes.end(), encaps_ss.ss.begin(), encaps_ss.ss.end());
+      baseline = BytesObservation(ciphertext.status, baseline_bytes);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      KEMSharedSecret mutated_ss;
+      KEMCiphertext mutated_ct = Encaps(config.target, zero_pk, &subtest, &mutated_ss);
       std::vector<uint8_t> mutated_bytes = mutated_ct.ct;
       mutated_bytes.insert(mutated_bytes.end(), mutated_ss.ss.begin(), mutated_ss.ss.end());
       baseline = BytesObservation(ciphertext.status, baseline_bytes);
@@ -413,16 +538,26 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
       KEMSharedSecret baseline_decaps = Decaps(config.target, ciphertext.ct, keypair.sk, &subtest);
       MaulResult maul = MaulBytes(ciphertext.ct, config.mutation, "ciphertext");
       mutation_record = maul.record;
-      KEMSharedSecret mutated_decaps = Decaps(config.target, maul.mutated, keypair.sk, &subtest);
+      RecordMutationEvidence(&mutation_record, ciphertext.ct, maul.mutated);
       baseline = BytesObservation(baseline_decaps.status, baseline_decaps.ss);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      KEMSharedSecret mutated_decaps = Decaps(config.target, maul.mutated, keypair.sk, &subtest);
       mutated = BytesObservation(mutated_decaps.status, mutated_decaps.ss);
       observations_ready = true;
     } else if (config.oracle_id == "kem_decaps_sk" && ciphertext.status == PQCFUZZ_OK) {
       KEMSharedSecret baseline_decaps = Decaps(config.target, ciphertext.ct, keypair.sk, &subtest);
       MaulResult maul = MaulBytes(keypair.sk, config.mutation, "secret_key");
       mutation_record = maul.record;
-      KEMSharedSecret mutated_decaps = Decaps(config.target, ciphertext.ct, maul.mutated, &subtest);
+      RecordMutationEvidence(&mutation_record, keypair.sk, maul.mutated);
       baseline = BytesObservation(baseline_decaps.status, baseline_decaps.ss);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      KEMSharedSecret mutated_decaps = Decaps(config.target, ciphertext.ct, maul.mutated, &subtest);
       mutated = BytesObservation(mutated_decaps.status, mutated_decaps.ss);
       observations_ready = true;
     }
@@ -463,23 +598,41 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
   const std::vector<uint8_t> message = config.message.empty()
                                           ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'}
                                           : config.message;
-  const bool reused_seed = !config.mutation.empty() && (config.mutation[0] & 1u) != 0;
-
   if (config.oracle_id == "sig_keygen_badrng") {
     const auto baseline_tape = MakeTape(config.seed, "sig-keygen-baseline", false);
-    const auto mutated_tape = MakeTape(config.seed, "sig-keygen-mutated", !reused_seed);
+    const auto mutated_tape = MakeTape(config.seed, "sig-keygen-mutated", false);
+    RngInterventionTrace rng_trace;
+    rng_trace.baseline_tape_id = "sig-keygen-baseline";
+    rng_trace.mutated_tape_id = "sig-keygen-mutated";
+    rng_trace.baseline_tape_sha256 = Sha256Hex(baseline_tape);
+    rng_trace.mutated_tape_sha256 = Sha256Hex(mutated_tape);
+    rng_trace.tapes_distinct = baseline_tape != mutated_tape;
+    if (!RequireDistinctRngTapes(&trace, &subtest, rng_trace)) return trace;
     SIGKeyPair baseline_keypair;
     SIGKeyPair mutated_keypair;
     {
       ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+      rng_trace.baseline_override_active = rng.active();
       baseline_keypair = SigKeygen(config.target, &subtest);
+      rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
     }
     {
-      ScopedRngOverride rng({(reused_seed ? baseline_tape : mutated_tape).data(), (reused_seed ? baseline_tape : mutated_tape).size(), true});
+      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+      rng_trace.mutated_override_active = rng.active();
       mutated_keypair = SigKeygen(config.target, &subtest);
+      rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
     }
     baseline = BytesObservation(baseline_keypair.status, PublicAndSecretDigest(baseline_keypair.pk, baseline_keypair.sk));
     mutated = BytesObservation(mutated_keypair.status, PublicAndSecretDigest(mutated_keypair.pk, mutated_keypair.sk));
+    trace.rng_interventions.push_back(rng_trace);
+    if (!rng_trace.tapes_distinct || !rng_trace.baseline_override_active || !rng_trace.mutated_override_active) {
+      FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "rng_override_unavailable");
+      return trace;
+    }
+    if (rng_trace.baseline_bytes_consumed == 0 || rng_trace.mutated_bytes_consumed == 0) {
+      FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "intervention_not_observed");
+      return trace;
+    }
     observations_ready = true;
   } else {
     SIGKeyPair keypair = SigKeygen(config.target, &subtest);
@@ -492,18 +645,38 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
           observations_ready = true;
         } else {
           const auto baseline_tape = MakeTape(config.seed, "sig-sign-baseline", false);
-          const auto mutated_tape = MakeTape(config.seed, "sig-sign-mutated", !reused_seed);
+          const auto mutated_tape = MakeTape(config.seed, "sig-sign-mutated", false);
+          RngInterventionTrace rng_trace;
+          rng_trace.baseline_tape_id = "sig-sign-baseline";
+          rng_trace.mutated_tape_id = "sig-sign-mutated";
+          rng_trace.baseline_tape_sha256 = Sha256Hex(baseline_tape);
+          rng_trace.mutated_tape_sha256 = Sha256Hex(mutated_tape);
+          rng_trace.tapes_distinct = baseline_tape != mutated_tape;
+          if (!RequireDistinctRngTapes(&trace, &subtest, rng_trace)) return trace;
           SIGSignature mutated_signature;
           {
             ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+            rng_trace.baseline_override_active = rng.active();
             signature = Sign(config.target, message, config.context, keypair.sk, &subtest);
+            rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
           }
           {
-            ScopedRngOverride rng({(reused_seed ? baseline_tape : mutated_tape).data(), (reused_seed ? baseline_tape : mutated_tape).size(), true});
+            ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+            rng_trace.mutated_override_active = rng.active();
             mutated_signature = Sign(config.target, message, config.context, keypair.sk, &subtest);
+            rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
           }
           baseline = BytesObservation(signature.status, signature.sig);
           mutated = BytesObservation(mutated_signature.status, mutated_signature.sig);
+          trace.rng_interventions.push_back(rng_trace);
+          if (!rng_trace.tapes_distinct || !rng_trace.baseline_override_active || !rng_trace.mutated_override_active) {
+            FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "rng_override_unavailable");
+            return trace;
+          }
+          if (rng_trace.baseline_bytes_consumed == 0 || rng_trace.mutated_bytes_consumed == 0) {
+            FinalizeRngInterventionNotObserved(&trace, &subtest, baseline, mutated, "intervention_not_observed");
+            return trace;
+          }
           observations_ready = true;
         }
       } else {
@@ -531,39 +704,64 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
     if (config.oracle_id == "sig_sign_m" && signature.status == PQCFUZZ_OK) {
       MaulResult maul = MaulBytes(message, config.mutation, "message");
       mutation_record = maul.record;
-      SIGSignature mutated_signature = Sign(config.target, maul.mutated, config.context, keypair.sk, &subtest);
+      RecordMutationEvidence(&mutation_record, message, maul.mutated);
       baseline = BytesObservation(signature.status, signature.sig);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      SIGSignature mutated_signature = Sign(config.target, maul.mutated, config.context, keypair.sk, &subtest);
       mutated = BytesObservation(mutated_signature.status, mutated_signature.sig);
       observations_ready = true;
     } else if (config.oracle_id == "sig_sign_sk" && signature.status == PQCFUZZ_OK) {
       MaulResult maul = MaulBytes(keypair.sk, config.mutation, "secret_key");
       mutation_record = maul.record;
-      SIGSignature mutated_signature = Sign(config.target, message, config.context, maul.mutated, &subtest);
+      RecordMutationEvidence(&mutation_record, keypair.sk, maul.mutated);
       baseline = BytesObservation(signature.status, signature.sig);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      SIGSignature mutated_signature = Sign(config.target, message, config.context, maul.mutated, &subtest);
       mutated = BytesObservation(mutated_signature.status, mutated_signature.sig);
       observations_ready = true;
     } else if (config.oracle_id == "sig_verify_m" && signature.status == PQCFUZZ_OK) {
       SIGVerifyResult baseline_verify = Verify(config.target, signature.sig, message, config.context, keypair.pk, &subtest);
       MaulResult maul = MaulBytes(message, config.mutation, "message");
       mutation_record = maul.record;
-      SIGVerifyResult mutated_verify = Verify(config.target, signature.sig, maul.mutated, config.context, keypair.pk, &subtest);
+      RecordMutationEvidence(&mutation_record, message, maul.mutated);
       baseline = BoolObservation(baseline_verify);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      SIGVerifyResult mutated_verify = Verify(config.target, signature.sig, maul.mutated, config.context, keypair.pk, &subtest);
       mutated = BoolObservation(mutated_verify);
       observations_ready = true;
     } else if (config.oracle_id == "sig_verify_sig" && signature.status == PQCFUZZ_OK) {
       SIGVerifyResult baseline_verify = Verify(config.target, signature.sig, message, config.context, keypair.pk, &subtest);
       MaulResult maul = MaulBytes(signature.sig, config.mutation, "signature");
       mutation_record = maul.record;
-      SIGVerifyResult mutated_verify = Verify(config.target, maul.mutated, message, config.context, keypair.pk, &subtest);
+      RecordMutationEvidence(&mutation_record, signature.sig, maul.mutated);
       baseline = BoolObservation(baseline_verify);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      SIGVerifyResult mutated_verify = Verify(config.target, maul.mutated, message, config.context, keypair.pk, &subtest);
       mutated = BoolObservation(mutated_verify);
       observations_ready = true;
     } else if (config.oracle_id == "sig_verify_pk" && signature.status == PQCFUZZ_OK) {
       SIGVerifyResult baseline_verify = Verify(config.target, signature.sig, message, config.context, keypair.pk, &subtest);
       MaulResult maul = MaulBytes(keypair.pk, config.mutation, "public_key");
       mutation_record = maul.record;
-      SIGVerifyResult mutated_verify = Verify(config.target, signature.sig, message, config.context, maul.mutated, &subtest);
+      RecordMutationEvidence(&mutation_record, keypair.pk, maul.mutated);
       baseline = BoolObservation(baseline_verify);
+      if (!mutation_record.effective) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      SIGVerifyResult mutated_verify = Verify(config.target, signature.sig, message, config.context, maul.mutated, &subtest);
       mutated = BoolObservation(mutated_verify);
       observations_ready = true;
     }

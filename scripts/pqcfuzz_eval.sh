@@ -168,12 +168,12 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: sanitizers: ${SANITIZERS}"
   echo "docker run pqcfuzz-eval: finding_save_mode: ${FINDING_SAVE_MODE}"
   echo "docker run pqcfuzz-eval: max_finding_exemplars_per_group: ${MAX_FINDING_EXEMPLARS_PER_GROUP}"
-  echo "docker run pqcfuzz-eval: build pqcfuzz_kem and pqcfuzz_sig"
-  echo "docker run pqcfuzz-eval: run pqcfuzz_kem for ${kem_seconds}s"
+  echo "docker run pqcfuzz-eval: build one fixed binary per ML-KEM/ML-DSA algorithm"
+  echo "docker run pqcfuzz-eval: run ML-KEM-512, ML-KEM-768, ML-KEM-1024 for ${kem_seconds}s each"
   if [ "$version" = "0.14.0" ]; then
-    echo "docker run pqcfuzz-eval: run pqcfuzz_sig for ${sig_seconds}s"
+    echo "docker run pqcfuzz-eval: run ML-DSA-44, ML-DSA-65, ML-DSA-87 for ${sig_seconds}s each"
   else
-    echo "docker run pqcfuzz-eval: write skipped pqcfuzz_sig summary for ${sig_seconds}s allocation"
+    echo "docker run pqcfuzz-eval: write skipped ML-DSA job summaries for ${sig_seconds}s allocation"
   fi
   echo "campaign fuzzing budget: ${seconds}s"
 }
@@ -858,6 +858,8 @@ write_run_summary() {
   local log_file="$6"
   local crash_dir="$7"
   local corpus_dir="$8"
+  local algorithm_enum="$9"
+  local oracle_enum="${10}"
 
   RUN_SUMMARY_FILE="$summary_file" \
   RUN_TARGET="$target" \
@@ -868,6 +870,8 @@ write_run_summary() {
   RUN_CRASH_DIR="$crash_dir" \
   RUN_CORPUS_DIR="$corpus_dir" \
   RUN_VERSION="$VERSION" \
+  RUN_ALGORITHM_ENUM="$algorithm_enum" \
+  RUN_ORACLE_ENUM="$oracle_enum" \
   RUN_RELATION_MODE="$RELATION_MODE" \
   RUN_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
@@ -884,6 +888,13 @@ doc = {
     "version": os.environ["RUN_VERSION"],
     "status": int(os.environ["RUN_STATUS"]),
     "max_total_time": int(os.environ["RUN_SECONDS"]),
+    "wall_time_seconds": int(os.environ["RUN_SECONDS"]),
+    "cpu_time_seconds": None,
+    "worker_count": 1,
+    "algorithm_coverage": [int(os.environ["RUN_ALGORITHM_ENUM"])],
+    "oracle_coverage": [int(os.environ["RUN_ORACLE_ENUM"])],
+    "stop_reason": "max_total_time" if int(os.environ["RUN_STATUS"]) == 0 else "process_exit",
+    "state": "completed" if int(os.environ["RUN_STATUS"]) == 0 else ("timed-out" if int(os.environ["RUN_STATUS"]) == 124 else "harness-error"),
     "binary": os.environ["RUN_BINARY"],
     "log": os.environ["RUN_LOG"],
     "crash_dir": os.environ["RUN_CRASH_DIR"],
@@ -891,6 +902,39 @@ doc = {
     "relation_mode": os.environ["RUN_RELATION_MODE"],
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
     "skipped": False,
+}
+
+write_replay_manifest() {
+  local manifest_file="$1"
+  local target="$2"
+  local result_dir="$3"
+  REPLAY_MANIFEST_FILE="$manifest_file" REPLAY_TARGET="$target" REPLAY_RESULT_DIR="$result_dir" python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+root = Path(os.environ["REPLAY_RESULT_DIR"])
+artifacts = []
+paths = sorted(root.rglob("finding.json")) if root.is_dir() else []
+for path in paths:
+    try:
+        finding = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        finding = {}
+    artifacts.append({"path": str(path), "validated": bool(finding.get("validated", False))})
+doc = {
+    "version": 2,
+    "target": os.environ["REPLAY_TARGET"],
+    "artifact_count": len(artifacts),
+    "validated_count": sum(item["validated"] for item in artifacts),
+    "unvalidated_count": sum(not item["validated"] for item in artifacts),
+    "state": "complete" if all(item["validated"] for item in artifacts) else "validation-required",
+    "artifacts": artifacts,
+}
+path = Path(os.environ["REPLAY_MANIFEST_FILE"])
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
 }
 with open(path, "w", encoding="utf-8") as f:
     json.dump(doc, f, indent=2, sort_keys=True)
@@ -1103,47 +1147,43 @@ build_pqcfuzz() {
     "$adapter_src"
   )
 
-  "$cxx_bin" -std=c++17 -O1 -g -Isrc -I"${liboqs_build_dir}/include" \
-    -fsanitize=fuzzer,address,undefined \
-    -DPQCFUZZ_JOB_ID="\"pqcfuzz_eval_kem_liboqs_${VERSION}\"" \
-    -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_self_reference_kem\"" \
-    -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/kem\"" \
-    -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${tmp_root}/generated_config_kem.json\"" \
-    -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
-    -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
-    -DPQCFUZZ_FINDING_SAVE_MODE="\"${FINDING_SAVE_MODE}\"" \
-    -DPQCFUZZ_MAX_FINDING_EXEMPLARS_PER_GROUP="${MAX_FINDING_EXEMPLARS_PER_GROUP}" \
-    -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"liboqs_mlkem768_wrapper_generic\"" \
-    -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"selfref_mlkem768_via_liboqs\"" \
-    -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 \
-    -DPQCFUZZ_CIPHERTEXT_EXCHANGE=1 \
-    -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 \
-    -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
-    src/fuzzers/kem_pair_fuzzer.cc "${common_sources[@]}" "$liboqs_archive" \
-    -lcrypto -ldl -lpthread -lm \
-    -o "${pqcfuzz_build_dir}/pqcfuzz_kem"
+  # A binary is bound to one algorithm.  The envelope is only test data and
+  # can no longer select (or relabel) an adapter at runtime.
+  build_target() {
+    local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" config_file
+    config_file="${tmp_root}/generated_config_${job}.json"
+    cat > "$config_file" <<JSON
+{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":2,"skipped_families":["SLH-DSA"]}
+JSON
+    "$cxx_bin" -std=c++17 -O1 -g -Isrc -I"${liboqs_build_dir}/include" \
+      -fsanitize=fuzzer,address,undefined \
+      -DPQCFUZZ_JOB_ID="\"pqcfuzz_eval_${job}_liboqs_${VERSION}\"" \
+      -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_${job}_single_target\"" \
+      -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/${job}\"" \
+      -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${config_file}\"" \
+      -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
+      -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
+      -DPQCFUZZ_FINDING_SAVE_MODE="\"${FINDING_SAVE_MODE}\"" \
+      -DPQCFUZZ_MAX_FINDING_EXEMPLARS_PER_GROUP="${MAX_FINDING_EXEMPLARS_PER_GROUP}" \
+      -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
+      -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_EXPECTED_ALGORITHM="\"${algorithm}\"" \
+      -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
+      -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 -DPQCFUZZ_CIPHERTEXT_EXCHANGE=1 \
+      -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
+      -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
+      "$source" "${common_sources[@]}" "$liboqs_archive" \
+      -lcrypto -ldl -lpthread -lm -o "${pqcfuzz_build_dir}/pqcfuzz_${job}"
+  }
 
-  "$cxx_bin" -std=c++17 -O1 -g -Isrc -I"${liboqs_build_dir}/include" \
-    -fsanitize=fuzzer,address,undefined \
-    -DPQCFUZZ_JOB_ID="\"pqcfuzz_eval_sig_liboqs_${VERSION}\"" \
-    -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_self_reference_sig\"" \
-    -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/sig\"" \
-    -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${tmp_root}/generated_config_sig.json\"" \
-    -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
-    -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
-    -DPQCFUZZ_FINDING_SAVE_MODE="\"${FINDING_SAVE_MODE}\"" \
-    -DPQCFUZZ_MAX_FINDING_EXEMPLARS_PER_GROUP="${MAX_FINDING_EXEMPLARS_PER_GROUP}" \
-    -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"liboqs_mldsa44_wrapper_generic\"" \
-    -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"selfref_mldsa44_via_liboqs\"" \
-    -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 \
-    -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
-    src/fuzzers/sig_pair_fuzzer.cc "${common_sources[@]}" "$liboqs_archive" \
-    -lcrypto -ldl -lpthread -lm \
-    -o "${pqcfuzz_build_dir}/pqcfuzz_sig"
+  build_target "mlkem512" kem "ML-KEM-512" "liboqs_mlkem512_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
+  build_target "mlkem768" kem "ML-KEM-768" "liboqs_mlkem768_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
+  build_target "mlkem1024" kem "ML-KEM-1024" "liboqs_mlkem1024_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
+  build_target "mldsa44" sig "ML-DSA-44" "liboqs_mldsa44_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
+  build_target "mldsa65" sig "ML-DSA-65" "liboqs_mldsa65_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
+  build_target "mldsa87" sig "ML-DSA-87" "liboqs_mldsa87_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
 }
 
 run_fuzzer() {
@@ -1177,7 +1217,8 @@ run_fuzzer() {
     "-rss_limit_mb=${RSS_MB}" \
     > >(tee "$log_file") 2>&1
   status="$?"
-  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir"
+  write_replay_manifest "${run_root}/replay_manifest.json" "$target" "$result_dir"
+  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum"
   return "$status"
 }
 
@@ -1199,6 +1240,7 @@ skip_fuzzer() {
     echo "[pqcfuzz-eval] reason: $reason"
   } | tee "$log_file"
   write_skip_summary "$summary_file" "$target" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$reason"
+  write_replay_manifest "${run_root}/replay_manifest.json" "$target" "$result_dir"
   return 0
 }
 
@@ -1219,7 +1261,7 @@ if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" != "1" ]; then
   DOCKER_BUILD_STATUS="$?"
   echo "[pqcfuzz-eval] docker-build exited with status $DOCKER_BUILD_STATUS"
   if [ "$DOCKER_BUILD_STATUS" -ne 0 ]; then
-    finish_campaign "docker-build-failed" "$DOCKER_BUILD_STATUS" "Docker image build failed"
+    finish_campaign "build-failed" "$DOCKER_BUILD_STATUS" "Docker image build failed"
   fi
 
   HOST_UID="$(id -u)"
@@ -1244,7 +1286,7 @@ if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" != "1" ]; then
     if status_file_finished; then
       exit "$DOCKER_RUN_STATUS"
     fi
-    finish_campaign "docker-run-failed" "$DOCKER_RUN_STATUS" "Docker campaign container exited before writing a finished status"
+    finish_campaign "infrastructure-failed" "$DOCKER_RUN_STATUS" "Docker campaign container exited before writing a finished status"
   fi
   if status_file_finished; then
     exit 0
@@ -1265,7 +1307,7 @@ build_liboqs "$BUILD_ROOT"
 LIBOQS_BUILD_STATUS="$?"
 echo "[pqcfuzz-eval] liboqs-build exited with status $LIBOQS_BUILD_STATUS"
 if [ "$LIBOQS_BUILD_STATUS" -ne 0 ]; then
-  finish_campaign "liboqs-build-failed" "$LIBOQS_BUILD_STATUS" "liboqs configure/build failed or did not produce lib/liboqs.a"
+  finish_campaign "build-failed" "$LIBOQS_BUILD_STATUS" "liboqs configure/build failed or did not produce lib/liboqs.a"
 fi
 
 write_status "pqcfuzz-build" "running"
@@ -1273,7 +1315,7 @@ build_pqcfuzz "$BUILD_ROOT"
 PQCFUZZ_BUILD_STATUS="$?"
 echo "[pqcfuzz-eval] pqcfuzz-build exited with status $PQCFUZZ_BUILD_STATUS"
 if [ "$PQCFUZZ_BUILD_STATUS" -ne 0 ]; then
-  finish_campaign "pqcfuzz-build-failed" "$PQCFUZZ_BUILD_STATUS" "PQCFuzz target compilation failed"
+  finish_campaign "build-failed" "$PQCFUZZ_BUILD_STATUS" "PQCFuzz target compilation failed"
 fi
 
 KEM_ORACLE_ENUM=1
@@ -1283,34 +1325,36 @@ if [ "$ORACLE_SUITE" = "metamorphic" ]; then
   SIG_ORACLE_ENUM=29
 fi
 
-write_status "run-kem" "running"
-run_fuzzer "kem" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_kem" 2 "$KEM_ORACLE_ENUM"
-KEM_STATUS="$?"
-echo "[pqcfuzz-eval] kem exited with status $KEM_STATUS"
-echo
+KEM_STATUS=0
+SIG_STATUS=0
+for job_spec in "mlkem512:1" "mlkem768:2" "mlkem1024:3"; do
+  IFS=: read -r job enum <<<"$job_spec"
+  write_status "run-${job}" "running"
+  run_fuzzer "$job" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+done
 
-write_status "run-sig" "running"
-case "$VERSION" in
-  0.14.0)
-    run_fuzzer "sig" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_sig" 5 "$SIG_ORACLE_ENUM"
-    ;;
-  *)
-    skip_fuzzer "sig" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_sig" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
-    ;;
-esac
-SIG_STATUS="$?"
-echo "[pqcfuzz-eval] sig exited with status $SIG_STATUS"
+for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
+  IFS=: read -r job enum <<<"$job_spec"
+  write_status "run-${job}" "running"
+  if [ "$VERSION" = "0.14.0" ]; then
+    run_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
+  else
+    skip_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
+  fi
+done
 
-if [ "$KEM_STATUS" -ne 0 ]; then
-  FUZZ_STATUS="$KEM_STATUS"
-else
-  FUZZ_STATUS="$SIG_STATUS"
-fi
+if [ "$KEM_STATUS" -ne 0 ]; then FUZZ_STATUS="$KEM_STATUS"; else FUZZ_STATUS="$SIG_STATUS"; fi
 
 if [ "$FUZZ_STATUS" -ne 0 ]; then
-  finish_campaign "fuzzing-failed" "$FUZZ_STATUS" "KEM or SIG fuzz target exited nonzero"
+  if [ "$FUZZ_STATUS" -eq 124 ]; then
+    finish_campaign "timed-out" "$FUZZ_STATUS" "one or more per-algorithm fuzz jobs exceeded their wall-clock budget"
+  fi
+  finish_campaign "harness-error" "$FUZZ_STATUS" "one or more per-algorithm fuzz jobs exited nonzero"
 fi
 
+if find "${WORKSPACE_ROOT_ABS}/results" -name finding.json -print -quit | grep -q .; then
+  finish_campaign "completed-with-findings" 0
+fi
 finish_campaign "completed" 0
 EOF
   } > "$launcher_file"

@@ -36,6 +36,14 @@
 #define PQCFUZZ_LEFT_IMPLEMENTATION_ID ""
 #endif
 
+#ifndef PQCFUZZ_EXPECTED_ALGORITHM
+#define PQCFUZZ_EXPECTED_ALGORITHM "ML-KEM-768"
+#endif
+
+#ifndef PQCFUZZ_EXPECTED_IMPLEMENTATION_ID
+#define PQCFUZZ_EXPECTED_IMPLEMENTATION_ID PQCFUZZ_LEFT_IMPLEMENTATION_ID
+#endif
+
 #ifndef PQCFUZZ_RIGHT_PROJECT_ID
 #define PQCFUZZ_RIGHT_PROJECT_ID "pqclean"
 #endif
@@ -93,8 +101,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   }
 
   const std::string algorithm = pqcfuzz::AlgorithmName(envelope.algorithm);
+  const std::string expected_algorithm = PQCFUZZ_EXPECTED_ALGORITHM;
+  if (algorithm != expected_algorithm) {
+    return 0;  // Invalid input: a fixed binary cannot be relabelled by its envelope.
+  }
   pqcfuzz::MlKemParams params{};
-  if (!pqcfuzz::GetMlKemParams(algorithm, &params)) {
+  if (!pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
+    return 0;
+  }
+  static const pqcfuzz_kem_adapter *const target =
+      pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID);
+  std::string routing_error;
+  const pqcfuzz::AdapterRoutingExpectation expected_routing{
+      PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID, expected_algorithm,
+      params.pk_len, params.sk_len, params.ct_len, params.ss_len, 0};
+  if (!pqcfuzz::ValidateKemAdapterRouting(target, expected_routing, &routing_error)) {
     return 0;
   }
 
@@ -103,10 +124,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     pqcfuzz::MetamorphicKemConfig config;
     config.job_id = PQCFUZZ_JOB_ID;
     config.pair_id = PQCFUZZ_PAIR_ID;
-    config.algorithm = algorithm;
+    config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
-    config.target = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_LEFT_IMPLEMENTATION_ID);
+    config.target = target;
     config.seed = envelope.seed;
     config.mutation = envelope.mutation;
     trace = pqcfuzz::ExecuteMetamorphicKemOracle(config);
@@ -114,10 +135,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     pqcfuzz::OracleExecutorConfig config;
     config.job_id = PQCFUZZ_JOB_ID;
     config.pair_id = PQCFUZZ_PAIR_ID;
-    config.algorithm = algorithm;
+    config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
-    config.left = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_LEFT_IMPLEMENTATION_ID);
+    config.left = target;
     config.right = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
     config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;
     config.exchange_contract.ciphertext_exchange = PQCFUZZ_CIPHERTEXT_EXCHANGE != 0;
@@ -129,6 +150,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   }
   trace.oracle_suite = PQCFUZZ_ORACLE_SUITE;
   trace.relation_mode = PQCFUZZ_RELATION_MODE;
+  trace.configured_algorithm = expected_algorithm;
+  trace.adapter_algorithm = target->algorithm;
+  trace.project_id = target->project_id;
+  trace.implementation_id = target->implementation_id;
+  trace.adapter_pk_len = target->pk_len;
+  trace.adapter_sk_len = target->sk_len;
+  trace.adapter_ct_len = target->ct_len;
+  trace.adapter_ss_len = target->ss_len;
   if (!trace.findings.empty()) {
     pqcfuzz::FindingArtifactInput artifacts;
     artifacts.job_id = PQCFUZZ_JOB_ID;

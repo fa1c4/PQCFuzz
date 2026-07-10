@@ -61,6 +61,10 @@ bool pqcfuzz_rng_is_active() {
   return !g_tapes.empty();
 }
 
+size_t pqcfuzz_rng_bytes_consumed() {
+  return g_tapes.empty() ? 0 : g_tapes.back().offset;
+}
+
 ScopedRngOverride::ScopedRngOverride(const RngTape &tape) {
   active_ = pqcfuzz_rng_push_tape(tape) == PQCFUZZ_OK;
 }
@@ -73,6 +77,10 @@ ScopedRngOverride::~ScopedRngOverride() {
 
 bool ScopedRngOverride::active() const {
   return active_;
+}
+
+size_t ScopedRngOverride::bytes_consumed() const {
+  return active_ ? pqcfuzz_rng_bytes_consumed() : 0;
 }
 
 }  // namespace pqcfuzz

@@ -85,7 +85,20 @@ struct ObservationTrace {
   size_t output_size = 0;
 };
 
+struct RngInterventionTrace {
+  std::string baseline_tape_id;
+  std::string mutated_tape_id;
+  std::string baseline_tape_sha256;
+  std::string mutated_tape_sha256;
+  bool tapes_distinct = false;
+  bool baseline_override_active = false;
+  bool mutated_override_active = false;
+  size_t baseline_bytes_consumed = 0;
+  size_t mutated_bytes_consumed = 0;
+};
+
 struct KEMOracleTrace {
+  int oracle_semantics_version = 2;
   std::string oracle_suite = "fips";
   std::string relation_mode = "cross-implementation";
   std::string job_id;
@@ -98,6 +111,19 @@ struct KEMOracleTrace {
   std::string finding_class;
   std::string finding_subclass;
   std::string mutation_target;
+  std::string configured_algorithm;
+  std::string adapter_algorithm;
+  std::string project_id;
+  std::string implementation_id;
+  size_t adapter_pk_len = 0;
+  size_t adapter_sk_len = 0;
+  size_t adapter_ct_len = 0;
+  size_t adapter_ss_len = 0;
+  size_t adapter_sig_max_len = 0;
+  bool valid_setup = true;
+  bool intervention_supported = true;
+  bool intervention_effective = true;
+  std::string diagnostic_event;
   pqcfuzz_status left_status = PQCFUZZ_INVALID_INPUT;
   pqcfuzz_status right_status = PQCFUZZ_INVALID_INPUT;
   bool has_verify_result = false;
@@ -107,6 +133,7 @@ struct KEMOracleTrace {
   ObservationTrace mutated;
   std::vector<OracleSubtestTrace> subtests;
   std::vector<MutationRecord> mutations;
+  std::vector<RngInterventionTrace> rng_interventions;
   std::vector<OracleFindingTrace> findings;
 };
 

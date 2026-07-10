@@ -14,6 +14,7 @@ from typing import Any
 
 REPORT_COLUMNS = [
     "version",
+    "oracle_semantics_version",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -30,6 +31,11 @@ REPORT_COLUMNS = [
     "mutated_accepted",
     "crash_signal",
     "timeout_seconds",
+    "validated",
+    "validation_attempts",
+    "validation_failure_reason",
+    "invalidated",
+    "invalidation_reasons",
     "artifact_path",
     "replay_command",
 ]
@@ -39,6 +45,7 @@ SUMMARY_COLUMNS = [
     "summary_mode",
     "group_key",
     "version",
+    "oracle_semantics_version",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -55,12 +62,14 @@ SUMMARY_COLUMNS = [
     "mutated_accepted",
     "crash_signal",
     "timeout_seconds",
+    "validated",
     "exemplar_artifact_path",
     "exemplar_replay_command",
 ]
 
 SUMMARY_KEY_COLUMNS = [
     "version",
+    "oracle_semantics_version",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -299,6 +308,7 @@ def base_row_from_finding(path: Path, finding: dict[str, Any]) -> dict[str, str]
     primitive = str(finding.get("primitive") or primitive_from_path(path) or primitive_for_algorithm(algorithm))
     row = {
         "version": version_from_finding(finding, path),
+        "oracle_semantics_version": str(finding.get("oracle_semantics_version") or ""),
         "algorithm": algorithm,
         "primitive": primitive,
         "oracle_suite": str(finding.get("oracle_suite") or ""),
@@ -315,6 +325,11 @@ def base_row_from_finding(path: Path, finding: dict[str, Any]) -> dict[str, str]
         "mutated_accepted": "",
         "crash_signal": "",
         "timeout_seconds": "",
+        "validated": str(bool(finding.get("validated", False))).lower(),
+        "validation_attempts": str(finding.get("validation_attempts") or "0"),
+        "validation_failure_reason": str(finding.get("validation_failure_reason") or ""),
+        "invalidated": "",
+        "invalidation_reasons": "",
         "artifact_path": str(artifact_dir),
         "replay_command": str(finding.get("replay_command") or ""),
     }
@@ -329,6 +344,7 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     mutated = trace.get("mutated") if isinstance(trace.get("mutated"), dict) else {}
     row = dict(row)
     row["version"] = row.get("version") or version_from_finding(finding, path, trace)
+    row["oracle_semantics_version"] = row.get("oracle_semantics_version") or str(trace.get("oracle_semantics_version") or "")
     row["algorithm"] = row.get("algorithm") or str(trace.get("algorithm") or "")
     row["primitive"] = row.get("primitive") or primitive_for_algorithm(row.get("algorithm", ""))
     row["oracle_suite"] = row.get("oracle_suite") or str(trace.get("oracle_suite") or "")
@@ -349,6 +365,11 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     row["mutated_accepted"] = "" if "accepted" not in mutated else str(bool(mutated.get("accepted"))).lower()
     row["crash_signal"] = str(trace.get("crash_signal") or "")
     row["timeout_seconds"] = str(trace.get("timeout_seconds") or "")
+    if not row.get("oracle_semantics_version") or row["oracle_semantics_version"] != "2":
+        row["invalidated"] = "true"
+        row["invalidation_reasons"] = "mutation_effectiveness_not_enforced,rng_intervention_may_be_identical,algorithm_adapter_mismatch"
+    else:
+        row["invalidated"] = "false"
     return {column: row.get(column, "") for column in REPORT_COLUMNS}
 
 

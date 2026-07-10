@@ -41,6 +41,7 @@ EXEMPLAR_KEY_COLUMNS = [
 
 COUNTER_ROW_COLUMNS = [
     "version",
+    "oracle_semantics_version",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -57,6 +58,7 @@ COUNTER_ROW_COLUMNS = [
     "mutated_accepted",
     "crash_signal",
     "timeout_seconds",
+    "validated",
 ]
 
 
@@ -285,6 +287,13 @@ def counter_rows(counter_file: Path, trace_mode: str) -> list[dict[str, object]]
             artifact_dir = artifact_dir_from_counter(counter_file, item)
             row = fast_row_from_artifact_dir(artifact_dir, trace_mode)
             apply_counter_fields(counter_file, artifact_dir, row, item)
+            finding_path = artifact_dir / "finding.json"
+            if finding_path.is_file():
+                validation_row = augment_row_with_trace(row, finding_path, load_json(finding_path))
+                if validation_row.get("validated") != "true" or validation_row.get("invalidated") == "true":
+                    continue
+            elif row.get("validated") != "true" or row.get("oracle_semantics_version") != "2":
+                continue
             if item.get("exemplar_replay_command"):
                 row["replay_command"] = item["exemplar_replay_command"]
             if item.get("exemplar_artifact_path"):
@@ -358,16 +367,28 @@ def write_reports(
     findings_mode: str = "full",
 ) -> None:
     output_root.mkdir(parents=True, exist_ok=True)
+    semantics_versions: set[str] = set()
+    for finding_path in iter_finding_files(roots):
+        finding = load_json(finding_path)
+        row = augment_row_with_trace(base_row_from_finding(finding_path, finding), finding_path, finding)
+        semantics_versions.add(row.get("oracle_semantics_version") or "legacy")
+    if "legacy" in semantics_versions and any(version != "legacy" for version in semantics_versions):
+        raise ValueError("refusing to merge invalidated legacy findings with corrected oracle semantics")
     if findings_mode == "fast-summary":
         write_fast_summary_reports(roots, output_root, formats, trace_mode)
         return
 
     write_findings = findings_mode == "full"
     findings_json = JsonArrayWriter(output_root / "findings.json") if write_findings and "json" in formats else None
+    diagnostics_json = JsonArrayWriter(output_root / "diagnostics.json") if "json" in formats else None
     findings_tsv_handle = None
     findings_tsv_writer = None
     if write_findings and "tsv" in formats:
         findings_tsv_handle, findings_tsv_writer = open_tsv(output_root / "findings.tsv", REPORT_COLUMNS)
+    diagnostics_tsv_handle = None
+    diagnostics_tsv_writer = None
+    if "tsv" in formats:
+        diagnostics_tsv_handle, diagnostics_tsv_writer = open_tsv(output_root / "diagnostics.tsv", REPORT_COLUMNS)
 
     counts: dict[tuple[str, ...], int] = {}
     exemplars: dict[tuple[str, ...], dict[str, str]] = {}
@@ -376,8 +397,18 @@ def write_reports(
         for finding_path in iter_finding_files(roots):
             finding = load_json(finding_path)
             row = base_row_from_finding(finding_path, finding)
-            if trace_mode == "all":
-                row = augment_row_with_trace(row, finding_path, finding)
+            # Validation and legacy invalidation are trace-backed properties;
+            # load the trace even when the public finding table is exemplar-only.
+            trace_row = augment_row_with_trace(row, finding_path, finding)
+            row = trace_row if trace_mode == "all" else row
+            eligible = trace_row.get("validated") == "true" and trace_row.get("invalidated") != "true"
+
+            if not eligible:
+                if diagnostics_json is not None:
+                    diagnostics_json.write_row(trace_row)
+                if diagnostics_tsv_writer is not None:
+                    diagnostics_tsv_writer.writerow({column: trace_row.get(column, "") for column in REPORT_COLUMNS})
+                continue
 
             if findings_json is not None:
                 findings_json.write_row(row)
@@ -395,6 +426,10 @@ def write_reports(
             findings_json.close()
         if findings_tsv_handle is not None:
             findings_tsv_handle.close()
+        if diagnostics_json is not None:
+            diagnostics_json.close()
+        if diagnostics_tsv_handle is not None:
+            diagnostics_tsv_handle.close()
 
     write_summary_reports(sorted_summary_rows(counts, exemplars), output_root, formats)
 

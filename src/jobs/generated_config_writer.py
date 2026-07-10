@@ -77,6 +77,8 @@ def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
 
 
 def metamorphic_oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
+    if pair["algorithm_family"] == "SLH-DSA":
+        raise ValueError("SLH-DSA jobs are disabled until a supported adapter is available")
     if pair["primitive_type"] == "kem":
         return [
             "kem_decaps_c",

@@ -4,6 +4,7 @@
   "type": "object",
   "required": [
     "version",
+    "oracle_semantics_version",
     "job_id",
     "pair_id",
     "algorithm",
@@ -15,16 +16,23 @@
     "legal_negative_outcome",
     "subtests",
     "mutations",
+    "rng_interventions",
     "findings"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
     },
     "subtests": {
       "type": "array"
     },
     "mutations": {
+      "type": "array"
+    },
+    "oracle_semantics_version": {
+      "const": 2
+    },
+    "rng_interventions": {
       "type": "array"
     },
     "findings": {

@@ -86,7 +86,7 @@ def test_rng_driven_fake_keygen_changes_with_tape(tmp_path: Path) -> None:
     )
 
 
-def test_ignored_rng_keygen_reports_malleability(tmp_path: Path) -> None:
+def test_ignored_rng_keygen_is_diagnostic_not_malleability(tmp_path: Path) -> None:
     compile_and_run(
         tmp_path,
         """
@@ -110,7 +110,9 @@ def test_ignored_rng_keygen_reports_malleability(tmp_path: Path) -> None:
           cfg.target = &adapter;
           cfg.seed = {1, 2, 3};
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
-          return trace.finding_class == "malleability" && trace.finding_subclass == "keygen_rng_ignored" ? 0 : 1;
+          return trace.findings.empty() && trace.observed_relation == "OBSERVED_INTERVENTION_NOT_OBSERVED" &&
+                         !trace.subtests.empty() && trace.subtests[0].skipped &&
+                         trace.subtests[0].note == "intervention_not_observed" ? 0 : 1;
         }
         """,
         [

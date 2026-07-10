@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "mutators/digest.h"
 #include "mutators/ml_kem_layout.h"
 
 namespace pqcfuzz {
@@ -15,9 +16,35 @@ struct MutationRecord {
   size_t offset = 0;
   size_t length = 0;
   bool skipped = false;
+  // `effective` is the semantic guard for mutation-based oracles.  It is
+  // deliberately independent of the planned operation: a set-zero on an
+  // already-zero byte is not an intervention.
+  bool effective = false;
   std::string reason;
   std::string field_parse_status;
+  size_t original_length = 0;
+  size_t mutated_length = 0;
+  std::string original_sha256;
+  std::string mutated_sha256;
 };
+
+inline void RecordMutationEffect(
+    MutationRecord *record,
+    const std::vector<uint8_t> &original,
+    const std::vector<uint8_t> &mutated) {
+  if (record == nullptr) {
+    return;
+  }
+  record->original_length = original.size();
+  record->mutated_length = mutated.size();
+  record->original_sha256 = MutationSha256Hex(original);
+  record->mutated_sha256 = MutationSha256Hex(mutated);
+  record->effective = original != mutated;
+  if (!record->effective) {
+    record->skipped = true;
+    record->reason = "no_effect";
+  }
+}
 
 std::vector<MutationRecord> MutateMlKemCiphertext(
     const MlKemParams &params,

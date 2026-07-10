@@ -632,12 +632,20 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
 std::string TraceToJson(const KEMOracleTrace &trace) {
   std::ostringstream out;
   out << "{\n";
-  out << "  \"version\": 1,\n";
+  out << "  \"version\": 2,\n";
+  out << "  \"oracle_semantics_version\": " << trace.oracle_semantics_version << ",\n";
   out << "  \"oracle_suite\": \"" << JsonEscape(trace.oracle_suite) << "\",\n";
   out << "  \"relation_mode\": \"" << JsonEscape(trace.relation_mode) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(trace.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(trace.pair_id) << "\",\n";
   out << "  \"algorithm\": \"" << JsonEscape(trace.algorithm) << "\",\n";
+  out << "  \"configured_algorithm\": \"" << JsonEscape(trace.configured_algorithm) << "\",\n";
+  out << "  \"adapter_algorithm\": \"" << JsonEscape(trace.adapter_algorithm) << "\",\n";
+  out << "  \"project_id\": \"" << JsonEscape(trace.project_id) << "\",\n";
+  out << "  \"implementation_id\": \"" << JsonEscape(trace.implementation_id) << "\",\n";
+  out << "  \"adapter_abi\": {\"pk_len\":" << trace.adapter_pk_len
+      << ",\"sk_len\":" << trace.adapter_sk_len << ",\"ct_len\":" << trace.adapter_ct_len
+      << ",\"ss_len\":" << trace.adapter_ss_len << ",\"sig_max_len\":" << trace.adapter_sig_max_len << "},\n";
   out << "  \"oracle_id\": \"" << JsonEscape(trace.oracle_id) << "\",\n";
   if (!trace.field.empty()) {
     out << "  \"field\": \"" << JsonEscape(trace.field) << "\",\n";
@@ -659,6 +667,10 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
   out << "  \"right_status\": \"" << pqcfuzz_status_to_string(trace.right_status) << "\",\n";
   out << "  \"verify_result\": " << (trace.verify_result ? "true" : "false") << ",\n";
   out << "  \"legal_negative_outcome\": " << (trace.legal_negative_outcome ? "true" : "false") << ",\n";
+  out << "  \"valid_setup\": " << (trace.valid_setup ? "true" : "false") << ",\n";
+  out << "  \"intervention_supported\": " << (trace.intervention_supported ? "true" : "false") << ",\n";
+  out << "  \"intervention_effective\": " << (trace.intervention_effective ? "true" : "false") << ",\n";
+  out << "  \"diagnostic_event\": \"" << JsonEscape(trace.diagnostic_event) << "\",\n";
   if (!trace.baseline.output_sha256.empty() || trace.baseline.has_bool ||
       trace.baseline.status != PQCFUZZ_INVALID_INPUT) {
     out << "  \"baseline\": {\"status\":\"" << pqcfuzz_status_to_string(trace.baseline.status) << "\"";
@@ -716,9 +728,28 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
     out << "    {\"operation\":\"" << JsonEscape(mutation.operation) << "\",\"target\":\""
         << JsonEscape(mutation.target) << "\",\"offset\":" << mutation.offset << ",\"length\":"
         << mutation.length << ",\"skipped\":" << (mutation.skipped ? "true" : "false")
+        << ",\"effective\":" << (mutation.effective ? "true" : "false")
         << ",\"reason\":\"" << JsonEscape(mutation.reason) << "\",\"field_parse_status\":\""
-        << JsonEscape(mutation.field_parse_status) << "\"}"
+        << JsonEscape(mutation.field_parse_status) << "\",\"original_length\":" << mutation.original_length
+        << ",\"mutated_length\":" << mutation.mutated_length
+        << ",\"original_sha256\":\"" << JsonEscape(mutation.original_sha256)
+        << "\",\"mutated_sha256\":\"" << JsonEscape(mutation.mutated_sha256) << "\"}"
         << (i + 1 == trace.mutations.size() ? "\n" : ",\n");
+  }
+  out << "  ],\n";
+  out << "  \"rng_interventions\": [\n";
+  for (size_t i = 0; i < trace.rng_interventions.size(); ++i) {
+    const auto &rng = trace.rng_interventions[i];
+    out << "    {\"baseline_tape_id\":\"" << JsonEscape(rng.baseline_tape_id)
+        << "\",\"mutated_tape_id\":\"" << JsonEscape(rng.mutated_tape_id)
+        << "\",\"baseline_tape_sha256\":\"" << JsonEscape(rng.baseline_tape_sha256)
+        << "\",\"mutated_tape_sha256\":\"" << JsonEscape(rng.mutated_tape_sha256)
+        << "\",\"tapes_distinct\":" << (rng.tapes_distinct ? "true" : "false")
+        << ",\"baseline_override_active\":" << (rng.baseline_override_active ? "true" : "false")
+        << ",\"mutated_override_active\":" << (rng.mutated_override_active ? "true" : "false")
+        << ",\"baseline_bytes_consumed\":" << rng.baseline_bytes_consumed
+        << ",\"mutated_bytes_consumed\":" << rng.mutated_bytes_consumed << "}"
+        << (i + 1 == trace.rng_interventions.size() ? "\n" : ",\n");
   }
   out << "  ],\n";
   out << "  \"findings\": [\n";

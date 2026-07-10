@@ -52,6 +52,7 @@ MaulResult MaulBytes(
   if (input.empty() && op % 8 != 5 && op % 8 != 7) {
     result.record.skipped = true;
     result.record.reason = "empty field";
+    RecordMutationEffect(&result.record, input, result.mutated);
     return result;
   }
 
@@ -73,7 +74,9 @@ MaulResult MaulBytes(
       result.mutated[offset] = 0xff;
       break;
     case 4: {
-      const size_t new_size = input.empty() ? 0 : PlanByte(mutation, 1, 0) % input.size();
+      // Include the original size in the planned domain so the common
+      // equality check can explicitly quarantine a no-op truncation.
+      const size_t new_size = input.empty() ? 0 : PlanByte(mutation, 1, 0) % (input.size() + 1);
       result.mutated.resize(new_size);
       result.record.length = input.size() - new_size;
       break;
@@ -100,6 +103,7 @@ MaulResult MaulBytes(
       result.record.length = result.mutated.size();
       break;
   }
+  RecordMutationEffect(&result.record, input, result.mutated);
   return result;
 }
 

@@ -75,11 +75,18 @@ int main(int argc, char **argv) {
   pqcfuzz::KEMOracleTrace trace;
   if (args.primitive_type == "sig") {
     pqcfuzz::MlDsaParams dsa_params{};
-    pqcfuzz::SlhDsaParams slh_params{};
     const bool is_mldsa = pqcfuzz::GetMlDsaParams(args.algorithm, &dsa_params);
-    const bool is_slhdsa = pqcfuzz::GetSlhDsaParams(args.algorithm, &slh_params);
-    if (!is_mldsa && !is_slhdsa) {
-      std::cerr << "unsupported signature algorithm: " << args.algorithm << "\n";
+    if (!is_mldsa) {
+      std::cerr << "unsupported signature algorithm (SLH-DSA is not dispatched): " << args.algorithm << "\n";
+      return pqcfuzz::kExitInvalidInputOrConfig;
+    }
+    const pqcfuzz_sig_adapter *target =
+        pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    pqcfuzz::AdapterRoutingExpectation expected{
+        args.left_project_id, args.left_implementation_id, args.algorithm,
+        dsa_params.pk_len, dsa_params.sk_len, 0, 0, dsa_params.sig_max_len};
+    if (!pqcfuzz::ValidateSigAdapterRouting(target, expected, &error)) {
+      std::cerr << "signature adapter routing error: " << error << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
 
@@ -90,9 +97,7 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = dsa_params;
-      config.slh_params = slh_params;
-      config.is_slh_dsa = is_slhdsa;
-      config.target = pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+      config.target = target;
       config.seed = envelope.seed;
       config.message = DefaultMessage(envelope.msg);
       config.context = envelope.extra.size() > 255
@@ -107,9 +112,7 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = dsa_params;
-      config.slh_params = slh_params;
-      config.is_slh_dsa = is_slhdsa;
-      config.left = pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+      config.left = target;
       config.right = pqcfuzz::GetSigAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;
       config.exchange_contract.signature_exchange = args.signature_exchange;
@@ -127,6 +130,15 @@ int main(int argc, char **argv) {
       std::cerr << "unsupported ML-KEM algorithm: " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
+    const pqcfuzz_kem_adapter *target =
+        pqcfuzz::GetKemAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    pqcfuzz::AdapterRoutingExpectation expected{
+        args.left_project_id, args.left_implementation_id, args.algorithm,
+        params.pk_len, params.sk_len, params.ct_len, params.ss_len, 0};
+    if (!pqcfuzz::ValidateKemAdapterRouting(target, expected, &error)) {
+      std::cerr << "KEM adapter routing error: " << error << "\n";
+      return pqcfuzz::kExitInvalidInputOrConfig;
+    }
 
     if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
       pqcfuzz::MetamorphicKemConfig config;
@@ -135,7 +147,7 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = params;
-      config.target = pqcfuzz::GetKemAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+      config.target = target;
       config.seed = envelope.seed;
       config.mutation = envelope.mutation;
       trace = pqcfuzz::ExecuteMetamorphicKemOracle(config);
@@ -146,7 +158,7 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = params;
-      config.left = pqcfuzz::GetKemAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+      config.left = target;
       config.right = pqcfuzz::GetKemAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;
       config.exchange_contract.ciphertext_exchange = args.ciphertext_exchange;
@@ -160,6 +172,25 @@ int main(int argc, char **argv) {
 
   trace.oracle_suite = pqcfuzz::OracleSuiteName(args.oracle_suite);
   trace.relation_mode = pqcfuzz::RelationModeName(args.relation_mode);
+  trace.configured_algorithm = args.algorithm;
+  if (args.primitive_type == "kem") {
+    const auto *adapter = pqcfuzz::GetKemAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    trace.adapter_algorithm = adapter->algorithm;
+    trace.project_id = adapter->project_id;
+    trace.implementation_id = adapter->implementation_id;
+    trace.adapter_pk_len = adapter->pk_len;
+    trace.adapter_sk_len = adapter->sk_len;
+    trace.adapter_ct_len = adapter->ct_len;
+    trace.adapter_ss_len = adapter->ss_len;
+  } else {
+    const auto *adapter = pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    trace.adapter_algorithm = adapter->algorithm;
+    trace.project_id = adapter->project_id;
+    trace.implementation_id = adapter->implementation_id;
+    trace.adapter_pk_len = adapter->pk_len;
+    trace.adapter_sk_len = adapter->sk_len;
+    trace.adapter_sig_max_len = adapter->sig_max_len;
+  }
   if (!WriteFile(args.trace, pqcfuzz::TraceToJson(trace))) {
     std::cerr << "failed to write trace: " << args.trace << "\n";
     return pqcfuzz::kExitInvalidInputOrConfig;

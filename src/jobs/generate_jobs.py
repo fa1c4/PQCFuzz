@@ -42,6 +42,11 @@ def main() -> int:
     args = parse_args()
     document = load_pair_alg(args.pair_alg)
     pairs = enabled_pairs_for_family(document, args.algorithm_family)
+    # SLH-DSA metadata remains parseable for audit, but no selected liboqs
+    # release has a real adapter in this harness.  Never materialize a job
+    # whose envelope label could otherwise reach an ML-DSA adapter.
+    if args.algorithm_family == "SLH-DSA":
+        pairs = []
     if args.target_algorithm:
         pairs = [pair for pair in pairs if pair["algorithm"] == args.target_algorithm]
     if args.oracle_suite == "metamorphic":

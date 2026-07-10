@@ -22,11 +22,13 @@ def write_finding(
     oracle_id: str = "kem_encaps_badrng",
     field: str = "rng",
     finding_class: str = "malleability",
+    legacy: bool = False,
 ) -> Path:
     artifact = eval_root / "campaigns" / f"liboqs-{version}" / "workspace" / "results" / primitive / finding_id
     artifact.mkdir(parents=True, exist_ok=True)
     finding = {
-        "version": 1,
+        "version": 1 if legacy else 2,
+        "oracle_semantics_version": None if legacy else 2,
         "finding_id": finding_id,
         "job_id": f"pqcfuzz_eval_{primitive}_liboqs_{version}",
         "pair_id": f"liboqs_{version}_self_reference_{primitive}",
@@ -39,9 +41,13 @@ def write_finding(
         "trace_path": str(artifact / "oracle_trace.json"),
         "artifact_dir": str(artifact),
         "replay_command": f"python3 src/replay/replay_one.py --input {artifact / 'structured_input.bin'}",
+        "validated": not legacy,
+        "validation_attempts": 1 if not legacy else 0,
+        "validation_failure_reason": "" if not legacy else "oracle_semantics_version_mismatch",
     }
     trace = {
-        "version": 1,
+        "version": 1 if legacy else 2,
+        "oracle_semantics_version": None if legacy else 2,
         "oracle_suite": "metamorphic",
         "relation_mode": "single-target",
         "job_id": finding["job_id"],
@@ -53,6 +59,11 @@ def write_finding(
         "observed_relation": "OBSERVED_EQUAL",
         "finding_class": finding_class,
         "finding_subclass": "encaps_rng_ignored",
+        "configured_algorithm": finding["algorithm"],
+        "adapter_algorithm": finding["algorithm"],
+        "valid_setup": True,
+        "intervention_supported": True,
+        "intervention_effective": True,
         "baseline": {"status": "OK", "accepted": True},
         "mutated": {"status": "OK", "accepted": True},
         "findings": [{"class": finding_class, "subclass": "encaps_rng_ignored"}],
@@ -114,6 +125,19 @@ def test_trace_mode_all_keeps_per_finding_trace_columns(tmp_path: Path) -> None:
     assert findings[0]["baseline_status"] == "OK"
 
 
+def test_legacy_findings_are_invalidated_and_not_counted(tmp_path: Path) -> None:
+    eval_root = tmp_path / "pqcfuzz_eval"
+    write_finding(eval_root, legacy=True)
+    output = tmp_path / "report"
+
+    write_reports([eval_root], output, {"tsv"}, trace_mode="all")
+
+    assert read_tsv(output / "findings.tsv") == []
+    diagnostics = read_tsv(output / "diagnostics.tsv")
+    assert diagnostics[0]["invalidated"] == "true"
+    assert "mutation_effectiveness_not_enforced" in diagnostics[0]["invalidation_reasons"]
+
+
 def test_summary_only_mode_skips_raw_finding_outputs(tmp_path: Path) -> None:
     eval_root = tmp_path / "pqcfuzz_eval"
     write_finding(eval_root)
@@ -172,6 +196,8 @@ def test_fast_summary_prefers_grouped_counter_counts(tmp_path: Path) -> None:
                 "count",
                 "group_key",
                 "finding_id",
+                "oracle_semantics_version",
+                "validated",
                 "finding_class",
                 "finding_subclass",
                 "exemplar_artifact_path",
@@ -184,6 +210,8 @@ def test_fast_summary_prefers_grouped_counter_counts(tmp_path: Path) -> None:
                 "42",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_keygen_badrng|rng|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|encaps_rng_ignored|OK|OK",
                 artifact.name,
+                "2",
+                "true",
                 "malleability",
                 "encaps_rng_ignored",
                 str(artifact),
@@ -216,6 +244,8 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
                 "count",
                 "group_key",
                 "finding_id",
+                "oracle_semantics_version",
+                "validated",
                 "algorithm",
                 "primitive",
                 "oracle_suite",
@@ -238,6 +268,8 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
                 "17",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_decaps_c|ciphertext|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|ciphertext_malleability|OK|OK",
                 "malleability_missing",
+                "2",
+                "true",
                 "ML-KEM-768",
                 "kem",
                 "metamorphic",

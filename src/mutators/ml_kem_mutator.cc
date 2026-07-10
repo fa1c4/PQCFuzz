@@ -39,14 +39,17 @@ MutationRecord ApplyMutationToRegions(
     const std::vector<uint8_t> &plan,
     std::vector<uint8_t> *buffer) {
   MutationRecord record;
+  const std::vector<uint8_t> original = buffer == nullptr ? std::vector<uint8_t>{} : *buffer;
   if (buffer == nullptr) {
     record.skipped = true;
     record.reason = "missing buffer";
+    RecordMutationEffect(&record, original, original);
     return record;
   }
   if (regions.empty()) {
     record.skipped = true;
     record.reason = "missing ML-KEM regions";
+    RecordMutationEffect(&record, original, *buffer);
     return record;
   }
   const uint8_t op_byte = static_cast<uint8_t>(ByteFromPlan(plan, 0, 0));
@@ -59,6 +62,7 @@ MutationRecord ApplyMutationToRegions(
   if (region.offset >= buffer->size() || region.length == 0) {
     record.skipped = true;
     record.reason = "target region outside buffer";
+    RecordMutationEffect(&record, original, *buffer);
     return record;
   }
 
@@ -83,9 +87,10 @@ MutationRecord ApplyMutationToRegions(
       (*buffer)[offset] = 0xff;
       break;
     case 4: {
-      const size_t new_size = region.offset + relative;
-      buffer->resize(std::min(new_size, buffer->size()));
-      record.length = 0;
+      const size_t new_size = region.offset + (ByteFromPlan(plan, 2, 0) % (region_len + 1));
+      const size_t bounded_new_size = std::min(new_size, buffer->size());
+      record.length = buffer->size() - bounded_new_size;
+      buffer->resize(bounded_new_size);
       break;
     }
     case 5:
@@ -107,6 +112,7 @@ MutationRecord ApplyMutationToRegions(
       record.length = region_len;
       break;
   }
+  RecordMutationEffect(&record, original, *buffer);
   return record;
 }
 

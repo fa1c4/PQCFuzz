@@ -124,3 +124,10 @@ def test_worker_exit_zero_without_trace_is_no_finding(tmp_path: Path) -> None:
     artifact = run_replay(tmp_path, "import sys\nsys.exit(0)\n")
     assert load_trace(artifact)["findings"] == []
     assert not (artifact / "finding.json").exists()
+
+
+def test_worker_api_error_without_trace_is_diagnostic_not_crash(tmp_path: Path) -> None:
+    artifact = run_replay(tmp_path, "import sys\nsys.exit(74)\n")
+    trace = load_trace(artifact)
+    assert trace["findings"] == []
+    assert trace["diagnostic_event"] == "native_replay_api_or_harness_error"

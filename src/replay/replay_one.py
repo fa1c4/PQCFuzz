@@ -315,7 +315,8 @@ def synthesize_trace(
         finding_class = sanitizer
     finding: dict[str, Any] = {"class": finding_class, "summary": summary}
     trace: dict[str, Any] = {
-        "version": 1,
+        "version": 2,
+        "oracle_semantics_version": 2,
         "oracle_suite": job.get("oracle_suite", "fips"),
         "relation_mode": job.get("relation_mode", "cross-implementation"),
         "job_id": job["job_id"],
@@ -335,7 +336,8 @@ def synthesize_trace(
 
 def synthesize_no_finding_trace(job: dict[str, Any], oracle_id: str) -> dict[str, Any]:
     return {
-        "version": 1,
+        "version": 2,
+        "oracle_semantics_version": 2,
         "oracle_suite": job.get("oracle_suite", "fips"),
         "relation_mode": job.get("relation_mode", "cross-implementation"),
         "job_id": job["job_id"],
@@ -346,6 +348,13 @@ def synthesize_no_finding_trace(job: dict[str, Any], oracle_id: str) -> dict[str
         "mutations": [],
         "findings": [],
     }
+
+
+def synthesize_diagnostic_trace(job: dict[str, Any], oracle_id: str, returncode: int | None) -> dict[str, Any]:
+    trace = synthesize_no_finding_trace(job, oracle_id)
+    trace["diagnostic_event"] = "native_replay_api_or_harness_error"
+    trace["normalized_status"] = returncode
+    return trace
 
 
 def load_trace(path: Path) -> dict[str, Any] | None:
@@ -373,18 +382,91 @@ def finding_subclass(trace: dict[str, Any]) -> str:
     return ""
 
 
+def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[bool, str]:
+    """Check the evidence required before a semantic result is countable."""
+    findings = trace.get("findings")
+    if not isinstance(findings, list) or not findings:
+        return False, "replay_has_no_finding"
+    finding_class = classify_trace(trace)
+    if finding_class in {"crash", "hang", "memory_safety", "ub"}:
+        # Process/sanitizer evidence is handled by the replay worker.  Do not
+        # require a mutation relation for those classes.
+        return True, ""
+    if trace.get("oracle_semantics_version") != 2:
+        return False, "oracle_semantics_version_mismatch"
+    if trace.get("algorithm") != job.get("algorithm"):
+        return False, "algorithm_routing_mismatch"
+    if trace.get("configured_algorithm") != job.get("algorithm"):
+        return False, "configured_algorithm_mismatch"
+    if trace.get("adapter_algorithm") != job.get("algorithm"):
+        return False, "adapter_algorithm_mismatch"
+    if not trace.get("valid_setup", False):
+        return False, "invalid_setup"
+    if not trace.get("intervention_supported", False):
+        return False, "unsupported_intervention"
+    if not trace.get("intervention_effective", False):
+        return False, "ineffective_intervention"
+    for mutation in trace.get("mutations", []):
+        if not isinstance(mutation, dict) or not mutation.get("effective", False):
+            return False, "ineffective_mutation"
+        if not mutation.get("original_sha256") or not mutation.get("mutated_sha256"):
+            return False, "missing_mutation_digest"
+        if mutation["original_sha256"] == mutation["mutated_sha256"]:
+            return False, "mutation_digest_mismatch"
+    for rng in trace.get("rng_interventions", []):
+        if not isinstance(rng, dict) or not rng.get("tapes_distinct", False):
+            return False, "rng_tapes_not_distinct"
+        if not rng.get("baseline_tape_sha256") or not rng.get("mutated_tape_sha256"):
+            return False, "missing_rng_tape_digest"
+        if rng["baseline_tape_sha256"] == rng["mutated_tape_sha256"]:
+            return False, "rng_tapes_not_distinct"
+        if not rng.get("baseline_bytes_consumed") or not rng.get("mutated_bytes_consumed"):
+            return False, "intervention_not_observed"
+    return True, ""
+
+
+def replay_equivalence_error(expected: dict[str, Any], observed: dict[str, Any]) -> str:
+    """Return the first evidence mismatch between an original and replay trace."""
+    for key in (
+        "oracle_semantics_version",
+        "algorithm",
+        "configured_algorithm",
+        "adapter_algorithm",
+        "project_id",
+        "implementation_id",
+        "oracle_id",
+        "observed_relation",
+    ):
+        if expected.get(key) != observed.get(key):
+            return f"replay_{key}_mismatch"
+    for key in ("baseline", "mutated"):
+        if expected.get(key) != observed.get(key):
+            return f"replay_{key}_observation_mismatch"
+    if expected.get("mutations", []) != observed.get("mutations", []):
+        return "replay_mutation_digest_mismatch"
+    if expected.get("rng_interventions", []) != observed.get("rng_interventions", []):
+        return "replay_rng_tape_digest_mismatch"
+    return ""
+
+
 def maybe_write_finding(
     artifact_dir: Path,
     job: dict[str, Any],
     trace: dict[str, Any],
     command: list[str],
+    replay_validation_failure: str = "",
 ) -> None:
     finding_class = classify_trace(trace)
     if finding_class is None:
         return
     finding_id = f"{finding_class}_{hashlib.sha256(json.dumps(trace, sort_keys=True).encode('utf-8')).hexdigest()[:16]}"
+    validated, validation_failure_reason = validate_replay_trace(trace, job)
+    if replay_validation_failure:
+        validated = False
+        validation_failure_reason = replay_validation_failure
     finding = {
-        "version": 1,
+        "version": 2,
+        "oracle_semantics_version": trace.get("oracle_semantics_version", 2),
         "finding_id": finding_id,
         "job_id": job["job_id"],
         "pair_id": job.get("pair_id", job["job_id"]),
@@ -398,12 +480,21 @@ def maybe_write_finding(
         "trace_path": str(artifact_dir / "oracle_trace.json"),
         "artifact_dir": str(artifact_dir),
         "replay_command": " ".join(command),
+        "validated": validated,
+        "validation_attempts": 1,
+        "validation_failure_reason": validation_failure_reason,
     }
     write_json(artifact_dir / "finding.json", finding)
     generate_poc(artifact_dir, finding, job)
 
 
-def replay(job_path: Path, input_path: Path, replay_bin: Path | None, timeout_seconds: int) -> Path:
+def replay(
+    job_path: Path,
+    input_path: Path,
+    replay_bin: Path | None,
+    timeout_seconds: int,
+    expected_trace_path: Path | None = None,
+) -> Path:
     job = json.loads(job_path.read_text(encoding="utf-8"))
     input_bytes, envelope = parse_envelope(input_path)
     if envelope["algorithm"] != job["algorithm"]:
@@ -489,16 +580,20 @@ def replay(job_path: Path, input_path: Path, replay_bin: Path | None, timeout_se
         elif returncode == 0:
             trace = synthesize_no_finding_trace(job, oracle_id)
         else:
-            trace = synthesize_trace(
-                job,
-                oracle_id,
-                "crash",
-                f"native replay exited with status {returncode} before writing a trace",
-                returncode=returncode,
-                stderr=stderr,
-            )
+            # A normal API/config return is diagnostic evidence, not a process
+            # crash.  Only a signal, timeout, explicit native-crash exit, or
+            # sanitizer output receives a crash/hang classification above.
+            trace = synthesize_diagnostic_trace(job, oracle_id, returncode)
+    replay_mismatch = ""
+    if expected_trace_path is not None:
+        expected = load_trace(expected_trace_path)
+        if expected is None:
+            raise ReplayError(f"expected trace is missing or invalid: {expected_trace_path}")
+        replay_mismatch = replay_equivalence_error(expected, trace)
     write_json(artifact_dir / "oracle_trace.json", trace)
-    maybe_write_finding(artifact_dir, job, trace, command)
+    maybe_write_finding(artifact_dir, job, trace, command, replay_mismatch)
+    if replay_mismatch:
+        raise ReplayError(replay_mismatch)
     return artifact_dir
 
 
@@ -508,6 +603,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input", required=True, help="PQCFuzz envelope input")
     parser.add_argument("--timeout-seconds", type=int, default=30, help="native replay timeout. Default: 30")
     parser.add_argument("--replay-bin", help="optional native replay_oracle binary")
+    parser.add_argument("--expected-trace", help="original trace that deterministic replay must match")
     return parser.parse_args()
 
 
@@ -520,6 +616,7 @@ def main() -> int:
         Path(args.input),
         Path(args.replay_bin) if args.replay_bin else None,
         args.timeout_seconds,
+        Path(args.expected_trace) if args.expected_trace else None,
     )
     try:
         display_path = artifact_dir.relative_to(REPO_ROOT)
