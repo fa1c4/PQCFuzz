@@ -2,6 +2,7 @@
 #include <fuzzing/datasource/id.hpp>
 #include "tests.h"
 #include "executor.h"
+#include "liboqs_replay_input.h"
 #include <cryptofuzz/util.h>
 #include <set>
 #include <algorithm>
@@ -16,6 +17,7 @@ void Driver::LoadModule(std::shared_ptr<Module> module) {
 
 void Driver::Run(const uint8_t* data, const size_t size) const {
     using fuzzing::datasource::ID;
+    const liboqs_replay::ScopedInput replayInput(data, size);
     /* Calculate the number of inputs */
 
     static ExecutorDigest executorDigest(CF_OPERATION("Digest"), modules, options);

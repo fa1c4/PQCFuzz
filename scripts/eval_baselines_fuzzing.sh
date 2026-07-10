@@ -106,8 +106,8 @@ print_campaign_commands() {
   case "$baseline" in
     libFuzzer)
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer build --version $version"
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --version $version --target kem --mode full --max-total-time $kem_seconds"
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --version $version --target sig --mode full --max-total-time $sig_seconds"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target kem --mode full --max-total-time $kem_seconds"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target sig --mode full --max-total-time $sig_seconds"
       ;;
     cryptofuzz|CLFuzz)
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline build --version $version"
@@ -497,6 +497,56 @@ run_step() {
   return $?
 }
 
+single_style_campaign_outcome() {
+  local baseline="$1"
+  local summary_file="${WORKSPACE_ROOT_REL}/${baseline}/targets-run/liboqs-${VERSION}/summary.json"
+  if [ "$baseline" = "CLFuzz" ]; then
+    summary_file="${WORKSPACE_ROOT_REL}/${baseline}/targets-run/liboqs-${VERSION}/full/summary.json"
+  fi
+
+  python3 - "$summary_file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+
+def count(value, paths):
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return len(paths) if isinstance(paths, list) else 0
+
+
+def outcome(document):
+    for key in ("outcome", "status"):
+        value = document.get(key)
+        if value in {
+            "completed", "completed-with-findings", "target-crash", "timed-out",
+            "harness-error", "infrastructure-failed",
+        }:
+            return value
+    if count(document.get("semantic_finding_count"), document.get("semantic_findings")) > 0:
+        return "completed-with-findings"
+    normalized = document.get("normalized_outcome")
+    return {
+        "ok": "completed",
+        "invariant_violation": "completed-with-findings",
+        "process_crash": "target-crash",
+        "process_hang": "timed-out",
+        "operation_error": "harness-error",
+    }.get(normalized, "unknown")
+
+
+try:
+    with Path(sys.argv[1]).open(encoding="utf-8") as f:
+        document = json.load(f)
+except (OSError, json.JSONDecodeError):
+    document = {}
+
+print(outcome(document) if isinstance(document, dict) else "unknown")
+PY
+}
+
 export PQCDF_WORKSPACE_ROOT="$WORKSPACE_ROOT_REL"
 export PQCDF_BASELINE_WRAPPER_ROOT="$BASELINE_WRAPPER_ROOT"
 
@@ -543,13 +593,13 @@ case "$BASELINE" in
   libFuzzer)
     COMPACTION_ELIGIBLE=1
     write_status "run-kem" "running"
-    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS"
     KEM_STATUS="$?"
     echo "[eval] libFuzzer kem exited with status $KEM_STATUS"
     echo
 
     write_status "run-sig" "running"
-    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS"
     SIG_STATUS="$?"
     echo "[eval] libFuzzer sig exited with status $SIG_STATUS"
 
@@ -570,7 +620,7 @@ case "$BASELINE" in
   CLFuzz)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    run_step "$RUN_BASELINE_SCRIPT" CLFuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" CLFuzz run --version "$VERSION" --mode full --profile full --max-total-time "$FUZZING_SECONDS"
     FUZZ_STATUS="$?"
     ;;
 
@@ -588,8 +638,22 @@ case "$BASELINE" in
 esac
 
 echo "[eval] fuzzing exited with status $FUZZ_STATUS"
+CAMPAIGN_OUTCOME=""
+if [ "$BASELINE" = "cryptofuzz" ] || [ "$BASELINE" = "CLFuzz" ]; then
+  CAMPAIGN_OUTCOME="$(single_style_campaign_outcome "$BASELINE")"
+  echo "[eval] ${BASELINE} outcome: $CAMPAIGN_OUTCOME"
+fi
 if [ "$FUZZ_STATUS" -ne 0 ]; then
+  case "$CAMPAIGN_OUTCOME" in
+    target-crash|timed-out|harness-error|infrastructure-failed)
+      finish_campaign "$CAMPAIGN_OUTCOME" "$FUZZ_STATUS"
+      ;;
+  esac
   finish_campaign "fuzzing-failed" "$FUZZ_STATUS"
+fi
+
+if [ "$CAMPAIGN_OUTCOME" = "completed-with-findings" ]; then
+  finish_campaign "completed-with-findings" 0
 fi
 
 finish_campaign "completed" 0
@@ -715,6 +779,79 @@ def artifact_counts(run_root):
                 counts["hang"] += 1
     return counts
 
+def nonnegative_int(value):
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return None
+
+def evidence_count(document, count_keys, path_keys):
+    if not isinstance(document, dict):
+        return 0
+    for key in count_keys:
+        value = nonnegative_int(document.get(key))
+        if value is not None:
+            return value
+    for key in path_keys:
+        value = document.get(key)
+        if isinstance(value, list):
+            return len(value)
+    return 0
+
+def selected_summary(document):
+    """Return one campaign-level record without double-counting nested profiles."""
+    if not isinstance(document, dict):
+        return {}
+    profiles = document.get("profiles")
+    if isinstance(profiles, dict):
+        for name in ("semantic", document.get("latest_profile")):
+            record = profiles.get(name)
+            if isinstance(record, dict):
+                return record
+        if len(profiles) == 1:
+            record = next(iter(profiles.values()))
+            if isinstance(record, dict):
+                return record
+    return document
+
+def summary_metrics(document):
+    document = selected_summary(document)
+    return {
+        "outcome": document.get("outcome") or document.get("status"),
+        "normalized_outcome": document.get("normalized_outcome"),
+        "stop_reason": document.get("stop_reason"),
+        "semantic_finding_count": evidence_count(
+            document,
+            ("semantic_finding_count", "structured_finding_count", "finding_count"),
+            ("semantic_findings", "structured_findings", "findings"),
+        ),
+        "operation_diagnostic_count": evidence_count(
+            document,
+            ("operation_diagnostic_count", "diagnostic_count"),
+            ("operation_diagnostics", "diagnostics"),
+        ),
+        "sanitizer_crash_count": evidence_count(
+            document,
+            ("sanitizer_crash_count", "crash_count"),
+            ("sanitizer_crashes", "crashes"),
+        ),
+        "hang_count": evidence_count(document, ("hang_count", "timeout_count"), ("hangs", "timeouts")),
+        "sanitizer_artifact_count": evidence_count(
+            document,
+            ("sanitizer_artifact_count",),
+            ("sanitizer_artifacts",),
+        ),
+        "worker_count": document.get("worker_count"),
+        "jobs": document.get("jobs"),
+        "cpu_allocation": document.get("cpu_allocation"),
+        "wall_time_seconds": document.get("wall_time_seconds"),
+        "cpu_time_seconds": document.get("cpu_time_seconds"),
+        "operations": document.get("operations"),
+        "algorithm_list": document.get("algorithm_list"),
+        "property_list": document.get("property_list"),
+        "module_version": document.get("module_version"),
+    }
+
 campaigns = []
 with open(index_file, "r", encoding="utf-8", newline="") as f:
     reader = csv.DictReader(f, delimiter="\t")
@@ -735,12 +872,27 @@ for campaign in campaigns:
     baseline_summaries = []
     for path in baseline_summary_paths:
         parsed = load_json(path)
+        parsed_metrics = summary_metrics(parsed)
         baseline_summaries.append({
             "path": rel(path),
             "status": parsed.get("status") if isinstance(parsed, dict) else None,
+            "outcome": parsed_metrics["outcome"],
             "target": parsed.get("target") if isinstance(parsed, dict) else None,
             "mode": parsed.get("mode") if isinstance(parsed, dict) else None,
+            "semantic_finding_count": parsed_metrics["semantic_finding_count"],
+            "operation_diagnostic_count": parsed_metrics["operation_diagnostic_count"],
+            "sanitizer_crash_count": parsed_metrics["sanitizer_crash_count"],
+            "hang_count": parsed_metrics["hang_count"],
         })
+
+    version_root = run_root / f"liboqs-{campaign['version']}"
+    profile_summary_path = version_root / "full" / "summary.json"
+    version_summary_path = version_root / "summary.json"
+    if profile_summary_path.is_file():
+        root_summary = load_json(profile_summary_path)
+    else:
+        root_summary = load_json(version_summary_path if version_summary_path.is_file() else run_root / "summary.json")
+    metrics = summary_metrics(root_summary)
 
     reports_dir = run_root / "reports"
     logs_dir = run_root / "logs"
@@ -750,6 +902,8 @@ for campaign in campaigns:
     manifest_path = workspace_root / baseline / "compaction_manifest.json"
     manifest = load_json(manifest_path) if manifest_path.is_file() else None
     retained_counts = manifest.get("retained_artifact_counts", {}) if isinstance(manifest, dict) else {}
+    if not isinstance(retained_counts, dict):
+        retained_counts = {}
     row_result_save_mode = (
         campaign.get("result_save_mode")
         or status.get("result_save_mode")
@@ -799,6 +953,28 @@ for campaign in campaigns:
         "script_snapshot": campaign.get("script_snapshot") or status.get("script_snapshot"),
         "script_snapshot_hash": campaign.get("script_snapshot_hash") or status.get("script_snapshot_hash"),
         "baseline_summaries": baseline_summaries,
+        "summary_outcome": metrics["outcome"],
+        "normalized_outcome": metrics["normalized_outcome"],
+        "stop_reason": metrics["stop_reason"],
+        "semantic_finding_count": metrics["semantic_finding_count"],
+        "operation_diagnostic_count": metrics["operation_diagnostic_count"],
+        "sanitizer_crash_count": max(
+            metrics["sanitizer_crash_count"],
+            counts["crash"] + counts["leak"] + counts["oom"],
+        ),
+        "sanitizer_artifact_count": max(
+            metrics["sanitizer_artifact_count"],
+            counts["crash"] + counts["leak"] + counts["oom"] + counts["timeout"],
+        ),
+        "worker_count": metrics["worker_count"],
+        "jobs": metrics["jobs"],
+        "cpu_allocation": metrics["cpu_allocation"],
+        "wall_time_seconds": metrics["wall_time_seconds"],
+        "cpu_time_seconds": metrics["cpu_time_seconds"],
+        "operations": metrics["operations"],
+        "algorithm_list": metrics["algorithm_list"],
+        "property_list": metrics["property_list"],
+        "module_version": metrics["module_version"],
         "missing_expected_summary": missing_expected_summary,
         "crash_count": counts["crash"],
         "timeout_count": counts["timeout"],
@@ -814,15 +990,28 @@ for campaign in campaigns:
         "build_retained": manifest.get("build_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "corpus_retained": manifest.get("corpus_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "retained_artifact_counts": retained_counts,
-        "hang_count": max(counts["hang"], retained_counts.get("hang", 0)),
+        "hang_count": max(
+            metrics["hang_count"],
+            counts["hang"],
+            counts["timeout"],
+            nonnegative_int(retained_counts.get("hang")) or 0,
+        ),
     }
     rows.append(row)
+
+totals = {
+    "semantic_finding_count": sum(row["semantic_finding_count"] for row in rows),
+    "operation_diagnostic_count": sum(row["operation_diagnostic_count"] for row in rows),
+    "sanitizer_crash_count": sum(row["sanitizer_crash_count"] for row in rows),
+    "hang_count": sum(row["hang_count"] for row in rows),
+}
 
 summary = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "fuzzing_seconds": fuzzing_seconds,
     "result_save_mode": result_save_mode,
     "overall_status": overall_status,
+    "totals": totals,
     "campaigns": rows,
 }
 
@@ -843,10 +1032,24 @@ columns = [
     "kem_status",
     "sig_status",
     "elapsed_seconds",
+    "summary_outcome",
+    "normalized_outcome",
+    "stop_reason",
+    "semantic_finding_count",
+    "operation_diagnostic_count",
+    "sanitizer_crash_count",
+    "sanitizer_artifact_count",
     "crash_count",
     "timeout_count",
     "leak_count",
     "oom_count",
+    "hang_count",
+    "worker_count",
+    "jobs",
+    "cpu_allocation",
+    "wall_time_seconds",
+    "cpu_time_seconds",
+    "module_version",
     "log",
     "launcher",
     "result_save_mode",
@@ -858,7 +1061,6 @@ columns = [
     "removed_bytes_estimate",
     "build_retained",
     "corpus_retained",
-    "hang_count",
 ]
 with open(summary_tsv, "w", encoding="utf-8", newline="") as f:
     writer = csv.DictWriter(f, delimiter="\t", fieldnames=columns)

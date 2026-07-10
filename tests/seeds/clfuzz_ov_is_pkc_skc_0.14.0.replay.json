@@ -1,0 +1,17 @@
+{
+  "algorithm": "OV-Is-pkc-skc",
+  "fixture_encoding": "base64",
+  "fixture_file": "clfuzz_ov_is_pkc_skc_0.14.0.input.b64",
+  "input_sha256": "6875390b403a51e17d5074a0a9cae40a2194470338be1cef94af68233fd24511",
+  "input_size": 3129,
+  "mutation": {
+    "historical_raw_byte_hex": "68",
+    "historical_effective_delta_hex": "69",
+    "historical_semantics": "legacy-or-one-v1",
+    "target": "public_key"
+  },
+  "property_id": "sig_verify_pk",
+  "replay_attempts": 3,
+  "selector": 15760,
+  "source": "CLFuzz 0.14.0 archived crash-4711be8eb65fce57e8dc138914fe65920baa0ac9"
+}

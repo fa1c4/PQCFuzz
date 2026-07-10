@@ -1,5 +1,23 @@
 # Baseline patches
 
+## libFuzzer
+
+- Changed: `baselines/libFuzzer/{fuzz_common.h,fuzz_kem.c,fuzz_sig.c}`.
+- Reason: replace abort-on-API-error handling with normalized outcomes and
+  diagnostics, add a versioned KEM/SIG property envelope, and persist
+  deduplicated replayable semantic findings without stopping libFuzzer.
+- Behavior preserved: the `memory-safety` profile remains a conventional
+  sanitizer-guided valid-lifecycle baseline; semantic findings do not become
+  sanitizer crashes.
+- Changed: `scripts/baselines/libFuzzer/run.sh`,
+  `scripts/eval_baselines_fuzzing.sh`, and
+  `scripts/compact_baseline_results.py`.
+- Reason: require an explicit `memory-safety` or `semantic` profile, keep KEM
+  and SIG summaries isolated, record per-target result accounting, and compact
+  artifact counts relative to the correct target.
+- Behavior preserved: sanitizer artifacts continue to use libFuzzer's normal
+  crash-artifact mechanism.
+
 ## cryptofuzz
 
 - Changed: `baselines/cryptofuzz/Makefile`
@@ -8,15 +26,91 @@
 - Changed: `baselines/cryptofuzz/{gen_repository.py,entry.cpp,driver.cpp,executor.cpp,executor.h,operation.cpp,include/cryptofuzz/module.h,include/cryptofuzz/operations.h}` and added `baselines/cryptofuzz/modules/liboqs/`.
 - Reason: add first-class liboqs KEM/SIG self-check operations and a version-specific liboqs module for reproducing PQ baseline campaigns.
 - Behavior preserved: existing non-liboqs cryptofuzz operations remain opt-in through the original operation/module controls.
+- Shared-oracle policy: `baselines/cryptofuzz/modules/liboqs/{module.cpp,module.h,Makefile}` and
+  `baselines/CLFuzz/modules/liboqs/{module.cpp,module.h,Makefile}` are intentionally independent
+  physical copies, but must remain byte-for-byte identical.  They implement the shared liboqs
+  oracle only; `executor.cpp`, mutator behavior, and runner scripts remain fuzzer-specific and may
+  diverge.  `tests/baseline_compaction_test.py` enforces this synchronization contract.
+- Changed: `scripts/baselines/cryptofuzz/run.sh`,
+  `scripts/compact_baseline_results.py`, and `scripts/eval_baselines_fuzzing.sh`.
+- Reason: isolate every campaign's libFuzzer working logs, record replayable semantic findings and
+  operation diagnostics separately from crashes/hangs, retain their structured evidence during
+  compaction, and report target-root-local retained counts and replay validation.
+- Behavior preserved: a reproduced semantic finding completes the campaign with findings; it is not
+  reclassified as a sanitizer crash.  A missing or non-reproduced replay prevents compaction from
+  deleting the campaign evidence and is recorded as a failed compaction manifest.
 - Changed: `baselines/cryptofuzz/Dockerfile` and `scripts/run_baseline.sh`
 - Reason: keep `ubuntu:22.04` as the default Docker base image while allowing `--base-image` or `PQCDF_DOCKER_BASE_IMAGE` overrides when Docker Hub or a registry mirror returns inconsistent base-image metadata.
 - Behavior preserved: default Docker build command still builds the same baseline image.
 
 ## CLFuzz
 
+- Upstream provenance: the vendored CLFuzz tree has no retained upstream `.git`
+  metadata, so an upstream SHA cannot be recovered honestly from this checkout.
+  Its reproducible in-repository source revision is
+  `d2cba61e1013df2e373d01a43739801494fffa5f` (`CLFuzz Reproduce`), based on
+  vendor import `763e08d7eb3ec2ff324d77c0683fef3545b69430`.  Any future
+  upstream refresh must replace this explicit unavailable-upstream record with
+  the upstream URL and immutable SHA.
 - Changed: `baselines/CLFuzz/Makefile`
 - Reason: redirect top-level object files, generated repository headers, the main fuzzer binary, and the local cpu_features CMake build to `workspace/CLFuzz/targets-build`.
 - Behavior preserved: upstream fuzzing logic unchanged.
+- Changed: `baselines/CLFuzz/{driver.cpp,liboqs_replay_input.h}` and
+  `baselines/CLFuzz/modules/liboqs/{module.cpp,module.h,Makefile}`.
+- Reason: add the local liboqs KEM/SIG oracle versioned as
+  `pqcdf-clfuzz-liboqs-oracle-v2`.  It records structured outcomes rather than
+  converting API returns into fuzzer crashes; compares effective mutations;
+  emits atomic, deduplicated, bounded replay inputs; and covers the KEM
+  round-trip/ciphertext/secret-key/public-key/keygen-RNG/encaps-RNG and SIG
+  round-trip/signature/message/public-key/secret-key/keygen-RNG/sign-RNG
+  properties.
+- Shared-oracle policy: these module files remain byte-for-byte identical to
+  `baselines/cryptofuzz/modules/liboqs/`.  They use neutral
+  `PQCDF_LIBOQS_*` sidecar variables (with legacy cryptofuzz aliases) so a
+  runner supplies its baseline identity without changing oracle logic.  The
+  common sidecar schema records `baseline`, module version, algorithm,
+  primitive, property, setup/baseline/mutated statuses, normalized relation,
+  diagnostics, skips and passed-property coverage, mutation
+  effectiveness/offset/length/operation/delta and before/after digests.  The
+  CLFuzz driver keeps the original libFuzzer bytes in thread-local scope while
+  dispatching a liboqs operation.  A semantic candidate is retained only if
+  the module atomically captures that exact input under
+  `findings/replay-inputs/<sha256>.bin`; a missing or mismatched fixture is a
+  non-counted diagnostic.
+- Public-key normalization: accepted signature public-key mutations are
+  replayed with three fresh liboqs objects, prove raw-byte changes, and use an
+  independent same-byte probe to distinguish `ignored_public_key_bytes` from
+  `verification_key_malleability`.  Generic liboqs has no public-key
+  parse/serialize interface, so canonicalization is explicitly recorded as
+  `unsupported` rather than inferred.  Failed replay is retained as an
+  `unreproduced` diagnostic and is excluded from semantic finding totals.
+- Changed: `baselines/CLFuzz/executor.cpp`.
+- Reason: a false legacy self-test result is now non-terminal because the
+  local liboqs module has already recorded its classified outcome.  ASan,
+  UBSan, signals, and unexpected exceptions still terminate normally through
+  the fuzzer runtime.
+- Changed: `scripts/baselines/CLFuzz/run.sh`,
+  `scripts/eval_baselines_fuzzing.sh`, and
+  `scripts/compact_baseline_results.py`.
+- Reason: create isolated `liboqs-<version>/<profile>` campaign roots for
+  corpus, logs, findings, diagnostics, coverage outcomes, metadata, crashes,
+  and artifacts (with a per-profile lock); report semantic findings separately
+  from sanitizer artifacts; mark a healthy run with evidence as
+  `completed-with-findings`; record CPU/worker/property coverage and stop
+  reason; and validate/replay-retain structured CLFuzz evidence during
+  compaction.  Compaction requires a matching raw fixture SHA-256 and three
+  unanimous exact-input replay results before it counts a CLFuzz semantic
+  finding.  A crash artifact or sanitizer report remains terminal even if an
+  intermediate wrapper exits zero.
+- Replay procedure: `CLFuzz run --mode replay` requires a raw input plus a
+  pinned algorithm and property.  It stages the input under the campaign
+  findings directory and can use `legacy-or-one-v1` mutation semantics to
+  reproduce the historical 0.14.0 `OV-Is-pkc-skc` public-key exemplar without
+  changing normal CLFuzz mutation behavior.  Replay is deliberately one job
+  and one worker; use `--profile NAME` to keep distinct investigations apart.
+  The archived raw exemplar and its SHA-256/mutation manifest are tracked as
+  `tests/seeds/clfuzz_ov_is_pkc_skc_0.14.0.{input.b64,replay.json}`; its
+  regression verifies exact staging and the pinned legacy replay contract.
 
 ## cryptoTesting
 

@@ -4,90 +4,307 @@
 #include <oqs/oqs.h>
 #include <oqs/rand.h>
 
+static const char *const pqcdf_kem_properties[] = {
+	"kem_roundtrip",
+	"kem_decaps_c",
+	"kem_decaps_sk",
+	"kem_encaps_pk",
+	"kem_keygen_badrng",
+	"kem_encaps_badrng",
+};
+
+static const char *pqcdf_kem_property_name(uint8_t property) {
+	switch (property) {
+	case PQCDF_KEM_PROPERTY_ROUNDTRIP:
+		return "kem_roundtrip";
+	case PQCDF_KEM_PROPERTY_DECAPS_C:
+		return "kem_decaps_c";
+	case PQCDF_KEM_PROPERTY_DECAPS_SK:
+		return "kem_decaps_sk";
+	case PQCDF_KEM_PROPERTY_ENCAPS_PK:
+		return "kem_encaps_pk";
+	case PQCDF_KEM_PROPERTY_KEYGEN_BADRNG:
+		return "kem_keygen_badrng";
+	case PQCDF_KEM_PROPERTY_ENCAPS_BADRNG:
+		return "kem_encaps_badrng";
+	default:
+		return NULL;
+	}
+}
+
+static const char *pqcdf_status_from_rc(OQS_STATUS rc) {
+	return rc == OQS_SUCCESS ? pqcdf_outcome_name(PQCDF_OUTCOME_OK) :
+		pqcdf_outcome_name(PQCDF_OUTCOME_OPERATION_ERROR);
+}
+
+static OQS_STATUS pqcdf_kem_default_keypair(OQS_KEM *kem, uint8_t *public_key,
+	uint8_t *secret_key) {
+	(void)OQS_randombytes_switch_algorithm("system");
+	const OQS_STATUS rc = OQS_KEM_keypair(kem, public_key, secret_key);
+	OQS_randombytes_custom_algorithm(&pqcdf_randombytes);
+	return rc;
+}
+
+static OQS_STATUS pqcdf_kem_default_encaps(OQS_KEM *kem, uint8_t *ciphertext,
+	uint8_t *shared_secret, const uint8_t *public_key) {
+	(void)OQS_randombytes_switch_algorithm("system");
+	const OQS_STATUS rc = OQS_KEM_encaps(kem, ciphertext, shared_secret, public_key);
+	OQS_randombytes_custom_algorithm(&pqcdf_randombytes);
+	return rc;
+}
+
+static OQS_STATUS pqcdf_kem_default_decaps(OQS_KEM *kem, uint8_t *shared_secret,
+	const uint8_t *ciphertext, const uint8_t *secret_key) {
+	(void)OQS_randombytes_switch_algorithm("system");
+	const OQS_STATUS rc = OQS_KEM_decaps(kem, shared_secret, ciphertext, secret_key);
+	OQS_randombytes_custom_algorithm(&pqcdf_randombytes);
+	return rc;
+}
+
+static void pqcdf_kem_diagnostic(const char *algorithm, const char *operation,
+	OQS_STATUS deterministic_rc, OQS_STATUS default_rc, const pqcdf_envelope *envelope) {
+	pqcdf_record_operation_diagnostic("kem", algorithm, operation,
+		pqcdf_status_from_rc(deterministic_rc), pqcdf_status_from_rc(default_rc),
+		envelope->raw, envelope->raw_size);
+}
+
+static void pqcdf_record_kem_roundtrip_failure(const char *algorithm,
+	const pqcdf_envelope *envelope) {
+	pqcdf_record_finding("kem", algorithm, "kem_roundtrip", "EXPECT_EQUAL",
+		"non_malleability", "functional_roundtrip_failure",
+		pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+		pqcdf_outcome_name(PQCDF_OUTCOME_INVARIANT_VIOLATION), 1, 0,
+		"OBSERVED_DIFFERENT", envelope->raw, envelope->raw_size);
+}
+
+static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm, OQS_KEM *kem) {
+	const size_t public_key_len = kem->length_public_key;
+	const size_t secret_key_len = kem->length_secret_key;
+	const size_t ciphertext_len = kem->length_ciphertext;
+	const size_t shared_secret_len = kem->length_shared_secret;
+
+	uint8_t *public_key = pqcdf_alloc(public_key_len);
+	uint8_t *secret_key = pqcdf_alloc(secret_key_len);
+	uint8_t *ciphertext = pqcdf_alloc(ciphertext_len);
+	uint8_t *shared_secret_encaps = pqcdf_alloc(shared_secret_len);
+	uint8_t *shared_secret_decaps = pqcdf_alloc(shared_secret_len);
+	uint8_t *mutated_ciphertext = pqcdf_alloc(ciphertext_len);
+	uint8_t *mutated_secret_key = pqcdf_alloc(secret_key_len);
+	uint8_t *mutated_public_key = pqcdf_alloc(public_key_len);
+	uint8_t *mutated_shared_secret = pqcdf_alloc(shared_secret_len);
+	uint8_t *alternate_public_key = pqcdf_alloc(public_key_len);
+	uint8_t *alternate_secret_key = pqcdf_alloc(secret_key_len);
+	uint8_t *alternate_ciphertext = pqcdf_alloc(ciphertext_len);
+	uint8_t *alternate_shared_secret = pqcdf_alloc(shared_secret_len);
+
+	if (public_key == NULL || secret_key == NULL || ciphertext == NULL ||
+		shared_secret_encaps == NULL || shared_secret_decaps == NULL ||
+		mutated_ciphertext == NULL || mutated_secret_key == NULL ||
+		mutated_public_key == NULL || mutated_shared_secret == NULL ||
+		alternate_public_key == NULL || alternate_secret_key == NULL ||
+		alternate_ciphertext == NULL || alternate_shared_secret == NULL) {
+		goto cleanup;
+	}
+
+	pqcdf_seed_envelope_rng(envelope, 0);
+	OQS_STATUS rc = OQS_KEM_keypair(kem, public_key, secret_key);
+	if (rc != OQS_SUCCESS) {
+		pqcdf_seed_envelope_rng(envelope, 0);
+		const OQS_STATUS deterministic_rc = OQS_KEM_keypair(kem, public_key, secret_key);
+		const OQS_STATUS default_rc = pqcdf_kem_default_keypair(kem, public_key, secret_key);
+		pqcdf_kem_diagnostic(algorithm, "keypair", deterministic_rc, default_rc, envelope);
+		goto cleanup;
+	}
+
+	pqcdf_seed_envelope_rng(envelope, 0);
+	rc = OQS_KEM_encaps(kem, ciphertext, shared_secret_encaps, public_key);
+	if (rc != OQS_SUCCESS) {
+		pqcdf_seed_envelope_rng(envelope, 0);
+		const OQS_STATUS deterministic_rc = OQS_KEM_encaps(
+			kem, ciphertext, shared_secret_encaps, public_key);
+		const OQS_STATUS default_rc = pqcdf_kem_default_encaps(
+			kem, ciphertext, shared_secret_encaps, public_key);
+		pqcdf_kem_diagnostic(algorithm, "encaps", deterministic_rc, default_rc, envelope);
+		goto cleanup;
+	}
+
+	rc = OQS_KEM_decaps(kem, shared_secret_decaps, ciphertext, secret_key);
+	if (rc != OQS_SUCCESS) {
+		pqcdf_seed_envelope_rng(envelope, 0);
+		const OQS_STATUS deterministic_rc = OQS_KEM_decaps(
+			kem, shared_secret_decaps, ciphertext, secret_key);
+		const OQS_STATUS default_rc = pqcdf_kem_default_decaps(
+			kem, shared_secret_decaps, ciphertext, secret_key);
+		pqcdf_kem_diagnostic(algorithm, "decaps", deterministic_rc, default_rc, envelope);
+		goto cleanup;
+	}
+	if (memcmp(shared_secret_encaps, shared_secret_decaps, shared_secret_len) != 0) {
+		pqcdf_record_kem_roundtrip_failure(algorithm, envelope);
+		goto cleanup;
+	}
+
+	/* The memory-safety profile intentionally stops at valid API lifecycles. */
+	if (!pqcdf_is_semantic_profile()) {
+		goto cleanup;
+	}
+
+	switch (envelope->property_id) {
+	case PQCDF_KEM_PROPERTY_ROUNDTRIP:
+		break;
+
+	case PQCDF_KEM_PROPERTY_DECAPS_C:
+		if (!pqcdf_mutate_copy(mutated_ciphertext, ciphertext, ciphertext_len, envelope)) {
+			break;
+		}
+		rc = OQS_KEM_decaps(kem, mutated_shared_secret, mutated_ciphertext, secret_key);
+		if (rc == OQS_SUCCESS &&
+			memcmp(shared_secret_encaps, mutated_shared_secret, shared_secret_len) == 0) {
+			pqcdf_record_finding("kem", algorithm, "kem_decaps_c", "EXPECT_DIFFERENT",
+				"malleability",
+				pqcdf_is_noncanonical_mutation(envelope) ? "accepted_noncanonical_mutation" :
+					"ciphertext_malleability",
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK), 1, 1,
+				"OBSERVED_EQUAL", envelope->raw, envelope->raw_size);
+		}
+		break;
+
+	case PQCDF_KEM_PROPERTY_DECAPS_SK:
+		if (!pqcdf_mutate_copy(mutated_secret_key, secret_key, secret_key_len, envelope)) {
+			break;
+		}
+		rc = OQS_KEM_decaps(kem, mutated_shared_secret, ciphertext, mutated_secret_key);
+		if (rc == OQS_SUCCESS &&
+			memcmp(shared_secret_encaps, mutated_shared_secret, shared_secret_len) == 0) {
+			pqcdf_record_finding("kem", algorithm, "kem_decaps_sk", "EXPECT_DIFFERENT",
+				"malleability",
+				pqcdf_is_noncanonical_mutation(envelope) ? "accepted_noncanonical_mutation" :
+					"secret_key_malleability",
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK), 1, 1,
+				"OBSERVED_EQUAL", envelope->raw, envelope->raw_size);
+		}
+		break;
+
+	case PQCDF_KEM_PROPERTY_ENCAPS_PK:
+		if (!pqcdf_mutate_copy(mutated_public_key, public_key, public_key_len, envelope)) {
+			break;
+		}
+		pqcdf_seed_envelope_rng(envelope, 0);
+		rc = OQS_KEM_encaps(kem, alternate_ciphertext, alternate_shared_secret,
+			mutated_public_key);
+		if (rc == OQS_SUCCESS &&
+			memcmp(ciphertext, alternate_ciphertext, ciphertext_len) == 0 &&
+			memcmp(shared_secret_encaps, alternate_shared_secret, shared_secret_len) == 0) {
+			pqcdf_record_finding("kem", algorithm, "kem_encaps_pk", "EXPECT_DIFFERENT",
+				"malleability", "public_key_ignored_or_malleable",
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK), 1, 1,
+				"OBSERVED_EQUAL", envelope->raw, envelope->raw_size);
+		}
+		break;
+
+	case PQCDF_KEM_PROPERTY_KEYGEN_BADRNG:
+		pqcdf_seed_envelope_rng(envelope, 1);
+		rc = OQS_KEM_keypair(kem, alternate_public_key, alternate_secret_key);
+		if (rc != OQS_SUCCESS) {
+			pqcdf_seed_envelope_rng(envelope, 1);
+			const OQS_STATUS deterministic_rc = OQS_KEM_keypair(
+				kem, alternate_public_key, alternate_secret_key);
+			const OQS_STATUS default_rc = pqcdf_kem_default_keypair(
+				kem, alternate_public_key, alternate_secret_key);
+			pqcdf_kem_diagnostic(algorithm, "keypair_rng_variant", deterministic_rc,
+				default_rc, envelope);
+		} else if (memcmp(public_key, alternate_public_key, public_key_len) == 0 &&
+			memcmp(secret_key, alternate_secret_key, secret_key_len) == 0) {
+			pqcdf_record_finding("kem", algorithm, "kem_keygen_badrng", "EXPECT_DIFFERENT",
+				"malleability", "keygen_rng_ignored",
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK), 1, 1,
+				"OBSERVED_EQUAL", envelope->raw, envelope->raw_size);
+		}
+		break;
+
+	case PQCDF_KEM_PROPERTY_ENCAPS_BADRNG:
+		pqcdf_seed_envelope_rng(envelope, 1);
+		rc = OQS_KEM_encaps(kem, alternate_ciphertext, alternate_shared_secret, public_key);
+		if (rc != OQS_SUCCESS) {
+			pqcdf_seed_envelope_rng(envelope, 1);
+			const OQS_STATUS deterministic_rc = OQS_KEM_encaps(
+				kem, alternate_ciphertext, alternate_shared_secret, public_key);
+			const OQS_STATUS default_rc = pqcdf_kem_default_encaps(
+				kem, alternate_ciphertext, alternate_shared_secret, public_key);
+			pqcdf_kem_diagnostic(algorithm, "encaps_rng_variant", deterministic_rc,
+				default_rc, envelope);
+		} else if (memcmp(ciphertext, alternate_ciphertext, ciphertext_len) == 0 &&
+			memcmp(shared_secret_encaps, alternate_shared_secret, shared_secret_len) == 0) {
+			pqcdf_record_finding("kem", algorithm, "kem_encaps_badrng", "EXPECT_DIFFERENT",
+				"malleability", "encaps_rng_ignored",
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK),
+				pqcdf_outcome_name(PQCDF_OUTCOME_OK), 1, 1,
+				"OBSERVED_EQUAL", envelope->raw, envelope->raw_size);
+		}
+		break;
+	default:
+		break;
+	}
+
+cleanup:
+	pqcdf_secure_free(secret_key, secret_key_len);
+	pqcdf_secure_free(mutated_secret_key, secret_key_len);
+	pqcdf_secure_free(alternate_secret_key, secret_key_len);
+	pqcdf_secure_free(public_key, public_key_len);
+	pqcdf_secure_free(mutated_public_key, public_key_len);
+	pqcdf_secure_free(alternate_public_key, public_key_len);
+	pqcdf_secure_free(ciphertext, ciphertext_len);
+	pqcdf_secure_free(mutated_ciphertext, ciphertext_len);
+	pqcdf_secure_free(alternate_ciphertext, ciphertext_len);
+	pqcdf_secure_free(shared_secret_encaps, shared_secret_len);
+	pqcdf_secure_free(shared_secret_decaps, shared_secret_len);
+	pqcdf_secure_free(mutated_shared_secret, shared_secret_len);
+	pqcdf_secure_free(alternate_shared_secret, shared_secret_len);
+}
+
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 	static int initialized = 0;
 	if (!initialized) {
-		OQS_init();
+		(void)OQS_init();
 		initialized = 1;
 	}
 
-	const int alg_count = OQS_KEM_alg_count();
-	if (alg_count <= 0) {
+	const int algorithm_count = OQS_KEM_alg_count();
+	pqcdf_write_metadata("kem", algorithm_count > 0 ? (size_t)algorithm_count : 0,
+		OQS_KEM_alg_identifier, pqcdf_kem_properties,
+		sizeof(pqcdf_kem_properties) / sizeof(pqcdf_kem_properties[0]));
+
+	pqcdf_envelope envelope;
+	if (!pqcdf_parse_envelope(data, size, &envelope) || envelope.primitive != PQCDF_PRIMITIVE_KEM ||
+		pqcdf_kem_property_name(envelope.property_id) == NULL || algorithm_count <= 0 ||
+		envelope.algorithm_index >= (uint32_t)algorithm_count) {
 		return 0;
 	}
 
-	const uint32_t alg_selector = pqcdf_read_u32(data, size, 0);
-	const uint64_t rng_seed = pqcdf_read_u64(data, size, 4);
-	const size_t payload_offset = size > 12 ? 12 : size;
-	const uint8_t *payload = (data != NULL && payload_offset < size) ? data + payload_offset : NULL;
-	const size_t payload_size = size - payload_offset;
+	const char *algorithm = OQS_KEM_alg_identifier(envelope.algorithm_index);
+	if (algorithm == NULL || !OQS_KEM_alg_is_enabled(algorithm)) {
+		if (algorithm != NULL) {
+			pqcdf_record_operation_diagnostic("kem", algorithm, "new",
+				pqcdf_outcome_name(PQCDF_OUTCOME_UNSUPPORTED),
+				pqcdf_outcome_name(PQCDF_OUTCOME_UNSUPPORTED), data, size);
+		}
+		return 0;
+	}
 
-	pqcdf_seed_rng(payload, payload_size, rng_seed ^ alg_selector);
+	pqcdf_seed_envelope_rng(&envelope, 0);
 	OQS_randombytes_custom_algorithm(&pqcdf_randombytes);
-
-	const char *algorithm = OQS_KEM_alg_identifier(alg_selector % (uint32_t) alg_count);
-	if (algorithm == NULL) {
-		return 0;
-	}
-
 	OQS_KEM *kem = OQS_KEM_new(algorithm);
 	if (kem == NULL) {
+		pqcdf_record_operation_diagnostic("kem", algorithm, "new",
+			pqcdf_outcome_name(PQCDF_OUTCOME_UNSUPPORTED),
+			pqcdf_outcome_name(PQCDF_OUTCOME_UNSUPPORTED), data, size);
 		return 0;
 	}
 
-	const size_t pk_len = kem->length_public_key;
-	const size_t sk_len = kem->length_secret_key;
-	const size_t ct_len = kem->length_ciphertext;
-	const size_t ss_len = kem->length_shared_secret;
-
-	uint8_t *public_key = pqcdf_alloc(pk_len);
-	uint8_t *secret_key = pqcdf_alloc(sk_len);
-	uint8_t *ciphertext = pqcdf_alloc(ct_len);
-	uint8_t *shared_secret_e = pqcdf_alloc(ss_len);
-	uint8_t *shared_secret_d = pqcdf_alloc(ss_len);
-	uint8_t *mutated_ciphertext = pqcdf_alloc(ct_len);
-	uint8_t *shared_secret_m = pqcdf_alloc(ss_len);
-
-	OQS_STATUS rc = OQS_KEM_keypair(kem, public_key, secret_key);
-	if (rc != OQS_SUCCESS) {
-		pqcdf_abort_with_message("OQS_KEM_keypair failed");
-	}
-
-	rc = OQS_KEM_encaps(kem, ciphertext, shared_secret_e, public_key);
-	if (rc != OQS_SUCCESS) {
-		pqcdf_abort_with_message("OQS_KEM_encaps failed");
-	}
-
-	rc = OQS_KEM_decaps(kem, shared_secret_d, ciphertext, secret_key);
-	if (rc != OQS_SUCCESS) {
-		pqcdf_abort_with_message("OQS_KEM_decaps failed");
-	}
-	if (memcmp(shared_secret_e, shared_secret_d, ss_len) != 0) {
-		pqcdf_abort_with_message("OQS_KEM_decaps produced a mismatched shared secret");
-	}
-
-	if (ct_len > 0) {
-		memcpy(mutated_ciphertext, ciphertext, ct_len);
-		const size_t mutation_len = pqcdf_min_size(payload_size, ct_len);
-		if (mutation_len == 0) {
-			mutated_ciphertext[0] ^= 0x01;
-		} else {
-			mutated_ciphertext[0] ^= 0x01;
-			for (size_t i = 1; i < mutation_len; i++) {
-				mutated_ciphertext[i] ^= (uint8_t) (payload[i] ^ (uint8_t) (i + 1));
-			}
-		}
-		(void) OQS_KEM_decaps(kem, shared_secret_m, mutated_ciphertext, secret_key);
-	}
-
-	pqcdf_secure_free(secret_key, sk_len);
-	pqcdf_secure_free(shared_secret_e, ss_len);
-	pqcdf_secure_free(shared_secret_d, ss_len);
-	pqcdf_secure_free(shared_secret_m, ss_len);
-	free(public_key);
-	free(ciphertext);
-	free(mutated_ciphertext);
+	pqcdf_run_kem(&envelope, algorithm, kem);
 	OQS_KEM_free(kem);
-
 	return 0;
 }
