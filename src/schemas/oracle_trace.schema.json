@@ -5,6 +5,7 @@
   "required": [
     "version",
     "oracle_semantics_version",
+    "disposition",
     "job_id",
     "pair_id",
     "algorithm",
@@ -14,6 +15,16 @@
     "right_status",
     "verify_result",
     "legal_negative_outcome",
+    "baseline_setup_valid",
+    "mutated_setup_valid",
+    "baseline_adapter_entered",
+    "baseline_target_entered",
+    "mutated_adapter_entered",
+    "mutated_target_entered",
+    "relation_evaluable",
+    "intervention_supported",
+    "intervention_effective",
+    "diagnostics",
     "subtests",
     "mutations",
     "rng_interventions",
@@ -21,28 +32,95 @@
   ],
   "properties": {
     "version": {
-      "const": 2
+      "const": 3
     },
     "subtests": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["subtest_id", "oracle_id", "expected_relation", "passed", "skipped", "note", "calls"],
+        "properties": {
+          "calls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "adapter",
+                "api",
+                "status",
+                "executor_dispatched",
+                "adapter_entered",
+                "target_entered",
+                "target_returned",
+                "rejection_layer"
+              ]
+            }
+          }
+        }
+      }
     },
     "mutations": {
       "type": "array"
     },
     "oracle_semantics_version": {
-      "const": 2
+      "const": 3
     },
     "rng_interventions": {
       "type": "array"
     },
     "findings": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidence_kind", "class", "subclass", "summary", "source_phase", "fingerprint"],
+        "properties": {
+          "evidence_kind": {"enum": ["semantic", "sanitizer", "process"]},
+          "source_phase": {"enum": ["fuzz", "replay"]}
+        }
+      }
     },
     "verify_result": {
       "type": "boolean"
     },
     "legal_negative_outcome": {
       "type": "boolean"
+    },
+    "disposition": {
+      "enum": ["pass", "diagnostic", "not_evaluable", "raw_candidate", "sanitizer_evidence", "harness_error"]
+    },
+    "baseline_setup_valid": {
+      "type": "boolean"
+    },
+    "mutated_setup_valid": {
+      "type": "boolean"
+    },
+    "baseline_adapter_entered": {
+      "type": "boolean"
+    },
+    "baseline_target_entered": {
+      "type": "boolean"
+    },
+    "mutated_adapter_entered": {
+      "type": "boolean"
+    },
+    "mutated_target_entered": {
+      "type": "boolean"
+    },
+    "relation_evaluable": {
+      "type": "boolean"
+    },
+    "intervention_supported": {
+      "type": "boolean"
+    },
+    "intervention_effective": {
+      "type": "boolean"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "stage", "summary"]
+      }
     }
   }
 }

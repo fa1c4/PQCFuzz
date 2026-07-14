@@ -1137,6 +1137,7 @@ build_pqcfuzz() {
     src/oracles/expected_relation.cc
     src/oracles/oracle_spec.cc
     src/oracles/oracle_spec_loader.cc
+    src/oracles/oracle_result.cc
     src/oracles/oracle_executor.cc
     src/oracles/metamorphic_observation.cc
     src/oracles/metamorphic_spec.cc
@@ -1153,7 +1154,7 @@ build_pqcfuzz() {
     local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" config_file
     config_file="${tmp_root}/generated_config_${job}.json"
     cat > "$config_file" <<JSON
-{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":2,"skipped_families":["SLH-DSA"]}
+{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":3,"skipped_families":["SLH-DSA"]}
 JSON
     "$cxx_bin" -std=c++17 -O1 -g -Isrc -I"${liboqs_build_dir}/include" \
       -fsanitize=fuzzer,address,undefined \

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pqcfuzz.local/schemas/oracle_trace.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "oracle_semantics_version",
+    "job_id",
+    "pair_id",
+    "algorithm",
+    "oracle_id",
+    "mutation_target",
+    "left_status",
+    "right_status",
+    "verify_result",
+    "legal_negative_outcome",
+    "subtests",
+    "mutations",
+    "rng_interventions",
+    "findings"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "subtests": {
+      "type": "array"
+    },
+    "mutations": {
+      "type": "array"
+    },
+    "oracle_semantics_version": {
+      "const": 2
+    },
+    "rng_interventions": {
+      "type": "array"
+    },
+    "findings": {
+      "type": "array"
+    },
+    "verify_result": {
+      "type": "boolean"
+    },
+    "legal_negative_outcome": {
+      "type": "boolean"
+    }
+  }
+}

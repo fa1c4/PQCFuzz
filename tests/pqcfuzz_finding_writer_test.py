@@ -7,6 +7,7 @@ import subprocess
 import textwrap
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,6 +21,7 @@ COMMON_SOURCES = [
     "src/mutators/ml_dsa_mutator.cc",
     "src/mutators/slh_dsa_layout.cc",
     "src/mutators/slh_dsa_mutator.cc",
+    "src/oracles/oracle_result.cc",
     "src/oracles/oracle_executor.cc",
     "src/triage/finding_writer.cc",
 ]
@@ -70,6 +72,11 @@ int main(int argc, char **argv) {
   std::filesystem::path result_dir = std::filesystem::path(argv[1]) / "results" / "kem";
   std::string artifact_dir;
   std::string error;
+  if (argc == 3 && std::string(argv[2]) == "empty") {
+    auto empty = MakeInput(result_dir.string(), "kem_keygen_badrng", 7);
+    empty.trace.findings.clear();
+    return !pqcfuzz::WriteFindingArtifacts(empty, &artifact_dir, &error) && error == "no_security_evidence" ? 0 : 7;
+  }
   if (argc == 3 && std::string(argv[2]) == "json-escape") {
     auto escaped = MakeInput(result_dir.string(), "kem_keygen_badrng", 7);
     escaped.job_id = "writer\\tjob\\rcontrol";
@@ -132,6 +139,17 @@ def test_grouped_writer_keeps_one_exemplar_per_group_and_counts_raw_hits(tmp_pat
     assert len(dirs) == 2
     assert all((path / "finding.json").exists() for path in dirs)
     assert all((path / "oracle_trace.json").exists() for path in dirs)
+    finding = json.loads((dirs[0] / "finding.json").read_text(encoding="utf-8"))
+    trace = json.loads((dirs[0] / "oracle_trace.json").read_text(encoding="utf-8"))
+    trace_schema = json.loads((REPO_ROOT / "src/schemas/oracle_trace.schema.json").read_text(encoding="utf-8"))
+    finding_schema = json.loads((REPO_ROOT / "src/schemas/finding.schema.json").read_text(encoding="utf-8"))
+    assert trace["version"] == trace["oracle_semantics_version"] == 3
+    assert trace["disposition"] == "raw_candidate"
+    assert "valid_setup" not in trace
+    assert finding["version"] == finding["oracle_semantics_version"] == 3
+    assert finding["validation_state"] == "raw"
+    assert not list(Draft202012Validator(trace_schema).iter_errors(trace))
+    assert not list(Draft202012Validator(finding_schema).iter_errors(finding))
     counts = sorted(read_counts(run_root / "results" / "kem" / "finding_counts.tsv"), key=lambda row: row["finding_subclass"])
     assert [row["count"] for row in counts] == ["1", "2"]
     assert [row["finding_subclass"] for row in counts] == ["encaps_rng_ignored", "keygen_rng_ignored"]
@@ -186,3 +204,9 @@ def test_writer_escapes_json_control_characters(tmp_path: Path) -> None:
     assert finding["job_id"] == "writer\tjob\rcontrol"
     assert finding["pair_id"] == "writer_pair_\x01"
     assert trace["findings"][0]["summary"] == "summary_\x02"
+
+
+def test_writer_rejects_empty_evidence(tmp_path: Path) -> None:
+    binary = compile_case(tmp_path, save_mode="grouped")
+
+    subprocess.run([str(binary), str(tmp_path / "empty"), "empty"], cwd=REPO_ROOT, check=True)

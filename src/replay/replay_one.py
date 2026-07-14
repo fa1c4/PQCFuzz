@@ -82,6 +82,7 @@ ORACLE_ENUM_BY_NAME = {value: key for key, value in ORACLE_BY_ENUM.items()}
 
 EXIT_HANG = 71
 EXIT_NATIVE_CRASH = 72
+V3_ORACLE_SEMANTICS_VERSION = 3
 
 
 class ReplayError(RuntimeError):
@@ -300,6 +301,53 @@ def sanitizer_class(stderr: str) -> str | None:
     return None
 
 
+def trace_semantics_status(trace: dict[str, Any]) -> str:
+    """Classify a trace without upgrading historical evidence in-place."""
+    if trace.get("version") == V3_ORACLE_SEMANTICS_VERSION and trace.get("oracle_semantics_version") == V3_ORACLE_SEMANTICS_VERSION:
+        return "v3"
+    if trace.get("version") == 2 or trace.get("oracle_semantics_version") == 2:
+        return "legacy_semantics"
+    return "unknown_semantics"
+
+
+def v3_trace(job: dict[str, Any], oracle_id: str, disposition: str) -> dict[str, Any]:
+    return {
+        "version": V3_ORACLE_SEMANTICS_VERSION,
+        "oracle_semantics_version": V3_ORACLE_SEMANTICS_VERSION,
+        "disposition": disposition,
+        "oracle_suite": job.get("oracle_suite", "fips"),
+        "relation_mode": job.get("relation_mode", "cross-implementation"),
+        "job_id": job["job_id"],
+        "pair_id": job.get("pair_id", job["job_id"]),
+        "algorithm": job["algorithm"],
+        "oracle_id": oracle_id,
+        "mutation_target": "",
+        "left_status": "INVALID_INPUT",
+        "right_status": "INVALID_INPUT",
+        "verify_result": False,
+        "legal_negative_outcome": False,
+        "baseline_setup_valid": True,
+        "mutated_setup_valid": True,
+        "baseline_adapter_entered": True,
+        "baseline_target_entered": True,
+        "mutated_adapter_entered": True,
+        "mutated_target_entered": True,
+        "relation_evaluable": disposition in {"pass", "raw_candidate", "sanitizer_evidence"},
+        "intervention_supported": True,
+        "intervention_effective": True,
+        "diagnostics": [],
+        "subtests": [],
+        "mutations": [],
+        "rng_interventions": [],
+        "findings": [],
+    }
+
+
+def evidence_fingerprint(evidence_kind: str, finding_class: str, summary: str) -> str:
+    material = "\n".join((evidence_kind, finding_class, summary))
+    return f"sha256:{hashlib.sha256(material.encode('utf-8')).hexdigest()}"
+
+
 def synthesize_trace(
     job: dict[str, Any],
     oracle_id: str,
@@ -311,22 +359,21 @@ def synthesize_trace(
     stderr: str = "",
 ) -> dict[str, Any]:
     sanitizer = sanitizer_class(stderr)
+    evidence_kind = "process"
     if sanitizer is not None:
         finding_class = sanitizer
-    finding: dict[str, Any] = {"class": finding_class, "summary": summary}
-    trace: dict[str, Any] = {
-        "version": 2,
-        "oracle_semantics_version": 2,
-        "oracle_suite": job.get("oracle_suite", "fips"),
-        "relation_mode": job.get("relation_mode", "cross-implementation"),
-        "job_id": job["job_id"],
-        "pair_id": job.get("pair_id", job["job_id"]),
-        "algorithm": job["algorithm"],
-        "oracle_id": oracle_id,
-        "subtests": [],
-        "mutations": [],
-        "findings": [finding],
+        evidence_kind = "sanitizer"
+    disposition = "sanitizer_evidence" if evidence_kind == "sanitizer" else "raw_candidate"
+    finding: dict[str, Any] = {
+        "evidence_kind": evidence_kind,
+        "class": finding_class,
+        "subclass": "",
+        "summary": summary,
+        "source_phase": "replay",
+        "fingerprint": evidence_fingerprint(evidence_kind, finding_class, summary),
     }
+    trace = v3_trace(job, oracle_id, disposition)
+    trace["findings"] = [finding]
     if returncode is not None and returncode < 0:
         trace["crash_signal"] = -returncode
     if timeout_seconds is not None:
@@ -335,24 +382,20 @@ def synthesize_trace(
 
 
 def synthesize_no_finding_trace(job: dict[str, Any], oracle_id: str) -> dict[str, Any]:
-    return {
-        "version": 2,
-        "oracle_semantics_version": 2,
-        "oracle_suite": job.get("oracle_suite", "fips"),
-        "relation_mode": job.get("relation_mode", "cross-implementation"),
-        "job_id": job["job_id"],
-        "pair_id": job.get("pair_id", job["job_id"]),
-        "algorithm": job["algorithm"],
-        "oracle_id": oracle_id,
-        "subtests": [],
-        "mutations": [],
-        "findings": [],
-    }
+    return v3_trace(job, oracle_id, "pass")
 
 
 def synthesize_diagnostic_trace(job: dict[str, Any], oracle_id: str, returncode: int | None) -> dict[str, Any]:
-    trace = synthesize_no_finding_trace(job, oracle_id)
+    trace = v3_trace(job, oracle_id, "diagnostic")
+    trace["relation_evaluable"] = False
     trace["diagnostic_event"] = "native_replay_api_or_harness_error"
+    trace["diagnostics"] = [
+        {
+            "code": "native_replay_api_or_harness_error",
+            "stage": "replay",
+            "summary": "native replay returned an API or harness error",
+        }
+    ]
     trace["normalized_status"] = returncode
     return trace
 
@@ -364,6 +407,13 @@ def load_trace(path: Path) -> dict[str, Any] | None:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ReplayError(f"native replay wrote invalid JSON trace: {exc}") from exc
+
+
+def first_finding(trace: dict[str, Any]) -> dict[str, Any]:
+    findings = trace.get("findings")
+    if isinstance(findings, list) and findings and isinstance(findings[0], dict):
+        return findings[0]
+    return {}
 
 
 def finding_summary(trace: dict[str, Any], finding_class: str) -> str:
@@ -384,6 +434,11 @@ def finding_subclass(trace: dict[str, Any]) -> str:
 
 def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[bool, str]:
     """Check the evidence required before a semantic result is countable."""
+    semantics = trace_semantics_status(trace)
+    if semantics == "legacy_semantics":
+        return False, "legacy_semantics"
+    if semantics != "v3":
+        return False, "oracle_semantics_version_mismatch"
     findings = trace.get("findings")
     if not isinstance(findings, list) or not findings:
         return False, "replay_has_no_finding"
@@ -392,20 +447,24 @@ def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[b
         # Process/sanitizer evidence is handled by the replay worker.  Do not
         # require a mutation relation for those classes.
         return True, ""
-    if trace.get("oracle_semantics_version") != 2:
-        return False, "oracle_semantics_version_mismatch"
     if trace.get("algorithm") != job.get("algorithm"):
         return False, "algorithm_routing_mismatch"
     if trace.get("configured_algorithm") != job.get("algorithm"):
         return False, "configured_algorithm_mismatch"
     if trace.get("adapter_algorithm") != job.get("algorithm"):
         return False, "adapter_algorithm_mismatch"
-    if not trace.get("valid_setup", False):
+    if not trace.get("baseline_setup_valid", False) or not trace.get("mutated_setup_valid", False):
         return False, "invalid_setup"
+    if not trace.get("baseline_adapter_entered", False) or not trace.get("baseline_target_entered", False):
+        return False, "baseline_target_not_reached"
+    if not trace.get("mutated_adapter_entered", False) or not trace.get("mutated_target_entered", False):
+        return False, "mutated_target_not_reached"
     if not trace.get("intervention_supported", False):
         return False, "unsupported_intervention"
     if not trace.get("intervention_effective", False):
         return False, "ineffective_intervention"
+    if not trace.get("relation_evaluable", False):
+        return False, "relation_not_evaluable"
     for mutation in trace.get("mutations", []):
         if not isinstance(mutation, dict) or not mutation.get("effective", False):
             return False, "ineffective_mutation"
@@ -428,7 +487,9 @@ def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[b
 def replay_equivalence_error(expected: dict[str, Any], observed: dict[str, Any]) -> str:
     """Return the first evidence mismatch between an original and replay trace."""
     for key in (
+        "version",
         "oracle_semantics_version",
+        "disposition",
         "algorithm",
         "configured_algorithm",
         "adapter_algorithm",
@@ -456,8 +517,12 @@ def maybe_write_finding(
     command: list[str],
     replay_validation_failure: str = "",
 ) -> None:
+    # A v2 trace remains readable for diagnostics, but it must never be
+    # wrapped in a new v3 finding or be treated as equivalent v3 evidence.
+    if trace_semantics_status(trace) != "v3":
+        return
     finding_class = classify_trace(trace)
-    if finding_class is None:
+    if finding_class is None or finding_class == "unsupported":
         return
     finding_id = f"{finding_class}_{hashlib.sha256(json.dumps(trace, sort_keys=True).encode('utf-8')).hexdigest()[:16]}"
     validated, validation_failure_reason = validate_replay_trace(trace, job)
@@ -465,8 +530,9 @@ def maybe_write_finding(
         validated = False
         validation_failure_reason = replay_validation_failure
     finding = {
-        "version": 2,
-        "oracle_semantics_version": trace.get("oracle_semantics_version", 2),
+        "version": 3,
+        "oracle_semantics_version": 3,
+        "evidence_kind": str(first_finding(trace).get("evidence_kind") or "semantic"),
         "finding_id": finding_id,
         "job_id": job["job_id"],
         "pair_id": job.get("pair_id", job["job_id"]),
@@ -477,9 +543,15 @@ def maybe_write_finding(
         "finding_class": finding_class,
         "finding_subclass": finding_subclass(trace),
         "summary": finding_summary(trace, finding_class),
+        "source_phase": str(first_finding(trace).get("source_phase") or "replay"),
+        "fingerprint": str(
+            first_finding(trace).get("fingerprint")
+            or evidence_fingerprint("semantic", finding_class, finding_summary(trace, finding_class))
+        ),
         "trace_path": str(artifact_dir / "oracle_trace.json"),
         "artifact_dir": str(artifact_dir),
         "replay_command": " ".join(command),
+        "validation_state": "validated" if validated else "invalidated",
         "validated": validated,
         "validation_attempts": 1,
         "validation_failure_reason": validation_failure_reason,

@@ -12,11 +12,31 @@ namespace pqcfuzz {
 namespace {
 
 void AddCall(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status status) {
-  subtest->calls.push_back({"left", api, status, false, false});
+  OracleCallTrace call;
+  call.adapter = "left";
+  call.api = api;
+  call.status = status;
+  call.executor_dispatched = true;
+  call.adapter_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_returned = status != PQCFUZZ_CRASH && status != PQCFUZZ_TIMEOUT;
+  call.rejection_layer = status == PQCFUZZ_REJECT ? "target" : "";
+  subtest->calls.push_back(call);
 }
 
 void AddBoolCall(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status status, bool accepted) {
-  subtest->calls.push_back({"left", api, status, true, accepted});
+  OracleCallTrace call;
+  call.adapter = "left";
+  call.api = api;
+  call.status = status;
+  call.has_bool_result = true;
+  call.bool_result = accepted;
+  call.executor_dispatched = true;
+  call.adapter_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_returned = status != PQCFUZZ_CRASH && status != PQCFUZZ_TIMEOUT;
+  call.rejection_layer = status == PQCFUZZ_REJECT ? "target" : "";
+  subtest->calls.push_back(call);
 }
 
 KEMKeyPair Keygen(const pqcfuzz_kem_adapter *adapter, OracleSubtestTrace *subtest) {
@@ -239,6 +259,9 @@ void FinalizeNoEffect(
   trace->baseline = ToObservationTrace(baseline);
   trace->mutated = ToObservationTrace(baseline);
   trace->valid_setup = baseline.status == PQCFUZZ_OK;
+  trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK;
+  trace->mutated_setup_valid = baseline.status == PQCFUZZ_OK;
+  trace->relation_evaluable = false;
   trace->intervention_effective = false;
   trace->diagnostic_event = "no_effect";
   subtest->skipped = true;
@@ -258,8 +281,12 @@ void FinalizeRngInterventionNotObserved(
   trace->baseline = ToObservationTrace(baseline);
   trace->mutated = ToObservationTrace(mutated);
   trace->valid_setup = baseline.status == PQCFUZZ_OK && mutated.status == PQCFUZZ_OK;
+  trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK;
+  trace->mutated_setup_valid = mutated.status == PQCFUZZ_OK;
+  trace->relation_evaluable = false;
   trace->intervention_supported = false;
   trace->intervention_effective = false;
+  trace->relation_evaluable = false;
   trace->diagnostic_event = reason;
   subtest->skipped = true;
   subtest->passed = true;
@@ -278,6 +305,7 @@ bool RequireDistinctRngTapes(
   trace->observed_relation = "OBSERVED_INTERVENTION_NOT_EFFECTIVE";
   trace->intervention_supported = false;
   trace->intervention_effective = false;
+  trace->relation_evaluable = false;
   trace->diagnostic_event = "rng_tapes_not_distinct";
   subtest->skipped = true;
   subtest->passed = true;
@@ -321,6 +349,10 @@ void FinalizeTrace(
     trace->intervention_effective = mutation->effective;
   }
   trace->valid_setup = baseline.status == PQCFUZZ_OK && mutated.status == PQCFUZZ_OK;
+  trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK;
+  trace->mutated_setup_valid = mutated.status == PQCFUZZ_OK;
+  trace->relation_evaluable = trace->baseline_setup_valid && trace->mutated_setup_valid && trace->intervention_supported &&
+                              trace->intervention_effective;
 
   const std::string finding_class = FindingClassFor(spec.expected_relation, observed);
   if (finding_class == "unsupported") {
@@ -354,6 +386,9 @@ void FinalizeSetupFailure(
   subtest->passed = true;
   subtest->note = note;
   trace->valid_setup = false;
+  trace->baseline_setup_valid = false;
+  trace->mutated_setup_valid = false;
+  trace->relation_evaluable = false;
   trace->diagnostic_event = note;
   trace->subtests.push_back(*subtest);
 }

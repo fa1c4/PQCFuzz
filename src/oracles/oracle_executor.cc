@@ -55,8 +55,30 @@ bool IsUnsupportedOnly(const OracleSubtestTrace &subtest) {
          });
 }
 
+OracleCallTrace MakeCallTrace(
+    const std::string &adapter,
+    const std::string &api,
+    pqcfuzz_status status,
+    bool has_bool_result,
+    bool bool_result) {
+  OracleCallTrace call;
+  call.adapter = adapter;
+  call.api = api;
+  call.status = status;
+  call.has_bool_result = has_bool_result;
+  call.bool_result = bool_result;
+  call.executor_dispatched = true;
+  // Precise adapter/target instrumentation is introduced in P0-04.  These
+  // fields preserve the v2 executor's observable call boundary meanwhile.
+  call.adapter_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_entered = status != PQCFUZZ_API_UNSUPPORTED;
+  call.target_returned = status != PQCFUZZ_CRASH && status != PQCFUZZ_TIMEOUT;
+  call.rejection_layer = status == PQCFUZZ_REJECT ? "target" : "";
+  return call;
+}
+
 void AddCall(OracleSubtestTrace *subtest, const std::string &adapter, const std::string &api, pqcfuzz_status status) {
-  subtest->calls.push_back({adapter, api, status, false, false});
+  subtest->calls.push_back(MakeCallTrace(adapter, api, status, false, false));
 }
 
 void AddBoolCall(
@@ -65,7 +87,7 @@ void AddBoolCall(
     const std::string &api,
     pqcfuzz_status status,
     bool bool_result) {
-  subtest->calls.push_back({adapter, api, status, true, bool_result});
+  subtest->calls.push_back(MakeCallTrace(adapter, api, status, true, bool_result));
 }
 
 KEMKeyPair Keygen(const pqcfuzz_kem_adapter *adapter, const std::string &label, OracleSubtestTrace *subtest) {
@@ -271,9 +293,9 @@ void AddFindingsForFailures(KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
       if (call.status == PQCFUZZ_CRASH) {
-        trace->findings.push_back({"memory_safety", "", "adapter call crashed"});
+        trace->findings.push_back({"memory_safety", "", "adapter call crashed", EvidenceKind::kProcess});
       } else if (call.status == PQCFUZZ_TIMEOUT) {
-        trace->findings.push_back({"timeout", "", "adapter call timed out"});
+        trace->findings.push_back({"timeout", "", "adapter call timed out", EvidenceKind::kProcess});
       }
     }
     if (!subtest.passed && subtest.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
@@ -515,9 +537,9 @@ void AddSigFindingsForFailures(KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
       if (call.status == PQCFUZZ_CRASH) {
-        trace->findings.push_back({"memory_safety", "", "adapter call crashed"});
+        trace->findings.push_back({"memory_safety", "", "adapter call crashed", EvidenceKind::kProcess});
       } else if (call.status == PQCFUZZ_TIMEOUT) {
-        trace->findings.push_back({"timeout", "", "adapter call timed out"});
+        trace->findings.push_back({"timeout", "", "adapter call timed out", EvidenceKind::kProcess});
       }
     }
     if (subtest.passed) {
@@ -631,9 +653,26 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
 
 std::string TraceToJson(const KEMOracleTrace &trace) {
   std::ostringstream out;
+  const OracleDisposition disposition = FinalizeDisposition(trace);
+  auto finding_fingerprint = [](const OracleFindingTrace &finding) {
+    if (!finding.fingerprint.empty()) {
+      return finding.fingerprint;
+    }
+    uint64_t hash = 1469598103934665603ull;
+    const std::string material = std::string(EvidenceKindName(finding.evidence_kind)) + "\n" + finding.finding_class +
+                                 "\n" + finding.finding_subclass + "\n" + finding.summary;
+    for (unsigned char byte : material) {
+      hash ^= byte;
+      hash *= 1099511628211ull;
+    }
+    std::ostringstream fingerprint;
+    fingerprint << "fnv1a64:" << std::hex << std::setw(16) << std::setfill('0') << hash;
+    return fingerprint.str();
+  };
   out << "{\n";
-  out << "  \"version\": 2,\n";
-  out << "  \"oracle_semantics_version\": " << trace.oracle_semantics_version << ",\n";
+  out << "  \"version\": 3,\n";
+  out << "  \"oracle_semantics_version\": 3,\n";
+  out << "  \"disposition\": \"" << OracleDispositionName(disposition) << "\",\n";
   out << "  \"oracle_suite\": \"" << JsonEscape(trace.oracle_suite) << "\",\n";
   out << "  \"relation_mode\": \"" << JsonEscape(trace.relation_mode) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(trace.job_id) << "\",\n";
@@ -656,21 +695,33 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
   if (!trace.observed_relation.empty()) {
     out << "  \"observed_relation\": \"" << JsonEscape(trace.observed_relation) << "\",\n";
   }
-  if (!trace.finding_class.empty()) {
-    out << "  \"finding_class\": \"" << JsonEscape(trace.finding_class) << "\",\n";
-  }
-  if (!trace.finding_subclass.empty()) {
-    out << "  \"finding_subclass\": \"" << JsonEscape(trace.finding_subclass) << "\",\n";
-  }
   out << "  \"mutation_target\": \"" << JsonEscape(trace.mutation_target) << "\",\n";
   out << "  \"left_status\": \"" << pqcfuzz_status_to_string(trace.left_status) << "\",\n";
   out << "  \"right_status\": \"" << pqcfuzz_status_to_string(trace.right_status) << "\",\n";
   out << "  \"verify_result\": " << (trace.verify_result ? "true" : "false") << ",\n";
   out << "  \"legal_negative_outcome\": " << (trace.legal_negative_outcome ? "true" : "false") << ",\n";
-  out << "  \"valid_setup\": " << (trace.valid_setup ? "true" : "false") << ",\n";
+  out << "  \"baseline_setup_valid\": " << (trace.baseline_setup_valid ? "true" : "false") << ",\n";
+  out << "  \"mutated_setup_valid\": " << (trace.mutated_setup_valid ? "true" : "false") << ",\n";
+  out << "  \"baseline_adapter_entered\": " << (trace.baseline_adapter_entered ? "true" : "false") << ",\n";
+  out << "  \"baseline_target_entered\": " << (trace.baseline_target_entered ? "true" : "false") << ",\n";
+  out << "  \"mutated_adapter_entered\": " << (trace.mutated_adapter_entered ? "true" : "false") << ",\n";
+  out << "  \"mutated_target_entered\": " << (trace.mutated_target_entered ? "true" : "false") << ",\n";
+  out << "  \"relation_evaluable\": " << (trace.relation_evaluable ? "true" : "false") << ",\n";
   out << "  \"intervention_supported\": " << (trace.intervention_supported ? "true" : "false") << ",\n";
   out << "  \"intervention_effective\": " << (trace.intervention_effective ? "true" : "false") << ",\n";
-  out << "  \"diagnostic_event\": \"" << JsonEscape(trace.diagnostic_event) << "\",\n";
+  out << "  \"diagnostics\": [\n";
+  size_t diagnostic_count = trace.diagnostics.size() + (trace.diagnostic_event.empty() ? 0 : 1);
+  for (size_t i = 0; i < trace.diagnostics.size(); ++i) {
+    const auto &diagnostic = trace.diagnostics[i];
+    out << "    {\"code\":\"" << JsonEscape(diagnostic.code) << "\",\"stage\":\""
+        << JsonEscape(diagnostic.stage) << "\",\"summary\":\"" << JsonEscape(diagnostic.summary) << "\"}"
+        << (i + 1 == diagnostic_count ? "\n" : ",\n");
+  }
+  if (!trace.diagnostic_event.empty()) {
+    out << "    {\"code\":\"" << JsonEscape(trace.diagnostic_event)
+        << "\",\"stage\":\"executor\",\"summary\":\"" << JsonEscape(trace.diagnostic_event) << "\"}\n";
+  }
+  out << "  ],\n";
   if (!trace.baseline.output_sha256.empty() || trace.baseline.has_bool ||
       trace.baseline.status != PQCFUZZ_INVALID_INPUT) {
     out << "  \"baseline\": {\"status\":\"" << pqcfuzz_status_to_string(trace.baseline.status) << "\"";
@@ -712,7 +763,12 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
         out << ", ";
       }
       out << "{\"adapter\":\"" << JsonEscape(call.adapter) << "\",\"api\":\"" << JsonEscape(call.api)
-          << "\",\"status\":\"" << pqcfuzz_status_to_string(call.status) << "\"";
+          << "\",\"status\":\"" << pqcfuzz_status_to_string(call.status) << "\""
+          << ",\"executor_dispatched\":" << (call.executor_dispatched ? "true" : "false")
+          << ",\"adapter_entered\":" << (call.adapter_entered ? "true" : "false")
+          << ",\"target_entered\":" << (call.target_entered ? "true" : "false")
+          << ",\"target_returned\":" << (call.target_returned ? "true" : "false")
+          << ",\"rejection_layer\":\"" << JsonEscape(call.rejection_layer) << "\"";
       if (call.has_bool_result) {
         out << ",\"accepted\":" << (call.bool_result ? "true" : "false");
       }
@@ -755,11 +811,11 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
   out << "  \"findings\": [\n";
   for (size_t i = 0; i < trace.findings.size(); ++i) {
     const auto &finding = trace.findings[i];
-    out << "    {\"class\":\"" << JsonEscape(finding.finding_class) << "\"";
-    if (!finding.finding_subclass.empty()) {
-      out << ",\"subclass\":\"" << JsonEscape(finding.finding_subclass) << "\"";
-    }
-    out << ",\"summary\":\"" << JsonEscape(finding.summary) << "\"}"
+    out << "    {\"evidence_kind\":\"" << EvidenceKindName(finding.evidence_kind) << "\",\"class\":\""
+        << JsonEscape(finding.finding_class) << "\",\"subclass\":\"" << JsonEscape(finding.finding_subclass)
+        << "\",\"summary\":\"" << JsonEscape(finding.summary) << "\",\"source_phase\":\""
+        << JsonEscape(finding.source_phase) << "\",\"fingerprint\":\""
+        << JsonEscape(finding_fingerprint(finding)) << "\"}"
         << (i + 1 == trace.findings.size() ? "\n" : ",\n");
   }
   out << "  ]\n";

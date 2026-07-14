@@ -70,6 +70,7 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "  src/oracles/expected_relation.cc \\",
                 "  src/oracles/oracle_spec.cc \\",
                 "  src/oracles/oracle_spec_loader.cc \\",
+                "  src/oracles/oracle_result.cc \\",
                 "  src/oracles/oracle_executor.cc \\",
                 "  src/oracles/metamorphic_observation.cc \\",
                 "  src/oracles/metamorphic_spec.cc \\",

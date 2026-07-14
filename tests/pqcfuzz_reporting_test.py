@@ -23,12 +23,15 @@ def write_finding(
     field: str = "rng",
     finding_class: str = "malleability",
     legacy: bool = False,
+    oracle_semantics_version: int | None = None,
 ) -> Path:
     artifact = eval_root / "campaigns" / f"liboqs-{version}" / "workspace" / "results" / primitive / finding_id
     artifact.mkdir(parents=True, exist_ok=True)
+    semantics_version = None if legacy else (oracle_semantics_version or 3)
+    artifact_version = 1 if legacy else semantics_version
     finding = {
-        "version": 1 if legacy else 2,
-        "oracle_semantics_version": None if legacy else 2,
+        "version": artifact_version,
+        "oracle_semantics_version": semantics_version,
         "finding_id": finding_id,
         "job_id": f"pqcfuzz_eval_{primitive}_liboqs_{version}",
         "pair_id": f"liboqs_{version}_self_reference_{primitive}",
@@ -41,13 +44,16 @@ def write_finding(
         "trace_path": str(artifact / "oracle_trace.json"),
         "artifact_dir": str(artifact),
         "replay_command": f"python3 src/replay/replay_one.py --input {artifact / 'structured_input.bin'}",
+        "evidence_kind": "semantic",
+        "fingerprint": "test-fingerprint",
+        "validation_state": "validated" if not legacy else "invalidated",
         "validated": not legacy,
         "validation_attempts": 1 if not legacy else 0,
         "validation_failure_reason": "" if not legacy else "oracle_semantics_version_mismatch",
     }
     trace = {
-        "version": 1 if legacy else 2,
-        "oracle_semantics_version": None if legacy else 2,
+        "version": artifact_version,
+        "oracle_semantics_version": semantics_version,
         "oracle_suite": "metamorphic",
         "relation_mode": "single-target",
         "job_id": finding["job_id"],
@@ -61,12 +67,28 @@ def write_finding(
         "finding_subclass": "encaps_rng_ignored",
         "configured_algorithm": finding["algorithm"],
         "adapter_algorithm": finding["algorithm"],
-        "valid_setup": True,
+        "disposition": "raw_candidate",
+        "baseline_setup_valid": True,
+        "mutated_setup_valid": True,
+        "baseline_adapter_entered": True,
+        "baseline_target_entered": True,
+        "mutated_adapter_entered": True,
+        "mutated_target_entered": True,
+        "relation_evaluable": True,
         "intervention_supported": True,
         "intervention_effective": True,
         "baseline": {"status": "OK", "accepted": True},
         "mutated": {"status": "OK", "accepted": True},
-        "findings": [{"class": finding_class, "subclass": "encaps_rng_ignored"}],
+        "diagnostics": [],
+        "findings": [
+            {
+                "evidence_kind": "semantic",
+                "class": finding_class,
+                "subclass": "encaps_rng_ignored",
+                "source_phase": "fuzz",
+                "fingerprint": "test-fingerprint",
+            }
+        ],
     }
     (artifact / "finding.json").write_text(json.dumps(finding) + "\n", encoding="utf-8")
     (artifact / "oracle_trace.json").write_text(json.dumps(trace) + "\n", encoding="utf-8")
@@ -135,7 +157,7 @@ def test_legacy_findings_are_invalidated_and_not_counted(tmp_path: Path) -> None
     assert read_tsv(output / "findings.tsv") == []
     diagnostics = read_tsv(output / "diagnostics.tsv")
     assert diagnostics[0]["invalidated"] == "true"
-    assert "mutation_effectiveness_not_enforced" in diagnostics[0]["invalidation_reasons"]
+    assert diagnostics[0]["invalidation_reasons"] == "legacy_semantics"
 
 
 def test_summary_only_mode_skips_raw_finding_outputs(tmp_path: Path) -> None:
@@ -176,7 +198,7 @@ def test_fast_summary_counts_artifact_dirs_and_reads_exemplars(tmp_path: Path) -
     assert len(summaries) == 1
     assert summaries[0]["count"] == "2"
     assert summaries[0]["summary_mode"] == "fast-directory"
-    assert summaries[0]["group_key"] == "0.8.0|kem|confirmed_semantic_bug"
+    assert summaries[0]["group_key"] == "0.8.0|3|v3|kem|confirmed_semantic_bug"
     assert summaries[0]["finding_class"] == "confirmed_semantic_bug"
     assert summaries[0]["oracle_id"] == "kem_decaps_c"
 
@@ -210,7 +232,7 @@ def test_fast_summary_prefers_grouped_counter_counts(tmp_path: Path) -> None:
                 "42",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_keygen_badrng|rng|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|encaps_rng_ignored|OK|OK",
                 artifact.name,
-                "2",
+                "3",
                 "true",
                 "malleability",
                 "encaps_rng_ignored",
@@ -268,7 +290,7 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
                 "17",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_decaps_c|ciphertext|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|ciphertext_malleability|OK|OK",
                 "malleability_missing",
-                "2",
+                "3",
                 "true",
                 "ML-KEM-768",
                 "kem",
@@ -303,3 +325,20 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
     assert summaries[0]["field"] == "ciphertext"
     assert summaries[0]["baseline_status"] == "OK"
     assert summaries[0]["exemplar_artifact_path"] == str(missing_artifact)
+
+
+def test_v2_and_v3_findings_are_kept_in_separate_semantic_lanes(tmp_path: Path) -> None:
+    eval_root = tmp_path / "pqcfuzz_eval"
+    write_finding(eval_root, finding_id="legacy", oracle_semantics_version=2)
+    write_finding(eval_root, finding_id="v3", oracle_semantics_version=3)
+    output = tmp_path / "report"
+
+    write_reports([eval_root], output, {"tsv"}, trace_mode="all")
+
+    summaries = read_tsv(output / "findings_summary.tsv")
+    diagnostics = read_tsv(output / "diagnostics.tsv")
+    assert len(summaries) == 1
+    assert summaries[0]["oracle_semantics_version"] == "3"
+    assert len(diagnostics) == 1
+    assert diagnostics[0]["oracle_semantics_version"] == "2"
+    assert diagnostics[0]["invalidation_reasons"] == "legacy_semantics"

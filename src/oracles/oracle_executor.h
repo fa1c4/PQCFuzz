@@ -10,6 +10,7 @@
 #include "mutators/ml_kem_layout.h"
 #include "mutators/ml_kem_mutator.h"
 #include "mutators/slh_dsa_layout.h"
+#include "oracles/oracle_result.h"
 
 namespace pqcfuzz {
 
@@ -59,6 +60,11 @@ struct OracleCallTrace {
   pqcfuzz_status status = PQCFUZZ_INVALID_INPUT;
   bool has_bool_result = false;
   bool bool_result = false;
+  bool executor_dispatched = false;
+  bool adapter_entered = false;
+  bool target_entered = false;
+  bool target_returned = false;
+  std::string rejection_layer;
 };
 
 struct OracleSubtestTrace {
@@ -74,6 +80,15 @@ struct OracleSubtestTrace {
 struct OracleFindingTrace {
   std::string finding_class;
   std::string finding_subclass;
+  std::string summary;
+  EvidenceKind evidence_kind = EvidenceKind::kSemantic;
+  std::string source_phase = "fuzz";
+  std::string fingerprint;
+};
+
+struct OracleDiagnosticTrace {
+  std::string code;
+  std::string stage;
   std::string summary;
 };
 
@@ -98,7 +113,7 @@ struct RngInterventionTrace {
 };
 
 struct KEMOracleTrace {
-  int oracle_semantics_version = 2;
+  int oracle_semantics_version = 3;
   std::string oracle_suite = "fips";
   std::string relation_mode = "cross-implementation";
   std::string job_id;
@@ -120,7 +135,18 @@ struct KEMOracleTrace {
   size_t adapter_ct_len = 0;
   size_t adapter_ss_len = 0;
   size_t adapter_sig_max_len = 0;
+  // valid_setup is retained only for in-process source compatibility with v2
+  // executors.  It is intentionally never serialized or used for v3 verdicts.
   bool valid_setup = true;
+  bool baseline_setup_valid = true;
+  bool mutated_setup_valid = true;
+  // P0-04 will populate phase-specific reachability with target hooks.  The
+  // compatibility defaults preserve existing execution behavior until then.
+  bool baseline_adapter_entered = true;
+  bool baseline_target_entered = true;
+  bool mutated_adapter_entered = true;
+  bool mutated_target_entered = true;
+  bool relation_evaluable = true;
   bool intervention_supported = true;
   bool intervention_effective = true;
   std::string diagnostic_event;
@@ -134,6 +160,7 @@ struct KEMOracleTrace {
   std::vector<OracleSubtestTrace> subtests;
   std::vector<MutationRecord> mutations;
   std::vector<RngInterventionTrace> rng_interventions;
+  std::vector<OracleDiagnosticTrace> diagnostics;
   std::vector<OracleFindingTrace> findings;
 };
 

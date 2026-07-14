@@ -15,6 +15,7 @@ from typing import Any
 REPORT_COLUMNS = [
     "version",
     "oracle_semantics_version",
+    "semantics_status",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -46,6 +47,7 @@ SUMMARY_COLUMNS = [
     "group_key",
     "version",
     "oracle_semantics_version",
+    "semantics_status",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -70,6 +72,7 @@ SUMMARY_COLUMNS = [
 SUMMARY_KEY_COLUMNS = [
     "version",
     "oracle_semantics_version",
+    "semantics_status",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -162,6 +165,12 @@ def first_finding(trace: dict[str, Any]) -> dict[str, Any]:
         if isinstance(first, dict):
             return first
     return {}
+
+
+def semantics_status(oracle_semantics_version: str) -> str:
+    if oracle_semantics_version == "3":
+        return "v3"
+    return "legacy_semantics"
 
 
 def candidate_result_roots(root: Path) -> list[Path]:
@@ -309,6 +318,7 @@ def base_row_from_finding(path: Path, finding: dict[str, Any]) -> dict[str, str]
     row = {
         "version": version_from_finding(finding, path),
         "oracle_semantics_version": str(finding.get("oracle_semantics_version") or ""),
+        "semantics_status": semantics_status(str(finding.get("oracle_semantics_version") or "")),
         "algorithm": algorithm,
         "primitive": primitive,
         "oracle_suite": str(finding.get("oracle_suite") or ""),
@@ -345,6 +355,7 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     row = dict(row)
     row["version"] = row.get("version") or version_from_finding(finding, path, trace)
     row["oracle_semantics_version"] = row.get("oracle_semantics_version") or str(trace.get("oracle_semantics_version") or "")
+    row["semantics_status"] = semantics_status(row["oracle_semantics_version"])
     row["algorithm"] = row.get("algorithm") or str(trace.get("algorithm") or "")
     row["primitive"] = row.get("primitive") or primitive_for_algorithm(row.get("algorithm", ""))
     row["oracle_suite"] = row.get("oracle_suite") or str(trace.get("oracle_suite") or "")
@@ -365,9 +376,9 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     row["mutated_accepted"] = "" if "accepted" not in mutated else str(bool(mutated.get("accepted"))).lower()
     row["crash_signal"] = str(trace.get("crash_signal") or "")
     row["timeout_seconds"] = str(trace.get("timeout_seconds") or "")
-    if not row.get("oracle_semantics_version") or row["oracle_semantics_version"] != "2":
+    if row["semantics_status"] != "v3":
         row["invalidated"] = "true"
-        row["invalidation_reasons"] = "mutation_effectiveness_not_enforced,rng_intervention_may_be_identical,algorithm_adapter_mismatch"
+        row["invalidation_reasons"] = "legacy_semantics"
     else:
         row["invalidated"] = "false"
     return {column: row.get(column, "") for column in REPORT_COLUMNS}

@@ -172,7 +172,40 @@ std::string FindingClass(const KEMOracleTrace &trace) {
       return finding.finding_class;
     }
   }
-  return "confirmed_semantic_bug";
+  return "";
+}
+
+const OracleFindingTrace *FirstSecurityFinding(const KEMOracleTrace &trace) {
+  for (const auto &finding : trace.findings) {
+    if (!finding.finding_class.empty() && finding.finding_class != "unsupported" &&
+        finding.finding_class != "unknown_oracle") {
+      return &finding;
+    }
+  }
+  return nullptr;
+}
+
+std::string FindingEvidenceKind(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : EvidenceKindName(finding->evidence_kind);
+}
+
+std::string FindingSourcePhase(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "fuzz" : finding->source_phase;
+}
+
+std::string FindingFingerprint(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  if (finding == nullptr) {
+    return "";
+  }
+  if (!finding->fingerprint.empty()) {
+    return finding->fingerprint;
+  }
+  const std::string material = std::string(EvidenceKindName(finding->evidence_kind)) + "\n" + finding->finding_class +
+                               "\n" + finding->finding_subclass + "\n" + finding->summary;
+  return "fnv1a64:" + Hex64(Fnv1aString(material));
 }
 
 std::string FindingSummary(const KEMOracleTrace &trace) {
@@ -318,8 +351,9 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   const std::string finding_subclass = FindingSubclass(input.trace);
   std::ostringstream out;
   out << "{\n";
-  out << "  \"version\": 2,\n";
-  out << "  \"oracle_semantics_version\": " << input.trace.oracle_semantics_version << ",\n";
+  out << "  \"version\": 3,\n";
+  out << "  \"oracle_semantics_version\": 3,\n";
+  out << "  \"evidence_kind\": \"" << JsonEscape(FindingEvidenceKind(input.trace)) << "\",\n";
   out << "  \"finding_id\": \"" << JsonEscape(finding_id) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(input.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(input.pair_id) << "\",\n";
@@ -330,9 +364,12 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   out << "  \"finding_class\": \"" << JsonEscape(finding_class) << "\",\n";
   out << "  \"finding_subclass\": \"" << JsonEscape(finding_subclass) << "\",\n";
   out << "  \"summary\": \"" << JsonEscape(summary) << "\",\n";
+  out << "  \"source_phase\": \"" << JsonEscape(FindingSourcePhase(input.trace)) << "\",\n";
+  out << "  \"fingerprint\": \"" << JsonEscape(FindingFingerprint(input.trace)) << "\",\n";
   out << "  \"trace_path\": \"" << JsonEscape(artifact_dir + "/oracle_trace.json") << "\",\n";
   out << "  \"artifact_dir\": \"" << JsonEscape(artifact_dir) << "\",\n";
   out << "  \"replay_command\": \"" << JsonEscape(ReplayCommand(input, artifact_dir)) << "\",\n";
+  out << "  \"validation_state\": \"raw\",\n";
   out << "  \"validated\": false,\n";
   out << "  \"validation_attempts\": 0,\n";
   out << "  \"validation_failure_reason\": \"pending_deterministic_replay\"\n";
@@ -401,6 +438,7 @@ bool WriteArtifactDirectory(
                  "  src/oracles/expected_relation.cc \\\n"
                  "  src/oracles/oracle_spec.cc \\\n"
                  "  src/oracles/oracle_spec_loader.cc \\\n"
+                 "  src/oracles/oracle_result.cc \\\n"
                  "  src/oracles/oracle_executor.cc \\\n"
                  "  src/oracles/metamorphic_observation.cc \\\n"
                  "  src/oracles/metamorphic_spec.cc \\\n"
@@ -476,6 +514,12 @@ uint64_t MaxExemplarsPerGroup() {
 }  // namespace
 
 bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artifact_dir, std::string *error) {
+  if (!HasSecurityEvidence(input.trace)) {
+    if (error != nullptr) {
+      *error = "no_security_evidence";
+    }
+    return false;
+  }
   const std::string finding_class = FindingClass(input.trace);
   if (SaveModeAll()) {
     const std::string finding_id = finding_class + "_" + Hex64(Fnv1a(input.structured_input));

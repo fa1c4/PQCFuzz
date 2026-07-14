@@ -23,6 +23,7 @@ from summarize_findings import (
     iter_finding_files,
     load_json,
     primitive_from_path,
+    semantics_status,
     unique_paths,
     version_from_path,
 )
@@ -30,6 +31,8 @@ from summarize_findings import (
 
 EXEMPLAR_KEY_COLUMNS = [
     "version",
+    "oracle_semantics_version",
+    "semantics_status",
     "algorithm",
     "primitive",
     "oracle_suite",
@@ -209,6 +212,8 @@ def fast_row_from_artifact_dir(artifact_dir: Path, trace_mode: str) -> dict[str,
 def fast_summary_key(artifact_dir: Path, row: dict[str, str]) -> tuple[str, ...]:
     return (
         row.get("version") or version_from_path(artifact_dir),
+        row.get("oracle_semantics_version"),
+        row.get("semantics_status"),
         row.get("primitive") or primitive_from_path(artifact_dir),
         row.get("finding_class") or finding_class_from_artifact_name(artifact_dir.name),
     )
@@ -278,6 +283,7 @@ def apply_counter_fields(counter_file: Path, artifact_dir: Path, row: dict[str, 
         row["finding_class"] = item.get("finding_class") or finding_class_from_artifact_name(artifact_dir.name) or "malformed_counter"
     if not row.get("finding_subclass") and row.get("finding_class") == "malformed_counter":
         row["finding_subclass"] = "missing_counter_fields"
+    row["semantics_status"] = semantics_status(row.get("oracle_semantics_version", ""))
 
 
 def counter_rows(counter_file: Path, trace_mode: str) -> list[dict[str, object]]:
@@ -292,7 +298,7 @@ def counter_rows(counter_file: Path, trace_mode: str) -> list[dict[str, object]]
                 validation_row = augment_row_with_trace(row, finding_path, load_json(finding_path))
                 if validation_row.get("validated") != "true" or validation_row.get("invalidated") == "true":
                     continue
-            elif row.get("validated") != "true" or row.get("oracle_semantics_version") != "2":
+            elif row.get("validated") != "true" or row.get("oracle_semantics_version") != "3":
                 continue
             if item.get("exemplar_replay_command"):
                 row["replay_command"] = item["exemplar_replay_command"]
@@ -335,10 +341,12 @@ def write_fast_summary_reports(roots: list[Path], output_root: Path, formats: se
     for artifact_dir in iter_finding_artifact_dirs(roots):
         if result_dir_key(artifact_dir.parent) in counter_result_dirs:
             continue
-        row = {column: "" for column in REPORT_COLUMNS}
-        row["version"] = version_from_path(artifact_dir)
-        row["primitive"] = primitive_from_path(artifact_dir)
-        row["finding_class"] = finding_class_from_artifact_name(artifact_dir.name)
+        row = fast_row_from_artifact_dir(artifact_dir, trace_mode)
+        if row.get("oracle_semantics_version") != "3":
+            continue
+        row["version"] = row.get("version") or version_from_path(artifact_dir)
+        row["primitive"] = row.get("primitive") or primitive_from_path(artifact_dir)
+        row["finding_class"] = row.get("finding_class") or finding_class_from_artifact_name(artifact_dir.name)
         key = fast_summary_key(artifact_dir, row)
         counts[key] = counts.get(key, 0) + 1
         if key not in exemplars:
@@ -367,13 +375,6 @@ def write_reports(
     findings_mode: str = "full",
 ) -> None:
     output_root.mkdir(parents=True, exist_ok=True)
-    semantics_versions: set[str] = set()
-    for finding_path in iter_finding_files(roots):
-        finding = load_json(finding_path)
-        row = augment_row_with_trace(base_row_from_finding(finding_path, finding), finding_path, finding)
-        semantics_versions.add(row.get("oracle_semantics_version") or "legacy")
-    if "legacy" in semantics_versions and any(version != "legacy" for version in semantics_versions):
-        raise ValueError("refusing to merge invalidated legacy findings with corrected oracle semantics")
     if findings_mode == "fast-summary":
         write_fast_summary_reports(roots, output_root, formats, trace_mode)
         return

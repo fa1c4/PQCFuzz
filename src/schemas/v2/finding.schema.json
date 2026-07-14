@@ -5,32 +5,22 @@
   "required": [
     "version",
     "oracle_semantics_version",
-    "evidence_kind",
     "finding_id",
     "job_id",
     "pair_id",
     "algorithm",
     "oracle_id",
     "finding_class",
-    "finding_subclass",
     "summary",
-    "fingerprint",
     "trace_path",
     "artifact_dir",
-    "validation_state",
     "validated",
     "validation_attempts",
     "validation_failure_reason"
   ],
   "properties": {
     "version": {
-      "const": 3
-    },
-    "oracle_semantics_version": {
-      "const": 3
-    },
-    "evidence_kind": {
-      "enum": ["semantic", "sanitizer", "process"]
+      "const": 2
     },
     "finding_class": {
       "enum": [
@@ -38,6 +28,7 @@
         "non_malleability",
         "crash",
         "hang",
+        "unsupported",
         "confirmed_semantic_bug",
         "potential_crypto_vuln",
         "memory_safety",
@@ -48,9 +39,6 @@
     },
     "validated": {
       "type": "boolean"
-    },
-    "validation_state": {
-      "enum": ["raw", "validated", "invalidated"]
     },
     "validation_attempts": {
       "type": "integer",
