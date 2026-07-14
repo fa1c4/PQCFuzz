@@ -114,7 +114,7 @@ print_campaign_commands() {
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline run --version $version --mode full --max-total-time $seconds"
       ;;
     cryptoTesting)
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=1 timeout ${seconds}s scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers 1 --skip-core-pattern-check"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=1 scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers 1 --max-total-time $seconds --skip-core-pattern-check"
       ;;
     *)
       die "unknown baseline '$baseline'"
@@ -458,6 +458,13 @@ finish_campaign() {
   RESULT="$1"
   FINAL_STATUS="$2"
 
+  # Do not turn a pre-run cryptoTesting failure into a second compaction
+  # failure: no raw result tree means there is nothing to retain yet.
+  if [ "$BASELINE" = "cryptoTesting" ] && [ "$COMPACTION_ELIGIBLE" = "1" ] && \
+     [ ! -f "${WORKSPACE_ROOT_REL}/cryptoTesting/targets-run/raw/cryptoTesting-${VERSION}/functional/manifest.json" ]; then
+    COMPACTION_ELIGIBLE=0
+  fi
+
   if [ "$RESULT_SAVE_MODE" = "compact" ]; then
     COMPACTION_MANIFEST="${WORKSPACE_ROOT_REL}/${BASELINE}/compaction_manifest.json"
     if [ "$COMPACTION_ELIGIBLE" = "1" ]; then
@@ -526,7 +533,7 @@ def outcome(document):
         value = document.get(key)
         if value in {
             "completed", "completed-with-findings", "target-crash", "timed-out",
-            "harness-error", "infrastructure-failed",
+            "harness-error", "infrastructure-failed", "sanitizer-report",
         }:
             return value
     if count(document.get("semantic_finding_count"), document.get("semantic_findings")) > 0:
@@ -548,6 +555,24 @@ except (OSError, json.JSONDecodeError):
     document = {}
 
 print(outcome(document) if isinstance(document, dict) else "unknown")
+PY
+}
+
+crypto_testing_campaign_outcome() {
+  local summary_file="${WORKSPACE_ROOT_REL}/cryptoTesting/targets-run/raw/cryptoTesting-${VERSION}/functional/summary.json"
+
+  python3 - "$summary_file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+try:
+    document = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    document = {}
+
+status = document.get("status") if isinstance(document, dict) else None
+print(status if status in {"completed", "completed-at-budget", "timed-out-partial"} else "unknown")
 PY
 }
 
@@ -631,13 +656,9 @@ case "$BASELINE" in
   cryptoTesting)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    echo "[eval] command: CRYPTO_TESTING_WORKERS=1 timeout ${FUZZING_SECONDS}s $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers 1 --skip-core-pattern-check"
-    CRYPTO_TESTING_WORKERS=1 timeout "${FUZZING_SECONDS}s" "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers 1 --skip-core-pattern-check
+    echo "[eval] command: CRYPTO_TESTING_WORKERS=1 $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers 1 --max-total-time $FUZZING_SECONDS --skip-core-pattern-check"
+    CRYPTO_TESTING_WORKERS=1 "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers 1 --max-total-time "$FUZZING_SECONDS" --skip-core-pattern-check
     FUZZ_STATUS="$?"
-    if [ "$FUZZ_STATUS" -eq 124 ]; then
-      echo "[eval] cryptoTesting reached the configured fuzzing-time limit"
-      finish_campaign "timed-out-partial" 124
-    fi
     ;;
 esac
 
@@ -646,10 +667,13 @@ CAMPAIGN_OUTCOME=""
 if [ "$BASELINE" = "cryptofuzz" ] || [ "$BASELINE" = "CLFuzz" ]; then
   CAMPAIGN_OUTCOME="$(single_style_campaign_outcome "$BASELINE")"
   echo "[eval] ${BASELINE} outcome: $CAMPAIGN_OUTCOME"
+elif [ "$BASELINE" = "cryptoTesting" ]; then
+  CAMPAIGN_OUTCOME="$(crypto_testing_campaign_outcome)"
+  echo "[eval] cryptoTesting outcome: $CAMPAIGN_OUTCOME"
 fi
 if [ "$FUZZ_STATUS" -ne 0 ]; then
   case "$CAMPAIGN_OUTCOME" in
-    target-crash|timed-out|harness-error|infrastructure-failed)
+    target-crash|timed-out|harness-error|infrastructure-failed|sanitizer-report)
       finish_campaign "$CAMPAIGN_OUTCOME" "$FUZZ_STATUS"
       ;;
   esac
@@ -658,6 +682,9 @@ fi
 
 if [ "$CAMPAIGN_OUTCOME" = "completed-with-findings" ]; then
   finish_campaign "completed-with-findings" 0
+fi
+if [ "$CAMPAIGN_OUTCOME" = "completed-at-budget" ]; then
+  finish_campaign "completed-at-budget" 0
 fi
 
 finish_campaign "completed" 0

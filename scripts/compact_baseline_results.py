@@ -1373,6 +1373,7 @@ class Compactor:
             "groups_missing_reproducer": groups_missing,
             "validated_target_hangs": validated_target_hangs,
             "tasks_terminal": bool(source_manifest.get("tasks_terminal")),
+            "budget_exhausted": bool(source_manifest.get("budget_exhausted")),
         }
 
     def compact_crypto_testing(self) -> None:
@@ -1404,6 +1405,7 @@ class Compactor:
                     "groups_missing_reproducer": info["groups_missing_reproducer"],
                     "validated_target_hangs": info["validated_target_hangs"],
                     "tasks_terminal": info["tasks_terminal"],
+                    "budget_exhausted": info["budget_exhausted"],
                 }
                 for mode, info in sorted(self.crypto_testing_campaigns.items())
             },
@@ -1875,7 +1877,16 @@ class Compactor:
                 "version": self.version,
                 "target": self.crypto_testing_target(),
                 "mode": mode,
-                "status": "completed" if info["tasks_terminal"] else "timed-out-partial",
+                "status": (
+                    "completed" if info["tasks_terminal"] else
+                    "completed-at-budget" if info["budget_exhausted"] else
+                    "timed-out-partial"
+                ),
+                "normalized_outcome": "ok" if (info["tasks_terminal"] or info["budget_exhausted"]) else "process_hang",
+                "stop_reason": "fuzzing-time-budget" if info["budget_exhausted"] else (
+                    "all-tasks-terminal" if info["tasks_terminal"] else "interrupted"
+                ),
+                "budget_exhausted": info["budget_exhausted"],
                 "raw_output_root": rel(raw_root),
                 "reports": source.get("report_files", []),
                 "task_states": source.get("task_states", {}),

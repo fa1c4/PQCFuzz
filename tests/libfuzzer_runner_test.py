@@ -179,6 +179,6 @@ def test_clean_full_time_budget_is_recorded_without_a_failure_exit(tmp_path: Pat
 
     assert result.returncode == 0, result.stderr
     detail = read_json(tmp_path / "run" / "liboqs-0.14.0" / "kem" / "summary.semantic.json")
-    assert detail["status"] == "timed-out"
+    assert detail["status"] == "completed-with-findings"
     assert detail["stop_reason"] == "max-total-time"
     assert detail["effective_exit_status"] == 0

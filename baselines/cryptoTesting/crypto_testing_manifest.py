@@ -6,8 +6,6 @@ directory.  This helper only reads the explicit output root used by the local
 runner; it intentionally never falls back to the ephemeral liboqs checkout.
 """
 
-from __future__ import annotations
-
 import argparse
 import hashlib
 import json
@@ -17,7 +15,7 @@ import sys
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Set
 
 
 def now() -> str:
@@ -39,7 +37,7 @@ def read_json(path: Path, fallback: Any) -> Any:
         return fallback
 
 
-def replay_record(output_root: Path, artifact: Path) -> dict[str, Any] | None:
+def replay_record(output_root: Path, artifact: Path) -> Optional[Dict[str, Any]]:
     path = output_root / "metadata" / "replays" / f"{sha256(artifact)}.json"
     record = read_json(path, None)
     return record if isinstance(record, dict) else None
@@ -67,8 +65,8 @@ def algorithm_for(alg_dir: Path) -> str:
         return alg_dir.name
 
 
-def report_groups(reports_dir: Path) -> set[str]:
-    groups: set[str] = set()
+def report_groups(reports_dir: Path) -> Set[str]:
+    groups: Set[str] = set()
     for database in reports_dir.glob("*.db"):
         try:
             with sqlite3.connect(database) as connection:
@@ -84,13 +82,13 @@ def report_groups(reports_dir: Path) -> set[str]:
     return groups
 
 
-def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> dict[str, Any]:
+def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> Dict[str, Any]:
     afl_root = output_root / "afl"
     campaign = read_json(output_root / "metadata" / "campaign.json", {})
     liboqs = campaign.get("liboqs", "<liboqs-target>") if isinstance(campaign, dict) else "<liboqs-target>"
-    artifacts: list[dict[str, Any]] = []
-    raw_groups: set[str] = set()
-    group_replays: dict[str, list[str]] = {}
+    artifacts: List[Dict[str, Any]] = []
+    raw_groups: Set[str] = set()
+    group_replays: Dict[str, List[str]] = {}
     kinds = {
         "crashes": "crash",
         "hangs": "hang",
@@ -177,6 +175,7 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> dict[
     scheduled_entries = schedule.get("tasks", []) if isinstance(schedule, dict) else []
     enabled_entries = [item for item in scheduled_entries if isinstance(item, dict) and item.get("enabled", True)]
 
+    budget_exhausted = os.environ.get("CRYPTO_TESTING_BUDGET_EXHAUSTED") == "1"
     return {
         "schema_version": 1,
         "baseline": "cryptoTesting",
@@ -189,6 +188,7 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> dict[
         "task_states": dict(sorted(states.items())),
         "scheduled_tasks": scheduled,
         "tasks_terminal": complete,
+        "budget_exhausted": budget_exhausted,
         "schedule": schedule if isinstance(schedule, dict) else {},
         "algorithm_list": sorted({item["algorithm"] for item in enabled_entries if isinstance(item.get("algorithm"), str)}),
         "property_list": sorted({item["property"] for item in enabled_entries if isinstance(item.get("property"), str)}),
@@ -212,7 +212,7 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> dict[
     }
 
 
-def main(argv: list[str]) -> int:
+def main(argv: List[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--mode", choices=("functional", "vanilla"), required=True)
@@ -230,7 +230,16 @@ def main(argv: list[str]) -> int:
             "label": f"cryptoTesting-{args.mode}",
             "mode": args.mode,
             "version": args.version,
-            "status": "completed" if document["tasks_terminal"] else "timed-out-partial",
+            "status": (
+                "completed" if document["tasks_terminal"] else
+                "completed-at-budget" if document["budget_exhausted"] else
+                "timed-out-partial"
+            ),
+            "normalized_outcome": "ok" if (document["tasks_terminal"] or document["budget_exhausted"]) else "process_hang",
+            "stop_reason": "fuzzing-time-budget" if document["budget_exhausted"] else (
+                "all-tasks-terminal" if document["tasks_terminal"] else "interrupted"
+            ),
+            "budget_exhausted": document["budget_exhausted"],
             "raw_output_root": str(args.output_root),
             "task_states": document["task_states"],
             "scheduled_tasks": document["scheduled_tasks"],

@@ -670,6 +670,7 @@ CLFUZZ_END_TS="$END_TS" \
 CLFUZZ_START_NS="$START_NS" \
 CLFUZZ_END_NS="$END_NS" \
 CLFUZZ_BINARY="$BINARY" \
+CLFUZZ_BUILD_METADATA="${VERSION_BUILD_DIR}/sanitizer-profile.json" \
 CLFUZZ_LOG_FILE="$LOG_FILE" \
 CLFUZZ_LOG_DIR="$LOG_DIR" \
 CLFUZZ_CORPUS_DIR="$CORPUS_DIR" \
@@ -815,6 +816,10 @@ try:
     log_text = Path(os.environ["CLFUZZ_LOG_FILE"]).read_text(encoding="utf-8", errors="replace")
 except OSError:
     log_text = ""
+try:
+    build_metadata = json.loads(Path(os.environ["CLFUZZ_BUILD_METADATA"]).read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    build_metadata = {}
 sanitizer_signal = any(marker in log_text for marker in (
     "AddressSanitizer", "UndefinedBehaviorSanitizer", "MemorySanitizer", "LeakSanitizer",
     "ERROR: libFuzzer: deadly signal", "runtime error:",
@@ -822,10 +827,12 @@ sanitizer_signal = any(marker in log_text for marker in (
 if os.environ["CLFUZZ_BINARY_MISSING"] == "1" or raw_status == 127:
     outcome, stop_reason = "infrastructure-failed", "missing-binary"
 elif effective_status != 0:
-    if sanitizer_crashes or effective_status >= 128 or sanitizer_signal:
+    if sanitizer_crashes or effective_status >= 128:
         outcome, stop_reason = "target-crash", "sanitizer-or-signal"
     elif hangs or effective_status == 70:
         outcome, stop_reason = "timed-out", "target-timeout"
+    elif sanitizer_signal:
+        outcome, stop_reason = "sanitizer-report", "recoverable-sanitizer-report"
     else:
         outcome, stop_reason = "harness-error", "nonzero-fuzzer-exit"
 else:
@@ -844,6 +851,7 @@ normalized = {
     "completed-with-findings": "invariant_violation",
     "timed-out": "process_hang",
     "target-crash": "process_crash",
+    "sanitizer-report": "sanitizer_report",
     "harness-error": "operation_error",
     "infrastructure-failed": "operation_error",
 }[outcome]
@@ -880,6 +888,7 @@ summary = {
     "operations": [value for value in os.environ["CLFUZZ_OPERATIONS"].split(",") if value],
     "module_version": module_versions[0] if len(module_versions) == 1 else "pqcdf-clfuzz-liboqs-oracle-v2",
     "module_versions": module_versions,
+    "sanitizer_profile": build_metadata.get("profile") if isinstance(build_metadata, dict) else None,
     "algorithm_list": algorithms,
     "property_list": properties,
     "exercised_algorithm_list": exercised_algorithms,
@@ -921,6 +930,7 @@ summary = {
     "operation_diagnostic_count": len(operation_diagnostics), "operation_diagnostics": operation_diagnostics,
     "diagnostics": operation_diagnostics,
     "sanitizer_crash_count": len(sanitizer_crashes), "sanitizer_crashes": sanitizer_crashes,
+    "recoverable_sanitizer_report_count": log_text.count("runtime error:"),
     "sanitizer_artifact_count": len(sanitizer_crashes) + len(hangs),
     "sanitizer_artifacts": sanitizer_crashes + hangs, "crashes": sanitizer_crashes + hangs,
     "hang_count": len(hangs), "hangs": hangs, "args": sys.argv[1:],

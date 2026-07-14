@@ -82,6 +82,7 @@ COPY fuzz_liboqs.py /fuzzing/fuzz_liboqs.py
 COPY fuzz_liboqs_baseline.py /fuzzing/fuzz_liboqs_baseline.py
 COPY report.py /fuzzing/report.py
 COPY report_baseline.py /fuzzing/report_baseline.py
+COPY crypto_testing_manifest.py /fuzzing/crypto_testing_manifest.py
 RUN mkdir -p /fuzzing/tech/paper_fuzzing/vanilla
 COPY tech/paper_fuzzing/vanilla/. /fuzzing/tech/paper_fuzzing/vanilla
 RUN mkdir -p /fuzzing/tech/paper_fuzzing/liboqs

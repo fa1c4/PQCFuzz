@@ -1,0 +1,36 @@
+diff --git a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_avx2/sign.c b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_avx2/sign.c
+index 90082a4..af14ee4 100644
+--- a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_avx2/sign.c
++++ b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-44_avx2/sign.c
+@@ -319 +319,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);
+@@ -496 +497,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);
+diff --git a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_avx2/sign.c b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_avx2/sign.c
+index 572d0e4..e722105 100644
+--- a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_avx2/sign.c
++++ b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-65_avx2/sign.c
+@@ -319 +319,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);
+@@ -496 +497,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);
+diff --git a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_avx2/sign.c b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_avx2/sign.c
+index e75eebd..0c92139 100644
+--- a/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_avx2/sign.c
++++ b/src/sig/ml_dsa/pqcrystals-dilithium-standard_ml-dsa-87_avx2/sign.c
+@@ -319 +319,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);
+@@ -496 +497,2 @@
+-  memcpy(&pre[2], ctx, ctxlen);
++  if(ctxlen)
++    memcpy(&pre[2], ctx, ctxlen);

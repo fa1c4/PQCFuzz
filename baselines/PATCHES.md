@@ -102,6 +102,19 @@
   unanimous exact-input replay results before it counts a CLFuzz semantic
   finding.  A crash artifact or sanitizer report remains terminal even if an
   intermediate wrapper exits zero.
+- Changed: `baselines/patches/liboqs-0.14.0-empty-context.patch` and
+  `scripts/baselines/CLFuzz/build.sh`.
+- Reason: liboqs 0.14.0 ML-DSA AVX2 calls `memcpy` with a null context pointer
+  and zero length through the generic signing API, which UBSan reports despite
+  a successful operation. The version-scoped patch skips those zero-length
+  copies. liboqs 0.4.0's normal CLFuzz campaign uses ASan only because its
+  archived Saber/SIKE/Picnic/qTesla implementations emit known recoverable
+  UBSan findings; set `PQCDF_CLFUZZ_STRICT_UBSAN=1` to run the strict UBSan
+  discovery lane. The selected sanitizer profile is persisted in the run
+  summary.
+- Behavior preserved: ASan artifacts, signals, and unfiltered sanitizer
+  reports still fail the campaign. A recoverable log-only report is labelled
+  `sanitizer-report`, rather than inaccurately as a target crash.
 - Replay procedure: `CLFuzz run --mode replay` requires a raw input plus a
   pinned algorithm and property.  It stages the input under the campaign
   findings directory and can use `legacy-or-one-v1` mutation semantics to
@@ -150,9 +163,11 @@
   to the validated hang count.
 - Changed: `scripts/eval_baselines_fuzzing.sh`.
 - Reason: cryptoTesting evaluation fixes its worker budget at one unless the
-  experiment is deliberately configured otherwise, treats outer timeout as
-  `timed-out-partial` with a nonzero result, and requires a summary for every
-  baseline rather than exempting cryptoTesting.  The final evaluation summary
-  labels the functional mode explicitly and includes per-version shared
+  experiment is deliberately configured otherwise, runs the configured time
+  limit inside the durable workflow, and requires a summary for every baseline
+  rather than exempting cryptoTesting. A controlled budget stop is recorded as
+  `completed-at-budget`; a pre-run failure skips compaction instead of creating
+  a second missing-raw-output failure. The final evaluation summary labels the
+  functional mode explicitly and includes per-version shared
   algorithm/property coverage intersections alongside each campaign's full
   scheduled matrix.

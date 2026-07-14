@@ -11,6 +11,8 @@ EVAL_SCRIPT = ROOT / "scripts" / "eval_baselines_fuzzing.sh"
 CRYPTOFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "cryptofuzz" / "run.sh"
 CLFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "CLFuzz" / "run.sh"
 CRYPTOTESTING_RUNNER = ROOT / "scripts" / "baselines" / "cryptoTesting" / "run.sh"
+CRYPTOTESTING_DOCKERFILE = ROOT / "baselines" / "cryptoTesting" / "Dockerfile"
+CRYPTOTESTING_REPRODUCE = ROOT / "baselines" / "cryptoTesting" / "reproduce.sh"
 CLFUZZ_OV_REPLAY_FIXTURE = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.input.b64"
 CLFUZZ_OV_REPLAY_MANIFEST = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.replay.json"
 
@@ -150,6 +152,9 @@ if [ "${FAKE_CLFUZZ_FATAL:-0}" = 1 ] || [ "${FAKE_CLFUZZ_ZERO_EXIT_CRASH:-0}" = 
     exit 77
   fi
 fi
+if [ "${FAKE_CLFUZZ_RECOVERABLE_UBSAN:-0}" = 1 ]; then
+  echo 'runtime error: fake recoverable undefined behavior' >&2
+fi
 """,
     )
 
@@ -189,12 +194,117 @@ def test_campaign_filter_rejects_unknown_campaign(tmp_path: Path) -> None:
     assert "unknown campaign 'unknown-0.14.0'" in result.stderr
 
 
-def test_cryptotesting_timeout_is_timed_out_partial_not_success(tmp_path: Path) -> None:
+def test_cryptotesting_budget_completion_is_successful_with_a_summary(tmp_path: Path) -> None:
     root = make_root(
         tmp_path,
         """#!/usr/bin/env bash
 if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
-  sleep 5
+  output_root="${PQCDF_WORKSPACE_ROOT}/cryptoTesting/targets-run/raw/cryptoTesting-0.14.0/functional"
+  mkdir -p "$output_root"
+  printf '%s\\n' '{"status":"completed-at-budget","budget_exhausted":true,"semantic_finding_count":0,"operation_diagnostic_count":0,"sanitizer_crash_count":0,"hang_count":0}' > "$output_root/summary.json"
+fi
+exit 0
+""",
+    )
+    make_tmux(
+        tmp_path,
+        """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+        """,
+    )
+    result = run_eval(
+        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "all",
+        "--fuzzing-time", "1s", "--progress-interval", "1",
+    )
+
+    assert result.returncode == 0, result.stderr
+    status = load_status(root, "cryptoTesting-0.14.0")
+    assert status["result"] == "completed-at-budget"
+    assert status["final_status"] == 0
+
+
+def test_cryptotesting_worker_validation_accepts_single_digits_and_auto(tmp_path: Path) -> None:
+    for workers in ("1", "9", "10", "auto"):
+        result = subprocess.run(
+            [
+                "bash", str(CRYPTOTESTING_RUNNER), "baseline", str(tmp_path / "build"), str(tmp_path / "run"),
+                "--workers", workers, "--geninput-timeout", "0",
+            ],
+            cwd=ROOT, text=True, capture_output=True,
+        )
+        assert result.returncode == 2
+        assert "--geninput-timeout must be a positive integer" in result.stderr
+        assert "--workers must" not in result.stderr
+
+
+def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path) -> None:
+    output_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    result = subprocess.run(
+        [
+            "python3", str(ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"),
+            "--output-root", str(output_root), "--mode", "functional", "--version", "0.14.0",
+            "--reports-dir", str(reports),
+        ],
+        cwd=ROOT,
+        env={**os.environ, "CRYPTO_TESTING_BUDGET_EXHAUSTED": "1"},
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((output_root / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "completed-at-budget"
+    assert summary["normalized_outcome"] == "ok"
+    assert summary["stop_reason"] == "fuzzing-time-budget"
+
+
+def test_cryptotesting_dockerfile_packages_manifest_writer() -> None:
+    dockerfile = CRYPTOTESTING_DOCKERFILE.read_text(encoding="utf-8")
+    manifest_writer = (ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "COPY crypto_testing_manifest.py /fuzzing/crypto_testing_manifest.py" in dockerfile
+    assert "from __future__ import annotations" not in manifest_writer
+
+
+def test_cryptotesting_manifest_finalizer_resolves_its_script_directory(tmp_path: Path) -> None:
+    output_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    write_executable(
+        tmp_path / "bin" / "make",
+        "#!/usr/bin/env bash\nexit 42\n",
+    )
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path / 'bin'}{os.pathsep}{env['PATH']}"
+
+    result = subprocess.run(
+        [
+            "bash", str(CRYPTOTESTING_REPRODUCE), "fake-library",
+            "--output-root", str(output_root), "--reports-dir", str(reports),
+            "--version", "0.14.0",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 42
+    assert (output_root / "manifest.json").is_file()
+
+
+def test_cryptotesting_pre_run_failure_skips_compaction_without_raw_output(tmp_path: Path) -> None:
+    root = make_root(
+        tmp_path,
+        """#!/usr/bin/env bash
+if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
+  exit 2
 fi
 exit 0
 """,
@@ -209,16 +319,26 @@ esac
 exit 0
 """,
     )
+    (root / "scripts" / "compact_baseline_results.py").write_text(
+        (ROOT / "scripts" / "compact_baseline_results.py").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     result = run_eval(
-        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "all",
+        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "compact",
         "--fuzzing-time", "1s", "--progress-interval", "1",
     )
 
     assert result.returncode == 1
     status = load_status(root, "cryptoTesting-0.14.0")
-    assert status["result"] == "timed-out-partial"
-    assert status["final_status"] == 124
+    assert status["result"] == "fuzzing-failed"
+    assert status["final_status"] == 2
+    assert status["compaction_status"] == 0
+    manifest = json.loads(
+        (root / "workspace" / "baselines_eval" / "campaigns" / "cryptoTesting-0.14.0" /
+         "workspace" / "cryptoTesting" / "compaction_manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["status"] == "skipped"
 
 
 def test_cryptotesting_success_without_summary_is_failure(tmp_path: Path) -> None:
@@ -654,6 +774,44 @@ def test_clfuzz_terminal_crash_artifact_is_nonzero_even_if_the_wrapper_returns_z
     assert summary["exit_status"] == 0
     assert summary["effective_exit_status"] == 77
     assert summary["sanitizer_crash_count"] == 1
+
+
+def test_clfuzz_recoverable_sanitizer_report_is_not_labelled_a_crash(tmp_path: Path) -> None:
+    build_dir = tmp_path / "build"
+    run_dir = tmp_path / "run"
+    install_fake_clfuzz_binary(build_dir)
+    env = clfuzz_runner_env("recoverable-ubsan")
+    env["FAKE_CLFUZZ_RECOVERABLE_UBSAN"] = "1"
+
+    result = subprocess.run(
+        [
+            "bash",
+            str(CLFUZZ_RUNNER),
+            str(ROOT / "baselines" / "CLFuzz"),
+            str(build_dir),
+            str(run_dir),
+            "--version",
+            "0.14.0",
+            "--runs",
+            "1",
+            "--profile",
+            "recoverable-ubsan",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    assert result.returncode == 77
+    summary = json.loads(
+        (run_dir / "liboqs-0.14.0" / "recoverable-ubsan" / "summary.json").read_text(encoding="utf-8")
+    )
+    assert summary["status"] == "sanitizer-report"
+    assert summary["stop_reason"] == "recoverable-sanitizer-report"
+    assert summary["sanitizer_crash_count"] == 0
+    assert summary["recoverable_sanitizer_report_count"] == 1
 
 
 def test_clfuzz_replay_rejects_parallel_workers_and_runs_limits(tmp_path: Path) -> None:

@@ -11,6 +11,7 @@ Options:
   --mode functional|vanilla     Run functional cryptoTesting or its vanilla AFL baseline. Default: functional.
   --workers N|auto              Bound the driver pool (default: 1, or CRYPTO_TESTING_WORKERS).
   --geninput-timeout SECONDS    Independent GenInput setup timeout. Default: 10.
+  --max-total-time SECONDS      End fuzzing cleanly after this many seconds.
   --skip-core-pattern-check     Skip the host AFL core_pattern preflight.
   -h, --help                    Show this help.
 
@@ -37,6 +38,7 @@ MODE="functional"
 SKIP_CORE_PATTERN_CHECK=0
 WORKERS="${CRYPTO_TESTING_WORKERS:-1}"
 GENINPUT_TIMEOUT="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
+MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -88,6 +90,18 @@ while [ "$#" -gt 0 ]; do
       GENINPUT_TIMEOUT="${1#--geninput-timeout=}"
       shift
       ;;
+    --max-total-time)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --max-total-time." >&2
+        exit 2
+      fi
+      MAX_TOTAL_TIME="$2"
+      shift 2
+      ;;
+    --max-total-time=*)
+      MAX_TOTAL_TIME="${1#--max-total-time=}"
+      shift
+      ;;
     --skip-core-pattern-check)
       SKIP_CORE_PATTERN_CHECK=1
       shift
@@ -110,14 +124,18 @@ if [ "$MODE" != "functional" ] && [ "$MODE" != "vanilla" ]; then
   exit 2
 fi
 
-case "$WORKERS" in
-  auto|[1-9][0-9]*) ;;
-  *) echo "--workers must be a positive integer or auto." >&2; exit 2 ;;
-esac
-case "$GENINPUT_TIMEOUT" in
-  [1-9][0-9]*) ;;
-  *) echo "--geninput-timeout must be a positive integer." >&2; exit 2 ;;
-esac
+if [ "$WORKERS" != "auto" ] && ! [[ "$WORKERS" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--workers must be a positive integer or auto." >&2
+  exit 2
+fi
+if ! [[ "$GENINPUT_TIMEOUT" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--geninput-timeout must be a positive integer." >&2
+  exit 2
+fi
+if [ -n "$MAX_TOTAL_TIME" ] && ! [[ "$MAX_TOTAL_TIME" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--max-total-time must be a positive integer." >&2
+  exit 2
+fi
 
 IMAGE_NAME="pqcdf-baseline-cryptotesting"
 
@@ -158,6 +176,9 @@ echo "[cryptoTesting] liboqs target: $LIBOQS_TARGET"
 echo "[cryptoTesting] mode: $MODE"
 echo "[cryptoTesting] requested workers: $WORKERS"
 echo "[cryptoTesting] GenInput setup timeout: ${GENINPUT_TIMEOUT}s"
+if [ -n "$MAX_TOTAL_TIME" ]; then
+  echo "[cryptoTesting] fuzzing time limit: ${MAX_TOTAL_TIME}s"
+fi
 
 if [ "$SKIP_CORE_PATTERN_CHECK" -eq 0 ]; then
   CORE_PATTERN="$(cat /proc/sys/kernel/core_pattern 2>/dev/null || true)"
@@ -214,6 +235,10 @@ REPRODUCE_MODE_ARGS=()
 if [ "$MODE" = "vanilla" ]; then
   REPRODUCE_MODE_ARGS+=(baseline)
 fi
+REPRODUCE_TIME_ARGS=()
+if [ -n "$MAX_TOTAL_TIME" ]; then
+  REPRODUCE_TIME_ARGS+=(--max-total-time "$MAX_TOTAL_TIME")
+fi
 
 set +e
 docker run --rm \
@@ -223,7 +248,7 @@ docker run --rm \
   -v "${RAW_OUTPUT_DIR}:/pqcdf-results" \
   -w /fuzzing \
   "$IMAGE_NAME" \
-  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results 2>/dev/null || true' EXIT; git config --global --add safe.directory /fuzzing/${LIBOQS_TARGET}; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION}" \
+  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results 2>/dev/null || true' EXIT; git config --global --add safe.directory /fuzzing/${LIBOQS_TARGET}; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION} ${REPRODUCE_TIME_ARGS[*]}" \
   2>&1 | tee "$LOG_FILE"
 DOCKER_STATUS="${PIPESTATUS[0]}"
 set -e
@@ -249,16 +274,31 @@ try:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 except (OSError, json.JSONDecodeError) as error:
     raise SystemExit(f"invalid cryptoTesting manifest: {error}")
-if not manifest.get("tasks_terminal"):
+if not manifest.get("tasks_terminal") and not manifest.get("budget_exhausted"):
     raise SystemExit("cryptoTesting did not finish all scheduled tasks")
-if not any(reports_dir.glob("*.xlsx")):
+if manifest.get("tasks_terminal") and not any(reports_dir.glob("*.xlsx")):
     raise SystemExit("cryptoTesting completed without its required XLSX report")
 PY
 then
   exit 1
 fi
 
-echo "[cryptoTesting] reproduction completed"
+if [ -n "$MAX_TOTAL_TIME" ] && python3 - "${RAW_OUTPUT_DIR}/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+try:
+    manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    raise SystemExit(1)
+raise SystemExit(0 if manifest.get("budget_exhausted") else 1)
+PY
+then
+  echo "[cryptoTesting] reproduction completed at the configured fuzzing-time budget"
+else
+  echo "[cryptoTesting] reproduction completed"
+fi
 echo "[cryptoTesting] reports: $REPORTS_DIR"
 echo "[cryptoTesting] raw outputs: $RAW_OUTPUT_DIR"
 echo "[cryptoTesting] log: $LOG_FILE"

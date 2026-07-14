@@ -83,6 +83,7 @@ if [ "${PQCDF_CLFUZZ_IN_DOCKER:-0}" != "1" ]; then
   HOST_GID="$(id -g)"
   docker run --rm \
     -e PQCDF_CLFUZZ_IN_DOCKER=1 \
+    -e PQCDF_CLFUZZ_STRICT_UBSAN="${PQCDF_CLFUZZ_STRICT_UBSAN:-0}" \
     -e HOST_UID="$HOST_UID" \
     -e HOST_GID="$HOST_GID" \
     -e PQCDF_CHOWN_BUILD_DIR="$BUILD_DIR" \
@@ -125,11 +126,49 @@ else
   fi
 fi
 
+# Start each build from the requested immutable tag.  The compatibility patch
+# below is intentionally applied after this checkout, never to the vendored
+# baseline tree itself.
+git -C "$LIBOQS_SRC_DIR" checkout --force "$VERSION"
+
+if [ "$VERSION" = "0.14.0" ]; then
+  LIBOQS_PATCH="${BASELINE_DIR_ABS}/../patches/liboqs-0.14.0-empty-context.patch"
+  if [ ! -f "$LIBOQS_PATCH" ]; then
+    echo "Required liboqs 0.14.0 compatibility patch is missing: $LIBOQS_PATCH" >&2
+    exit 1
+  fi
+  patch --batch -d "$LIBOQS_SRC_DIR" -p1 < "$LIBOQS_PATCH"
+fi
+
 CC_BIN="${CC:-clang}"
 CXX_BIN="${CXX:-clang++}"
 PARALLEL_JOBS="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)"
 SAN_CFLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address,undefined"
 SAN_CXXFLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address,undefined"
+SANITIZER_PROFILE="address-and-undefined"
+
+# liboqs 0.4.0 contains known, recoverable UBSan findings in legacy Saber,
+# SIKE, Picnic, and qTesla implementations.  Keep the normal baseline useful
+# for memory-safety fuzzing with ASan, while retaining an opt-in strict UBSan
+# discovery lane for investigating those upstream findings.
+if [ "$VERSION" = "0.4.0" ] && [ "${PQCDF_CLFUZZ_STRICT_UBSAN:-0}" != "1" ]; then
+  SAN_CFLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address"
+  SAN_CXXFLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address"
+  SANITIZER_PROFILE="address-only-known-legacy-ubsan"
+fi
+
+python3 - "$VERSION_BUILD_DIR/sanitizer-profile.json" "$VERSION" "$SANITIZER_PROFILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+path.write_text(json.dumps({
+    "liboqs_version": sys.argv[2],
+    "profile": sys.argv[3],
+    "strict_ubsan": sys.argv[3] == "address-and-undefined",
+}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
 
 cmake -S "$LIBOQS_SRC_DIR" -B "$LIBOQS_BUILD_DIR" -GNinja \
   -DCMAKE_C_COMPILER="$CC_BIN" \

@@ -436,12 +436,6 @@ classify_target_result() {
   elif [ "$raw_exit_status" -ne 0 ]; then
     TARGET_STATUS="harness-error"
     TARGET_STOP_REASON="nonzero-fuzzer-exit"
-  elif [ -z "$RUNS" ] && [ -n "$MAX_TOTAL_TIME" ]; then
-    # libFuzzer exits zero when its configured campaign budget elapses.  This
-    # is a normal launcher outcome, but recording it as timed-out makes the
-    # bounded wall-clock stop explicit in the fairness metadata.
-    TARGET_STATUS="timed-out"
-    TARGET_STOP_REASON="max-total-time"
   elif [ "$semantic_finding_count" -gt 0 ]; then
     TARGET_STATUS="completed-with-findings"
     if [ -n "$RUNS" ]; then

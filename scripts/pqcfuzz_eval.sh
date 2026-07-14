@@ -903,6 +903,11 @@ doc = {
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
     "skipped": False,
 }
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(doc, f, indent=2, sort_keys=True)
+    f.write("\n")
+PY
+}
 
 write_replay_manifest() {
   local manifest_file="$1"
@@ -934,11 +939,6 @@ doc = {
 path = Path(os.environ["REPLAY_MANIFEST_FILE"])
 path.parent.mkdir(parents=True, exist_ok=True)
 path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-PY
-}
-with open(path, "w", encoding="utf-8") as f:
-    json.dump(doc, f, indent=2, sort_keys=True)
-    f.write("\n")
 PY
 }
 
@@ -2003,6 +2003,15 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
     "$FUZZING_SECONDS" \
     "$KEM_SECONDS" \
     "$SIG_SECONDS"
+
+  # The launcher is generated from nested Bash/Python heredocs.  Parse the
+  # generated artifact before tmux starts it so a template error is reported
+  # synchronously instead of looking like a campaign that vanished.
+  if ! bash -n "${LAUNCHER_FILE_BY_ID[$campaign]}"; then
+    echo "[pqcfuzz-eval] generated launcher failed syntax validation: ${LAUNCHER_FILE_BY_ID[$campaign]}" >&2
+    START_FAILURE=1
+    continue
+  fi
 
   if tmux new-session -d -s "${SESSION_BY_ID[$campaign]}" -c "$ROOT_DIR" "${LAUNCHER_FILE_BY_ID[$campaign]}"; then
     echo "[pqcfuzz-eval] started: ${SESSION_BY_ID[$campaign]}"
