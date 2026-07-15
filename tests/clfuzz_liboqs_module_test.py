@@ -247,14 +247,14 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
           if (is_mode("keypair_error")) return OQS_ERROR;
           randombytes(pk, 4); for (size_t i = 0; i < 4; ++i) { pk[i] = 0x10 + i; sk[i] = 0x20 + i; } return OQS_SUCCESS;
         }
-        OQS_STATUS OQS_KEM_encaps(OQS_KEM*, uint8_t* ct, uint8_t* ss, const uint8_t*) {
-          if (is_mode("encaps_error")) return OQS_ERROR;
-          randombytes(ct, 4); ct[0] = 0x30; std::memset(ss, 0x42, 4); return OQS_SUCCESS;
-        }
-        OQS_STATUS OQS_KEM_decaps(OQS_KEM*, uint8_t* ss, const uint8_t* ct, const uint8_t*) {
-          if (is_mode("decaps_error")) return OQS_ERROR;
-          if (ct[0] != 0x30 && !is_mode("kem_find")) return OQS_ERROR;
-          std::memset(ss, 0x42, 4); return OQS_SUCCESS;
+            OQS_STATUS OQS_KEM_encaps(OQS_KEM*, uint8_t* ct, uint8_t* ss, const uint8_t*) {
+              if (is_mode("encaps_error")) return OQS_ERROR;
+              randombytes(ct, 4); std::memset(ct, 0x30, 4); std::memset(ss, 0x42, 4); return OQS_SUCCESS;
+            }
+            OQS_STATUS OQS_KEM_decaps(OQS_KEM*, uint8_t* ss, const uint8_t* ct, const uint8_t*) {
+              if (is_mode("decaps_error")) return OQS_ERROR;
+              for (size_t i = 0; i < 4; ++i) if (ct[i] != 0x30 && !is_mode("kem_find")) return OQS_ERROR;
+              std::memset(ss, 0x42, 4); return OQS_SUCCESS;
         }
 
         int OQS_SIG_alg_count() { return 1; }
@@ -274,11 +274,11 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
           if (is_mode("sig_sign_error")) return OQS_ERROR;
           for (size_t i = 0; i < 4; ++i) signature[i] = 0x60 + i; *size = 4; return OQS_SUCCESS;
         }
-        OQS_STATUS OQS_SIG_verify(OQS_SIG*, const uint8_t*, size_t, const uint8_t* signature, size_t size, const uint8_t* pk) {
-          if (is_mode("sig_ignore_pk")) return size == 4 && signature[0] == 0x60 ? OQS_SUCCESS : OQS_ERROR;
-          if (is_mode("sig_accept_all")) return OQS_SUCCESS;
-          return size == 4 && signature[0] == 0x60 && pk[0] == 0x40 && pk[1] == 0x41 && pk[2] == 0x42 && pk[3] == 0x43 ? OQS_SUCCESS : OQS_ERROR;
-        }
+            OQS_STATUS OQS_SIG_verify(OQS_SIG*, const uint8_t*, size_t, const uint8_t* signature, size_t size, const uint8_t* pk) {
+              if (is_mode("sig_ignore_pk")) return size == 4 && signature[0] == 0x60 && signature[1] == 0x61 && signature[2] == 0x62 && signature[3] == 0x63 ? OQS_SUCCESS : OQS_ERROR;
+              if (is_mode("sig_accept_all")) return OQS_SUCCESS;
+              return size == 4 && signature[0] == 0x60 && signature[1] == 0x61 && signature[2] == 0x62 && signature[3] == 0x63 && pk[0] == 0x40 && pk[1] == 0x41 && pk[2] == 0x42 && pk[3] == 0x43 ? OQS_SUCCESS : OQS_ERROR;
+            }
         ''',
     )
     write(
@@ -326,21 +326,25 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
           const std::vector<uint8_t> raw = {'s', 't', 'u', 'b'};
           cryptofuzz::liboqs_replay::ScopedInput scoped(raw.data(), raw.size());
           cryptofuzz::module::liboqs module;
-          if (test_case == "kem") return run_kem(module, 1ULL << 17) ? 0 : 1;
+          // Low-valued selectors must still address non-round-trip properties.
+          // The liboqs module divides the selector into an algorithm slot and a
+          // property slot; this stub exposes one algorithm, so selector 1 is
+          // the second KEM property and selector 3 is the fourth SIG property.
+          if (test_case == "kem") return run_kem(module, 1) ? 0 : 1;
           if (test_case == "kem-replay-mismatch") {
             setenv("PQCDF_LIBOQS_REPLAY_MODE", "raw-input-v1", 1);
             setenv("PQCDF_LIBOQS_REPLAY_ALGORITHM", "fake-kem", 1);
             setenv("PQCDF_LIBOQS_REPLAY_PROPERTY", "kem_decaps_c", 1);
             setenv("PQCDF_LIBOQS_REPLAY_INPUT_SHA256", "0000000000000000000000000000000000000000000000000000000000000000", 1);
             setenv("PQCDF_LIBOQS_REPLAY_INPUT_RELATIVE_PATH", "replay-inputs/wrong.bin", 1);
-            return run_kem(module, 1ULL << 17) ? 0 : 1;
+            return run_kem(module, 1) ? 0 : 1;
           }
           if (test_case == "kem-twice") {
-            return run_kem(module, 1ULL << 17) && run_kem(module, (1ULL << 17) + 1) ? 0 : 1;
+            return run_kem(module, 1) && run_kem(module, 7) ? 0 : 1;
           }
-          if (test_case == "sig-verify-signature") return run_sig(module, 1ULL << 17, 1) ? 0 : 1;
-          if (test_case == "sig-verify-public-key") return run_sig(module, 3ULL << 17, 1) ? 0 : 1;
-          if (test_case == "sig-noop") return run_sig(module, 1ULL << 17, 0) ? 0 : 1;
+          if (test_case == "sig-verify-signature") return run_sig(module, 1, 1) ? 0 : 1;
+          if (test_case == "sig-verify-public-key") return run_sig(module, 3, 1) ? 0 : 1;
+          if (test_case == "sig-noop") return run_sig(module, 1, 0) ? 0 : 1;
           return 65;
         }
         ''',

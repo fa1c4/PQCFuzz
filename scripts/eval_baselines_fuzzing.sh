@@ -533,7 +533,7 @@ def outcome(document):
         value = document.get(key)
         if value in {
             "completed", "completed-with-findings", "target-crash", "timed-out",
-            "harness-error", "infrastructure-failed", "sanitizer-report",
+            "harness-error", "infrastructure-failed", "sanitizer-report", "completed-with-coverage-gap",
         }:
             return value
     if count(document.get("semantic_finding_count"), document.get("semantic_findings")) > 0:
@@ -542,6 +542,7 @@ def outcome(document):
     return {
         "ok": "completed",
         "invariant_violation": "completed-with-findings",
+        "coverage_incomplete": "completed-with-coverage-gap",
         "process_crash": "target-crash",
         "process_hang": "timed-out",
         "operation_error": "harness-error",
@@ -572,7 +573,7 @@ except (OSError, json.JSONDecodeError):
     document = {}
 
 status = document.get("status") if isinstance(document, dict) else None
-print(status if status in {"completed", "completed-at-budget", "timed-out-partial"} else "unknown")
+print(status if status in {"completed", "completed-at-budget-incomplete", "timed-out-partial"} else "unknown")
 PY
 }
 
@@ -683,8 +684,11 @@ fi
 if [ "$CAMPAIGN_OUTCOME" = "completed-with-findings" ]; then
   finish_campaign "completed-with-findings" 0
 fi
-if [ "$CAMPAIGN_OUTCOME" = "completed-at-budget" ]; then
-  finish_campaign "completed-at-budget" 0
+if [ "$CAMPAIGN_OUTCOME" = "completed-with-coverage-gap" ]; then
+  finish_campaign "completed-with-coverage-gap" 0
+fi
+if [ "$CAMPAIGN_OUTCOME" = "completed-at-budget-incomplete" ]; then
+  finish_campaign "completed-at-budget-incomplete" 0
 fi
 
 finish_campaign "completed" 0

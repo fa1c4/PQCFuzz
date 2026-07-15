@@ -1359,6 +1359,18 @@ class Compactor:
             )
 
         self.retain_tree_files(raw_root)
+        task_coverage = source_manifest.get("task_coverage")
+        if not isinstance(task_coverage, dict):
+            scheduled = source_manifest.get("scheduled_tasks", 0)
+            if not isinstance(scheduled, int) or scheduled < 0:
+                scheduled = 0
+            terminal = scheduled if source_manifest.get("tasks_terminal") else 0
+            task_coverage = {
+                "scheduled": scheduled,
+                "terminal": terminal,
+                "incomplete": scheduled - terminal,
+                "fraction": 1.0 if scheduled and terminal == scheduled else 0.0,
+            }
         self.crypto_testing_campaigns[mode] = {
             "raw_root": raw_root,
             "source_manifest": source_manifest,
@@ -1374,6 +1386,8 @@ class Compactor:
             "validated_target_hangs": validated_target_hangs,
             "tasks_terminal": bool(source_manifest.get("tasks_terminal")),
             "budget_exhausted": bool(source_manifest.get("budget_exhausted")),
+            "task_coverage": task_coverage,
+            "unvalidated_artifact_count": source_manifest.get("unvalidated_artifact_count", 0),
         }
 
     def compact_crypto_testing(self) -> None:
@@ -1406,6 +1420,8 @@ class Compactor:
                     "validated_target_hangs": info["validated_target_hangs"],
                     "tasks_terminal": info["tasks_terminal"],
                     "budget_exhausted": info["budget_exhausted"],
+                    "task_coverage": info["task_coverage"],
+                    "unvalidated_artifact_count": info["unvalidated_artifact_count"],
                 }
                 for mode, info in sorted(self.crypto_testing_campaigns.items())
             },
@@ -1879,10 +1895,12 @@ class Compactor:
                 "mode": mode,
                 "status": (
                     "completed" if info["tasks_terminal"] else
-                    "completed-at-budget" if info["budget_exhausted"] else
+                    "completed-at-budget-incomplete" if info["budget_exhausted"] else
                     "timed-out-partial"
                 ),
-                "normalized_outcome": "ok" if (info["tasks_terminal"] or info["budget_exhausted"]) else "process_hang",
+                "normalized_outcome": "ok" if info["tasks_terminal"] else (
+                    "coverage_incomplete" if info["budget_exhausted"] else "process_hang"
+                ),
                 "stop_reason": "fuzzing-time-budget" if info["budget_exhausted"] else (
                     "all-tasks-terminal" if info["tasks_terminal"] else "interrupted"
                 ),
@@ -1891,6 +1909,8 @@ class Compactor:
                 "reports": source.get("report_files", []),
                 "task_states": source.get("task_states", {}),
                 "scheduled_tasks": source.get("scheduled_tasks", 0),
+                "task_coverage": info["task_coverage"],
+                "unvalidated_artifact_count": info["unvalidated_artifact_count"],
                 "worker_count": source.get("resource_allocation", {}).get("effective_workers"),
                 "requested_workers": source.get("resource_allocation", {}).get("requested_workers"),
                 "cpu_allocation": source.get("resource_allocation", {}).get("cpu_allocation"),

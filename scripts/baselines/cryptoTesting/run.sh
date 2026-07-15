@@ -11,6 +11,7 @@ Options:
   --mode functional|vanilla     Run functional cryptoTesting or its vanilla AFL baseline. Default: functional.
   --workers N|auto              Bound the driver pool (default: 1, or CRYPTO_TESTING_WORKERS).
   --geninput-timeout SECONDS    Independent GenInput setup timeout. Default: 10.
+  --task-max-time SECONDS       Maximum AFL time for each scheduled functional task.
   --max-total-time SECONDS      End fuzzing cleanly after this many seconds.
   --skip-core-pattern-check     Skip the host AFL core_pattern preflight.
   -h, --help                    Show this help.
@@ -39,6 +40,7 @@ SKIP_CORE_PATTERN_CHECK=0
 WORKERS="${CRYPTO_TESTING_WORKERS:-1}"
 GENINPUT_TIMEOUT="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
 MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
+TASK_MAX_TIME="${CRYPTO_TESTING_TASK_MAX_TIME:-}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -90,6 +92,18 @@ while [ "$#" -gt 0 ]; do
       GENINPUT_TIMEOUT="${1#--geninput-timeout=}"
       shift
       ;;
+    --task-max-time)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --task-max-time." >&2
+        exit 2
+      fi
+      TASK_MAX_TIME="$2"
+      shift 2
+      ;;
+    --task-max-time=*)
+      TASK_MAX_TIME="${1#--task-max-time=}"
+      shift
+      ;;
     --max-total-time)
       if [ "$#" -lt 2 ]; then
         echo "Missing value for --max-total-time." >&2
@@ -136,6 +150,10 @@ if [ -n "$MAX_TOTAL_TIME" ] && ! [[ "$MAX_TOTAL_TIME" =~ ^[1-9][0-9]*$ ]]; then
   echo "--max-total-time must be a positive integer." >&2
   exit 2
 fi
+if [ -n "$TASK_MAX_TIME" ] && ! [[ "$TASK_MAX_TIME" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--task-max-time must be a positive integer." >&2
+  exit 2
+fi
 
 IMAGE_NAME="pqcdf-baseline-cryptotesting"
 
@@ -178,6 +196,9 @@ echo "[cryptoTesting] requested workers: $WORKERS"
 echo "[cryptoTesting] GenInput setup timeout: ${GENINPUT_TIMEOUT}s"
 if [ -n "$MAX_TOTAL_TIME" ]; then
   echo "[cryptoTesting] fuzzing time limit: ${MAX_TOTAL_TIME}s"
+fi
+if [ -n "$TASK_MAX_TIME" ]; then
+  echo "[cryptoTesting] per-task AFL time limit: ${TASK_MAX_TIME}s"
 fi
 
 if [ "$SKIP_CORE_PATTERN_CHECK" -eq 0 ]; then
@@ -238,6 +259,9 @@ fi
 REPRODUCE_TIME_ARGS=()
 if [ -n "$MAX_TOTAL_TIME" ]; then
   REPRODUCE_TIME_ARGS+=(--max-total-time "$MAX_TOTAL_TIME")
+fi
+if [ -n "$TASK_MAX_TIME" ]; then
+  REPRODUCE_TIME_ARGS+=(--task-max-time "$TASK_MAX_TIME")
 fi
 
 set +e

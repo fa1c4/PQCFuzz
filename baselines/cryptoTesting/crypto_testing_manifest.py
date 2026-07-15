@@ -159,8 +159,18 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> Dict[
     states = Counter(
         item.get("state", "unknown") for item in tasks if isinstance(item, dict)
     )
-    scheduled = sum(1 for item in tasks if isinstance(item, dict) and item.get("state") != "skipped")
     terminal = {"completed", "skipped", "setup-timeout", "target-failed", "interrupted"}
+    scheduled_tasks = [
+        item for item in tasks if isinstance(item, dict) and item.get("state") != "skipped"
+    ]
+    scheduled = len(scheduled_tasks)
+    terminal_count = sum(item.get("state") in terminal for item in scheduled_tasks)
+    task_coverage = {
+        "scheduled": scheduled,
+        "terminal": terminal_count,
+        "incomplete": scheduled - terminal_count,
+        "fraction": round(terminal_count / scheduled, 6) if scheduled else 0.0,
+    }
     complete = bool(tasks) and all(
         isinstance(item, dict) and item.get("state") in terminal for item in tasks
     )
@@ -187,6 +197,7 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> Dict[
         "artifact_counts": dict(sorted(Counter(item["kind"] for item in artifacts).items())),
         "task_states": dict(sorted(states.items())),
         "scheduled_tasks": scheduled,
+        "task_coverage": task_coverage,
         "tasks_terminal": complete,
         "budget_exhausted": budget_exhausted,
         "schedule": schedule if isinstance(schedule, dict) else {},
@@ -204,6 +215,9 @@ def scan(output_root: Path, mode: str, version: str, reports_dir: Path) -> Dict[
             "raw-crash": "crash",
             "raw-hang": "unvalidated until replay; then target-hang, crash, operation-error, accepted-mutation, mismatch, or unreproduced",
         },
+        "unvalidated_artifact_count": sum(
+            item.get("classification") == "unvalidated" for item in artifacts
+        ),
         "resource_allocation": {
             "requested_workers": campaign.get("requested_workers") if isinstance(campaign, dict) else None,
             "effective_workers": campaign.get("effective_workers") if isinstance(campaign, dict) else None,
@@ -232,10 +246,12 @@ def main(argv: List[str]) -> int:
             "version": args.version,
             "status": (
                 "completed" if document["tasks_terminal"] else
-                "completed-at-budget" if document["budget_exhausted"] else
+                "completed-at-budget-incomplete" if document["budget_exhausted"] else
                 "timed-out-partial"
             ),
-            "normalized_outcome": "ok" if (document["tasks_terminal"] or document["budget_exhausted"]) else "process_hang",
+            "normalized_outcome": "ok" if document["tasks_terminal"] else (
+                "coverage_incomplete" if document["budget_exhausted"] else "process_hang"
+            ),
             "stop_reason": "fuzzing-time-budget" if document["budget_exhausted"] else (
                 "all-tasks-terminal" if document["tasks_terminal"] else "interrupted"
             ),
@@ -243,7 +259,9 @@ def main(argv: List[str]) -> int:
             "raw_output_root": str(args.output_root),
             "task_states": document["task_states"],
             "scheduled_tasks": document["scheduled_tasks"],
+            "task_coverage": document["task_coverage"],
             "raw_artifact_counts": document["artifact_counts"],
+            "unvalidated_artifact_count": document["unvalidated_artifact_count"],
             "reported_groups": document["reported_groups"],
             "groups_with_reproducer": document["groups_with_reproducer"],
             "groups_replayed": document["groups_replayed"],

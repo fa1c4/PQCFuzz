@@ -11,6 +11,7 @@ import psutil
 import time
 import hashlib
 import os
+import signal
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -48,6 +49,21 @@ def collect_tasks(output_root):
             continue
     write_json(Path(output_root) / "metadata" / "tasks.json", tasks)
     return tasks
+
+
+def mark_running_tasks_interrupted(output_root, reason):
+    """Turn durable in-flight task records into terminal budget evidence."""
+    tasks = collect_tasks(output_root)
+    for task in tasks:
+        if task.get("state") != "running":
+            continue
+        task.update({
+            "state": "interrupted",
+            "stop_reason": reason,
+            "interrupted_at": timestamp(),
+        })
+        write_task(output_root, task)
+    return collect_tasks(output_root)
 
 
 def property_name(testpath):
@@ -120,7 +136,7 @@ def get_algs(testpath, liboqs):
 
 
 def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
-    ctr, testpath, alg, mutator, liboqs, algs_d, output_root, workers, geninput_timeout = ctr_testpath_alg_mutator_liboqs_algsd
+    ctr, testpath, alg, mutator, liboqs, algs_d, output_root, workers, geninput_timeout, task_max_time = ctr_testpath_alg_mutator_liboqs_algsd
     task = {
         "id": task_id(testpath, alg),
         "algorithm": algs_d[alg],
@@ -136,16 +152,18 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
 
     raw_property = Path(output_root) / "afl" / property_name(testpath)
+    task_time_argument = f" --task-max-time {task_max_time}" if task_max_time else ""
     shellcmd = (
         f"cd {testpath}; make clone; bash clone.sh {alg}; cd {alg}; "
         f"DIRNAME={liboqs} make clean all > /dev/null 2>&1; "
         f"python3 run_all.py --mutator {mutator} --base_path {raw_property} "
-        f"--run_specific_alg_only {alg} --run_inside_clone --geninput-timeout {geninput_timeout}"
+        f"--run_specific_alg_only {alg} --run_inside_clone --geninput-timeout {geninput_timeout}{task_time_argument}"
     )
     task.update({
         "state": "running",
         "command": shellcmd,
         "geninput_timeout_seconds": geninput_timeout,
+        "task_max_time_seconds": task_max_time,
         "workers": workers,
         "started_at": timestamp(),
     })
@@ -176,23 +194,12 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
             print(shellcmd)
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
 
-def main(mutator, liboqs, version, output_root, requested_workers, geninput_timeout):
+def main(mutator, liboqs, version, output_root, requested_workers, geninput_timeout,
+         task_max_time, max_total_time):
     requested_workers, nproc = configured_workers(requested_workers)
     print(f"Using pool of size {nproc} (requested: {requested_workers})")
     metadata_root = Path(output_root) / "metadata"
     metadata_root.mkdir(parents=True, exist_ok=True)
-    write_json(metadata_root / "campaign.json", {
-        "baseline": "cryptoTesting",
-        "mode": "functional",
-        "liboqs": liboqs,
-        "version": version,
-        "requested_workers": requested_workers,
-        "effective_workers": nproc,
-        "cpu_allocation": os.environ.get("CRYPTO_TESTING_CPU_QUOTA", f"workers:{nproc}"),
-        "geninput_timeout_seconds": geninput_timeout,
-        "created_at": timestamp(),
-    })
-
     bars = []
     algs = []
     for ctr in range(len(TESTPATHS)):
@@ -211,6 +218,33 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
         bars.append(tqdm.tqdm(total=len(list(algs_d.keys())), position=ctr, desc='/'.join(testpath.split('/')[-3:])))
 
     schedule = collect_tasks(output_root)
+    scheduled_count = sum(task.get("state") != "skipped" for task in schedule)
+    if task_max_time is not None:
+        effective_task_max_time = task_max_time
+        task_budget_strategy = "explicit"
+    elif max_total_time is not None and scheduled_count:
+        effective_task_max_time = max(1, max_total_time // scheduled_count)
+        task_budget_strategy = "equal-share"
+    else:
+        effective_task_max_time = None
+        task_budget_strategy = "unbounded"
+    campaign = {
+        "baseline": "cryptoTesting",
+        "mode": "functional",
+        "liboqs": liboqs,
+        "version": version,
+        "requested_workers": requested_workers,
+        "effective_workers": nproc,
+        "cpu_allocation": os.environ.get("CRYPTO_TESTING_CPU_QUOTA", f"workers:{nproc}"),
+        "geninput_timeout_seconds": geninput_timeout,
+        "requested_task_max_time_seconds": task_max_time,
+        "effective_task_max_time_seconds": effective_task_max_time,
+        "task_budget_strategy": task_budget_strategy,
+        "max_total_time_seconds": max_total_time,
+        "scheduled_task_count": scheduled_count,
+        "created_at": timestamp(),
+    }
+    write_json(metadata_root / "campaign.json", campaign)
     write_json(metadata_root / "schedule.json", {
         "version": version,
         "liboqs": liboqs,
@@ -225,15 +259,32 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
         ],
     })
 
+    work_by_property = [
+        [
+            (ctr, TESTPATHS[ctr], alg, mutator, liboqs, algs[ctr], output_root, nproc,
+             geninput_timeout, effective_task_max_time)
+            for alg in algs[ctr].keys()
+        ]
+        for ctr in range(len(TESTPATHS))
+    ]
+    work_items = []
+    while any(work_by_property):
+        for queue in work_by_property:
+            if queue:
+                work_items.append(queue.pop(0))
+
+    interrupted_by = {"signal": None}
+
+    def handle_termination(signum, _frame):
+        interrupted_by["signal"] = signum
+        raise KeyboardInterrupt
+
+    previous_sigterm = signal.signal(signal.SIGTERM, handle_termination)
     try:
         with multiprocessing.Pool(nproc) as pool:
             for rv in pool.imap_unordered(
                         experiment,
-                        list(
-                            (_ctr, TESTPATHS[_ctr], _alg, mutator, liboqs, algs[_ctr], output_root, nproc, geninput_timeout)
-                            for _ctr in range(len(TESTPATHS))
-                            for _alg in algs[_ctr].keys()
-                        )
+                        work_items
             ):
                 # rv['ctr']
                 # rv['testpath']
@@ -244,11 +295,15 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
     except KeyboardInterrupt:
         subprocess.run(f"echo -ne '%s'" % ('\x1bD' * len(TESTPATHS)), shell=True)
         print("\n\nAborting.\n")
-        collect_tasks(output_root)
+        signal_name = "SIGTERM" if interrupted_by["signal"] == signal.SIGTERM else "SIGINT"
+        tasks = mark_running_tasks_interrupted(output_root, signal_name)
         write_json(Path(output_root) / "metadata" / "partial-summary.json", {
-            "state": "interrupted", "interrupted_at": timestamp(), "tasks": collect_tasks(output_root),
+            "state": "interrupted", "stop_reason": signal_name,
+            "interrupted_at": timestamp(), "tasks": tasks,
         })
-        return 130
+        return 128 + interrupted_by["signal"] if interrupted_by["signal"] else 130
+    finally:
+        signal.signal(signal.SIGTERM, previous_sigterm)
 
     for bar in bars:
         bar.close()
@@ -268,6 +323,10 @@ if __name__ == "__main__":
     parser.add_argument('--workers', default=os.environ.get("CRYPTO_TESTING_WORKERS", "1"))
     parser.add_argument('--geninput-timeout', type=int, default=int(os.environ.get("CRYPTO_TESTING_GENINPUT_TIMEOUT", "10")))
     parser.add_argument('--version', default=os.environ.get("CRYPTO_TESTING_VERSION", "unknown"))
+    parser.add_argument('--task-max-time', type=int, default=None,
+                        help='maximum AFL seconds per scheduled task')
+    parser.add_argument('--max-total-time', type=int, default=None,
+                        help='campaign budget used to derive an equal per-task AFL limit')
 
     args = parser.parse_args()
     mutator = args.mutator
@@ -279,12 +338,18 @@ if __name__ == "__main__":
     if logfile:
         LOGFILE = open(logfile, 'w')
 
+    if args.task_max_time is not None and args.task_max_time <= 0:
+        parser.error('--task-max-time must be positive')
+    if args.max_total_time is not None and args.max_total_time <= 0:
+        parser.error('--max-total-time must be positive')
+
     # print (args)
     if "old" in liboqs:
         TESTPATHS = [_ for _ in TESTPATHS if "Verify" not in _]
 
     dt = time.time()
-    status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout)
+    status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout,
+                  args.task_max_time, args.max_total_time)
     dt = time.time() - dt
 
     print("Wall time:", dt)

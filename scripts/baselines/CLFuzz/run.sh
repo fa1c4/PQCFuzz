@@ -804,6 +804,15 @@ supported_algorithms = string_values(metadata_records, (
     "enabled_algorithms", "enabled_kem_algorithms", "enabled_sig_algorithms",
 ))
 supported_properties = string_values(metadata_records, ("property_ids", "kem_property_ids", "sig_property_ids"))
+if os.environ["CLFUZZ_MODE"] == "replay":
+    coverage_status = "not-applicable"
+    unexercised_properties = []
+elif not supported_properties:
+    coverage_status = "unknown"
+    unexercised_properties = []
+else:
+    unexercised_properties = sorted(set(supported_properties) - set(exercised_properties))
+    coverage_status = "complete" if not unexercised_properties else "incomplete"
 module_versions = string_values(all_records + metadata_records, ("module_version",))
 relations = string_values(records, ("semantic_relation", "relation"))
 replays = [value.get("replay") for value in records if isinstance(value.get("replay"), dict)]
@@ -836,7 +845,10 @@ elif effective_status != 0:
     else:
         outcome, stop_reason = "harness-error", "nonzero-fuzzer-exit"
 else:
-    outcome = "completed-with-findings" if semantic_findings else "completed"
+    if coverage_status == "incomplete":
+        outcome = "completed-with-coverage-gap"
+    else:
+        outcome = "completed-with-findings" if semantic_findings else "completed"
     if os.environ["CLFUZZ_MODE"] == "replay":
         stop_reason = "replay-completed"
     elif any(arg.startswith("-runs=") for arg in sys.argv[1:]):
@@ -849,6 +861,7 @@ else:
 normalized = {
     "completed": "ok",
     "completed-with-findings": "invariant_violation",
+    "completed-with-coverage-gap": "coverage_incomplete",
     "timed-out": "process_hang",
     "target-crash": "process_crash",
     "sanitizer-report": "sanitizer_report",
@@ -895,6 +908,8 @@ summary = {
     "exercised_property_list": exercised_properties,
     "supported_algorithm_list": supported_algorithms,
     "supported_property_list": supported_properties,
+    "coverage_status": coverage_status,
+    "unexercised_property_list": unexercised_properties,
     "campaign_root": str(root),
     "working_directory": str(log_dir),
     "resolved_working_directory": str(log_dir),

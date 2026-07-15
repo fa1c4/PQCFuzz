@@ -828,7 +828,8 @@ const char *ReplayOverride(const char *environment) {
 }
 
 template <size_t N>
-bool SelectProperty(uint64_t selector, const char *const (&properties)[N], size_t& selected) {
+bool SelectProperty(uint64_t selector, size_t algorithmCount,
+                    const char *const (&properties)[N], size_t& selected) {
     const char *forced = ReplayOverride(kReplayPropertyEnv);
     if ( forced != nullptr ) {
         for (size_t i = 0; i < N; i++) {
@@ -839,7 +840,13 @@ bool SelectProperty(uint64_t selector, const char *const (&properties)[N], size_
         }
         return false;
     }
-    selected = static_cast<size_t>((selector >> 17) % N);
+    if ( algorithmCount == 0 ) {
+        return false;
+    }
+    /* Selector values are commonly small after corpus minimization.  Splitting
+     * the selector into a mixed-radix (algorithm, property) pair reaches every
+     * property for every enabled algorithm without relying on high bits. */
+    selected = static_cast<size_t>((selector / algorithmCount) % N);
     return true;
 }
 
@@ -905,10 +912,10 @@ Outcome ControlledDiagnostic(const char *primitive, const std::string& algorithm
 }
 
 std::vector<Outcome> EvaluateKEM(OQS_KEM *kem, const std::string& algorithm,
-                                 const operation::OQS_KEM_SelfTest& op) {
+                                 const operation::OQS_KEM_SelfTest& op, size_t algorithmCount) {
     std::vector<Outcome> outcomes;
     size_t property = 0;
-    if ( !SelectProperty(op.selector, kKEMProperties, property) ) {
+    if ( !SelectProperty(op.selector, algorithmCount, kKEMProperties, property) ) {
         outcomes.push_back(Diagnostic("kem", algorithm, "replay_selection", "selection", "ok", "not_run",
             "not_run", "unsupported_replay_property", "requested replay property is not a KEM property"));
         return outcomes;
@@ -1108,10 +1115,10 @@ std::vector<Outcome> EvaluateKEM(OQS_KEM *kem, const std::string& algorithm,
 }
 
 std::vector<Outcome> EvaluateSIG(OQS_SIG *sig, const std::string& algorithm,
-                                 const operation::OQS_SIG_SelfTest& op) {
+                                 const operation::OQS_SIG_SelfTest& op, size_t algorithmCount) {
     std::vector<Outcome> outcomes;
     size_t property = 0;
-    if ( !SelectProperty(op.selector, kSIGProperties, property) ) {
+    if ( !SelectProperty(op.selector, algorithmCount, kSIGProperties, property) ) {
         outcomes.push_back(Diagnostic("sig", algorithm, "replay_selection", "selection", "ok", "not_run",
             "not_run", "unsupported_replay_property", "requested replay property is not a SIG property"));
         return outcomes;
@@ -1510,7 +1517,7 @@ std::optional<bool> liboqs::OpOQSKEMSelfTest(operation::OQS_KEM_SelfTest& op) {
         return true;
     }
 
-    const auto outcomes = EvaluateKEM(kem.get(), algorithm, op);
+    const auto outcomes = EvaluateKEM(kem.get(), algorithm, op, kemAlgorithms.size());
     PersistOutcomes(outcomes, input, [&](const Outcome& finding) {
         ReplayReport report;
         const size_t attempts = RequiredReplayAttempts();
@@ -1519,7 +1526,7 @@ std::optional<bool> liboqs::OpOQSKEMSelfTest(operation::OQS_KEM_SelfTest& op) {
             std::unique_ptr<OQS_KEM, KEMDeleter> replayKem(OQS_KEM_new(algorithm.c_str()));
             bool reproduced = false;
             if ( replayKem != nullptr ) {
-                const auto replay = EvaluateKEM(replayKem.get(), algorithm, op);
+                const auto replay = EvaluateKEM(replayKem.get(), algorithm, op, kemAlgorithms.size());
                 reproduced = std::any_of(replay.begin(), replay.end(), [&](const Outcome& candidate) {
                     return IsSameFinding(finding, candidate);
                 });
@@ -1568,7 +1575,7 @@ std::optional<bool> liboqs::OpOQSSIGSelfTest(operation::OQS_SIG_SelfTest& op) {
         return true;
     }
 
-    const auto outcomes = EvaluateSIG(sig.get(), algorithm, op);
+    const auto outcomes = EvaluateSIG(sig.get(), algorithm, op, sigAlgorithms.size());
     PersistOutcomes(outcomes, input, [&](const Outcome& finding) {
         ReplayReport report;
         const size_t attempts = RequiredReplayAttempts();
@@ -1577,7 +1584,7 @@ std::optional<bool> liboqs::OpOQSSIGSelfTest(operation::OQS_SIG_SelfTest& op) {
             std::unique_ptr<OQS_SIG, SIGDeleter> replaySig(OQS_SIG_new(algorithm.c_str()));
             bool reproduced = false;
             if ( replaySig != nullptr ) {
-                const auto replay = EvaluateSIG(replaySig.get(), algorithm, op);
+                const auto replay = EvaluateSIG(replaySig.get(), algorithm, op, sigAlgorithms.size());
                 reproduced = std::any_of(replay.begin(), replay.end(), [&](const Outcome& candidate) {
                     return IsSameFinding(finding, candidate);
                 });

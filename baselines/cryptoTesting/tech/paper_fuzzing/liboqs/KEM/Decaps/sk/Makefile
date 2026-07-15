@@ -136,8 +136,8 @@ clean:
 # loops in makefiles: https://stackoverflow.com/a/1490961
 
 GENINPUTCMD=$(BINDIR)/GenInput.out $(FUZZINPUTS)/test.bin
-FUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR)/Match.afl.out @@
-# -V 90 above would set a time limit to afl-fuzz
+FUZZTIME?=$(CRYPTO_TESTING_TASK_MAX_TIME)
+FUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D $(if $(FUZZTIME),-V $(FUZZTIME)) -- $(BINDIR)/Match.afl.out @@
 
 # setting default overwritable value for DESIRED_ALG_TO_FUZZ
 DESIRED_ALG_TO_FUZZ?=0
@@ -182,8 +182,7 @@ run_c: export AFL_NO_UI=0
 run_c: dirs all
 	min=0; max=60; for bits in `seq $$min $$max`; do $(GENINPUTCMD) $$bits; $(FUZZCMD); cp $(AFLCRASHDIR)/* $(CRASHDIR); done
 
-AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR)/Match.afl.out clean_input.bin @@
-# -V 90 above would set a time limit to afl-fuzz
+AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D $(if $(FUZZTIME),-V $(FUZZTIME)) -- $(BINDIR)/Match.afl.out clean_input.bin @@
 
 # run_afl: export AFL_PYTHON_MODULE=Maul
 # run_afl: export AFL_CUSTOM_MUTATOR_ONLY=1

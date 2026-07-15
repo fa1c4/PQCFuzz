@@ -126,6 +126,8 @@ def main():
     parser.add_argument("--run_specific_alg_only", type=int, default=-1)
     parser.add_argument("--run_inside_clone", action="store_true")
     parser.add_argument("--geninput-timeout", type=int, default=int(os.environ.get("CRYPTO_TESTING_GENINPUT_TIMEOUT", "10")))
+    parser.add_argument("--task-max-time", type=int, default=None,
+                        help="maximum AFL seconds for this task")
     args = parser.parse_args()
 
     base_path = args.base_path
@@ -135,6 +137,10 @@ def main():
     n_algs_only = args.n_algs_only
     run_specific_alg_only = args.run_specific_alg_only
     run_inside_clone = args.run_inside_clone
+    if args.task_max_time is not None:
+        if args.task_max_time <= 0:
+            parser.error("--task-max-time must be positive")
+        os.environ["CRYPTO_TESTING_TASK_MAX_TIME"] = str(args.task_max_time)
     os.environ["GITIMEOUT"] = str(args.geninput_timeout)
     cwd = os.getcwd()
 

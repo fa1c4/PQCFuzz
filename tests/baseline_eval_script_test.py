@@ -2,8 +2,13 @@ import base64
 import hashlib
 import json
 import os
+import runpy
 import subprocess
+import sys
+import types
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -133,7 +138,11 @@ printf '{"format_version":1,"baseline":"CLFuzz","module_version":"fake-module","
   > "${PQCDF_LIBOQS_FINDINGS_DIR}/finding-${marker}.json"
 printf '{"format_version":1,"baseline":"CLFuzz","module_version":"fake-module","algorithm":"%s","property_id":"fake-diagnostic"}\\n' "$marker" \\
   > "${PQCDF_LIBOQS_DIAGNOSTICS_DIR}/diagnostic-${marker}.json"
-printf '{"module_version":"fake-module"}\\n' > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
+if [ "${FAKE_CLFUZZ_MISSING_PROPERTY:-0}" = 1 ]; then
+  printf '{"module_version":"fake-module","kem_property_ids":["fake-property","missing-property"]}\\n' > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
+else
+  printf '{"module_version":"fake-module"}\\n' > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
+fi
 printf '%s' "${PQCDF_LIBOQS_REPLAY_MODE:-}" > "${PQCDF_LIBOQS_METADATA_DIR}/replay-mode.txt"
 if [ "${PQCDF_LIBOQS_REPLAY_MODE:-}" = raw-input-v1 ]; then
   printf '%s|%s|%s|%s|%s|%s\\n' \\
@@ -201,7 +210,7 @@ def test_cryptotesting_budget_completion_is_successful_with_a_summary(tmp_path: 
 if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
   output_root="${PQCDF_WORKSPACE_ROOT}/cryptoTesting/targets-run/raw/cryptoTesting-0.14.0/functional"
   mkdir -p "$output_root"
-  printf '%s\\n' '{"status":"completed-at-budget","budget_exhausted":true,"semantic_finding_count":0,"operation_diagnostic_count":0,"sanitizer_crash_count":0,"hang_count":0}' > "$output_root/summary.json"
+  printf '%s\\n' '{"status":"completed-at-budget-incomplete","budget_exhausted":true,"semantic_finding_count":0,"operation_diagnostic_count":0,"sanitizer_crash_count":0,"hang_count":0}' > "$output_root/summary.json"
 fi
 exit 0
 """,
@@ -223,7 +232,7 @@ exit 0
 
     assert result.returncode == 0, result.stderr
     status = load_status(root, "cryptoTesting-0.14.0")
-    assert status["result"] == "completed-at-budget"
+    assert status["result"] == "completed-at-budget-incomplete"
     assert status["final_status"] == 0
 
 
@@ -244,6 +253,10 @@ def test_cryptotesting_worker_validation_accepts_single_digits_and_auto(tmp_path
 def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path) -> None:
     output_root = tmp_path / "raw"
     reports = tmp_path / "reports"
+    task_dir = output_root / "metadata" / "tasks"
+    task_dir.mkdir(parents=True)
+    (task_dir / "completed.json").write_text(json.dumps({"state": "completed"}), encoding="utf-8")
+    (task_dir / "running.json").write_text(json.dumps({"state": "running"}), encoding="utf-8")
     result = subprocess.run(
         [
             "python3", str(ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"),
@@ -258,9 +271,59 @@ def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path)
 
     assert result.returncode == 0, result.stderr
     summary = json.loads((output_root / "summary.json").read_text(encoding="utf-8"))
-    assert summary["status"] == "completed-at-budget"
-    assert summary["normalized_outcome"] == "ok"
+    assert summary["status"] == "completed-at-budget-incomplete"
+    assert summary["normalized_outcome"] == "coverage_incomplete"
     assert summary["stop_reason"] == "fuzzing-time-budget"
+    assert summary["task_coverage"] == {
+        "scheduled": 2,
+        "terminal": 1,
+        "incomplete": 1,
+        "fraction": 0.5,
+    }
+
+
+def test_cryptotesting_task_budget_is_forwarded_to_every_afl_recipe() -> None:
+    driver = (ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs.py").read_text(encoding="utf-8")
+    run_all = (
+        ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs" / "run_all.py"
+    ).read_text(encoding="utf-8")
+    recipes = sorted((ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs").rglob("Makefile"))
+
+    assert "--task-max-time" in driver
+    assert "CRYPTO_TESTING_TASK_MAX_TIME" in run_all
+    assert len(recipes) == 13
+    for recipe in recipes:
+        contents = recipe.read_text(encoding="utf-8")
+        assert "FUZZTIME?=$(CRYPTO_TESTING_TASK_MAX_TIME)" in contents
+        for line in contents.splitlines():
+            if "FUZZCMD=" in line:
+                assert "-V $(FUZZTIME)" in line
+
+
+def test_cryptotesting_marks_running_tasks_interrupted_on_termination(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    output_root = tmp_path / "raw"
+    task_dir = output_root / "metadata" / "tasks"
+    task_dir.mkdir(parents=True)
+    (task_dir / "running.json").write_text(
+        json.dumps({"id": "running", "state": "running"}), encoding="utf-8"
+    )
+    (task_dir / "completed.json").write_text(
+        json.dumps({"id": "completed", "state": "completed"}), encoding="utf-8"
+    )
+
+    fake_psutil = types.ModuleType("psutil")
+    fake_psutil.cpu_count = lambda *args, **kwargs: 1
+    monkeypatch.setitem(sys.modules, "psutil", fake_psutil)
+    driver = runpy.run_path(str(ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs.py"))
+    tasks = driver["mark_running_tasks_interrupted"](output_root, "SIGTERM")
+
+    assert {task["id"]: task["state"] for task in tasks} == {
+        "completed": "completed",
+        "running": "interrupted",
+    }
+    interrupted = json.loads((task_dir / "running.json").read_text(encoding="utf-8"))
+    assert interrupted["stop_reason"] == "SIGTERM"
+    assert "interrupted_at" in interrupted
 
 
 def test_cryptotesting_dockerfile_packages_manifest_writer() -> None:
@@ -684,6 +747,31 @@ def test_clfuzz_concurrent_campaigns_isolate_worker_logs_and_summary_paths(tmp_p
         assert summary["module_version"] == "fake-module"
         assert summary["profile"] == marker
         assert (campaign_root / "metadata" / "replay-mode.txt").read_text(encoding="utf-8") == ""
+
+
+def test_clfuzz_marks_a_completed_run_with_unexercised_supported_properties(tmp_path: Path) -> None:
+    build_dir = tmp_path / "build"
+    run_dir = tmp_path / "run"
+    install_fake_clfuzz_binary(build_dir)
+    env = clfuzz_runner_env("coverage-gap")
+    env["FAKE_CLFUZZ_MISSING_PROPERTY"] = "1"
+
+    result = subprocess.run(
+        [
+            "bash", str(CLFUZZ_RUNNER), str(ROOT / "baselines" / "CLFuzz"), str(build_dir), str(run_dir),
+            "--version", "0.14.0", "--runs", "1",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((run_dir / "liboqs-0.14.0" / "smoke" / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "completed-with-coverage-gap"
+    assert summary["coverage_status"] == "incomplete"
+    assert summary["unexercised_property_list"] == ["missing-property"]
 
 
 def test_clfuzz_replay_copies_fixture_and_sets_exact_replay_contract(tmp_path: Path) -> None:
