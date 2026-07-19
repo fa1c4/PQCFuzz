@@ -226,6 +226,7 @@ def iter_result_finding_files(result_root: Path) -> Iterator[Path]:
 
 
 def iter_result_artifact_dirs(result_root: Path) -> Iterator[Path]:
+    yielded = False
     for primitive in ("kem", "sig"):
         primitive_root = result_root / primitive
         if not primitive_root.is_dir():
@@ -233,7 +234,12 @@ def iter_result_artifact_dirs(result_root: Path) -> Iterator[Path]:
         with os.scandir(primitive_root) as entries:
             for entry in entries:
                 if entry.is_dir():
+                    yielded = True
                     yield Path(entry.path)
+    if yielded:
+        return
+    for finding_path in walk_finding_files(result_root):
+        yield finding_path.parent
 
 
 def walk_finding_files(root: Path) -> Iterator[Path]:

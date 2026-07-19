@@ -17,8 +17,11 @@ Options:
   --relation-mode single-target|self-reference|cross-implementation
                                 Relation mode. Default: single-target.
   --target-runtime liboqs       Target runtime. Default: liboqs.
-  --sanitizers CSV              Sanitizers: address,undefined, memory, or none.
+  --sanitizers CSV              Sanitizers: address, undefined, memory, or none.
+                                Comma-separated; memory cannot be combined with address.
                                 Default: address,undefined.
+  --leak-check auto|on|off      Run a one-input LeakSanitizer pass after each target.
+                                Default: auto (on when address is enabled).
   --input-timeout-seconds N     Per-input timeout. Default: 30.
   --rss-mb N                    RSS limit. Default: 2048.
   --report-formats CSV          Report formats. Default: json,tsv.
@@ -126,6 +129,47 @@ parse_versions() {
   printf '%s\n' "${parsed[@]}"
 }
 
+normalize_sanitizers() {
+  local raw="$1" item normalized="" seen_address=0 seen_undefined=0 seen_memory=0 seen_none=0
+  local -a items=()
+  IFS=',' read -r -a items <<<"$raw"
+  if [ "${#items[@]}" -eq 0 ]; then
+    return 1
+  fi
+  for item in "${items[@]}"; do
+    item="$(printf '%s' "$item" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+    case "$item" in
+      address)
+        if [ "$seen_address" -eq 0 ]; then normalized+="${normalized:+,}address"; seen_address=1; fi
+        ;;
+      undefined)
+        if [ "$seen_undefined" -eq 0 ]; then normalized+="${normalized:+,}undefined"; seen_undefined=1; fi
+        ;;
+      memory)
+        if [ "$seen_memory" -eq 0 ]; then normalized+="${normalized:+,}memory"; seen_memory=1; fi
+        ;;
+      none)
+        seen_none=1
+        ;;
+      *) return 1 ;;
+    esac
+  done
+  if [ "$seen_none" -eq 1 ]; then
+    if [ -n "$normalized" ]; then return 1; fi
+    printf 'none\n'
+    return
+  fi
+  if [ -z "$normalized" ] || { [ "$seen_memory" -eq 1 ] && [ "$seen_address" -eq 1 ]; }; then
+    return 1
+  fi
+  printf '%s\n' "$normalized"
+}
+
+sanitizer_enabled() {
+  local sanitizer="$1"
+  [ "$SANITIZERS" != "none" ] && [[ ",$SANITIZERS," == *",${sanitizer},"* ]]
+}
+
 write_dockerfile() {
   mkdir -p "$DOCKER_DIR"
   cat > "$DOCKERFILE" <<EOF
@@ -137,6 +181,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \\
     build-essential \\
     clang \\
+    llvm \\
     cmake \\
     ninja-build \\
     git \\
@@ -166,6 +211,7 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: relation_mode: ${RELATION_MODE}"
   echo "docker run pqcfuzz-eval: target_runtime: ${TARGET_RUNTIME}"
   echo "docker run pqcfuzz-eval: sanitizers: ${SANITIZERS}"
+  echo "docker run pqcfuzz-eval: leak_check: ${LEAK_CHECK}"
   echo "docker run pqcfuzz-eval: finding_save_mode: ${FINDING_SAVE_MODE}"
   echo "docker run pqcfuzz-eval: max_finding_exemplars_per_group: ${MAX_FINDING_EXEMPLARS_PER_GROUP}"
   echo "docker run pqcfuzz-eval: build one fixed binary per ML-KEM/ML-DSA algorithm"
@@ -248,6 +294,7 @@ write_launcher() {
     printf 'RELATION_MODE=%q\n' "$RELATION_MODE"
     printf 'TARGET_RUNTIME=%q\n' "$TARGET_RUNTIME"
     printf 'SANITIZERS=%q\n' "$SANITIZERS"
+    printf 'LEAK_CHECK=%q\n' "$LEAK_CHECK"
     printf 'INPUT_TIMEOUT_SECONDS=%q\n' "$INPUT_TIMEOUT_SECONDS"
     printf 'RSS_MB=%q\n' "$RSS_MB"
     printf 'FINDING_SAVE_MODE=%q\n' "$FINDING_SAVE_MODE"
@@ -293,9 +340,45 @@ ORACLE_SUITE="${ORACLE_SUITE:-metamorphic}"
 RELATION_MODE="${RELATION_MODE:-single-target}"
 TARGET_RUNTIME="${TARGET_RUNTIME:-liboqs}"
 SANITIZERS="${SANITIZERS:-address,undefined}"
+LEAK_CHECK="${LEAK_CHECK:-auto}"
 INPUT_TIMEOUT_SECONDS="${INPUT_TIMEOUT_SECONDS:-30}"
 RSS_MB="${RSS_MB:-2048}"
 SKIPPED_FAMILIES_JSON='["SLH-DSA"]'
+
+has_sanitizer() {
+  local sanitizer="$1"
+  [ "$SANITIZERS" != "none" ] && [[ ",$SANITIZERS," == *",${sanitizer},"* ]]
+}
+
+configure_sanitizer_flags() {
+  if [ "$SANITIZERS" = "none" ]; then
+    LIBOQS_SANITIZER_FLAGS=""
+    FUZZER_SANITIZER_FLAGS="-fsanitize=fuzzer"
+  else
+    LIBOQS_SANITIZER_FLAGS="-fsanitize=fuzzer-no-link,${SANITIZERS}"
+    FUZZER_SANITIZER_FLAGS="-fsanitize=fuzzer,${SANITIZERS}"
+  fi
+}
+
+resolve_llvm_symbolizer() {
+  LLVM_SYMBOLIZER_PATH="$(command -v llvm-symbolizer 2>/dev/null || true)"
+  if [ -z "$LLVM_SYMBOLIZER_PATH" ]; then
+    local candidate
+    for candidate in /usr/bin/llvm-symbolizer-*; do
+      if [ -x "$candidate" ]; then
+        LLVM_SYMBOLIZER_PATH="$candidate"
+        break
+      fi
+    done
+  fi
+  if [ -z "$LLVM_SYMBOLIZER_PATH" ] && [ "$SANITIZERS" != "none" ]; then
+    echo "llvm-symbolizer is required for symbolized sanitizer diagnostics" >&2
+    return 1
+  fi
+  return 0
+}
+
+configure_sanitizer_flags
 
 write_status() {
   local phase="$1"
@@ -326,6 +409,8 @@ write_status() {
   EVAL_ORACLE_SUITE="$ORACLE_SUITE" \
   EVAL_RELATION_MODE="$RELATION_MODE" \
   EVAL_TARGET_RUNTIME="$TARGET_RUNTIME" \
+  EVAL_SANITIZERS="$SANITIZERS" \
+  EVAL_LEAK_CHECK="$LEAK_CHECK" \
   EVAL_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
 import json
@@ -381,6 +466,8 @@ doc.update({
     "oracle_suite": os.environ["EVAL_ORACLE_SUITE"],
     "relation_mode": os.environ["EVAL_RELATION_MODE"],
     "target_runtime": os.environ["EVAL_TARGET_RUNTIME"],
+    "sanitizers": os.environ["EVAL_SANITIZERS"],
+    "leak_check": os.environ["EVAL_LEAK_CHECK"],
     "skipped_families": json.loads(os.environ["EVAL_SKIPPED_FAMILIES_JSON"]),
 })
 if os.environ["EVAL_ENDED_AT"]:
@@ -860,6 +947,7 @@ write_run_summary() {
   local corpus_dir="$8"
   local algorithm_enum="$9"
   local oracle_enum="${10}"
+  local result_dir="${11}"
 
   RUN_SUMMARY_FILE="$summary_file" \
   RUN_TARGET="$target" \
@@ -873,6 +961,9 @@ write_run_summary() {
   RUN_ALGORITHM_ENUM="$algorithm_enum" \
   RUN_ORACLE_ENUM="$oracle_enum" \
   RUN_RELATION_MODE="$RELATION_MODE" \
+  RUN_SANITIZERS="$SANITIZERS" \
+  RUN_LEAK_CHECK="$LEAK_CHECK" \
+  RUN_RESULT_DIR="$result_dir" \
   RUN_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
 import json
@@ -882,30 +973,128 @@ from pathlib import Path
 
 path = Path(os.environ["RUN_SUMMARY_FILE"])
 path.parent.mkdir(parents=True, exist_ok=True)
+result_dir = Path(os.environ["RUN_RESULT_DIR"])
+sanitizer_findings = []
+for finding_path in sorted(result_dir.glob("sanitizer_*/finding.json")):
+    try:
+        finding = json.loads(finding_path.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+    sanitizer_findings.append({
+        "path": str(finding_path),
+        "sanitizer": finding.get("sanitizer"),
+        "fingerprint": finding.get("fingerprint"),
+        "source_location": finding.get("source_location"),
+        "message": finding.get("summary"),
+    })
+status = int(os.environ["RUN_STATUS"])
+has_sanitizer_findings = bool(sanitizer_findings)
 doc = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "target": os.environ["RUN_TARGET"],
     "version": os.environ["RUN_VERSION"],
-    "status": int(os.environ["RUN_STATUS"]),
+    "status": status,
     "max_total_time": int(os.environ["RUN_SECONDS"]),
     "wall_time_seconds": int(os.environ["RUN_SECONDS"]),
     "cpu_time_seconds": None,
     "worker_count": 1,
     "algorithm_coverage": [int(os.environ["RUN_ALGORITHM_ENUM"])],
     "oracle_coverage": [int(os.environ["RUN_ORACLE_ENUM"])],
-    "stop_reason": "max_total_time" if int(os.environ["RUN_STATUS"]) == 0 else "process_exit",
-    "state": "completed" if int(os.environ["RUN_STATUS"]) == 0 else ("timed-out" if int(os.environ["RUN_STATUS"]) == 124 else "harness-error"),
+    "stop_reason": "sanitizer-report" if has_sanitizer_findings else ("max_total_time" if status == 0 else "process_exit"),
+    "state": "completed-with-findings" if has_sanitizer_findings else ("completed" if status == 0 else ("timed-out" if status == 124 else "harness-error")),
     "binary": os.environ["RUN_BINARY"],
     "log": os.environ["RUN_LOG"],
     "crash_dir": os.environ["RUN_CRASH_DIR"],
     "corpus_dir": os.environ["RUN_CORPUS_DIR"],
     "relation_mode": os.environ["RUN_RELATION_MODE"],
+    "sanitizers": os.environ["RUN_SANITIZERS"],
+    "leak_check": os.environ["RUN_LEAK_CHECK"],
+    "sanitizer_finding_count": len(sanitizer_findings),
+    "sanitizer_findings": sanitizer_findings,
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
     "skipped": False,
 }
 with open(path, "w", encoding="utf-8") as f:
     json.dump(doc, f, indent=2, sort_keys=True)
     f.write("\n")
+PY
+}
+
+target_metadata() {
+  case "$1" in
+    mlkem512) printf 'kem\tML-KEM-512\n' ;;
+    mlkem768) printf 'kem\tML-KEM-768\n' ;;
+    mlkem1024) printf 'kem\tML-KEM-1024\n' ;;
+    mldsa44) printf 'sig\tML-DSA-44\n' ;;
+    mldsa65) printf 'sig\tML-DSA-65\n' ;;
+    mldsa87) printf 'sig\tML-DSA-87\n' ;;
+    *) return 1 ;;
+  esac
+}
+
+collect_sanitizer_findings() {
+  local target="$1" phase="$2" log_file="$3" result_dir="$4" seed_file="$5" binary="$6" summary_file="$7"
+  local primitive algorithm
+  IFS=$'\t' read -r primitive algorithm < <(target_metadata "$target") || return 1
+  python3 scripts/collect_sanitizer_findings.py \
+    --log "$log_file" \
+    --result-dir "$result_dir" \
+    --summary-file "$summary_file" \
+    --target "$target" \
+    --version "$VERSION" \
+    --algorithm "$algorithm" \
+    --primitive "$primitive" \
+    --job-id "pqcfuzz_eval_${target}_liboqs_${VERSION}" \
+    --pair-id "liboqs_${VERSION}_${target}_single_target" \
+    --oracle-suite "$ORACLE_SUITE" \
+    --relation-mode "$RELATION_MODE" \
+    --phase "$phase" \
+    --binary "$binary" \
+    --seed-file "$seed_file" >/dev/null || return $?
+  SANITIZER_FINDING_COUNT="$(python3 - "$summary_file" <<'PY'
+import json
+import sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        print(int(json.load(handle).get("count", 0)))
+except Exception:
+    print(0)
+PY
+)"
+}
+
+refresh_sanitizer_summary() {
+  local summary_file="$1" result_dir="$2"
+  RUN_SUMMARY_FILE="$summary_file" RUN_RESULT_DIR="$result_dir" python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+summary_path = Path(os.environ["RUN_SUMMARY_FILE"])
+result_dir = Path(os.environ["RUN_RESULT_DIR"])
+try:
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+except Exception:
+    raise SystemExit("cannot refresh missing run summary")
+findings = []
+for path in sorted(result_dir.glob("sanitizer_*/finding.json")):
+    try:
+        finding = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+    findings.append({
+        "path": str(path),
+        "sanitizer": finding.get("sanitizer"),
+        "fingerprint": finding.get("fingerprint"),
+        "source_location": finding.get("source_location"),
+        "message": finding.get("summary"),
+    })
+summary["sanitizer_finding_count"] = len(findings)
+summary["sanitizer_findings"] = findings
+if findings:
+    summary["state"] = "completed-with-findings"
+    summary["stop_reason"] = "sanitizer-report"
+summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 PY
 }
 
@@ -1067,6 +1256,12 @@ build_liboqs() {
     fi
   fi
 
+  if [ "$VERSION" = "0.14.0" ]; then
+    python3 scripts/patch_liboqs_mldsa_empty_context.py \
+      --source-root "$liboqs_src_dir" \
+      --manifest "${build_root}/liboqs-mldsa-empty-context-patch.json" || return $?
+  fi
+
   rm -rf "$liboqs_build_dir"
   printf '[pqcfuzz-eval] liboqs CMake extra flags:'
   printf ' %q' "${cmake_extra_flags[@]}"
@@ -1079,8 +1274,8 @@ build_liboqs() {
     -DBUILD_SHARED_LIBS=OFF \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_C_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address,undefined" \
-    -DCMAKE_CXX_FLAGS="-O1 -g -fno-omit-frame-pointer -fsanitize=fuzzer-no-link,address,undefined" \
+    -DCMAKE_C_FLAGS="-O1 -g -fno-omit-frame-pointer ${LIBOQS_SANITIZER_FLAGS}" \
+    -DCMAKE_CXX_FLAGS="-O1 -g -fno-omit-frame-pointer ${LIBOQS_SANITIZER_FLAGS}" \
     -DCMAKE_ASM_FLAGS="-fno-omit-frame-pointer" \
     "${cmake_extra_flags[@]}"
   cmake_status="$?"
@@ -1156,8 +1351,8 @@ build_pqcfuzz() {
     cat > "$config_file" <<JSON
 {"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":3,"skipped_families":["SLH-DSA"]}
 JSON
-    "$cxx_bin" -std=c++17 -O1 -g -Isrc -I"${liboqs_build_dir}/include" \
-      -fsanitize=fuzzer,address,undefined \
+    "$cxx_bin" -std=c++17 -O1 -g -fno-omit-frame-pointer -Isrc -I"${liboqs_build_dir}/include" \
+      "$FUZZER_SANITIZER_FLAGS" \
       -DPQCFUZZ_JOB_ID="\"pqcfuzz_eval_${job}_liboqs_${VERSION}\"" \
       -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_${job}_single_target\"" \
       -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/${job}\"" \
@@ -1201,7 +1396,7 @@ run_fuzzer() {
   local summary_file="${run_root}/summary.json"
   local seed_file="${corpus_dir}/seed-pqcfuzz-${target}.bin"
   local timeout_seconds=$((seconds + 60))
-  local status
+  local status asan_options ubsan_options msan_options sanitizer_summary
 
   mkdir -p "$corpus_dir" "$crash_dir" "$result_dir"
   if [ ! -f "$seed_file" ]; then
@@ -1209,7 +1404,19 @@ run_fuzzer() {
   fi
 
   echo "[pqcfuzz-eval] running $target for ${seconds}s"
-  ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=0}" \
+  asan_options="${ASAN_OPTIONS:-}"
+  ubsan_options="${UBSAN_OPTIONS:-}"
+  msan_options="${MSAN_OPTIONS:-}"
+  if has_sanitizer address; then
+    asan_options="${asan_options:+${asan_options}:}detect_leaks=0:symbolize=1:external_symbolizer_path=${LLVM_SYMBOLIZER_PATH}"
+  fi
+  if has_sanitizer undefined; then
+    ubsan_options="${ubsan_options:+${ubsan_options}:}print_stacktrace=1:symbolize=1"
+  fi
+  if has_sanitizer memory; then
+    msan_options="${msan_options:+${msan_options}:}symbolize=1:external_symbolizer_path=${LLVM_SYMBOLIZER_PATH}"
+  fi
+  ASAN_OPTIONS="$asan_options" UBSAN_OPTIONS="$ubsan_options" MSAN_OPTIONS="$msan_options" LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" \
     timeout "${timeout_seconds}s" \
     "$binary" "$corpus_dir" \
     "-artifact_prefix=${crash_dir}/" \
@@ -1218,9 +1425,84 @@ run_fuzzer() {
     "-rss_limit_mb=${RSS_MB}" \
     > >(tee "$log_file") 2>&1
   status="$?"
+  sanitizer_summary="${run_root}/fuzz-sanitizer-findings.json"
+  collect_sanitizer_findings "$target" "fuzz" "$log_file" "$result_dir" "$seed_file" "$binary" "$sanitizer_summary" || return $?
   write_replay_manifest "${run_root}/replay_manifest.json" "$target" "$result_dir"
-  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum"
+  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+  if [ "$SANITIZER_FINDING_COUNT" -gt 0 ]; then
+    return 0
+  fi
   return "$status"
+}
+
+run_leak_check() {
+  local target="$1"
+  local binary="$2"
+  local algorithm_enum="$3"
+  local oracle_enum="$4"
+  local run_root="${WORKSPACE_ROOT_ABS}/runs/${target}"
+  local corpus_dir="${run_root}/corpus"
+  local result_dir="${WORKSPACE_ROOT_ABS}/results/${target}"
+  local log_file="${run_root}/leak-${target}.log"
+  local summary_file="${run_root}/summary.json"
+  local seed_file="${corpus_dir}/seed-pqcfuzz-${target}.bin"
+  local status sanitizer_summary asan_options ubsan_options
+
+  if [ "$LEAK_CHECK" = "off" ] || ! has_sanitizer address; then
+    return 0
+  fi
+  mkdir -p "$corpus_dir" "$result_dir"
+  if [ ! -f "$seed_file" ]; then
+    make_seed "$seed_file" "$algorithm_enum" "$oracle_enum"
+  fi
+  echo "[pqcfuzz-eval] leak-checking $target with one deterministic input"
+  asan_options="${ASAN_OPTIONS:-}"
+  ubsan_options="${UBSAN_OPTIONS:-}"
+  asan_options="${asan_options:+${asan_options}:}detect_leaks=1:symbolize=1:external_symbolizer_path=${LLVM_SYMBOLIZER_PATH}"
+  if has_sanitizer undefined; then
+    ubsan_options="${ubsan_options:+${ubsan_options}:}print_stacktrace=1:symbolize=1"
+  fi
+  ASAN_OPTIONS="$asan_options" UBSAN_OPTIONS="$ubsan_options" LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" \
+    timeout "$((INPUT_TIMEOUT_SECONDS + 60))s" "$binary" "$seed_file" -runs=1 > >(tee "$log_file") 2>&1
+  status="$?"
+  sanitizer_summary="${run_root}/leak-sanitizer-findings.json"
+  collect_sanitizer_findings "$target" "leak-check" "$log_file" "$result_dir" "$seed_file" "$binary" "$sanitizer_summary" || return $?
+  refresh_sanitizer_summary "$summary_file" "$result_dir" || return $?
+  write_replay_manifest "${run_root}/replay_manifest.json" "$target" "$result_dir"
+  if [ "$SANITIZER_FINDING_COUNT" -gt 0 ]; then
+    return 0
+  fi
+  return "$status"
+}
+
+run_mldsa_empty_context_regression() {
+  local job enum binary run_root corpus_dir result_dir seed_file log_file status sanitizer_summary
+  if [ "$VERSION" != "0.14.0" ] || ! has_sanitizer undefined; then
+    return 0
+  fi
+  echo "[pqcfuzz-eval] running ML-DSA empty-context UBSan regression checks"
+  for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
+    IFS=: read -r job enum <<<"$job_spec"
+    binary="${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}"
+    run_root="${WORKSPACE_ROOT_ABS}/runs/${job}"
+    corpus_dir="${run_root}/corpus"
+    result_dir="${WORKSPACE_ROOT_ABS}/results/${job}"
+    seed_file="${corpus_dir}/seed-pqcfuzz-${job}.bin"
+    log_file="${run_root}/regression-empty-context-${job}.log"
+    mkdir -p "$corpus_dir" "$result_dir"
+    if [ ! -f "$seed_file" ]; then
+      make_seed "$seed_file" "$enum" "$SIG_ORACLE_ENUM"
+    fi
+    UBSAN_OPTIONS="${UBSAN_OPTIONS:+${UBSAN_OPTIONS}:}halt_on_error=1:print_stacktrace=1:symbolize=1" \
+      LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" timeout "$((INPUT_TIMEOUT_SECONDS + 60))s" "$binary" "$seed_file" -runs=1 > >(tee "$log_file") 2>&1
+    status="$?"
+    sanitizer_summary="${run_root}/regression-sanitizer-findings.json"
+    collect_sanitizer_findings "$job" "regression" "$log_file" "$result_dir" "$seed_file" "$binary" "$sanitizer_summary" || return $?
+    if [ "$status" -ne 0 ] || [ "$SANITIZER_FINDING_COUNT" -ne 0 ]; then
+      echo "ML-DSA empty-context UBSan regression failed for ${job}" >&2
+      return 1
+    fi
+  done
 }
 
 skip_fuzzer() {
@@ -1299,6 +1581,12 @@ echo "[pqcfuzz-eval] in Docker for campaign $CAMPAIGN"
 echo "[pqcfuzz-eval] liboqs version: $VERSION"
 echo "[pqcfuzz-eval] workspace root: $WORKSPACE_ROOT_ABS"
 echo "[pqcfuzz-eval] relation mode: $RELATION_MODE"
+if ! resolve_llvm_symbolizer; then
+  finish_campaign "build-failed" 1 "llvm-symbolizer is unavailable for the selected sanitizer profile"
+fi
+if [ -n "${LLVM_SYMBOLIZER_PATH:-}" ]; then
+  echo "[pqcfuzz-eval] llvm-symbolizer: $LLVM_SYMBOLIZER_PATH"
+fi
 
 BUILD_ROOT="${WORKSPACE_ROOT_ABS}/build/liboqs-${VERSION}"
 PQCFUZZ_BUILD_DIR="${BUILD_ROOT}/pqcfuzz"
@@ -1326,12 +1614,16 @@ if [ "$ORACLE_SUITE" = "metamorphic" ]; then
   SIG_ORACLE_ENUM=29
 fi
 
+write_status "regression-mldsa-empty-context" "running"
+run_mldsa_empty_context_regression || finish_campaign "harness-error" "$?" "ML-DSA empty-context UBSan regression failed"
+
 KEM_STATUS=0
 SIG_STATUS=0
 for job_spec in "mlkem512:1" "mlkem768:2" "mlkem1024:3"; do
   IFS=: read -r job enum <<<"$job_spec"
   write_status "run-${job}" "running"
   run_fuzzer "$job" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+  run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
 done
 
 for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
@@ -1339,6 +1631,7 @@ for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
   write_status "run-${job}" "running"
   if [ "$VERSION" = "0.14.0" ]; then
     run_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
+    run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
   else
     skip_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
   fi
@@ -1436,7 +1729,7 @@ print_progress() {
 }
 
 write_final_summary() {
-  python3 - "$INDEX_FILE" "$SUMMARY_JSON" "$SUMMARY_TSV" "$FUZZING_SECONDS" <<'PY'
+  SANITIZERS="$SANITIZERS" LEAK_CHECK="$LEAK_CHECK" python3 - "$INDEX_FILE" "$SUMMARY_JSON" "$SUMMARY_TSV" "$FUZZING_SECONDS" <<'PY'
 import csv
 import json
 import os
@@ -1491,6 +1784,9 @@ for campaign in campaigns:
     run_summaries = []
     for path in run_summary_paths:
         parsed = load_json(path)
+        sanitizer_findings = parsed.get("sanitizer_findings") if isinstance(parsed, dict) else []
+        if not isinstance(sanitizer_findings, list):
+            sanitizer_findings = []
         run_summaries.append({
             "path": rel(path),
             "target": parsed.get("target") if isinstance(parsed, dict) else None,
@@ -1498,6 +1794,9 @@ for campaign in campaigns:
             "relation_mode": parsed.get("relation_mode") if isinstance(parsed, dict) else None,
             "skipped": parsed.get("skipped") if isinstance(parsed, dict) else None,
             "skip_reason": parsed.get("skip_reason") if isinstance(parsed, dict) else None,
+            "state": parsed.get("state") if isinstance(parsed, dict) else None,
+            "sanitizer_finding_count": parsed.get("sanitizer_finding_count", len(sanitizer_findings)) if isinstance(parsed, dict) else 0,
+            "sanitizer_findings": sanitizer_findings,
         })
 
     counts = artifact_counts(workspace_root / "crashes")
@@ -1506,8 +1805,24 @@ for campaign in campaigns:
         for item in run_summaries
         if item.get("skipped") and item.get("target")
     )
+    sanitizer_findings = [
+        finding
+        for item in run_summaries
+        for finding in item.get("sanitizer_findings", [])
+        if isinstance(finding, dict)
+    ]
+    sanitizer_counts = {"address": 0, "undefined": 0, "memory": 0, "leak": 0}
+    for finding in sanitizer_findings:
+        sanitizer = str(finding.get("sanitizer") or "")
+        if sanitizer in sanitizer_counts:
+            sanitizer_counts[sanitizer] += 1
+        message = str(finding.get("message") or "").lower()
+        if "leak" in message:
+            sanitizer_counts["leak"] += 1
     final_status = status.get("final_status")
     result = status.get("result") or "missing-status"
+    if sanitizer_findings and result == "completed":
+        result = "completed-with-findings"
     aggregate_status = 1 if final_status is None else int(final_status)
     if aggregate_status == 0 and len(run_summaries) < 2:
         aggregate_status = 1
@@ -1536,6 +1851,8 @@ for campaign in campaigns:
         "failure_reason": status.get("failure_reason"),
         "oracle_suite": status.get("oracle_suite") or os.environ.get("ORACLE_SUITE", "metamorphic"),
         "relation_mode": status.get("relation_mode") or os.environ.get("RELATION_MODE", "single-target"),
+        "sanitizers": status.get("sanitizers") or os.environ.get("SANITIZERS", "address,undefined"),
+        "leak_check": status.get("leak_check") or os.environ.get("LEAK_CHECK", "off"),
         "skipped_families": status.get("skipped_families") or ["SLH-DSA"],
         "skipped_targets": skipped_targets,
         "log": campaign["log_file_abs"],
@@ -1545,6 +1862,11 @@ for campaign in campaigns:
         "timeout_count": counts["timeout"],
         "leak_count": counts["leak"],
         "oom_count": counts["oom"],
+        "sanitizer_finding_count": len(sanitizer_findings),
+        "address_sanitizer_count": sanitizer_counts["address"],
+        "undefined_sanitizer_count": sanitizer_counts["undefined"],
+        "memory_sanitizer_count": sanitizer_counts["memory"],
+        "leak_sanitizer_count": sanitizer_counts["leak"],
     }
     rows.append(row)
 
@@ -1554,6 +1876,8 @@ summary = {
     "overall_status": overall_status,
     "oracle_suite": os.environ.get("ORACLE_SUITE", "metamorphic"),
     "relation_mode": os.environ.get("RELATION_MODE", "single-target"),
+    "sanitizers": os.environ.get("SANITIZERS", "address,undefined"),
+    "leak_check": os.environ.get("LEAK_CHECK", "off"),
     "skipped_families": ["SLH-DSA"],
     "campaigns": rows,
 }
@@ -1570,6 +1894,8 @@ columns = [
     "failure_reason",
     "aggregate_status",
     "relation_mode",
+    "sanitizers",
+    "leak_check",
     "skipped_families",
     "skipped_targets",
     "docker_build_status",
@@ -1584,6 +1910,11 @@ columns = [
     "timeout_count",
     "leak_count",
     "oom_count",
+    "sanitizer_finding_count",
+    "address_sanitizer_count",
+    "undefined_sanitizer_count",
+    "memory_sanitizer_count",
+    "leak_sanitizer_count",
     "log",
 ]
 with open(summary_tsv, "w", encoding="utf-8", newline="") as f:
@@ -1611,6 +1942,7 @@ ORACLE_SUITE="metamorphic"
 RELATION_MODE="single-target"
 TARGET_RUNTIME="liboqs"
 SANITIZERS="address,undefined"
+LEAK_CHECK="auto"
 INPUT_TIMEOUT_SECONDS="30"
 RSS_MB="2048"
 REPORT_FORMATS="json,tsv"
@@ -1708,6 +2040,17 @@ while [ "$#" -gt 0 ]; do
       ;;
     --sanitizers=*)
       SANITIZERS="${1#--sanitizers=}"
+      shift
+      ;;
+    --leak-check)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --leak-check"
+      fi
+      LEAK_CHECK="$2"
+      shift 2
+      ;;
+    --leak-check=*)
+      LEAK_CHECK="${1#--leak-check=}"
       shift
       ;;
     --input-timeout-seconds)
@@ -1827,6 +2170,17 @@ esac
 if [ "$TARGET_RUNTIME" != "liboqs" ]; then
   die "--target-runtime currently supports liboqs"
 fi
+SANITIZERS="$(normalize_sanitizers "$SANITIZERS")" || die "--sanitizers must be a nonempty combination of address, undefined, memory, or none; memory cannot be combined with address"
+case "$LEAK_CHECK" in
+  auto)
+    if sanitizer_enabled address; then LEAK_CHECK="on"; else LEAK_CHECK="off"; fi
+    ;;
+  on|off) ;;
+  *) die "--leak-check must be auto, on, or off" ;;
+esac
+if [ "$LEAK_CHECK" = "on" ] && ! sanitizer_enabled address; then
+  die "--leak-check=on requires --sanitizers to include address"
+fi
 if [[ ! "$INPUT_TIMEOUT_SECONDS" =~ ^[0-9]+$ ]] || [ "$INPUT_TIMEOUT_SECONDS" -le 0 ]; then
   die "--input-timeout-seconds must be a positive integer"
 fi
@@ -1919,6 +2273,7 @@ echo "[pqcfuzz-eval] oracle_suite: $ORACLE_SUITE"
 echo "[pqcfuzz-eval] relation_mode: $RELATION_MODE"
 echo "[pqcfuzz-eval] target_runtime: $TARGET_RUNTIME"
 echo "[pqcfuzz-eval] sanitizers: $SANITIZERS"
+echo "[pqcfuzz-eval] leak check: $LEAK_CHECK"
 echo "[pqcfuzz-eval] input timeout: ${INPUT_TIMEOUT_SECONDS}s"
 echo "[pqcfuzz-eval] rss mb: $RSS_MB"
 echo "[pqcfuzz-eval] report formats: $REPORT_FORMATS"
