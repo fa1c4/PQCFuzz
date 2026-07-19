@@ -214,10 +214,19 @@ std::vector<uint8_t> MakeTape(const std::vector<uint8_t> &seed, const std::strin
   if (all_zero) {
     return tape;
   }
+  // Labels such as "*-baseline" and "*-mutated" share a long textual
+  // prefix.  Mixing a digest of the complete label into every byte prevents
+  // short RNG consumers from receiving identical control tapes.
+  uint32_t label_hash = 2166136261u;
+  for (unsigned char byte : label) {
+    label_hash ^= byte;
+    label_hash *= 16777619u;
+  }
   for (size_t i = 0; i < tape.size(); ++i) {
     const uint8_t seed_byte = seed.empty() ? static_cast<uint8_t>(i * 17u) : seed[i % seed.size()];
     const uint8_t label_byte = label.empty() ? 0x5a : static_cast<uint8_t>(label[i % label.size()]);
-    tape[i] = static_cast<uint8_t>(seed_byte ^ label_byte ^ (i * 29u));
+    const uint8_t hash_byte = static_cast<uint8_t>(label_hash >> ((i % 4u) * 8u));
+    tape[i] = static_cast<uint8_t>(seed_byte ^ label_byte ^ hash_byte ^ (i * 29u));
   }
   return tape;
 }
@@ -333,6 +342,13 @@ std::string FindingClassFor(const std::string &expected, ObservedRelation observ
   return "";
 }
 
+bool IsEvaluableObservation(const Observation &observation) {
+  // A verify oracle deliberately drives the mutated input to rejection.  That
+  // is a valid, security-relevant observation rather than a setup failure.
+  return observation.status == PQCFUZZ_OK ||
+         (observation.has_bool && observation.status == PQCFUZZ_REJECT);
+}
+
 void FinalizeTrace(
     KEMOracleTrace *trace,
     OracleSubtestTrace *subtest,
@@ -348,9 +364,9 @@ void FinalizeTrace(
     trace->mutations.push_back(*mutation);
     trace->intervention_effective = mutation->effective;
   }
-  trace->valid_setup = baseline.status == PQCFUZZ_OK && mutated.status == PQCFUZZ_OK;
-  trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK;
-  trace->mutated_setup_valid = mutated.status == PQCFUZZ_OK;
+  trace->valid_setup = IsEvaluableObservation(baseline) && IsEvaluableObservation(mutated);
+  trace->baseline_setup_valid = IsEvaluableObservation(baseline);
+  trace->mutated_setup_valid = IsEvaluableObservation(mutated);
   trace->relation_evaluable = trace->baseline_setup_valid && trace->mutated_setup_valid && trace->intervention_supported &&
                               trace->intervention_effective;
 

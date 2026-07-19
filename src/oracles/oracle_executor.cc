@@ -4,9 +4,11 @@
 #include <iomanip>
 #include <sstream>
 
+#include "adapters/rng_control.h"
 #include "adapters/status.h"
 #include "mutators/ml_dsa_mutator.h"
 #include "mutators/slh_dsa_mutator.h"
+#include "oracles/metamorphic_observation.h"
 
 namespace pqcfuzz {
 namespace {
@@ -165,6 +167,81 @@ KEMSharedSecret Decaps(
 
 bool SameSecret(const KEMSharedSecret &left, const KEMSharedSecret &right) {
   return left.status == PQCFUZZ_OK && right.status == PQCFUZZ_OK && left.ss == right.ss;
+}
+
+std::vector<uint8_t> MakeRandomnessTape(const std::vector<uint8_t> &seed, const std::string &label) {
+  std::vector<uint8_t> tape(256);
+  uint32_t label_hash = 2166136261u;
+  for (unsigned char byte : label) {
+    label_hash ^= byte;
+    label_hash *= 16777619u;
+  }
+  for (size_t i = 0; i < tape.size(); ++i) {
+    const uint8_t seed_byte = seed.empty() ? static_cast<uint8_t>(i * 17u) : seed[i % seed.size()];
+    const uint8_t label_byte = label.empty() ? 0x5a : static_cast<uint8_t>(label[i % label.size()]);
+    const uint8_t hash_byte = static_cast<uint8_t>(label_hash >> ((i % 4u) * 8u));
+    tape[i] = static_cast<uint8_t>(seed_byte ^ label_byte ^ hash_byte ^ (i * 29u));
+  }
+  return tape;
+}
+
+OracleSubtestTrace KemRandomnessSanity(
+    const OracleExecutorConfig &config,
+    RngInterventionTrace *rng_trace) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "randomness_sanity";
+  subtest.oracle_id = "mlkem_bad_randomness_sanity";
+  subtest.expected_relation = "DISTINCT_CIPHERTEXT_OR_SHARED_SECRET";
+  KEMKeyPair keypair = Keygen(config.left, "left", &subtest);
+  if (keypair.status == PQCFUZZ_API_UNSUPPORTED) {
+    subtest.skipped = true;
+    subtest.note = "adapter API unsupported";
+    return subtest;
+  }
+  if (keypair.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct keypair before randomness control";
+    return subtest;
+  }
+  const auto baseline_tape = MakeRandomnessTape(config.seed, "mlkem-encaps-baseline");
+  const auto mutated_tape = MakeRandomnessTape(config.seed, "mlkem-encaps-mutated");
+  rng_trace->baseline_tape_id = "mlkem-encaps-baseline";
+  rng_trace->mutated_tape_id = "mlkem-encaps-mutated";
+  rng_trace->baseline_tape_sha256 = Sha256Hex(baseline_tape);
+  rng_trace->mutated_tape_sha256 = Sha256Hex(mutated_tape);
+  rng_trace->tapes_distinct = baseline_tape != mutated_tape;
+  KEMSharedSecret baseline_ss;
+  KEMSharedSecret mutated_ss;
+  KEMCiphertext baseline_ct;
+  KEMCiphertext mutated_ct;
+  {
+    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+    rng_trace->baseline_override_active = rng.active();
+    baseline_ct = Encaps(config.left, "left", keypair.pk, &subtest, &baseline_ss);
+    rng_trace->baseline_bytes_consumed = rng.bytes_consumed();
+  }
+  {
+    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+    rng_trace->mutated_override_active = rng.active();
+    mutated_ct = Encaps(config.left, "left", keypair.pk, &subtest, &mutated_ss);
+    rng_trace->mutated_bytes_consumed = rng.bytes_consumed();
+  }
+  if (!rng_trace->tapes_distinct || !rng_trace->baseline_override_active || !rng_trace->mutated_override_active ||
+      rng_trace->baseline_bytes_consumed == 0 || rng_trace->mutated_bytes_consumed == 0) {
+    subtest.skipped = true;
+    subtest.note = "randomness intervention was not observed";
+    return subtest;
+  }
+  if (baseline_ct.status != PQCFUZZ_OK || mutated_ct.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "encapsulation failed under randomness control";
+    return subtest;
+  }
+  subtest.passed = baseline_ct.ct != mutated_ct.ct || baseline_ss.ss != mutated_ss.ss;
+  if (!subtest.passed) {
+    subtest.note = "distinct randomness produced identical encapsulation outputs";
+  }
+  return subtest;
 }
 
 void FinalizeRoundtrip(OracleSubtestTrace *subtest, const KEMSharedSecret &encaps_ss, const KEMSharedSecret &decaps_ss) {
@@ -441,6 +518,91 @@ OracleSubtestTrace SigCrossVerify(
   return subtest;
 }
 
+OracleSubtestTrace SigRandomnessSanity(
+    const SigOracleExecutorConfig &config,
+    RngInterventionTrace *rng_trace) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "randomness_sanity";
+  subtest.oracle_id = "mldsa_bad_randomness_sanity";
+  subtest.expected_relation = "DISTINCT_SIGNATURE";
+  if (config.left != nullptr && config.left->supports_deterministic_sign && !config.left->supports_seeded_sign) {
+    subtest.skipped = true;
+    subtest.note = "deterministic signing has no randomness control";
+    return subtest;
+  }
+  SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  if (keypair.status == PQCFUZZ_API_UNSUPPORTED) {
+    subtest.skipped = true;
+    subtest.note = "adapter API unsupported";
+    return subtest;
+  }
+  if (keypair.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct keypair before randomness control";
+    return subtest;
+  }
+  const auto baseline_tape = MakeRandomnessTape(config.seed, "mldsa-sign-baseline");
+  const auto mutated_tape = MakeRandomnessTape(config.seed, "mldsa-sign-mutated");
+  rng_trace->baseline_tape_id = "mldsa-sign-baseline";
+  rng_trace->mutated_tape_id = "mldsa-sign-mutated";
+  rng_trace->baseline_tape_sha256 = Sha256Hex(baseline_tape);
+  rng_trace->mutated_tape_sha256 = Sha256Hex(mutated_tape);
+  rng_trace->tapes_distinct = baseline_tape != mutated_tape;
+  SIGSignature baseline;
+  SIGSignature mutated;
+  {
+    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+    rng_trace->baseline_override_active = rng.active();
+    baseline = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+    rng_trace->baseline_bytes_consumed = rng.bytes_consumed();
+  }
+  {
+    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+    rng_trace->mutated_override_active = rng.active();
+    mutated = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+    rng_trace->mutated_bytes_consumed = rng.bytes_consumed();
+  }
+  if (!rng_trace->tapes_distinct || !rng_trace->baseline_override_active || !rng_trace->mutated_override_active ||
+      rng_trace->baseline_bytes_consumed == 0 || rng_trace->mutated_bytes_consumed == 0) {
+    subtest.skipped = true;
+    subtest.note = "randomness intervention was not observed";
+    return subtest;
+  }
+  if (baseline.status != PQCFUZZ_OK || mutated.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "signing failed under randomness control";
+    return subtest;
+  }
+  subtest.passed = baseline.sig != mutated.sig;
+  if (!subtest.passed) {
+    subtest.note = "distinct randomness produced identical signatures";
+  }
+  return subtest;
+}
+
+void SetRandomnessTraceReachability(KEMOracleTrace *trace) {
+  if (trace == nullptr || trace->subtests.empty() || trace->rng_interventions.empty()) {
+    return;
+  }
+  const OracleSubtestTrace &subtest = trace->subtests.front();
+  const RngInterventionTrace &rng = trace->rng_interventions.front();
+  const bool calls_succeeded = !subtest.calls.empty() &&
+      std::all_of(subtest.calls.begin(), subtest.calls.end(), [](const OracleCallTrace &call) {
+        return call.status == PQCFUZZ_OK;
+      });
+  const bool observed = rng.tapes_distinct && rng.baseline_override_active && rng.mutated_override_active &&
+      rng.baseline_bytes_consumed > 0 && rng.mutated_bytes_consumed > 0;
+  trace->valid_setup = calls_succeeded;
+  trace->baseline_setup_valid = calls_succeeded;
+  trace->mutated_setup_valid = calls_succeeded;
+  trace->intervention_supported = observed;
+  trace->intervention_effective = observed;
+  trace->relation_evaluable = calls_succeeded && observed && !subtest.skipped;
+  if (subtest.skipped) {
+    trace->diagnostic_event = subtest.note;
+  }
+}
+
 bool LegalNegativeStatus(pqcfuzz_status status, bool allow_api_unsupported) {
   if (status == PQCFUZZ_REJECT || status == PQCFUZZ_INVALID_INPUT) {
     return true;
@@ -564,7 +726,12 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
   trace.algorithm = config.algorithm;
   trace.oracle_id = config.oracle_id;
 
-  if (config.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
+  if (config.oracle_id == "mlkem_bad_randomness_sanity") {
+    RngInterventionTrace rng_trace;
+    trace.subtests.push_back(KemRandomnessSanity(config, &rng_trace));
+    trace.rng_interventions.push_back(std::move(rng_trace));
+    SetRandomnessTraceReachability(&trace);
+  } else if (config.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
     trace.subtests.push_back(TamperedCiphertext(config, &trace.mutations));
   } else if (config.oracle_id == "mlkem_cross_exchange_roundtrip") {
     if (config.exchange_contract.public_key_exchange && config.exchange_contract.ciphertext_exchange) {
@@ -609,7 +776,12 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
   const std::string local_trace_oracle =
       (config.oracle_id.find("_bad_randomness_sanity") != std::string::npos) ? config.oracle_id : local_oracle;
 
-  if (config.oracle_id == cross_oracle) {
+  if (!is_slh && config.oracle_id == "mldsa_bad_randomness_sanity") {
+    RngInterventionTrace rng_trace;
+    trace.subtests.push_back(SigRandomnessSanity(config, &rng_trace));
+    trace.rng_interventions.push_back(std::move(rng_trace));
+    SetRandomnessTraceReachability(&trace);
+  } else if (config.oracle_id == cross_oracle) {
     if (config.exchange_contract.public_key_exchange && config.exchange_contract.signature_exchange) {
       trace.subtests.push_back(SigCrossVerify(
           "left_keygen_left_sign_right_verify", cross_oracle, "left", config.left, "right", config.right, config.message, config.context));

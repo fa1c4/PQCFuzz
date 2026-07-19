@@ -199,9 +199,7 @@ EOF
 print_campaign_commands() {
   local version="$1"
   local seconds="$2"
-  local kem_seconds="$3"
-  local sig_seconds="$4"
-  local workspace="$5"
+  local workspace="$3"
 
   echo "docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t pqcfuzz-eval -f $DOCKERFILE_REL $DOCKER_DIR_REL"
   echo "docker run pqcfuzz-eval: clone/update liboqs $version into $workspace/build/liboqs-${version}/liboqs-src"
@@ -215,11 +213,12 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: finding_save_mode: ${FINDING_SAVE_MODE}"
   echo "docker run pqcfuzz-eval: max_finding_exemplars_per_group: ${MAX_FINDING_EXEMPLARS_PER_GROUP}"
   echo "docker run pqcfuzz-eval: build one fixed binary per ML-KEM/ML-DSA algorithm"
-  echo "docker run pqcfuzz-eval: run ML-KEM-512, ML-KEM-768, ML-KEM-1024 for ${kem_seconds}s each"
+  echo "docker run pqcfuzz-eval: seed every enabled oracle with a valid structured input"
+  echo "docker run pqcfuzz-eval: distribute the ${seconds}s campaign budget across active targets"
   if [ "$version" = "0.14.0" ]; then
-    echo "docker run pqcfuzz-eval: run ML-DSA-44, ML-DSA-65, ML-DSA-87 for ${sig_seconds}s each"
+    echo "docker run pqcfuzz-eval: schedule 6 active canonical targets"
   else
-    echo "docker run pqcfuzz-eval: write skipped ML-DSA job summaries for ${sig_seconds}s allocation"
+    echo "docker run pqcfuzz-eval: schedule 3 ML-KEM targets; record historical ML-DSA as unsupported"
   fi
   echo "campaign fuzzing budget: ${seconds}s"
 }
@@ -262,8 +261,6 @@ write_launcher() {
   local status_file_rel="$9"
   local status_file_abs="${10}"
   local seconds="${11}"
-  local kem_seconds="${12}"
-  local sig_seconds="${13}"
 
   {
     printf '#!/usr/bin/env bash\n'
@@ -287,9 +284,7 @@ write_launcher() {
     printf 'LOG_FILE_ABS_HOST=%q\n' "$log_file_abs"
     printf 'STATUS_FILE_REL=%q\n' "$status_file_rel"
     printf 'STATUS_FILE_ABS_HOST=%q\n' "$status_file_abs"
-    printf 'FUZZING_SECONDS=%q\n' "$seconds"
-    printf 'KEM_SECONDS=%q\n' "$kem_seconds"
-    printf 'SIG_SECONDS=%q\n\n' "$sig_seconds"
+    printf 'FUZZING_SECONDS=%q\n\n' "$seconds"
     printf 'ORACLE_SUITE=%q\n' "$ORACLE_SUITE"
     printf 'RELATION_MODE=%q\n' "$RELATION_MODE"
     printf 'TARGET_RUNTIME=%q\n' "$TARGET_RUNTIME"
@@ -936,6 +931,96 @@ with open(path, "wb") as f:
 PY
 }
 
+oracle_specs_for_primitive() {
+  local primitive="$1"
+  case "${ORACLE_SUITE}:${primitive}" in
+    metamorphic:kem)
+      printf '%s\n' \
+        '18:kem_decaps_c' '19:kem_decaps_sk' '20:kem_encaps_badrng' \
+        '21:kem_encaps_pk_0' '22:kem_encaps_pk' '23:kem_keygen_badrng'
+      ;;
+    metamorphic:sig)
+      printf '%s\n' \
+        '24:sig_keygen_badrng' '25:sig_sign_badrng' '26:sig_sign_m' \
+        '27:sig_sign_sk' '28:sig_verify_m' '29:sig_verify_sig' '30:sig_verify_pk'
+      ;;
+    fips:kem)
+      printf '%s\n' \
+        '1:mlkem_local_roundtrip' '2:mlkem_cross_exchange_roundtrip' \
+        '3:mlkem_tampered_ciphertext_implicit_rejection' '4:mlkem_bad_randomness_sanity'
+      ;;
+    fips:sig)
+      printf '%s\n' \
+        '5:mldsa_local_sign_verify' '6:mldsa_cross_verify' \
+        '7:mldsa_mutated_signature_negative' '8:mldsa_mutated_message_negative' \
+        '9:mldsa_mutated_context_negative' '10:mldsa_oid_field_mutation_sanity' \
+        '11:mldsa_bad_randomness_sanity'
+      ;;
+    *)
+      echo "unsupported oracle suite/primitive: ${ORACLE_SUITE}/${primitive}" >&2
+      return 1
+      ;;
+  esac
+}
+
+make_seed_corpus() {
+  local corpus_dir="$1" target="$2" algorithm_enum="$3" primitive="$4"
+  local spec oracle_enum oracle_name
+  mkdir -p "$corpus_dir"
+  while IFS=: read -r oracle_enum oracle_name; do
+    [ -n "$oracle_enum" ] || continue
+    make_seed "${corpus_dir}/seed-pqcfuzz-${target}-${oracle_name}.bin" "$algorithm_enum" "$oracle_enum"
+  done < <(oracle_specs_for_primitive "$primitive")
+}
+
+first_seed_in_corpus() {
+  local corpus_dir="$1"
+  find "$corpus_dir" -maxdepth 1 -type f -name 'seed-pqcfuzz-*.bin' -print | LC_ALL=C sort | head -n 1
+}
+
+verify_oracle_coverage() {
+  local coverage_file="$1" primitive="$2"
+  EXPECTED_ORACLE_SPECS="$(oracle_specs_for_primitive "$primitive" | paste -sd, -)" \
+  python3 - "$coverage_file" <<'PY'
+import json
+import os
+import sys
+from pathlib import Path
+
+coverage_path = Path(sys.argv[1])
+try:
+    coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+except Exception as exc:
+    raise SystemExit(f"missing or unreadable oracle coverage file {coverage_path}: {exc}")
+
+expected = []
+for item in os.environ["EXPECTED_ORACLE_SPECS"].split(","):
+    if not item:
+        continue
+    _, name = item.split(":", 1)
+    expected.append(name)
+oracles = coverage.get("oracles", {})
+missing = []
+for name in expected:
+    counters = oracles.get(name, {})
+    requirements = {
+        "invoked": "oracle_invocations",
+        "valid_setup": "valid_setup",
+        "relation_evaluable": "relation_evaluable",
+        "intervention_effective": "intervention_effective",
+    }
+    absent = [label for label, field in requirements.items() if int(counters.get(field, 0)) < 1]
+    if int(counters.get("unsupported", 0)) > 0:
+        absent.append("unsupported")
+    if int(counters.get("skipped", 0)) > 0:
+        absent.append("skipped")
+    if absent:
+        missing.append(name + " (" + ", ".join(absent) + ")")
+if missing:
+    raise SystemExit("oracle preflight did not produce an evaluable observation: " + ", ".join(missing))
+PY
+}
+
 write_run_summary() {
   local summary_file="$1"
   local target="$2"
@@ -960,6 +1045,8 @@ write_run_summary() {
   RUN_VERSION="$VERSION" \
   RUN_ALGORITHM_ENUM="$algorithm_enum" \
   RUN_ORACLE_ENUM="$oracle_enum" \
+  RUN_ORACLE_SPECS="$(oracle_specs_for_primitive "$(target_metadata "$target" | cut -f1)")" \
+  RUN_ORACLE_COVERAGE_FILE="${result_dir}/oracle_coverage.json" \
   RUN_RELATION_MODE="$RELATION_MODE" \
   RUN_SANITIZERS="$SANITIZERS" \
   RUN_LEAK_CHECK="$LEAK_CHECK" \
@@ -989,6 +1076,25 @@ for finding_path in sorted(result_dir.glob("sanitizer_*/finding.json")):
     })
 status = int(os.environ["RUN_STATUS"])
 has_sanitizer_findings = bool(sanitizer_findings)
+coverage_path = Path(os.environ["RUN_ORACLE_COVERAGE_FILE"])
+try:
+    oracle_coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+except Exception:
+    oracle_coverage = {"schema_version": 1, "totals": {}, "oracles": {}}
+scheduled_oracles = []
+for item in os.environ["RUN_ORACLE_SPECS"].splitlines():
+    if not item:
+        continue
+    enum, name = item.split(":", 1)
+    scheduled_oracles.append({"enum": int(enum), "oracle_id": name})
+observed_oracles = oracle_coverage.get("oracles", {}) if isinstance(oracle_coverage, dict) else {}
+uncovered_oracles = []
+for item in scheduled_oracles:
+    counters = observed_oracles.get(item["oracle_id"], {})
+    required = ("oracle_invocations", "valid_setup", "relation_evaluable", "intervention_effective")
+    if (any(int(counters.get(field, 0)) < 1 for field in required) or
+            int(counters.get("unsupported", 0)) > 0 or int(counters.get("skipped", 0)) > 0):
+        uncovered_oracles.append(item["oracle_id"])
 doc = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "target": os.environ["RUN_TARGET"],
@@ -999,7 +1105,11 @@ doc = {
     "cpu_time_seconds": None,
     "worker_count": 1,
     "algorithm_coverage": [int(os.environ["RUN_ALGORITHM_ENUM"])],
-    "oracle_coverage": [int(os.environ["RUN_ORACLE_ENUM"])],
+    "seed_oracle_enum": int(os.environ["RUN_ORACLE_ENUM"]),
+    "scheduled_oracles": scheduled_oracles,
+    "oracle_coverage": oracle_coverage,
+    "oracle_coverage_complete": not uncovered_oracles,
+    "uncovered_oracles": uncovered_oracles,
     "stop_reason": "sanitizer-report" if has_sanitizer_findings else ("max_total_time" if status == 0 else "process_exit"),
     "state": "completed-with-findings" if has_sanitizer_findings else ("completed" if status == 0 else ("timed-out" if status == 124 else "harness-error")),
     "binary": os.environ["RUN_BINARY"],
@@ -1322,6 +1432,7 @@ build_pqcfuzz() {
     src/adapters/liboqs/rng_control.cc
     src/adapters/pqclean/randombytes_override.cc
     src/mutators/envelope.cc
+    src/mutators/envelope_fuzzer_mutator.cc
     src/mutators/maul.cc
     src/mutators/ml_kem_layout.cc
     src/mutators/ml_kem_mutator.cc
@@ -1340,13 +1451,24 @@ build_pqcfuzz() {
     src/runtime/adapter_registry.cc
     src/runtime/replay_args.cc
     src/triage/finding_writer.cc
+    src/triage/oracle_coverage.cc
     "$adapter_src"
   )
 
   # A binary is bound to one algorithm.  The envelope is only test data and
   # can no longer select (or relabel) an adapter at runtime.
   build_target() {
-    local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" config_file
+    local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" algorithm_enum="$6" oracle_specs config_file right_implementation
+    oracle_specs="$(oracle_specs_for_primitive "$primitive" | cut -d: -f1 | paste -sd, -)"
+    case "$job" in
+      mlkem512) right_implementation="selfref_mlkem512_via_liboqs" ;;
+      mlkem768) right_implementation="selfref_mlkem768_via_liboqs" ;;
+      mlkem1024) right_implementation="selfref_mlkem1024_via_liboqs" ;;
+      mldsa44) right_implementation="selfref_mldsa44_via_liboqs" ;;
+      mldsa65) right_implementation="selfref_mldsa65_via_liboqs" ;;
+      mldsa87) right_implementation="selfref_mldsa87_via_liboqs" ;;
+      *) echo "unknown PQCFuzz target $job" >&2; return 1 ;;
+    esac
     config_file="${tmp_root}/generated_config_${job}.json"
     cat > "$config_file" <<JSON
 {"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":3,"skipped_families":["SLH-DSA"]}
@@ -1365,8 +1487,10 @@ JSON
       -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"${implementation}\"" \
       -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"${implementation}\"" \
       -DPQCFUZZ_EXPECTED_ALGORITHM="\"${algorithm}\"" \
-      -DPQCFUZZ_RIGHT_PROJECT_ID="\"pqclean\"" \
-      -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_FIXED_ALGORITHM_ID="${algorithm_enum}" \
+      -DPQCFUZZ_ALLOWED_ORACLE_IDS="\"${oracle_specs}\"" \
+      -DPQCFUZZ_RIGHT_PROJECT_ID="\"liboqs_self_reference\"" \
+      -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"${right_implementation}\"" \
       -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 -DPQCFUZZ_CIPHERTEXT_EXCHANGE=1 \
       -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
       -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
@@ -1374,12 +1498,12 @@ JSON
       -lcrypto -ldl -lpthread -lm -o "${pqcfuzz_build_dir}/pqcfuzz_${job}"
   }
 
-  build_target "mlkem512" kem "ML-KEM-512" "liboqs_mlkem512_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
-  build_target "mlkem768" kem "ML-KEM-768" "liboqs_mlkem768_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
-  build_target "mlkem1024" kem "ML-KEM-1024" "liboqs_mlkem1024_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc || return $?
-  build_target "mldsa44" sig "ML-DSA-44" "liboqs_mldsa44_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
-  build_target "mldsa65" sig "ML-DSA-65" "liboqs_mldsa65_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
-  build_target "mldsa87" sig "ML-DSA-87" "liboqs_mldsa87_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc || return $?
+  build_target "mlkem512" kem "ML-KEM-512" "liboqs_mlkem512_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc 1 || return $?
+  build_target "mlkem768" kem "ML-KEM-768" "liboqs_mlkem768_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc 2 || return $?
+  build_target "mlkem1024" kem "ML-KEM-1024" "liboqs_mlkem1024_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc 3 || return $?
+  build_target "mldsa44" sig "ML-DSA-44" "liboqs_mldsa44_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc 4 || return $?
+  build_target "mldsa65" sig "ML-DSA-65" "liboqs_mldsa65_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc 5 || return $?
+  build_target "mldsa87" sig "ML-DSA-87" "liboqs_mldsa87_wrapper_generic" src/fuzzers/sig_pair_fuzzer.cc 6 || return $?
 }
 
 run_fuzzer() {
@@ -1394,16 +1518,19 @@ run_fuzzer() {
   local result_dir="${WORKSPACE_ROOT_ABS}/results/${target}"
   local log_file="${run_root}/fuzz-${target}.log"
   local summary_file="${run_root}/summary.json"
-  local seed_file="${corpus_dir}/seed-pqcfuzz-${target}.bin"
-  local timeout_seconds=$((seconds + 60))
-  local status asan_options ubsan_options msan_options sanitizer_summary
+  local seed_file timeout_seconds preflight_status status asan_options ubsan_options msan_options sanitizer_summary
+  local primitive algorithm preflight_log preflight_coverage
 
   mkdir -p "$corpus_dir" "$crash_dir" "$result_dir"
-  if [ ! -f "$seed_file" ]; then
-    make_seed "$seed_file" "$algorithm_enum" "$oracle_enum"
+  IFS=$'\t' read -r primitive algorithm < <(target_metadata "$target") || return 1
+  make_seed_corpus "$corpus_dir" "$target" "$algorithm_enum" "$primitive" || return $?
+  seed_file="$(first_seed_in_corpus "$corpus_dir")"
+  if [ -z "$seed_file" ]; then
+    echo "no structured corpus seed generated for ${target}" >&2
+    return 1
   fi
 
-  echo "[pqcfuzz-eval] running $target for ${seconds}s"
+  echo "[pqcfuzz-eval] preflighting all ${primitive} oracles for ${target}"
   asan_options="${ASAN_OPTIONS:-}"
   ubsan_options="${UBSAN_OPTIONS:-}"
   msan_options="${MSAN_OPTIONS:-}"
@@ -1416,6 +1543,30 @@ run_fuzzer() {
   if has_sanitizer memory; then
     msan_options="${msan_options:+${msan_options}:}symbolize=1:external_symbolizer_path=${LLVM_SYMBOLIZER_PATH}"
   fi
+  preflight_log="${run_root}/preflight-${target}.log"
+  preflight_coverage="${run_root}/preflight-oracle-coverage.json"
+  ASAN_OPTIONS="$asan_options" UBSAN_OPTIONS="$ubsan_options" MSAN_OPTIONS="$msan_options" LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" \
+    timeout "$((INPUT_TIMEOUT_SECONDS + 60))s" "$binary" "$corpus_dir" -runs=1 > >(tee "$preflight_log") 2>&1
+  preflight_status="$?"
+  if [ -f "${result_dir}/oracle_coverage.json" ]; then
+    cp "${result_dir}/oracle_coverage.json" "$preflight_coverage"
+  fi
+  if [ "$preflight_status" -ne 0 ] || ! verify_oracle_coverage "$preflight_coverage" "$primitive"; then
+    echo "oracle preflight failed for ${target}" >&2
+    write_run_summary "$summary_file" "$target" 70 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+    return 70
+  fi
+
+  # This allocation is part of the campaign-wide fuzzing budget.  A very
+  # small requested budget can legitimately leave later targets with no fuzz
+  # time; they were nevertheless preflighted above so coverage is explicit.
+  if [ "$seconds" -le 0 ]; then
+    write_run_summary "$summary_file" "$target" 0 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+    return 0
+  fi
+
+  timeout_seconds="$((seconds + INPUT_TIMEOUT_SECONDS + 60))"
+  echo "[pqcfuzz-eval] running $target for ${seconds}s with every ${primitive} oracle seeded"
   ASAN_OPTIONS="$asan_options" UBSAN_OPTIONS="$ubsan_options" MSAN_OPTIONS="$msan_options" LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" \
     timeout "${timeout_seconds}s" \
     "$binary" "$corpus_dir" \
@@ -1445,17 +1596,20 @@ run_leak_check() {
   local result_dir="${WORKSPACE_ROOT_ABS}/results/${target}"
   local log_file="${run_root}/leak-${target}.log"
   local summary_file="${run_root}/summary.json"
-  local seed_file="${corpus_dir}/seed-pqcfuzz-${target}.bin"
-  local status sanitizer_summary asan_options ubsan_options
+  local seed_file status sanitizer_summary asan_options ubsan_options primitive algorithm
 
   if [ "$LEAK_CHECK" = "off" ] || ! has_sanitizer address; then
     return 0
   fi
   mkdir -p "$corpus_dir" "$result_dir"
-  if [ ! -f "$seed_file" ]; then
-    make_seed "$seed_file" "$algorithm_enum" "$oracle_enum"
+  IFS=$'\t' read -r primitive algorithm < <(target_metadata "$target") || return 1
+  make_seed_corpus "$corpus_dir" "$target" "$algorithm_enum" "$primitive" || return $?
+  seed_file="$(first_seed_in_corpus "$corpus_dir")"
+  if [ -z "$seed_file" ]; then
+    echo "no structured corpus seed generated for ${target}" >&2
+    return 1
   fi
-  echo "[pqcfuzz-eval] leak-checking $target with one deterministic input"
+  echo "[pqcfuzz-eval] leak-checking every seeded ${primitive} oracle for ${target}"
   asan_options="${ASAN_OPTIONS:-}"
   ubsan_options="${UBSAN_OPTIONS:-}"
   asan_options="${asan_options:+${asan_options}:}detect_leaks=1:symbolize=1:external_symbolizer_path=${LLVM_SYMBOLIZER_PATH}"
@@ -1463,7 +1617,7 @@ run_leak_check() {
     ubsan_options="${ubsan_options:+${ubsan_options}:}print_stacktrace=1:symbolize=1"
   fi
   ASAN_OPTIONS="$asan_options" UBSAN_OPTIONS="$ubsan_options" LLVM_SYMBOLIZER_PATH="${LLVM_SYMBOLIZER_PATH:-}" \
-    timeout "$((INPUT_TIMEOUT_SECONDS + 60))s" "$binary" "$seed_file" -runs=1 > >(tee "$log_file") 2>&1
+    timeout "$((INPUT_TIMEOUT_SECONDS + 60))s" "$binary" "$corpus_dir" -runs=1 > >(tee "$log_file") 2>&1
   status="$?"
   sanitizer_summary="${run_root}/leak-sanitizer-findings.json"
   collect_sanitizer_findings "$target" "leak-check" "$log_file" "$result_dir" "$seed_file" "$binary" "$sanitizer_summary" || return $?
@@ -1614,26 +1768,50 @@ if [ "$ORACLE_SUITE" = "metamorphic" ]; then
   SIG_ORACLE_ENUM=29
 fi
 
+active_target_count() {
+  if [ "$VERSION" = "0.14.0" ]; then
+    printf '%s\n' 6
+  else
+    # ML-DSA uses FIPS canonical parameter sizes.  Those do not match the
+    # historical Dilithium APIs, so only ML-KEM is active for these versions.
+    printf '%s\n' 3
+  fi
+}
+
+target_budget_seconds() {
+  local ordinal="$1" count base remainder
+  count="$(active_target_count)"
+  base=$((FUZZING_SECONDS / count))
+  remainder=$((FUZZING_SECONDS % count))
+  if [ "$ordinal" -lt "$remainder" ]; then
+    printf '%s\n' "$((base + 1))"
+  else
+    printf '%s\n' "$base"
+  fi
+}
+
 write_status "regression-mldsa-empty-context" "running"
 run_mldsa_empty_context_regression || finish_campaign "harness-error" "$?" "ML-DSA empty-context UBSan regression failed"
 
 KEM_STATUS=0
 SIG_STATUS=0
-for job_spec in "mlkem512:1" "mlkem768:2" "mlkem1024:3"; do
-  IFS=: read -r job enum <<<"$job_spec"
+for job_spec in "mlkem512:1:0" "mlkem768:2:1" "mlkem1024:3:2"; do
+  IFS=: read -r job enum budget_ordinal <<<"$job_spec"
+  target_seconds="$(target_budget_seconds "$budget_ordinal")"
   write_status "run-${job}" "running"
-  run_fuzzer "$job" "$KEM_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+  run_fuzzer "$job" "$target_seconds" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
   run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
 done
 
-for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
-  IFS=: read -r job enum <<<"$job_spec"
+for job_spec in "mldsa44:4:3" "mldsa65:5:4" "mldsa87:6:5"; do
+  IFS=: read -r job enum budget_ordinal <<<"$job_spec"
   write_status "run-${job}" "running"
   if [ "$VERSION" = "0.14.0" ]; then
-    run_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
+    target_seconds="$(target_budget_seconds "$budget_ordinal")"
+    run_fuzzer "$job" "$target_seconds" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
     run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
   else
-    skip_fuzzer "$job" "$SIG_SECONDS" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
+    skip_fuzzer "$job" 0 "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
   fi
 done
 
@@ -1797,6 +1975,10 @@ for campaign in campaigns:
             "state": parsed.get("state") if isinstance(parsed, dict) else None,
             "sanitizer_finding_count": parsed.get("sanitizer_finding_count", len(sanitizer_findings)) if isinstance(parsed, dict) else 0,
             "sanitizer_findings": sanitizer_findings,
+            "scheduled_oracles": parsed.get("scheduled_oracles", []) if isinstance(parsed, dict) else [],
+            "oracle_coverage": parsed.get("oracle_coverage", {}) if isinstance(parsed, dict) else {},
+            "oracle_coverage_complete": bool(parsed.get("oracle_coverage_complete", False)) if isinstance(parsed, dict) else False,
+            "uncovered_oracles": parsed.get("uncovered_oracles", []) if isinstance(parsed, dict) else [],
         })
 
     counts = artifact_counts(workspace_root / "crashes")
@@ -1811,6 +1993,38 @@ for campaign in campaigns:
         for finding in item.get("sanitizer_findings", [])
         if isinstance(finding, dict)
     ]
+    oracle_totals = {
+        "inputs": 0,
+        "parse_rejected": 0,
+        "parsed": 0,
+        "algorithm_rejected": 0,
+        "routing_rejected": 0,
+        "oracle_invocations": 0,
+        "valid_setup": 0,
+        "relation_evaluable": 0,
+        "intervention_effective": 0,
+        "rng_intervention_observed": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "finding_records": 0,
+    }
+    uncovered_oracles = []
+    scheduled_oracle_count = 0
+    covered_oracle_count = 0
+    for item in run_summaries:
+        scheduled = item.get("scheduled_oracles") or []
+        scheduled_oracle_count += len(scheduled)
+        coverage = item.get("oracle_coverage") if isinstance(item.get("oracle_coverage"), dict) else {}
+        totals = coverage.get("totals") if isinstance(coverage.get("totals"), dict) else {}
+        for key in oracle_totals:
+            oracle_totals[key] += int(totals.get(key, 0) or 0)
+        oracle_map = coverage.get("oracles") if isinstance(coverage.get("oracles"), dict) else {}
+        for scheduled_item in scheduled:
+            oracle_id = scheduled_item.get("oracle_id") if isinstance(scheduled_item, dict) else None
+            if oracle_id and int(oracle_map.get(oracle_id, {}).get("oracle_invocations", 0) or 0) > 0:
+                covered_oracle_count += 1
+        for oracle_id in item.get("uncovered_oracles") or []:
+            uncovered_oracles.append({"target": item.get("target"), "oracle_id": oracle_id})
     sanitizer_counts = {"address": 0, "undefined": 0, "memory": 0, "leak": 0}
     for finding in sanitizer_findings:
         sanitizer = str(finding.get("sanitizer") or "")
@@ -1827,6 +2041,9 @@ for campaign in campaigns:
     if aggregate_status == 0 and len(run_summaries) < 2:
         aggregate_status = 1
         result = "missing-run-summary"
+    if aggregate_status == 0 and uncovered_oracles:
+        aggregate_status = 1
+        result = "oracle-coverage-incomplete"
     if aggregate_status != 0:
         overall_status = 1
 
@@ -1858,6 +2075,11 @@ for campaign in campaigns:
         "log": campaign["log_file_abs"],
         "status_file": campaign["status_file_abs"],
         "run_summaries": run_summaries,
+        "oracle_coverage_complete": not uncovered_oracles,
+        "scheduled_oracle_count": scheduled_oracle_count,
+        "covered_oracle_count": covered_oracle_count,
+        "uncovered_oracles": uncovered_oracles,
+        "oracle_totals": oracle_totals,
         "crash_count": counts["crash"],
         "timeout_count": counts["timeout"],
         "leak_count": counts["leak"],
@@ -1896,6 +2118,10 @@ columns = [
     "relation_mode",
     "sanitizers",
     "leak_check",
+    "oracle_coverage_complete",
+    "scheduled_oracle_count",
+    "covered_oracle_count",
+    "uncovered_oracles",
     "skipped_families",
     "skipped_targets",
     "docker_build_status",
@@ -1924,6 +2150,9 @@ with open(summary_tsv, "w", encoding="utf-8", newline="") as f:
         out = {column: row.get(column) for column in columns}
         out["skipped_families"] = ",".join(row.get("skipped_families") or [])
         out["skipped_targets"] = ",".join(row.get("skipped_targets") or [])
+        out["uncovered_oracles"] = ",".join(
+            f"{item.get('target')}:{item.get('oracle_id')}" for item in row.get("uncovered_oracles") or []
+        )
         writer.writerow(out)
 
 print(summary_json)
@@ -2207,12 +2436,6 @@ fi
 
 mapfile -t VERSIONS < <(parse_versions "$VERSIONS_CSV")
 
-KEM_SECONDS=$(((FUZZING_SECONDS + 1) / 2))
-SIG_SECONDS=$((FUZZING_SECONDS / 2))
-if [ "$SIG_SECONDS" -le 0 ]; then
-  SIG_SECONDS=1
-fi
-
 EVAL_ROOT_REL="workspace/pqcfuzz_eval"
 EVAL_ROOT="${ROOT_DIR}/${EVAL_ROOT_REL}"
 CAMPAIGN_ROOT="${EVAL_ROOT}/campaigns"
@@ -2292,7 +2515,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "[dry-run] workspace: ${WORKSPACE_REL_BY_ID[$campaign]}"
     echo "[dry-run] log: ${LOG_FILE_ABS_BY_ID[$campaign]}"
     echo "[dry-run] status: ${STATUS_FILE_ABS_BY_ID[$campaign]}"
-    print_campaign_commands "$version" "$FUZZING_SECONDS" "$KEM_SECONDS" "$SIG_SECONDS" "${WORKSPACE_REL_BY_ID[$campaign]}" |
+    print_campaign_commands "$version" "$FUZZING_SECONDS" "${WORKSPACE_REL_BY_ID[$campaign]}" |
       sed 's/^/[dry-run] command: /'
     echo
   done
@@ -2356,9 +2579,7 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
     "${LOG_FILE_ABS_BY_ID[$campaign]}" \
     "${STATUS_FILE_REL_BY_ID[$campaign]}" \
     "${STATUS_FILE_ABS_BY_ID[$campaign]}" \
-    "$FUZZING_SECONDS" \
-    "$KEM_SECONDS" \
-    "$SIG_SECONDS"
+    "$FUZZING_SECONDS"
 
   # The launcher is generated from nested Bash/Python heredocs.  Parse the
   # generated artifact before tmux starts it so a template error is reported

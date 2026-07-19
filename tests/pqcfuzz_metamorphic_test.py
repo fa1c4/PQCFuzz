@@ -131,6 +131,55 @@ def test_unsupported_adapter_reports_unsupported(tmp_path: Path) -> None:
     )
 
 
+def test_every_metamorphic_oracle_executes_with_effective_controls(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include <string>
+        #include <vector>
+        #include "oracles/metamorphic_executor.h"
+        extern "C" const pqcfuzz_kem_adapter *pqcfuzz_fake_kem_oracle_contract_adapter();
+        extern "C" const pqcfuzz_sig_adapter *pqcfuzz_fake_sig_oracle_contract_adapter();
+
+        bool Check(const pqcfuzz::KEMOracleTrace &trace, const std::string &id, bool rng) {
+          if (trace.oracle_id != id || !trace.findings.empty() || !trace.valid_setup ||
+              !trace.relation_evaluable || !trace.intervention_effective || trace.subtests.empty() ||
+              trace.subtests.front().skipped) return false;
+          return !rng || (!trace.rng_interventions.empty() &&
+                          trace.rng_interventions.front().baseline_bytes_consumed > 0 &&
+                          trace.rng_interventions.front().mutated_bytes_consumed > 0);
+        }
+
+        int main() {
+          const std::vector<std::string> kem = {
+              "kem_decaps_c", "kem_decaps_sk", "kem_encaps_badrng", "kem_encaps_pk_0",
+              "kem_encaps_pk", "kem_keygen_badrng"};
+          for (size_t i = 0; i < kem.size(); ++i) {
+            const auto &id = kem[i];
+            pqcfuzz::MetamorphicKemConfig cfg;
+            cfg.job_id = "test"; cfg.pair_id = "test"; cfg.algorithm = "ML-KEM-768";
+            cfg.oracle_id = id; cfg.target = pqcfuzz_fake_kem_oracle_contract_adapter();
+            cfg.seed = {1, 2, 3}; cfg.mutation = {0, 0, 1};
+            if (!Check(pqcfuzz::ExecuteMetamorphicKemOracle(cfg), id, id.find("badrng") != std::string::npos)) return 1;
+          }
+          const std::vector<std::string> sig = {
+              "sig_keygen_badrng", "sig_sign_badrng", "sig_sign_m", "sig_sign_sk",
+              "sig_verify_m", "sig_verify_sig", "sig_verify_pk"};
+          for (size_t i = 0; i < sig.size(); ++i) {
+            const auto &id = sig[i];
+            pqcfuzz::MetamorphicSigConfig cfg;
+            cfg.job_id = "test"; cfg.pair_id = "test"; cfg.algorithm = "ML-DSA-44";
+            cfg.oracle_id = id; cfg.target = pqcfuzz_fake_sig_oracle_contract_adapter();
+            cfg.seed = {1, 2, 3}; cfg.message = {'m', 's', 'g'}; cfg.context = {'c'}; cfg.mutation = {0, 0, 1};
+            if (!Check(pqcfuzz::ExecuteMetamorphicSigOracle(cfg), id, id.find("badrng") != std::string::npos)) return 2;
+          }
+          return 0;
+        }
+        """,
+        ["tests/fake_adapters/fake_oracle_contract.cc"],
+    )
+
+
 def test_kem_setup_keygen_failure_is_skipped_not_malleability(tmp_path: Path) -> None:
     compile_and_run(
         tmp_path,

@@ -12,6 +12,7 @@
 #include "oracles/oracle_executor.h"
 #include "runtime/adapter_registry.h"
 #include "triage/finding_writer.h"
+#include "triage/oracle_coverage.h"
 
 #ifndef PQCFUZZ_JOB_ID
 #define PQCFUZZ_JOB_ID "adhoc_pqcfuzz_sig_job"
@@ -90,12 +91,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   pqcfuzz::Envelope envelope;
   std::string error;
   if (!pqcfuzz::ParseEnvelope(data, size, &envelope, &error)) {
+    pqcfuzz::RecordEnvelopeParseRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
+  pqcfuzz::RecordEnvelopeParsed(PQCFUZZ_RESULT_DIR);
 
   const std::string algorithm = pqcfuzz::AlgorithmName(envelope.algorithm);
   const std::string expected_algorithm = PQCFUZZ_EXPECTED_ALGORITHM;
   if (algorithm != expected_algorithm) {
+    pqcfuzz::RecordAlgorithmRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
   pqcfuzz::MlDsaParams params{};
@@ -109,6 +113,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID, expected_algorithm,
       params.pk_len, params.sk_len, 0, 0, params.sig_max_len};
   if (!pqcfuzz::ValidateSigAdapterRouting(target, expected_routing, &routing_error)) {
+    pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
 
@@ -152,6 +157,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   trace.adapter_pk_len = target->pk_len;
   trace.adapter_sk_len = target->sk_len;
   trace.adapter_sig_max_len = target->sig_max_len;
+  pqcfuzz::RecordOracleTrace(PQCFUZZ_RESULT_DIR, trace);
   if (!trace.findings.empty()) {
     pqcfuzz::FindingArtifactInput artifacts;
     artifacts.job_id = PQCFUZZ_JOB_ID;
