@@ -69,7 +69,8 @@ def report_groups(reports_dir: Path) -> Set[str]:
     groups: Set[str] = set()
     for database in reports_dir.glob("*.db"):
         try:
-            with sqlite3.connect(database) as connection:
+            # Ubuntu 18.04's sqlite binding does not accept PathLike values.
+            with sqlite3.connect(os.fspath(database)) as connection:
                 columns = {row[1] for row in connection.execute("PRAGMA table_info(crashes)")}
                 if not {"test", "name"}.issubset(columns):
                     continue

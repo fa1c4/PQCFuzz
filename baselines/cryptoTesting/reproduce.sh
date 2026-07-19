@@ -43,6 +43,7 @@ VERSION="${CRYPTO_TESTING_VERSION:-unknown}"
 MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
 TASK_MAX_TIME="${CRYPTO_TESTING_TASK_MAX_TIME:-}"
 BUDGET_EXHAUSTED=0
+MANIFEST_FINALIZATION_ATTEMPTED=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -102,13 +103,57 @@ run_fuzz_driver() {
   "$@"
 }
 
+write_manifest() {
+  MANIFEST_FINALIZATION_ATTEMPTED=1
+  python3 "$MANIFEST_WRITER" \
+    --output-root "$OUTPUT_ROOT" --mode "$MODE" --version "$VERSION" --reports-dir "$REPORTS_DIR" "$@"
+}
+
+write_harness_error_summary() {
+  local stage="$1"
+  local exit_status="$2"
+
+  python3 - "$OUTPUT_ROOT/summary.json" "$MODE" "$VERSION" "$stage" "$exit_status" <<'PY'
+import json
+import os
+import sys
+import tempfile
+from datetime import datetime, timezone
+
+path, mode, version, stage, exit_status = sys.argv[1:]
+directory = os.path.dirname(path)
+os.makedirs(directory, exist_ok=True)
+document = {
+    "baseline": "cryptoTesting",
+    "label": f"cryptoTesting-{mode}",
+    "mode": mode,
+    "version": version,
+    "status": "harness-error",
+    "normalized_outcome": "operation_error",
+    "stop_reason": "manifest-finalization",
+    "failure_stage": stage,
+    "exit_status": int(exit_status),
+    "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+fd, temporary = tempfile.mkstemp(prefix=".summary.", dir=directory)
+with os.fdopen(fd, "w", encoding="utf-8") as destination:
+    json.dump(document, destination, indent=2, sort_keys=True)
+    destination.write("\n")
+os.replace(temporary, path)
+PY
+}
+
 finalize() {
   local status="$?"
+  local manifest_status=0
+
   set +e
-  python3 "$MANIFEST_WRITER" \
-    --output-root "$OUTPUT_ROOT" --mode "$MODE" --version "$VERSION" --reports-dir "$REPORTS_DIR"
-  local manifest_status="$?"
+  if [ "$MANIFEST_FINALIZATION_ATTEMPTED" -eq 0 ]; then
+    write_manifest
+    manifest_status="$?"
+  fi
   if [ "$status" -eq 0 ] && [ "$manifest_status" -ne 0 ]; then
+    write_harness_error_summary "manifest-finalizer" "$manifest_status"
     status="$manifest_status"
   fi
   exit "$status"
@@ -152,7 +197,12 @@ fi
 
 # A report is evidence only when every group it reports has retained raw input.
 if [ "$BUDGET_EXHAUSTED" -eq 0 ]; then
-  python3 "$MANIFEST_WRITER" \
-    --output-root "$OUTPUT_ROOT" --mode "$MODE" --version "$VERSION" --reports-dir "$REPORTS_DIR" \
-    --require-report-evidence
+  set +e
+  write_manifest --require-report-evidence
+  manifest_status="$?"
+  set -e
+  if [ "$manifest_status" -ne 0 ]; then
+    write_harness_error_summary "manifest-validation" "$manifest_status"
+    exit "$manifest_status"
+  fi
 fi

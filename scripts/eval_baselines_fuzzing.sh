@@ -29,6 +29,7 @@ Options:
                                 Result retention policy. Default: compact.
   --campaign BASELINE-VERSION   Run only one campaign. May be repeated.
                                 Example: --campaign libFuzzer-0.14.0
+  --summarize-only              Regenerate summaries from existing campaign status files.
   --dry-run                     Print the sessions and commands without starting tmux.
   -h, --help                    Show this help.
 
@@ -573,7 +574,7 @@ except (OSError, json.JSONDecodeError):
     document = {}
 
 status = document.get("status") if isinstance(document, dict) else None
-print(status if status in {"completed", "completed-at-budget-incomplete", "timed-out-partial"} else "unknown")
+print(status if status in {"completed", "completed-at-budget-incomplete", "timed-out-partial", "harness-error"} else "unknown")
 PY
 }
 
@@ -1172,6 +1173,7 @@ PROGRESS_INTERVAL="3600"
 SESSION_PREFIX="pqcdf"
 RESULT_SAVE_MODE="compact"
 DRY_RUN=0
+SUMMARIZE_ONLY=0
 declare -a REQUESTED_CAMPAIGNS=()
 
 while [ "$#" -gt 0 ]; do
@@ -1229,6 +1231,10 @@ while [ "$#" -gt 0 ]; do
       ;;
     --campaign=*)
       REQUESTED_CAMPAIGNS+=("${1#--campaign=}")
+      shift
+      ;;
+    --summarize-only)
+      SUMMARIZE_ONLY=1
       shift
       ;;
     --dry-run)
@@ -1330,6 +1336,9 @@ done
 if [ "${#CAMPAIGN_IDS[@]}" -eq 0 ]; then
   die "no campaigns selected"
 fi
+if [ "$SUMMARIZE_ONLY" -eq 1 ] && [ "${#REQUESTED_CAMPAIGNS[@]}" -gt 0 ]; then
+  die "--summarize-only cannot be combined with --campaign"
+fi
 
 echo "[eval] repository: $ROOT_DIR"
 echo "[eval] output root: $EVAL_ROOT"
@@ -1344,6 +1353,14 @@ else
 fi
 echo "[eval] dry run: $DRY_RUN"
 echo
+
+if [ "$SUMMARIZE_ONLY" -eq 1 ]; then
+  [ -f "$INDEX_FILE" ] || die "cannot summarize: missing campaign index $INDEX_FILE"
+  SUMMARY_OUTPUT="$(write_final_summary)"
+  SUMMARY_STATUS="$?"
+  printf '%s\n' "$SUMMARY_OUTPUT"
+  exit "$SUMMARY_STATUS"
+fi
 
 if [ "$DRY_RUN" -eq 1 ]; then
   for campaign in "${CAMPAIGN_IDS[@]}"; do

@@ -1,8 +1,12 @@
 import hashlib
 import json
+import runpy
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -805,6 +809,34 @@ def test_cryptotesting_raw_manifest_classifies_geninput_as_setup_timeout(tmp_pat
     assert records["hang"]["replay"]["command"][1] == "crypto_testing_replay.py"
     summary = json.loads((raw_root / "summary.json").read_text(encoding="utf-8"))
     assert summary["status"] == "completed"
+
+
+def test_cryptotesting_manifest_passes_a_string_path_to_sqlite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    raw_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    database = reports / "report.db"
+    with sqlite3.connect(str(database)) as connection:
+        connection.execute("CREATE TABLE crashes(test TEXT, name TEXT)")
+        connection.execute("INSERT INTO crashes VALUES ('KEM/Decaps/sk', 'ML-KEM-512')")
+
+    write_json(raw_root / "metadata" / "tasks.json", [{"state": "completed"}])
+    original_connect = sqlite3.connect
+    received_paths: list[str] = []
+
+    def string_only_connect(path: str, *args: object, **kwargs: object) -> sqlite3.Connection:
+        assert isinstance(path, str)
+        received_paths.append(path)
+        return original_connect(path, *args, **kwargs)
+
+    manifest_module = runpy.run_path(str(CRYPTOTESTING_MANIFEST))
+    monkeypatch.setattr(sqlite3, "connect", string_only_connect)
+    document = manifest_module["scan"](raw_root, "functional", "0.14.0", reports)
+
+    assert received_paths == [str(database)]
+    assert document["reported_groups"] == 1
 
 
 def test_all_mode_leaves_tree_untouched(tmp_path: Path) -> None:

@@ -18,6 +18,7 @@ CLFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "CLFuzz" / "run.sh"
 CRYPTOTESTING_RUNNER = ROOT / "scripts" / "baselines" / "cryptoTesting" / "run.sh"
 CRYPTOTESTING_DOCKERFILE = ROOT / "baselines" / "cryptoTesting" / "Dockerfile"
 CRYPTOTESTING_REPRODUCE = ROOT / "baselines" / "cryptoTesting" / "reproduce.sh"
+CRYPTOTESTING_RECOVERY = ROOT / "scripts" / "recover_cryptotesting_results.py"
 CLFUZZ_OV_REPLAY_FIXTURE = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.input.b64"
 CLFUZZ_OV_REPLAY_MANIFEST = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.replay.json"
 
@@ -426,6 +427,134 @@ exit 0
     summary = load_summary(root)
     assert summary["campaigns"][0]["result"] == "missing-summary"
     assert summary["campaigns"][0]["missing_expected_summary"] is True
+
+
+def test_cryptotesting_manifest_failure_is_classified_as_harness_error(tmp_path: Path) -> None:
+    root = make_root(
+        tmp_path,
+        """#!/usr/bin/env bash
+if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
+  output_root="${PQCDF_WORKSPACE_ROOT}/cryptoTesting/targets-run/raw/cryptoTesting-0.14.0/functional"
+  mkdir -p "$output_root"
+  printf '%s\\n' '{"status":"harness-error","normalized_outcome":"operation_error","stop_reason":"manifest-finalization"}' > "$output_root/summary.json"
+  exit 1
+fi
+exit 0
+""",
+    )
+    make_tmux(
+        tmp_path,
+        """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+        """,
+    )
+
+    result = run_eval(
+        tmp_path, root, "--campaign", "cryptoTesting-0.14.0", "--result-save-mode", "all",
+        "--fuzzing-time", "1s", "--progress-interval", "1",
+    )
+
+    assert result.returncode == 1
+    status = load_status(root, "cryptoTesting-0.14.0")
+    assert status["result"] == "harness-error"
+    assert status["final_status"] == 1
+
+
+def test_cryptotesting_manifest_failure_is_attempted_once(tmp_path: Path) -> None:
+    work = tmp_path / "cryptoTesting"
+    work.mkdir()
+    write_executable(work / "reproduce.sh", CRYPTOTESTING_REPRODUCE.read_text(encoding="utf-8"))
+    (work / "crypto_testing_manifest.py").write_text(
+        """import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[sys.argv.index('--output-root') + 1])
+counter = root / 'manifest-attempts.txt'
+counter.write_text(str(int(counter.read_text()) + 1) if counter.exists() else '1')
+raise SystemExit(23)
+""",
+        encoding="utf-8",
+    )
+    write_executable(tmp_path / "bin" / "make", "#!/usr/bin/env bash\nexit 0\n")
+    driver = """from pathlib import Path
+import json
+import sys
+
+root = Path(sys.argv[sys.argv.index('--output-root') + 1])
+(root / 'metadata').mkdir(parents=True, exist_ok=True)
+(root / 'metadata' / 'tasks.json').write_text(json.dumps([{'state': 'completed'}]))
+"""
+    report = """from pathlib import Path
+import sys
+
+Path(sys.argv[sys.argv.index('--report-dir') + 1]).mkdir(parents=True, exist_ok=True)
+"""
+    for name in ("fuzz_liboqs.py", "fuzz_liboqs_baseline.py"):
+        (work / name).write_text(driver, encoding="utf-8")
+    for name in ("report.py", "report_baseline.py"):
+        (work / name).write_text(report, encoding="utf-8")
+
+    env = os.environ.copy()
+    env["PATH"] = f"{tmp_path / 'bin'}{os.pathsep}{env['PATH']}"
+    raw = tmp_path / "raw"
+    result = subprocess.run(
+        [
+            "bash", "reproduce.sh", "ches_liboqs", "--output-root", str(raw),
+            "--reports-dir", str(tmp_path / "reports"), "--workers", "1", "--version", "0.14.0",
+        ],
+        cwd=work,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 23
+    assert (raw / "manifest-attempts.txt").read_text(encoding="utf-8") == "1"
+    summary = json.loads((raw / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "harness-error"
+    assert summary["failure_stage"] == "manifest-validation"
+
+
+def test_cryptotesting_recovery_regenerates_terminal_campaign_evidence(tmp_path: Path) -> None:
+    eval_root = tmp_path / "baselines_eval"
+    campaign = "cryptoTesting-0.14.0"
+    workspace = eval_root / "campaigns" / campaign / "workspace"
+    raw = workspace / "cryptoTesting" / "targets-run" / "raw" / campaign / "functional"
+    reports = workspace / "cryptoTesting" / "targets-run" / "reports" / f"{campaign}-functional"
+    crash = raw / "afl" / "KEM" / "Decaps" / "sk" / "0" / "fuzzoutputs" / "default" / "crashes" / "id:000000"
+    crash.parent.mkdir(parents=True)
+    crash.write_text("crash", encoding="utf-8")
+    (crash.parents[3] / "alg.txt").write_text("ML-KEM-512", encoding="utf-8")
+    (raw / "metadata").mkdir(parents=True)
+    (raw / "metadata" / "tasks.json").write_text('[{"state":"completed"}]', encoding="utf-8")
+    reports.mkdir(parents=True)
+    import sqlite3
+    with sqlite3.connect(str(reports / "report.db")) as connection:
+        connection.execute("CREATE TABLE crashes(test TEXT, name TEXT)")
+        connection.execute("INSERT INTO crashes VALUES ('KEM/Decaps/sk', 'ML-KEM-512')")
+    status_path = eval_root / "status" / f"{campaign}.json"
+    status_path.parent.mkdir(parents=True)
+    status_path.write_text('{"result":"fuzzing-failed","final_status":1}', encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(CRYPTOTESTING_RECOVERY), "--eval-root", str(eval_root), "--version", "0.14.0"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    status = json.loads(status_path.read_text(encoding="utf-8"))
+    assert status["result"] == "completed"
+    assert status["final_status"] == 0
+    assert status["recovery"]["previous_result"] == "fuzzing-failed"
+    manifest = json.loads((raw / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["tasks_terminal"] is True
+    assert manifest["groups_missing_reproducer"] == 0
 
 
 def test_cryptotesting_reproduce_selects_functional_and_vanilla_drivers(tmp_path: Path) -> None:
