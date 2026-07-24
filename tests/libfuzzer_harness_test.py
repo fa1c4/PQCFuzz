@@ -27,8 +27,10 @@ OQS_STATUS OQS_init(void);
 FAKE_KEM_H = r"""
 #ifndef FAKE_KEM_H
 #define FAKE_KEM_H
+#include <stdbool.h>
 #include <oqs/oqs.h>
 typedef struct OQS_KEM {
+  bool ind_cca;
   size_t length_public_key;
   size_t length_secret_key;
   size_t length_ciphertext;
@@ -119,6 +121,7 @@ OQS_KEM *OQS_KEM_new(const char *algorithm) {
   if (!OQS_KEM_alg_is_enabled(algorithm)) return NULL;
   OQS_KEM *kem = calloc(1, sizeof(*kem));
   if (kem != NULL) {
+    kem->ind_cca = true;
     kem->length_public_key = 4;
     kem->length_secret_key = 4;
     kem->length_ciphertext = 4;

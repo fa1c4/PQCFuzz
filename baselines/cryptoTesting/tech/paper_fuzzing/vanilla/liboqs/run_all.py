@@ -77,6 +77,7 @@ def run_algo(alg, alg_name, mutator_tool, base_path, run_inside_clone=False, ver
         stderr=subprocess.PIPE,
     )
     stdout = res.stdout
+    stderr = res.stderr
     if verbose:
         print(stdout)
 
@@ -96,6 +97,17 @@ def run_algo(alg, alg_name, mutator_tool, base_path, run_inside_clone=False, ver
     # backup full stdout from fuzzing
     with open(os.path.join(full_path, 'stdout.txt'), 'wb') as f:
         f.write(stdout)
+    with open(os.path.join(full_path, 'stderr.txt'), 'wb') as f:
+        f.write(stderr)
+
+    if res.returncode != 0:
+        detail = stderr.decode("utf-8", errors="replace").strip()
+        if not detail:
+            detail = stdout.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(
+            f"make run_{mutator_tool} failed for algorithm {alg} with exit status "
+            f"{res.returncode}: {detail[-2000:]}"
+        )
 
     # count crashes nad if any, add this algorithm to the list of problematic ones
     crash_dir = os.path.join(fuzz_outputs, "default", "crashes")
@@ -156,7 +168,7 @@ def main():
     if n_algs_only:
         # print(algs)
         print(json.dumps(algs_d))
-        exit(algs)
+        sys.exit(0)
 
     if run_specific_alg_only == -1:
         algs = min(algs, dbg_max_alg)

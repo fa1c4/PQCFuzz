@@ -212,8 +212,6 @@ fuzz_implementation() {
         export AFL_CUSTOM_MUTATOR_ONLY=1
         export AFL_SKIP_CPUFREQ=1
         export AFL_DISABLE_TRIM=1
-        export AFL_EXIT_WHEN_DONE=1
-        export AFL_EXIT_ON_TIME=1
         export AFL_DEBUG_CHILD=0
         export AFL_NO_UI=0
         outbytes=
@@ -238,7 +236,7 @@ fuzz_implementation() {
                 echo "$impl $bytes" >> $impl/GENINPUTCRASH.log
                 continue
             fi
-            errorline=$($AFLFUZZ -i $impl/fuzzinputs/ -o $impl/fuzzoutputs/ -D -V 60 -- $impl/Match.afl.out @@);
+            errorline=$($AFLFUZZ -i $impl/fuzzinputs/ -o $impl/fuzzoutputs/ -D -- $impl/Match.afl.out @@);
             # echo "$errorline";
             if [ $(echo $errorline | grep 'We need at least one valid input seed that does not crash' | wc -w) -gt 0 ]
             then

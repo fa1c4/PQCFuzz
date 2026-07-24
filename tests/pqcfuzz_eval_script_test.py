@@ -43,7 +43,23 @@ def test_launcher_seeds_and_verifies_every_selected_oracle_with_a_global_budget(
     assert "make_seed_corpus" in script
     assert "verify_oracle_coverage" in script
     assert "target_budget_seconds" in script
+    assert "target_capability_state" in script
+    assert "write_capability_manifest" in script
+    assert "record_target_preflight" in script
+    assert "not building non-comparable target" in script
     assert "KEM_SECONDS" not in script
     assert "SIG_SECONDS" not in script
     assert 'right_implementation="selfref_mlkem768_via_liboqs"' in script
     assert '-DPQCFUZZ_RIGHT_PROJECT_ID="\\\"liboqs_self_reference\\\""' in script
+
+
+def test_launcher_uses_preflight_coverage_for_gating_and_fuzz_coverage_for_telemetry() -> None:
+    script = (REPO_ROOT / "scripts" / "pqcfuzz_eval.sh").read_text(encoding="utf-8")
+
+    assert 'RUN_PREFLIGHT_ORACLE_COVERAGE_FILE="$preflight_coverage"' in script
+    assert '"preflight_oracle_coverage": preflight_coverage' in script
+    assert '"fuzz_oracle_coverage": fuzz_coverage' in script
+    assert '"oracle_coverage_state": oracle_coverage_state' in script
+    assert 'coverage_states.append(item.get("oracle_coverage_state") or "not-run")' in script
+    assert '0.4.0:mlkem512' in script
+    assert 'PREFLIGHT_ONLY' in script

@@ -487,7 +487,8 @@ write_target_summary() {
   local diagnostics_dir="${20}"
   local metadata_file="${21}"
   local time_file="${22}"
-  shift 22
+  local outcomes_dir="${23}"
+  shift 23
 
   LIBFUZZER_SUMMARY_FILE="$summary_file" \
   LIBFUZZER_PROFILE_DETAIL_FILE="$detail_file" \
@@ -512,6 +513,7 @@ write_target_summary() {
   LIBFUZZER_ARTIFACT_DIR="$artifact_dir" \
   LIBFUZZER_FINDINGS_DIR="$findings_dir" \
   LIBFUZZER_DIAGNOSTICS_DIR="$diagnostics_dir" \
+  LIBFUZZER_OUTCOMES_DIR="$outcomes_dir" \
   LIBFUZZER_METADATA_FILE="$metadata_file" \
   LIBFUZZER_TIME_FILE="$time_file" \
   LIBFUZZER_JOBS="$JOBS" \
@@ -603,6 +605,7 @@ detail_path = Path(os.environ["LIBFUZZER_PROFILE_DETAIL_FILE"])
 target_root = Path(os.environ["LIBFUZZER_TARGET_ROOT"])
 findings_dir = Path(os.environ["LIBFUZZER_FINDINGS_DIR"])
 diagnostics_dir = Path(os.environ["LIBFUZZER_DIAGNOSTICS_DIR"])
+outcomes_dir = Path(os.environ["LIBFUZZER_OUTCOMES_DIR"])
 crash_dir = Path(os.environ["LIBFUZZER_CRASH_DIR"])
 corpus_dir = Path(os.environ["LIBFUZZER_CORPUS_DIR"])
 metadata_path = Path(os.environ["LIBFUZZER_METADATA_FILE"])
@@ -617,6 +620,11 @@ diagnostic_paths = [
     if path.is_file()
 ] if diagnostics_dir.is_dir() else []
 diagnostic_paths.sort()
+outcome_paths = [
+    path for path in outcomes_dir.rglob("*.json")
+    if path.is_file()
+] if outcomes_dir.is_dir() else []
+outcome_paths.sort()
 sanitizer_prefixes = ("crash-", "timeout-", "leak-", "oom-")
 sanitizer_paths = relative_files(
     target_root,
@@ -625,7 +633,10 @@ sanitizer_paths = relative_files(
 )
 semantic_findings = [str(path.relative_to(target_root)) for path in semantic_paths]
 operation_diagnostics = [str(path.relative_to(target_root)) for path in diagnostic_paths]
+structured_outcomes = [str(path.relative_to(target_root)) for path in outcome_paths]
 records = json_records(semantic_paths)
+diagnostic_records = json_records(diagnostic_paths)
+outcome_records = json_records(outcome_paths)
 metadata = load_object(metadata_path)
 
 algorithm_list = string_list(
@@ -641,6 +652,26 @@ if not property_list:
 else:
     algorithm_list = sorted(set(algorithm_list))
     property_list = sorted(set(property_list))
+
+supported_pairs = {
+    f"{algorithm}|{property_id}"
+    for algorithm in algorithm_list for property_id in property_list
+}
+covered_pairs = {
+    f"{record['algorithm']}|{record['property_id']}"
+    for record in records + diagnostic_records + outcome_records
+    if isinstance(record.get("algorithm"), str) and isinstance(record.get("property_id"), str)
+    and record.get("classification") in ("property_exercised", "skipped")
+}
+if os.environ["LIBFUZZER_PROFILE"] != "semantic":
+    coverage_status = "not-applicable"
+    unexercised_pairs = []
+elif not supported_pairs:
+    coverage_status = "unknown"
+    unexercised_pairs = []
+else:
+    unexercised_pairs = sorted(supported_pairs - covered_pairs)
+    coverage_status = "complete" if not unexercised_pairs else "incomplete"
 
 user_seconds, system_seconds, cpu_seconds = timing(Path(os.environ["LIBFUZZER_TIME_FILE"]))
 try:
@@ -662,7 +693,13 @@ normalized_outcome = {
     "target-crash": "process_crash",
     "harness-error": "operation_error",
     "infrastructure-failed": "operation_error",
+    "completed-with-coverage-gap": "coverage_incomplete",
 }.get(os.environ["LIBFUZZER_STATUS"], "operation_error")
+
+summary_status = os.environ["LIBFUZZER_STATUS"]
+if coverage_status == "incomplete" and summary_status in ("completed", "completed-with-findings"):
+    summary_status = "completed-with-coverage-gap"
+    normalized_outcome = "coverage_incomplete"
 
 summary = {
     "baseline": "libFuzzer",
@@ -670,7 +707,7 @@ summary = {
     "version": os.environ["LIBFUZZER_VERSION"],
     "profile": os.environ["LIBFUZZER_PROFILE"],
     "mode": os.environ["LIBFUZZER_MODE"],
-    "status": os.environ["LIBFUZZER_STATUS"],
+    "status": summary_status,
     "normalized_outcome": normalized_outcome,
     "exit_status": as_int(os.environ["LIBFUZZER_RAW_EXIT_STATUS"]),
     "effective_exit_status": as_int(os.environ["LIBFUZZER_EFFECTIVE_EXIT_STATUS"]),
@@ -688,6 +725,11 @@ summary = {
     "max_exemplars_per_group": as_int(os.environ["LIBFUZZER_MAX_EXEMPLARS_PER_GROUP"]),
     "algorithm_list": algorithm_list,
     "property_list": property_list,
+    "coverage_status": coverage_status,
+    "supported_pair_count": len(supported_pairs),
+    "covered_pair_count": len(covered_pairs),
+    "covered_pair_list": sorted(covered_pairs),
+    "unexercised_pair_list": unexercised_pairs,
     "corpus_seed_count": as_int(os.environ["LIBFUZZER_CORPUS_SEED_COUNT"]),
     "corpus_file_count": corpus_file_count,
     "semantic_finding_count": len(semantic_findings),
@@ -705,7 +747,10 @@ summary = {
     "artifact_dir": os.environ["LIBFUZZER_ARTIFACT_DIR"],
     "findings_dir": os.environ["LIBFUZZER_FINDINGS_DIR"],
     "diagnostics_dir": os.environ["LIBFUZZER_DIAGNOSTICS_DIR"],
+    "outcomes_dir": os.environ["LIBFUZZER_OUTCOMES_DIR"],
     "metadata_file": os.environ["LIBFUZZER_METADATA_FILE"],
+    "structured_outcome_count": len(structured_outcomes),
+    "structured_outcomes": structured_outcomes,
     "args": list(__import__("sys").argv[1:]),
     "worker_logs": relative_files(
         target_root,
@@ -820,6 +865,8 @@ elif any(status == "infrastructure-failed" for status in target_statuses.values(
     aggregate_status = "infrastructure-failed"
 elif any(status == "timed-out" for status in target_statuses.values()):
     aggregate_status = "timed-out"
+elif any(status == "completed-with-coverage-gap" for status in target_statuses.values()):
+    aggregate_status = "completed-with-coverage-gap"
 elif any(status == "completed-with-findings" for status in target_statuses.values()):
     aggregate_status = "completed-with-findings"
 else:
@@ -835,6 +882,7 @@ aggregate = {
     "normalized_outcome": {
         "completed": "ok",
         "completed-with-findings": "invariant_violation",
+        "completed-with-coverage-gap": "coverage_incomplete",
         "timed-out": "process_hang",
         "target-crash": "process_crash",
         "harness-error": "operation_error",
@@ -851,6 +899,13 @@ aggregate = {
     "semantic_finding_count": sum(as_int(record.get("semantic_finding_count")) for record in targets.values()),
     "sanitizer_artifact_count": sum(as_int(record.get("sanitizer_artifact_count")) for record in targets.values()),
     "operation_diagnostic_count": sum(as_int(record.get("operation_diagnostic_count")) for record in targets.values()),
+    "coverage_status": "complete" if all(record.get("coverage_status") == "complete" for record in targets.values()) else "incomplete",
+    "supported_pair_count": sum(as_int(record.get("supported_pair_count")) for record in targets.values()),
+    "covered_pair_count": sum(as_int(record.get("covered_pair_count")) for record in targets.values()),
+    "unexercised_pair_list": sorted({
+        pair for record in targets.values() for pair in record.get("unexercised_pair_list", [])
+        if isinstance(pair, str)
+    }),
     "exit_status": next(
         (as_int(record.get("exit_status")) for record in targets.values() if as_int(record.get("exit_status")) != 0),
         0,
@@ -923,6 +978,7 @@ for TARGET_NAME in "${TARGETS[@]}"; do
   ARTIFACT_DIR="${TARGET_RUN_DIR}/artifacts/${PROFILE}"
   FINDINGS_DIR="${TARGET_RUN_DIR}/findings/${PROFILE}"
   DIAGNOSTICS_DIR="${TARGET_RUN_DIR}/diagnostics/${PROFILE}"
+  OUTCOMES_DIR="${TARGET_RUN_DIR}/outcomes/${PROFILE}"
   METADATA_DIR="${TARGET_RUN_DIR}/metadata"
   METADATA_FILE="${METADATA_DIR}/${PROFILE}.json"
   TIME_FILE="${METADATA_DIR}/${PROFILE}.time"
@@ -931,7 +987,7 @@ for TARGET_NAME in "${TARGETS[@]}"; do
   LOG_FILE="${LOG_DIR}/${MODE}.log"
   BINARY="${FUZZER_BUILD_DIR}/fuzz_${TARGET_NAME}"
 
-  mkdir -p "$LOG_DIR" "$CORPUS_DIR" "$CRASH_DIR" "$ARTIFACT_DIR" "$FINDINGS_DIR" "$DIAGNOSTICS_DIR" "$METADATA_DIR"
+  mkdir -p "$LOG_DIR" "$CORPUS_DIR" "$CRASH_DIR" "$ARTIFACT_DIR" "$FINDINGS_DIR" "$DIAGNOSTICS_DIR" "$OUTCOMES_DIR" "$METADATA_DIR"
   seed_default_envelope "$CORPUS_DIR" "$TARGET_NAME"
   CORPUS_SEED_COUNT="$(count_files_named "$CORPUS_DIR" '*')"
 
@@ -968,6 +1024,7 @@ for TARGET_NAME in "${TARGETS[@]}"; do
         PQCDF_LIBFUZZER_PROFILE="$PROFILE" \
         PQCDF_LIBFUZZER_FINDINGS_DIR="$FINDINGS_DIR" \
         PQCDF_LIBFUZZER_DIAGNOSTICS_DIR="$DIAGNOSTICS_DIR" \
+        PQCDF_LIBFUZZER_OUTCOMES_DIR="$OUTCOMES_DIR" \
         PQCDF_LIBFUZZER_METADATA_FILE="$METADATA_FILE" \
         PQCDF_LIBFUZZER_MAX_EXEMPLARS_PER_GROUP="$MAX_EXEMPLARS_PER_GROUP" \
         PQCDF_LIBFUZZER_TARGET="$TARGET_NAME" \
@@ -980,6 +1037,7 @@ for TARGET_NAME in "${TARGETS[@]}"; do
         PQCDF_LIBFUZZER_PROFILE="$PROFILE" \
         PQCDF_LIBFUZZER_FINDINGS_DIR="$FINDINGS_DIR" \
         PQCDF_LIBFUZZER_DIAGNOSTICS_DIR="$DIAGNOSTICS_DIR" \
+        PQCDF_LIBFUZZER_OUTCOMES_DIR="$OUTCOMES_DIR" \
         PQCDF_LIBFUZZER_METADATA_FILE="$METADATA_FILE" \
         PQCDF_LIBFUZZER_MAX_EXEMPLARS_PER_GROUP="$MAX_EXEMPLARS_PER_GROUP" \
         PQCDF_LIBFUZZER_TARGET="$TARGET_NAME" \
@@ -1019,6 +1077,7 @@ for TARGET_NAME in "${TARGETS[@]}"; do
     "$DIAGNOSTICS_DIR" \
     "$METADATA_FILE" \
     "$TIME_FILE" \
+    "$OUTCOMES_DIR" \
     "${ARGS[@]}"
   echo "[libFuzzer] ${TARGET_NAME} ${PROFILE} summary: $TARGET_PROFILE_SUMMARY_FILE"
 

@@ -11,6 +11,7 @@ import psutil
 import time
 import hashlib
 import os
+import signal
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -50,9 +51,35 @@ def collect_tasks(output_root):
     return tasks
 
 
+def mark_running_tasks_interrupted(output_root, reason):
+    tasks = collect_tasks(output_root)
+    for task in tasks:
+        if task.get("state") != "running":
+            continue
+        task.update({
+            "state": "interrupted",
+            "stop_reason": reason,
+            "interrupted_at": timestamp(),
+        })
+        write_task(output_root, task)
+    return collect_tasks(output_root)
+
+
 def property_name(testpath):
     marker = "liboqs/"
     return testpath.split(marker, 1)[1] if marker in testpath else testpath
+
+
+def setup_timeout_record(output_root, testpath, alg):
+    directory = (
+        Path(output_root) / "afl" / property_name(testpath) / str(alg) /
+        "fuzzoutputs" / "default" / "setup-timeout"
+    )
+    for name in ("GenInput.json", "GenInput"):
+        record = directory / name
+        if record.is_file():
+            return record
+    return None
 
 
 def configured_workers(raw):
@@ -81,13 +108,7 @@ TESTPATHS=(
 )
 
 
-BLACKLIST=(
-    # the three entries below slow significantly the process
-    # full results do however include these experiments
-    # ("McEliece", "Encaps/pk-eq"),      # huge pk, makes the test take really long
-    # ("BIKE", "Encaps/pk-eq"),          # ditto
-    # ("Frodo", "Encaps/pk-eq"),         # ditto
-)
+BLACKLIST=()
 
 WHITELIST = (
     # ("SIDH", "Encaps/pk-eq"),
@@ -124,12 +145,18 @@ FILTER_KEM = [1]
 FILTER_SIG = [1]
 
 def get_algs(testpath, liboqs):
-    shellcmd = f'bash -c "cd {testpath}; DIRNAME={liboqs} make clean all > /dev/null 2>&1; python3 run_all.py --n_algs_only; exit $?"'
-    
-    proc = subprocess.run(shellcmd, shell=True, stdout=subprocess.PIPE, stderr= subprocess.PIPE) #subprocess.DEVNULL)
-    # print(proc.stderr.decode())
-    algs_d = collections.OrderedDict(json.loads(proc.stdout.decode('ascii').strip()))
-    return algs_d
+    shellcmd = f'cd {testpath} && DIRNAME={liboqs} make clean all > /dev/null 2>&1 && python3 run_all.py --n_algs_only'
+    proc = subprocess.run(shellcmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = proc.stdout.decode("utf-8", errors="replace").strip()
+    if proc.returncode != 0:
+        detail = proc.stderr.decode("utf-8", errors="replace").strip()
+        raise RuntimeError(
+            f"algorithm discovery failed for {testpath} with exit status {proc.returncode}: {detail[-1000:]}"
+        )
+    try:
+        return collections.OrderedDict(json.loads(output))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"algorithm discovery emitted invalid JSON for {testpath}: {output[-1000:]}") from error
 
 
 def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
@@ -171,7 +198,15 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
                         stderr = subprocess.STDOUT,
                         check=True,
                         universal_newlines=True)
-        task["state"] = "completed"
+        timeout_record = setup_timeout_record(output_root, testpath, alg)
+        if timeout_record is not None:
+            task.update({
+                "state": "setup-timeout",
+                "stop_reason": "GenInput-timeout",
+                "setup_timeout_record": str(timeout_record.relative_to(output_root)),
+            })
+        else:
+            task["state"] = "completed"
         task["elapsed_seconds"] = round(time.monotonic() - started, 6)
         write_task(output_root, task)
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
@@ -180,6 +215,9 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
             "state": "target-failed", "elapsed_seconds": round(time.monotonic() - started, 6),
             "error": str(e),
         })
+        output = getattr(e, "stdout", None)
+        if output:
+            task["output_tail"] = output[-2000:]
         write_task(output_root, task)
         if LOGFILE:
             print(shellcmd, file=LOGFILE)
@@ -232,6 +270,13 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
         ],
     })
 
+    interrupted_by = {"signal": None}
+
+    def handle_termination(signum, _frame):
+        interrupted_by["signal"] = signum
+        raise KeyboardInterrupt
+
+    previous_sigterm = signal.signal(signal.SIGTERM, handle_termination)
     try:
         with multiprocessing.Pool(nproc) as pool:
             for rv in pool.imap_unordered(
@@ -251,11 +296,15 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
     except KeyboardInterrupt:
         subprocess.run(f"echo -ne '%s'" % ('\x1bD' * len(TESTPATHS)), shell=True)
         print("\n\nAborting.\n")
-        collect_tasks(output_root)
+        signal_name = "SIGTERM" if interrupted_by["signal"] == signal.SIGTERM else "SIGINT"
+        tasks = mark_running_tasks_interrupted(output_root, signal_name)
         write_json(Path(output_root) / "metadata" / "partial-summary.json", {
-            "state": "interrupted", "interrupted_at": timestamp(), "tasks": collect_tasks(output_root),
+            "state": "interrupted", "stop_reason": signal_name,
+            "interrupted_at": timestamp(), "tasks": tasks,
         })
-        return 130
+        return 128 + interrupted_by["signal"] if interrupted_by["signal"] else 130
+    finally:
+        signal.signal(signal.SIGTERM, previous_sigterm)
 
     for bar in bars:
         bar.close()
@@ -286,12 +335,15 @@ if __name__ == "__main__":
     if logfile:
         LOGFILE = open(logfile, 'w')
 
-    # print (args)
-    if "old" in liboqs:
-        TESTPATHS = [_ for _ in TESTPATHS if "Verify" not in _]
-
     dt = time.time()
-    status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout)
+    try:
+        status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout)
+    except Exception as error:
+        write_json(Path(args.output_root) / "metadata" / "driver-error.json", {
+            "state": "harness-error", "stage": "driver", "error": str(error), "at": timestamp(),
+        })
+        print(f"Driver failure: {error}")
+        status = 1
     dt = time.time() - dt
 
     print("Wall time:", dt)

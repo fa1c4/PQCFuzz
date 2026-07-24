@@ -134,13 +134,15 @@ printf '%s stdout\\n' "$marker"
 sleep 0.2
 printf '%s end\\n' "$marker" >> fuzz-0.log
 
-mkdir -p "${PQCDF_LIBOQS_FINDINGS_DIR:?}" "${PQCDF_LIBOQS_DIAGNOSTICS_DIR:?}" "${PQCDF_LIBOQS_METADATA_DIR:?}"
+mkdir -p "${PQCDF_LIBOQS_FINDINGS_DIR:?}" "${PQCDF_LIBOQS_DIAGNOSTICS_DIR:?}" "${PQCDF_LIBOQS_METADATA_DIR:?}" "${PQCDF_LIBOQS_OUTCOMES_DIR:?}"
 printf '{"format_version":1,"baseline":"CLFuzz","module_version":"fake-module","algorithm":"%s","property_id":"fake-property","semantic_relation":"fake-relation","mutation_effective":true,"mutation_operation":"xor","mutation_before_digest":"before","mutation_after_digest":"after","replay":{"required":true,"result":"reproduced","attempts_completed":3,"reproduced_count":3,"attempt_results":["reproduced","reproduced","reproduced"]}}\\n' "$marker" \\
   > "${PQCDF_LIBOQS_FINDINGS_DIR}/finding-${marker}.json"
 printf '{"format_version":1,"baseline":"CLFuzz","module_version":"fake-module","algorithm":"%s","property_id":"fake-diagnostic"}\\n' "$marker" \\
   > "${PQCDF_LIBOQS_DIAGNOSTICS_DIR}/diagnostic-${marker}.json"
+printf '{"format_version":1,"baseline":"CLFuzz","classification":"property_passed","primitive":"kem","algorithm":"%s","property_id":"fake-property"}\\n' "$marker" \\
+  > "${PQCDF_LIBOQS_OUTCOMES_DIR}/outcome-${marker}.json"
 if [ "${FAKE_CLFUZZ_MISSING_PROPERTY:-0}" = 1 ]; then
-  printf '{"module_version":"fake-module","kem_property_ids":["fake-property","missing-property"]}\\n' > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
+  printf '{"module_version":"fake-module","enabled_kem_algorithms":["%s"],"kem_property_ids":["fake-property","missing-property"]}\\n' "$marker" > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
 else
   printf '{"module_version":"fake-module"}\\n' > "${PQCDF_LIBOQS_METADATA_DIR}/metadata-${marker}.json"
 fi
@@ -283,22 +285,94 @@ def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path)
     }
 
 
-def test_cryptotesting_task_budget_is_forwarded_to_every_afl_recipe() -> None:
+def test_cryptotesting_uses_campaign_wall_clock_without_per_task_afl_limits() -> None:
     driver = (ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs.py").read_text(encoding="utf-8")
     run_all = (
         ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs" / "run_all.py"
     ).read_text(encoding="utf-8")
+    reproduce = CRYPTOTESTING_REPRODUCE.read_text(encoding="utf-8")
     recipes = sorted((ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs").rglob("Makefile"))
+    vanilla_driver = (ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs_baseline.py").read_text(encoding="utf-8")
+    vanilla_recipes = sorted((ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "vanilla" / "liboqs").rglob("Makefile"))
 
-    assert "--task-max-time" in driver
-    assert "CRYPTO_TESTING_TASK_MAX_TIME" in run_all
+    assert "--task-max-time" not in driver
+    assert "--max-total-time" not in driver
+    assert "CRYPTO_TESTING_TASK_MAX_TIME" not in run_all
+    assert "--task-max-time" not in reproduce
+    assert "BLACKLIST=()" in driver
+    assert "BLACKLIST=()" in vanilla_driver
+    assert 'if "old" in liboqs' not in driver
+    assert 'if "old" in liboqs' not in vanilla_driver
     assert len(recipes) == 13
     for recipe in recipes:
         contents = recipe.read_text(encoding="utf-8")
-        assert "FUZZTIME?=$(CRYPTO_TESTING_TASK_MAX_TIME)" in contents
+        assert "CRYPTO_TESTING_TASK_MAX_TIME" not in contents
+        assert "setup-timeout" in contents
+        assert "touch $(FUZZOUTPUTS)/default/hangs/GenInput" not in contents
+        assert "GenInput.json" in contents
         for line in contents.splitlines():
             if "FUZZCMD=" in line:
-                assert "-V $(FUZZTIME)" in line
+                assert " -D -- " in line
+                assert " -V " not in line
+    assert len(vanilla_recipes) == 4
+    for recipe in vanilla_recipes:
+        contents = recipe.read_text(encoding="utf-8")
+        assert "AFL_EXIT_WHEN_DONE" not in contents
+        assert "AFL_EXIT_ON_TIME" not in contents
+        assert " -V " not in contents
+        assert "setup-timeout" in contents
+
+
+def test_cryptotesting_full_matrix_validation_rejects_skipped_tasks(tmp_path: Path) -> None:
+    output_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    write_json = lambda path, data: path.write_text(json.dumps(data), encoding="utf-8")
+    task_dir = output_root / "metadata" / "tasks"
+    task_dir.mkdir(parents=True)
+    write_json(task_dir / "completed.json", {"state": "completed"})
+    write_json(task_dir / "skipped.json", {"state": "skipped", "reason": "blacklist"})
+
+    result = subprocess.run(
+        [
+            sys.executable, str(ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"),
+            "--output-root", str(output_root), "--mode", "functional", "--version", "0.14.0",
+            "--reports-dir", str(reports), "--require-full-matrix",
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 1
+    assert "every available scheduled task" in result.stderr
+    summary = json.loads((output_root / "summary.json").read_text(encoding="utf-8"))
+    assert summary["full_matrix_complete"] is False
+
+
+def test_cryptotesting_manifest_keeps_setup_timeout_and_target_failure_distinct(tmp_path: Path) -> None:
+    reports = tmp_path / "reports"
+    for state, expected_status, expected_outcome in (
+        ("setup-timeout", "completed-with-coverage-gap", "coverage_incomplete"),
+        ("target-failed", "target-failed", "operation_error"),
+    ):
+        output_root = tmp_path / state
+        task_dir = output_root / "metadata" / "tasks"
+        task_dir.mkdir(parents=True)
+        (task_dir / "task.json").write_text(json.dumps({"state": state}), encoding="utf-8")
+        result = subprocess.run(
+            [
+                sys.executable, str(ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"),
+                "--output-root", str(output_root), "--mode", "functional", "--version", "0.14.0",
+                "--reports-dir", str(reports),
+            ],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+        )
+        assert result.returncode == 0, result.stderr
+        summary = json.loads((output_root / "summary.json").read_text(encoding="utf-8"))
+        assert summary["status"] == expected_status
+        assert summary["normalized_outcome"] == expected_outcome
 
 
 def test_cryptotesting_marks_running_tasks_interrupted_on_termination(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -334,6 +408,7 @@ def test_cryptotesting_dockerfile_packages_manifest_writer() -> None:
     )
 
     assert "COPY crypto_testing_manifest.py /fuzzing/crypto_testing_manifest.py" in dockerfile
+    assert "COPY crypto_testing_replay.py /fuzzing/crypto_testing_replay.py" in dockerfile
     assert "from __future__ import annotations" not in manifest_writer
 
 
@@ -1283,6 +1358,8 @@ exit 0
     assert campaign["module_version"] == "fake-module"
     assert summary["totals"] == {
         "semantic_finding_count": 2,
+        "malleability_count": 0,
+        "mismatch_count": 0,
         "operation_diagnostic_count": 3,
         "sanitizer_crash_count": 0,
         "hang_count": 0,

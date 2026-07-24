@@ -13,7 +13,6 @@ Options:
   --reports-dir PATH       Directory for generated reports (default: reports).
   --workers N|auto         Worker count, passed to the Python driver.
   --geninput-timeout SEC   Independent setup timeout (default: 10).
-  --task-max-time SEC      Maximum AFL time for each scheduled functional task.
   --version VERSION        Version recorded in the raw manifest.
   --max-total-time SEC     End the current fuzzing workload at this budget.
 EOF
@@ -37,11 +36,10 @@ fi
 
 OUTPUT_ROOT="${CRYPTO_TESTING_OUTPUT_ROOT:-}"
 REPORTS_DIR="${CRYPTO_TESTING_REPORTS_DIR:-reports}"
-WORKERS="${CRYPTO_TESTING_WORKERS:-1}"
+WORKERS="${CRYPTO_TESTING_WORKERS:-auto}"
 GENINPUT_TIMEOUT="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
 VERSION="${CRYPTO_TESTING_VERSION:-unknown}"
 MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
-TASK_MAX_TIME="${CRYPTO_TESTING_TASK_MAX_TIME:-}"
 BUDGET_EXHAUSTED=0
 MANIFEST_FINALIZATION_ATTEMPTED=0
 
@@ -51,7 +49,6 @@ while [ "$#" -gt 0 ]; do
     --reports-dir) REPORTS_DIR="$2"; shift 2 ;;
     --workers) WORKERS="$2"; shift 2 ;;
     --geninput-timeout) GENINPUT_TIMEOUT="$2"; shift 2 ;;
-    --task-max-time) TASK_MAX_TIME="$2"; shift 2 ;;
     --version) VERSION="$2"; shift 2 ;;
     --max-total-time) MAX_TOTAL_TIME="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
@@ -75,17 +72,12 @@ case "$MAX_TOTAL_TIME" in
   '') ;;
   *[!0-9]*|0) echo "--max-total-time must be a positive integer" >&2; exit 2 ;;
 esac
-case "$TASK_MAX_TIME" in
-  '') ;;
-  *[!0-9]*|0) echo "--task-max-time must be a positive integer" >&2; exit 2 ;;
-esac
 
 mkdir -p "$OUTPUT_ROOT" "$REPORTS_DIR"
 export CRYPTO_TESTING_OUTPUT_ROOT="$OUTPUT_ROOT"
 export CRYPTO_TESTING_WORKERS="$WORKERS"
 export CRYPTO_TESTING_GENINPUT_TIMEOUT="$GENINPUT_TIMEOUT"
 export CRYPTO_TESTING_VERSION="$VERSION"
-export CRYPTO_TESTING_TASK_MAX_TIME="$TASK_MAX_TIME"
 
 run_fuzz_driver() {
   if [ -n "$MAX_TOTAL_TIME" ]; then
@@ -176,23 +168,15 @@ make "$LIBRARY"
 if [ "$MODE" = "vanilla" ]; then
   run_fuzz_driver python3 fuzz_liboqs_baseline.py --liboqs "$LIBRARY" --logfile "${LIBRARY}.vanilla.log" \
     --output-root "$OUTPUT_ROOT" --workers "$WORKERS" --geninput-timeout "$GENINPUT_TIMEOUT" --version "$VERSION"
-  if [ "$BUDGET_EXHAUSTED" -eq 0 ]; then
-    python3 report_baseline.py --liboqs "$LIBRARY" --output-root "$OUTPUT_ROOT" --report-dir "$REPORTS_DIR"
-  fi
+  # The reporter is deliberately tolerant of a campaign-wall-clock stop, so
+  # keep the partial output searchable and let the manifest mark its coverage.
+  python3 report_baseline.py --liboqs "$LIBRARY" --output-root "$OUTPUT_ROOT" --report-dir "$REPORTS_DIR"
 else
-  DRIVER_BUDGET_ARGS=()
-  if [ -n "$MAX_TOTAL_TIME" ]; then
-    DRIVER_BUDGET_ARGS+=(--max-total-time "$MAX_TOTAL_TIME")
-  fi
-  if [ -n "$TASK_MAX_TIME" ]; then
-    DRIVER_BUDGET_ARGS+=(--task-max-time "$TASK_MAX_TIME")
-  fi
   run_fuzz_driver python3 fuzz_liboqs.py --liboqs "$LIBRARY" --logfile "${LIBRARY}.functional.log" \
-    --output-root "$OUTPUT_ROOT" --workers "$WORKERS" --geninput-timeout "$GENINPUT_TIMEOUT" --version "$VERSION" \
-    "${DRIVER_BUDGET_ARGS[@]}"
-  if [ "$BUDGET_EXHAUSTED" -eq 0 ]; then
-    python3 report.py --liboqs "$LIBRARY" --output-root "$OUTPUT_ROOT" --report-dir "$REPORTS_DIR"
-  fi
+    --output-root "$OUTPUT_ROOT" --workers "$WORKERS" --geninput-timeout "$GENINPUT_TIMEOUT" --version "$VERSION"
+  # report.py can classify the durable AFL trees after a campaign-wall-clock
+  # stop.  The manifest will still mark their task coverage incomplete.
+  python3 report.py --liboqs "$LIBRARY" --output-root "$OUTPUT_ROOT" --report-dir "$REPORTS_DIR"
 fi
 
 # A report is evidence only when every group it reports has retained raw input.

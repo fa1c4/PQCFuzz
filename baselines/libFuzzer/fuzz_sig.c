@@ -137,14 +137,17 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		goto cleanup;
 	}
 
+	int property_exercised = 0;
 	switch (envelope->property_id) {
 	case PQCDF_SIG_PROPERTY_ROUNDTRIP:
+		property_exercised = 1;
 		break;
 
 	case PQCDF_SIG_PROPERTY_VERIFY_SIG:
 		if (!pqcdf_mutate_copy(mutated_signature, signature, signature_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		rc = OQS_SIG_verify(sig, message, message_len, mutated_signature, signature_len, public_key);
 		if (rc == OQS_SUCCESS) {
 			pqcdf_record_finding("sig", algorithm, "sig_verify_sig", "EXPECT_DIFFERENT",
@@ -161,6 +164,7 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_message, message, message_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		rc = OQS_SIG_verify(sig, mutated_message, message_len, signature, signature_len, public_key);
 		if (rc == OQS_SUCCESS) {
 			pqcdf_record_finding("sig", algorithm, "sig_verify_m", "EXPECT_DIFFERENT",
@@ -177,6 +181,7 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_public_key, public_key, public_key_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		rc = OQS_SIG_verify(sig, message, message_len, signature, signature_len, mutated_public_key);
 		if (rc == OQS_SUCCESS) {
 			pqcdf_record_finding("sig", algorithm, "sig_verify_pk", "EXPECT_DIFFERENT",
@@ -193,6 +198,7 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_secret_key, secret_key, secret_key_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		alternate_signature_len = 0;
 		pqcdf_seed_envelope_rng(envelope, 0);
 		rc = OQS_SIG_sign(sig, alternate_signature, &alternate_signature_len, message,
@@ -211,6 +217,7 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 
 	case PQCDF_SIG_PROPERTY_KEYGEN_BADRNG:
+		property_exercised = 1;
 		pqcdf_seed_envelope_rng(envelope, 1);
 		rc = OQS_SIG_keypair(sig, alternate_public_key, alternate_secret_key);
 		if (rc != OQS_SUCCESS) {
@@ -232,6 +239,7 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 
 	case PQCDF_SIG_PROPERTY_SIGN_BADRNG:
+		property_exercised = 1;
 		alternate_signature_len = 0;
 		pqcdf_seed_envelope_rng(envelope, 1);
 		rc = OQS_SIG_sign(sig, alternate_signature, &alternate_signature_len, message,
@@ -259,6 +267,11 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 	default:
 		break;
+	}
+	if (property_exercised) {
+		pqcdf_record_property_outcome("sig", algorithm,
+			pqcdf_sig_property_name(envelope->property_id), "property_exercised",
+			envelope->raw, envelope->raw_size);
 	}
 
 cleanup:

@@ -334,6 +334,7 @@ ARTIFACT_DIR="$(resolve_path "${CAMPAIGN_ROOT}/artifacts")"
 FINDINGS_DIR="$(resolve_path "${CAMPAIGN_ROOT}/findings")"
 DIAGNOSTICS_DIR="$(resolve_path "${CAMPAIGN_ROOT}/diagnostics")"
 METADATA_DIR="$(resolve_path "${CAMPAIGN_ROOT}/metadata")"
+OUTCOMES_DIR="$(resolve_path "${CAMPAIGN_ROOT}/outcomes")"
 SUMMARY_FILE="$(resolve_path "${CAMPAIGN_ROOT}/summary.json")"
 LOG_FILE="$(resolve_path "${LOG_DIR}/${MODE}.log")"
 TIME_FILE="$(resolve_path "${METADATA_DIR}/${MODE}.time")"
@@ -344,6 +345,7 @@ require_campaign_path "artifact directory" "$ARTIFACT_DIR"
 require_campaign_path "finding directory" "$FINDINGS_DIR"
 require_campaign_path "diagnostic directory" "$DIAGNOSTICS_DIR"
 require_campaign_path "metadata directory" "$METADATA_DIR"
+require_campaign_path "outcome directory" "$OUTCOMES_DIR"
 require_campaign_path "log directory" "$LOG_DIR"
 require_campaign_path "log file" "$LOG_FILE"
 require_campaign_path "summary file" "$SUMMARY_FILE"
@@ -361,7 +363,8 @@ mkdir -p \
   "$ARTIFACT_DIR" \
   "$FINDINGS_DIR" \
   "$DIAGNOSTICS_DIR" \
-  "$METADATA_DIR"
+  "$METADATA_DIR" \
+  "$OUTCOMES_DIR"
 
 # libFuzzer's pinned flag set has no -log_path option. Its -jobs worker logs
 # are named fuzz-N.log relative to the current directory, so this directory is
@@ -373,6 +376,7 @@ ARTIFACT_DIR="$(realpath "$ARTIFACT_DIR")"
 FINDINGS_DIR="$(realpath "$FINDINGS_DIR")"
 DIAGNOSTICS_DIR="$(realpath "$DIAGNOSTICS_DIR")"
 METADATA_DIR="$(realpath "$METADATA_DIR")"
+OUTCOMES_DIR="$(realpath "$OUTCOMES_DIR")"
 LOG_FILE="$(resolve_path "${LOG_DIR}/${MODE}.log")"
 SUMMARY_FILE="$(resolve_path "${CAMPAIGN_ROOT}/summary.json")"
 TIME_FILE="$(resolve_path "${METADATA_DIR}/${MODE}.time")"
@@ -382,6 +386,7 @@ require_campaign_path "resolved crash directory" "$CRASH_DIR"
 require_campaign_path "resolved artifact directory" "$ARTIFACT_DIR"
 require_campaign_path "resolved finding directory" "$FINDINGS_DIR"
 require_campaign_path "resolved diagnostic directory" "$DIAGNOSTICS_DIR"
+require_campaign_path "resolved outcome directory" "$OUTCOMES_DIR"
 require_campaign_path "resolved log directory" "$LOG_DIR"
 require_campaign_path "resolved log file" "$LOG_FILE"
 require_campaign_path "resolved summary file" "$SUMMARY_FILE"
@@ -494,6 +499,7 @@ elif [ -x /usr/bin/time ]; then
     PQCDF_CRYPTOFUZZ_FINDINGS_DIR="$FINDINGS_DIR" \
     PQCDF_CRYPTOFUZZ_DIAGNOSTICS_DIR="$DIAGNOSTICS_DIR" \
     PQCDF_CRYPTOFUZZ_METADATA_DIR="$METADATA_DIR" \
+    PQCDF_CRYPTOFUZZ_OUTCOMES_DIR="$OUTCOMES_DIR" \
     PQCDF_CRYPTOFUZZ_LOG_FILE="$LOG_FILE" \
     PQCDF_CRYPTOFUZZ_MAX_EXEMPLARS_PER_GROUP="$MAX_EXEMPLARS_PER_GROUP" \
     PQCDF_CRYPTOFUZZ_LIBOQS_VERSION="$VERSION" \
@@ -506,6 +512,7 @@ else
     PQCDF_CRYPTOFUZZ_FINDINGS_DIR="$FINDINGS_DIR" \
     PQCDF_CRYPTOFUZZ_DIAGNOSTICS_DIR="$DIAGNOSTICS_DIR" \
     PQCDF_CRYPTOFUZZ_METADATA_DIR="$METADATA_DIR" \
+    PQCDF_CRYPTOFUZZ_OUTCOMES_DIR="$OUTCOMES_DIR" \
     PQCDF_CRYPTOFUZZ_LOG_FILE="$LOG_FILE" \
     PQCDF_CRYPTOFUZZ_MAX_EXEMPLARS_PER_GROUP="$MAX_EXEMPLARS_PER_GROUP" \
     PQCDF_CRYPTOFUZZ_LIBOQS_VERSION="$VERSION" \
@@ -536,6 +543,7 @@ CRYPTOFUZZ_ARTIFACT_DIR="$ARTIFACT_DIR" \
 CRYPTOFUZZ_FINDINGS_DIR="$FINDINGS_DIR" \
 CRYPTOFUZZ_DIAGNOSTICS_DIR="$DIAGNOSTICS_DIR" \
 CRYPTOFUZZ_METADATA_DIR="$METADATA_DIR" \
+CRYPTOFUZZ_OUTCOMES_DIR="$OUTCOMES_DIR" \
 CRYPTOFUZZ_TIME_FILE="$TIME_FILE" \
 CRYPTOFUZZ_JOBS="$JOBS" \
 CRYPTOFUZZ_WORKERS="$WORKERS" \
@@ -619,6 +627,7 @@ crash_dir = Path(os.environ["CRYPTOFUZZ_CRASH_DIR"]).resolve()
 findings_dir = Path(os.environ["CRYPTOFUZZ_FINDINGS_DIR"]).resolve()
 diagnostics_dir = Path(os.environ["CRYPTOFUZZ_DIAGNOSTICS_DIR"]).resolve()
 metadata_dir = Path(os.environ["CRYPTOFUZZ_METADATA_DIR"]).resolve()
+outcomes_dir = Path(os.environ["CRYPTOFUZZ_OUTCOMES_DIR"]).resolve()
 time_file = Path(os.environ["CRYPTOFUZZ_TIME_FILE"])
 
 semantic_findings = relative_files(campaign_root, findings_dir, lambda path: path.suffix == ".json")
@@ -635,10 +644,12 @@ worker_logs = relative_files(
     lambda path: path.name.startswith("fuzz-") and path.name.endswith(".log"),
 )
 metadata_files = relative_files(campaign_root, metadata_dir, lambda path: path.suffix == ".json")
+structured_outcomes = relative_files(campaign_root, outcomes_dir, lambda path: path.suffix == ".json")
 records = json_records(campaign_root, semantic_findings)
 diagnostic_records = json_records(campaign_root, operation_diagnostics)
+outcome_records = json_records(campaign_root, structured_outcomes)
 metadata_records = json_records(campaign_root, metadata_files)
-all_records = records + diagnostic_records
+all_records = records + diagnostic_records + outcome_records
 
 def string_values(records, keys):
     values = set()
@@ -667,6 +678,28 @@ semantic_relations = sorted(string_values(records, ("semantic_relation", "relati
 replays = [record.get("replay") for record in records if isinstance(record.get("replay"), dict)]
 replay_required_count = sum(bool(replay.get("required")) for replay in replays)
 replay_reproduced_count = sum(replay.get("result") == "reproduced" for replay in replays)
+
+def pairs_for(metadata, primitive, algorithms_key, properties_key):
+    algorithms = string_values([metadata], (algorithms_key,))
+    properties = string_values([metadata], (properties_key,))
+    return {f"{primitive}|{algorithm}|{property_id}" for algorithm in algorithms for property_id in properties}
+
+supported_pairs = set()
+for metadata in metadata_records:
+    supported_pairs |= pairs_for(metadata, "kem", "enabled_kem_algorithms", "kem_property_ids")
+    supported_pairs |= pairs_for(metadata, "sig", "enabled_sig_algorithms", "sig_property_ids")
+covered_pairs = {
+    f"{record['primitive']}|{record['algorithm']}|{record['property_id']}"
+    for record in outcome_records
+    if record.get("classification") in ("property_passed", "skipped")
+    and all(isinstance(record.get(key), str) and record.get(key) for key in ("primitive", "algorithm", "property_id"))
+}
+if not supported_pairs:
+    coverage_status = "unknown"
+    unexercised_pairs = []
+else:
+    unexercised_pairs = sorted(supported_pairs - covered_pairs)
+    coverage_status = "complete" if not unexercised_pairs else "incomplete"
 
 raw_exit_status = int(os.environ["CRYPTOFUZZ_STATUS"])
 try:
@@ -702,9 +735,14 @@ else:
         "max-total-time" if any(arg.startswith("-max_total_time=") for arg in sys.argv[1:]) else "fuzzer-completed"
     )
 
+if coverage_status == "incomplete" and outcome in ("completed", "completed-with-findings"):
+    outcome = "completed-with-coverage-gap"
+    stop_reason = "semantic-coverage-incomplete"
+
 normalized_outcome = {
     "completed": "ok",
     "completed-with-findings": "invariant_violation",
+    "completed-with-coverage-gap": "coverage_incomplete",
     "timed-out": "process_hang",
     "target-crash": "process_crash",
     "harness-error": "operation_error",
@@ -747,6 +785,11 @@ summary = {
     "operations": [value for value in os.environ["CRYPTOFUZZ_OPERATIONS"].split(",") if value],
     "algorithm_list": algorithm_list,
     "property_list": property_list,
+    "coverage_status": coverage_status,
+    "supported_pair_count": len(supported_pairs),
+    "covered_pair_count": len(covered_pairs),
+    "covered_pair_list": sorted(covered_pairs),
+    "unexercised_pair_list": unexercised_pairs,
     "campaign_root": str(campaign_root),
     "working_directory": str(log_dir),
     "resolved_working_directory": str(log_dir),
@@ -761,6 +804,7 @@ summary = {
         "findings_dir": os.environ["CRYPTOFUZZ_FINDINGS_DIR"],
         "diagnostics_dir": os.environ["CRYPTOFUZZ_DIAGNOSTICS_DIR"],
         "metadata_dir": os.environ["CRYPTOFUZZ_METADATA_DIR"],
+        "outcomes_dir": os.environ["CRYPTOFUZZ_OUTCOMES_DIR"],
         "timing_file": os.environ["CRYPTOFUZZ_TIME_FILE"],
         "summary_file": str(summary_path),
     },
@@ -779,7 +823,10 @@ summary = {
     "findings_dir": os.environ["CRYPTOFUZZ_FINDINGS_DIR"],
     "diagnostics_dir": os.environ["CRYPTOFUZZ_DIAGNOSTICS_DIR"],
     "metadata_dir": os.environ["CRYPTOFUZZ_METADATA_DIR"],
+    "outcomes_dir": os.environ["CRYPTOFUZZ_OUTCOMES_DIR"],
     "metadata_files": metadata_files,
+    "structured_outcome_count": len(structured_outcomes),
+    "structured_outcomes": structured_outcomes,
     "semantic_finding_count": len(semantic_findings),
     "structured_finding_count": len(semantic_findings),
     "semantic_findings": semantic_findings,

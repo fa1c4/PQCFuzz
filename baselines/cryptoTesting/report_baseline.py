@@ -31,13 +31,17 @@ def main(mutator, liboqs, report_fn="crash_report", output_root=None):
             alg_dir = os.path.join(aggr_dir, alg_aggr)
             if not os.path.isdir(alg_dir):
                 continue
-            with open(os.path.join(alg_dir, 'alg.txt')) as f:
+            alg_name_path = os.path.join(alg_dir, 'alg.txt')
+            if not os.path.isfile(alg_name_path):
+                print(f"{alg_name_path} doesn't exist, skipping unfinished task")
+                continue
+            with open(alg_name_path) as f:
                 alg_name = f.readline()
             if alg_name == "DEFAULT":
                 continue
             print(f"Including {alg_dir} {alg_name} in report")
             hangs_dir = os.path.join(alg_dir, 'fuzzoutputs', 'default', 'hangs')
-            for file in os.listdir(hangs_dir):
+            for file in sorted(os.listdir(hangs_dir)) if os.path.isdir(hangs_dir) else []:
                 filename = os.fsdecode(file)
                 if filename == "README.txt":
                     continue
@@ -58,7 +62,7 @@ def main(mutator, liboqs, report_fn="crash_report", output_root=None):
                 no_entry_in_path = False
 
             crash_dir = os.path.join(alg_dir, 'fuzzoutputs', 'default', 'crashes')
-            for file in os.listdir(crash_dir):
+            for file in sorted(os.listdir(crash_dir)) if os.path.isdir(crash_dir) else []:
                 filename = os.fsdecode(file)
                 if filename == "README.txt":
                     continue

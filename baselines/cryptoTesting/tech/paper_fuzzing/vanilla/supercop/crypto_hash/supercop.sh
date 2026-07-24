@@ -220,8 +220,6 @@ fuzz_implementation() {
         rm -f "$impl/supercop.geninput.log"
         export AFL_SKIP_CPUFREQ=1
         export AFL_DISABLE_TRIM=1
-        export AFL_EXIT_WHEN_DONE=1
-        export AFL_EXIT_ON_TIME=1800
         export AFL_DEBUG_CHILD=0
         export AFL_NO_UI=0
         for bytes in `seq $min $max`;

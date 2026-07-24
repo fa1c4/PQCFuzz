@@ -19,11 +19,14 @@ struct Counters {
   uint64_t oracle_invocations = 0;
   uint64_t valid_setup = 0;
   uint64_t relation_evaluable = 0;
+  uint64_t not_evaluable = 0;
   uint64_t intervention_effective = 0;
   uint64_t rng_intervention_observed = 0;
   uint64_t skipped = 0;
   uint64_t unsupported = 0;
   uint64_t finding_records = 0;
+  std::map<std::string, uint64_t> skipped_subtest_reasons;
+  std::map<std::string, uint64_t> non_evaluable_reasons;
 };
 
 struct CoverageFile {
@@ -68,13 +71,32 @@ std::string JsonEscape(const std::string &value) {
   return out.str();
 }
 
+void WriteReasonCounts(std::ostringstream *out, const std::map<std::string, uint64_t> &reasons) {
+  *out << '{';
+  bool first = true;
+  for (const auto &item : reasons) {
+    if (!first) {
+      *out << ',';
+    }
+    first = false;
+    *out << '"' << JsonEscape(item.first) << "\":" << item.second;
+  }
+  *out << '}';
+}
+
 void WriteCounters(std::ostringstream *out, const Counters &c) {
   *out << "{\"inputs\":" << c.inputs << ",\"parse_rejected\":" << c.parse_rejected << ",\"parsed\":" << c.parsed
        << ",\"algorithm_rejected\":" << c.algorithm_rejected << ",\"routing_rejected\":" << c.routing_rejected
        << ",\"oracle_invocations\":" << c.oracle_invocations << ",\"valid_setup\":" << c.valid_setup
-       << ",\"relation_evaluable\":" << c.relation_evaluable << ",\"intervention_effective\":" << c.intervention_effective
+       << ",\"relation_evaluable\":" << c.relation_evaluable << ",\"not_evaluable\":" << c.not_evaluable
+       << ",\"intervention_effective\":" << c.intervention_effective
        << ",\"rng_intervention_observed\":" << c.rng_intervention_observed << ",\"skipped\":" << c.skipped
-       << ",\"unsupported\":" << c.unsupported << ",\"finding_records\":" << c.finding_records << "}";
+       << ",\"unsupported\":" << c.unsupported << ",\"finding_records\":" << c.finding_records
+       << ",\"skipped_subtest_reasons\":";
+  WriteReasonCounts(out, c.skipped_subtest_reasons);
+  *out << ",\"non_evaluable_reasons\":";
+  WriteReasonCounts(out, c.non_evaluable_reasons);
+  *out << '}';
 }
 
 void FlushAll() {
@@ -87,7 +109,7 @@ void FlushAll() {
       continue;
     }
     std::ostringstream out;
-    out << "{\n  \"schema_version\": 1,\n  \"totals\": ";
+    out << "{\n  \"schema_version\": 2,\n  \"totals\": ";
     WriteCounters(&out, item.second.total);
     out << ",\n  \"oracles\": {";
     bool first = true;
@@ -141,6 +163,18 @@ bool HasSkippedSubtest(const KEMOracleTrace &trace) {
   return false;
 }
 
+std::string TraceReason(const KEMOracleTrace &trace) {
+  if (!trace.diagnostic_event.empty()) {
+    return trace.diagnostic_event;
+  }
+  for (const auto &subtest : trace.subtests) {
+    if (subtest.skipped && !subtest.note.empty()) {
+      return subtest.note;
+    }
+  }
+  return "unspecified";
+}
+
 bool RngInterventionObserved(const KEMOracleTrace &trace) {
   for (const auto &rng : trace.rng_interventions) {
     if (rng.tapes_distinct && rng.baseline_override_active && rng.mutated_override_active &&
@@ -158,6 +192,9 @@ void RecordTraceCounters(Counters *c, const KEMOracleTrace &trace) {
   }
   if (trace.relation_evaluable) {
     ++c->relation_evaluable;
+  } else {
+    ++c->not_evaluable;
+    ++c->non_evaluable_reasons[TraceReason(trace)];
   }
   if (trace.intervention_effective) {
     ++c->intervention_effective;
@@ -167,6 +204,11 @@ void RecordTraceCounters(Counters *c, const KEMOracleTrace &trace) {
   }
   if (HasSkippedSubtest(trace)) {
     ++c->skipped;
+    for (const auto &subtest : trace.subtests) {
+      if (subtest.skipped) {
+        ++c->skipped_subtest_reasons[subtest.note.empty() ? "unspecified" : subtest.note];
+      }
+    }
   }
   if (trace.finding_class == "unsupported") {
     ++c->unsupported;

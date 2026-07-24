@@ -577,6 +577,50 @@ static void pqcdf_record_operation_diagnostic(const char *primitive, const char 
 	(void)fclose(file);
 }
 
+static void pqcdf_record_property_outcome(const char *primitive, const char *algorithm,
+	const char *property_id, const char *classification, const uint8_t *input,
+	size_t input_size) {
+	if (!pqcdf_is_semantic_profile()) {
+		return;
+	}
+	const char *directory = getenv("PQCDF_LIBFUZZER_OUTCOMES_DIR");
+	if (directory == NULL || !pqcdf_make_directories(directory)) {
+		return;
+	}
+	char group_source[1024];
+	const int group_length = snprintf(group_source, sizeof(group_source), "%s|%s|%s|%s",
+		primitive, algorithm, property_id, classification);
+	if (group_length < 0 || group_length >= (int)sizeof(group_source)) {
+		return;
+	}
+	char group_digest[33];
+	char input_digest[33];
+	pqcdf_digest_hex((const uint8_t *)group_source, (size_t)group_length, group_digest);
+	pqcdf_digest_hex(input, input_size, input_digest);
+	char path[PATH_MAX];
+	if (snprintf(path, sizeof(path), "%s/%s.json", directory, group_digest) >= (int)sizeof(path)) {
+		return;
+	}
+	FILE *file = NULL;
+	if (!pqcdf_open_unique_json(path, &file)) {
+		return;
+	}
+	fputs("{\n  \"format_version\": 1,\n  \"baseline\": \"libFuzzer\",\n  \"classification\": ", file);
+	pqcdf_json_string(file, classification);
+	fputs(",\n  \"primitive\": ", file);
+	pqcdf_json_string(file, primitive);
+	fputs(",\n  \"algorithm\": ", file);
+	pqcdf_json_string(file, algorithm);
+	fputs(",\n  \"property_id\": ", file);
+	pqcdf_json_string(file, property_id);
+	fputs(",\n  \"input_digest\": ", file);
+	pqcdf_json_string(file, input_digest);
+	fputs("\n}\n", file);
+	if (fclose(file) != 0) {
+		(void)unlink(path);
+	}
+}
+
 static void pqcdf_write_metadata(const char *primitive, size_t algorithm_count,
 	pqcdf_algorithm_name_fn algorithm_name, const char *const *property_names,
 	size_t property_count) {

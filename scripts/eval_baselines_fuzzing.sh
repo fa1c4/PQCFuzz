@@ -115,7 +115,7 @@ print_campaign_commands() {
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline run --version $version --mode full --max-total-time $seconds"
       ;;
     cryptoTesting)
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=1 scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers 1 --max-total-time $seconds --skip-core-pattern-check"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=auto scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers auto --max-total-time $seconds --skip-core-pattern-check"
       ;;
     *)
       die "unknown baseline '$baseline'"
@@ -574,7 +574,7 @@ except (OSError, json.JSONDecodeError):
     document = {}
 
 status = document.get("status") if isinstance(document, dict) else None
-print(status if status in {"completed", "completed-at-budget-incomplete", "timed-out-partial", "harness-error"} else "unknown")
+print(status if status in {"completed", "completed-with-findings", "completed-at-budget-incomplete", "timed-out-partial", "harness-error"} else "unknown")
 PY
 }
 
@@ -658,8 +658,8 @@ case "$BASELINE" in
   cryptoTesting)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    echo "[eval] command: CRYPTO_TESTING_WORKERS=1 $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers 1 --max-total-time $FUZZING_SECONDS --skip-core-pattern-check"
-    CRYPTO_TESTING_WORKERS=1 "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers 1 --max-total-time "$FUZZING_SECONDS" --skip-core-pattern-check
+    echo "[eval] command: CRYPTO_TESTING_WORKERS=auto $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers auto --max-total-time $FUZZING_SECONDS --skip-core-pattern-check"
+    CRYPTO_TESTING_WORKERS=auto "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers auto --max-total-time "$FUZZING_SECONDS" --skip-core-pattern-check
     FUZZ_STATUS="$?"
     ;;
 esac
@@ -861,6 +861,8 @@ def summary_metrics(document):
             ("semantic_finding_count", "structured_finding_count", "finding_count"),
             ("semantic_findings", "structured_findings", "findings"),
         ),
+        "malleability_count": evidence_count(document, ("malleability_count",), ("malleability",)),
+        "mismatch_count": evidence_count(document, ("mismatch_count",), ("mismatches",)),
         "operation_diagnostic_count": evidence_count(
             document,
             ("operation_diagnostic_count", "diagnostic_count"),
@@ -916,6 +918,8 @@ for campaign in campaigns:
             "target": parsed.get("target") if isinstance(parsed, dict) else None,
             "mode": parsed.get("mode") if isinstance(parsed, dict) else None,
             "semantic_finding_count": parsed_metrics["semantic_finding_count"],
+            "malleability_count": parsed_metrics["malleability_count"],
+            "mismatch_count": parsed_metrics["mismatch_count"],
             "operation_diagnostic_count": parsed_metrics["operation_diagnostic_count"],
             "sanitizer_crash_count": parsed_metrics["sanitizer_crash_count"],
             "hang_count": parsed_metrics["hang_count"],
@@ -970,6 +974,7 @@ for campaign in campaigns:
     if aggregate_status != 0:
         overall_status = 1
 
+    is_crypto_testing = baseline == "cryptoTesting"
     row = {
         "campaign": campaign["campaign"],
         "baseline": baseline,
@@ -999,12 +1004,14 @@ for campaign in campaigns:
         "normalized_outcome": metrics["normalized_outcome"],
         "stop_reason": metrics["stop_reason"],
         "semantic_finding_count": metrics["semantic_finding_count"],
+        "malleability_count": metrics["malleability_count"],
+        "mismatch_count": metrics["mismatch_count"],
         "operation_diagnostic_count": metrics["operation_diagnostic_count"],
-        "sanitizer_crash_count": max(
+        "sanitizer_crash_count": metrics["sanitizer_crash_count"] if is_crypto_testing else max(
             metrics["sanitizer_crash_count"],
             counts["crash"] + counts["leak"] + counts["oom"],
         ),
-        "sanitizer_artifact_count": max(
+        "sanitizer_artifact_count": metrics["sanitizer_artifact_count"] if is_crypto_testing else max(
             metrics["sanitizer_artifact_count"],
             counts["crash"] + counts["leak"] + counts["oom"] + counts["timeout"],
         ),
@@ -1032,7 +1039,7 @@ for campaign in campaigns:
         "build_retained": manifest.get("build_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "corpus_retained": manifest.get("corpus_retained") if isinstance(manifest, dict) else row_result_save_mode == "all",
         "retained_artifact_counts": retained_counts,
-        "hang_count": max(
+        "hang_count": metrics["hang_count"] if is_crypto_testing else max(
             metrics["hang_count"],
             counts["hang"],
             counts["timeout"],
@@ -1043,6 +1050,8 @@ for campaign in campaigns:
 
 totals = {
     "semantic_finding_count": sum(row["semantic_finding_count"] for row in rows),
+    "malleability_count": sum(row["malleability_count"] for row in rows),
+    "mismatch_count": sum(row["mismatch_count"] for row in rows),
     "operation_diagnostic_count": sum(row["operation_diagnostic_count"] for row in rows),
     "sanitizer_crash_count": sum(row["sanitizer_crash_count"] for row in rows),
     "hang_count": sum(row["hang_count"] for row in rows),
@@ -1103,6 +1112,8 @@ columns = [
     "normalized_outcome",
     "stop_reason",
     "semantic_finding_count",
+    "malleability_count",
+    "mismatch_count",
     "operation_diagnostic_count",
     "sanitizer_crash_count",
     "sanitizer_artifact_count",

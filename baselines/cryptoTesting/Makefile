@@ -12,11 +12,11 @@ endif
 ifneq ("$(wildcard ./aflpp/afl-gcc-fast)","")
     AFLGCC=${current_dir}/aflpp/afl-gcc-fast
 else ifneq ("$(wildcard ./aflpp/afl-gcc)","")
-    AFLCC=${current_dir}/aflpp/afl-gcc
+    AFLGCC=${current_dir}/aflpp/afl-gcc
 else ifneq (, $(shell which afl-gcc-fast))
-    AFLCC=afl-gcc-fast
+    AFLGCC=afl-gcc-fast
 else ifneq (, $(shell which afl-gcc))
-    AFLCC=afl-gcc
+    AFLGCC=afl-gcc
 endif
 
 common:

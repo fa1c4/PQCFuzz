@@ -704,6 +704,12 @@ def test_cryptotesting_compaction_retains_mounted_afl_output_without_flattening(
             "version": "0.14.0",
             "tasks_terminal": True,
             "task_states": {"completed": 1, "setup-timeout": 1},
+            "semantic_finding_count": 3,
+            "malleability_count": 2,
+            "mismatch_count": 1,
+            "sanitizer_crash_count": 4,
+            "hang_count": 5,
+            "operation_diagnostic_count": 6,
             "reported_groups": 0,
             "groups_with_reproducer": 0,
             "groups_replayed": 0,
@@ -757,6 +763,10 @@ def test_cryptotesting_compaction_retains_mounted_afl_output_without_flattening(
     assert summary["target"] == "ches_liboqs"
     assert summary["label"] == "cryptoTesting-functional"
     assert summary["compacted"] is True
+    assert summary["malleability_count"] == 2
+    assert summary["mismatch_count"] == 1
+    assert summary["sanitizer_crash_count"] == 4
+    assert summary["hang_count"] == 5
 
 
 def test_cryptotesting_compaction_rejects_report_group_without_raw_reproducer(tmp_path: Path) -> None:
@@ -837,6 +847,51 @@ def test_cryptotesting_manifest_passes_a_string_path_to_sqlite(
 
     assert received_paths == [str(database)]
     assert document["reported_groups"] == 1
+
+
+def test_cryptotesting_report_database_normalizes_functional_findings(tmp_path: Path) -> None:
+    raw_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    crash = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "crashes" / "id:000000"
+    hang = raw_root / "afl" / "KEM" / "Decaps" / "c" / "0" / "fuzzoutputs" / "default" / "hangs" / "GenInput"
+    touch(crash, "crash")
+    touch(hang, "hang")
+    touch(crash.parents[3] / "alg.txt", "ML-KEM-512")
+    write_json(raw_root / "metadata" / "tasks.json", [{"state": "completed"}])
+    reports.mkdir()
+    with sqlite3.connect(str(reports / "report.db")) as connection:
+        connection.execute(
+            "CREATE TABLE crashes(test TEXT, name TEXT, error TEXT, expected TEXT, gotten TEXT)"
+        )
+        connection.executemany(
+            "INSERT INTO crashes VALUES (?, ?, ?, ?, ?)",
+            [
+                ("KEM/Decaps/c", "ML-KEM-512", None, "unequal", "equal"),
+                ("KEM/Decaps/c", "ML-KEM-512", None, "equal", "unequal buffers"),
+                ("KEM/Decaps/c", "ML-KEM-512", "ERROR: AddressSanitizer: heap-buffer-overflow", None, None),
+                ("KEM/Decaps/c", "ML-KEM-512", "hang", None, None),
+            ],
+        )
+
+    result = subprocess.run(
+        [
+            sys.executable, str(CRYPTOTESTING_MANIFEST), "--output-root", str(raw_root),
+            "--mode", "functional", "--version", "0.14.0", "--reports-dir", str(reports),
+            "--require-report-evidence", "--require-full-matrix",
+        ],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0
+    summary = json.loads((raw_root / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "completed-with-findings"
+    assert summary["malleability_count"] == 1
+    assert summary["mismatch_count"] == 1
+    assert summary["semantic_finding_count"] == 2
+    assert summary["sanitizer_crash_count"] == 1
+    assert summary["hang_count"] == 1
 
 
 def test_all_mode_leaves_tree_untouched(tmp_path: Path) -> None:

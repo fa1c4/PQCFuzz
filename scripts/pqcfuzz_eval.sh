@@ -30,6 +30,8 @@ Options:
                                 Finding artifact retention. Default: grouped.
   --max-finding-exemplars-per-group N
                                 Replayable exemplars kept per finding group. Default: 1.
+  --preflight-only              Build each campaign and validate every comparable target's
+                                seeded oracle corpus without starting a fuzzing campaign.
   --base-image IMAGE            Docker base image. Default: ubuntu:22.04.
   --dry-run                     Print campaigns and commands without starting tmux.
   -h, --help                    Show this help.
@@ -217,8 +219,13 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: distribute the ${seconds}s campaign budget across active targets"
   if [ "$version" = "0.14.0" ]; then
     echo "docker run pqcfuzz-eval: schedule 6 active canonical targets"
+  elif [ "$version" = "0.4.0" ]; then
+    echo "docker run pqcfuzz-eval: schedule 2 canonical ML-KEM targets; record Kyber512 and historical ML-DSA as not applicable"
   else
-    echo "docker run pqcfuzz-eval: schedule 3 ML-KEM targets; record historical ML-DSA as unsupported"
+    echo "docker run pqcfuzz-eval: schedule 3 canonical ML-KEM targets; record historical ML-DSA as not applicable"
+  fi
+  if [ "$PREFLIGHT_ONLY" -eq 1 ]; then
+    echo "docker run pqcfuzz-eval: preflight-only; execute each comparable target's complete seeded oracle corpus"
   fi
   echo "campaign fuzzing budget: ${seconds}s"
 }
@@ -294,6 +301,7 @@ write_launcher() {
     printf 'RSS_MB=%q\n' "$RSS_MB"
     printf 'FINDING_SAVE_MODE=%q\n' "$FINDING_SAVE_MODE"
     printf 'MAX_FINDING_EXEMPLARS_PER_GROUP=%q\n\n' "$MAX_FINDING_EXEMPLARS_PER_GROUP"
+    printf 'PREFLIGHT_ONLY=%q\n\n' "$PREFLIGHT_ONLY"
     cat <<'EOF'
 if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" = "1" ]; then
   WORKSPACE_ROOT_ABS="${ROOT_DIR}/${WORKSPACE_ROOT_REL}"
@@ -338,6 +346,7 @@ SANITIZERS="${SANITIZERS:-address,undefined}"
 LEAK_CHECK="${LEAK_CHECK:-auto}"
 INPUT_TIMEOUT_SECONDS="${INPUT_TIMEOUT_SECONDS:-30}"
 RSS_MB="${RSS_MB:-2048}"
+PREFLIGHT_ONLY="${PREFLIGHT_ONLY:-0}"
 SKIPPED_FAMILIES_JSON='["SLH-DSA"]'
 
 has_sanitizer() {
@@ -406,6 +415,7 @@ write_status() {
   EVAL_TARGET_RUNTIME="$TARGET_RUNTIME" \
   EVAL_SANITIZERS="$SANITIZERS" \
   EVAL_LEAK_CHECK="$LEAK_CHECK" \
+  EVAL_PREFLIGHT_ONLY="$PREFLIGHT_ONLY" \
   EVAL_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
 import json
@@ -463,6 +473,7 @@ doc.update({
     "target_runtime": os.environ["EVAL_TARGET_RUNTIME"],
     "sanitizers": os.environ["EVAL_SANITIZERS"],
     "leak_check": os.environ["EVAL_LEAK_CHECK"],
+    "preflight_only": os.environ["EVAL_PREFLIGHT_ONLY"] == "1",
     "skipped_families": json.loads(os.environ["EVAL_SKIPPED_FAMILIES_JSON"]),
 })
 if os.environ["EVAL_ENDED_AT"]:
@@ -1033,6 +1044,7 @@ write_run_summary() {
   local algorithm_enum="$9"
   local oracle_enum="${10}"
   local result_dir="${11}"
+  local preflight_coverage="${12}"
 
   RUN_SUMMARY_FILE="$summary_file" \
   RUN_TARGET="$target" \
@@ -1046,7 +1058,8 @@ write_run_summary() {
   RUN_ALGORITHM_ENUM="$algorithm_enum" \
   RUN_ORACLE_ENUM="$oracle_enum" \
   RUN_ORACLE_SPECS="$(oracle_specs_for_primitive "$(target_metadata "$target" | cut -f1)")" \
-  RUN_ORACLE_COVERAGE_FILE="${result_dir}/oracle_coverage.json" \
+  RUN_PREFLIGHT_ORACLE_COVERAGE_FILE="$preflight_coverage" \
+  RUN_FUZZ_ORACLE_COVERAGE_FILE="${result_dir}/oracle_coverage.json" \
   RUN_RELATION_MODE="$RELATION_MODE" \
   RUN_SANITIZERS="$SANITIZERS" \
   RUN_LEAK_CHECK="$LEAK_CHECK" \
@@ -1076,18 +1089,29 @@ for finding_path in sorted(result_dir.glob("sanitizer_*/finding.json")):
     })
 status = int(os.environ["RUN_STATUS"])
 has_sanitizer_findings = bool(sanitizer_findings)
-coverage_path = Path(os.environ["RUN_ORACLE_COVERAGE_FILE"])
-try:
-    oracle_coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
-except Exception:
-    oracle_coverage = {"schema_version": 1, "totals": {}, "oracles": {}}
+
+def load_coverage(path_value: str):
+    path = Path(path_value)
+    try:
+        return json.loads(path.read_text(encoding="utf-8")), True
+    except Exception:
+        return {"schema_version": 1, "totals": {}, "oracles": {}}, False
+
+preflight_coverage, preflight_coverage_present = load_coverage(
+    os.environ["RUN_PREFLIGHT_ORACLE_COVERAGE_FILE"]
+)
+fuzz_coverage, fuzz_coverage_present = load_coverage(
+    os.environ["RUN_FUZZ_ORACLE_COVERAGE_FILE"]
+)
 scheduled_oracles = []
 for item in os.environ["RUN_ORACLE_SPECS"].splitlines():
     if not item:
         continue
     enum, name = item.split(":", 1)
     scheduled_oracles.append({"enum": int(enum), "oracle_id": name})
-observed_oracles = oracle_coverage.get("oracles", {}) if isinstance(oracle_coverage, dict) else {}
+observed_oracles = (
+    preflight_coverage.get("oracles", {}) if isinstance(preflight_coverage, dict) else {}
+)
 uncovered_oracles = []
 for item in scheduled_oracles:
     counters = observed_oracles.get(item["oracle_id"], {})
@@ -1095,6 +1119,12 @@ for item in scheduled_oracles:
     if (any(int(counters.get(field, 0)) < 1 for field in required) or
             int(counters.get("unsupported", 0)) > 0 or int(counters.get("skipped", 0)) > 0):
         uncovered_oracles.append(item["oracle_id"])
+if not preflight_coverage_present:
+    oracle_coverage_state = "not-run"
+elif uncovered_oracles:
+    oracle_coverage_state = "failed"
+else:
+    oracle_coverage_state = "passed"
 doc = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "target": os.environ["RUN_TARGET"],
@@ -1107,8 +1137,12 @@ doc = {
     "algorithm_coverage": [int(os.environ["RUN_ALGORITHM_ENUM"])],
     "seed_oracle_enum": int(os.environ["RUN_ORACLE_ENUM"]),
     "scheduled_oracles": scheduled_oracles,
-    "oracle_coverage": oracle_coverage,
-    "oracle_coverage_complete": not uncovered_oracles,
+    "preflight_oracle_coverage": preflight_coverage,
+    "fuzz_oracle_coverage": fuzz_coverage,
+    "fuzz_oracle_coverage_present": fuzz_coverage_present,
+    "oracle_coverage": fuzz_coverage,
+    "oracle_coverage_state": oracle_coverage_state,
+    "oracle_coverage_complete": oracle_coverage_state == "passed",
     "uncovered_oracles": uncovered_oracles,
     "stop_reason": "sanitizer-report" if has_sanitizer_findings else ("max_total_time" if status == 0 else "process_exit"),
     "state": "completed-with-findings" if has_sanitizer_findings else ("completed" if status == 0 else ("timed-out" if status == 124 else "harness-error")),
@@ -1140,6 +1174,115 @@ target_metadata() {
     mldsa87) printf 'sig\tML-DSA-87\n' ;;
     *) return 1 ;;
   esac
+}
+
+target_capability_state() {
+  case "${VERSION}:$1" in
+    0.4.0:mlkem512|0.4.0:mldsa44|0.4.0:mldsa65|0.4.0:mldsa87|0.8.0:mldsa44|0.8.0:mldsa65|0.8.0:mldsa87)
+      printf '%s\n' 'not-applicable'
+      ;;
+    *)
+      printf '%s\n' 'comparable'
+      ;;
+  esac
+}
+
+target_skip_reason() {
+  case "${VERSION}:$1" in
+    0.4.0:mlkem512)
+      printf '%s\n' 'legacy Kyber512 in liboqs 0.4.0 has a 736-byte ciphertext and is not comparable with canonical ML-KEM-512 (768 bytes)'
+      ;;
+    0.4.0:mldsa44|0.4.0:mldsa65|0.4.0:mldsa87|0.8.0:mldsa44|0.8.0:mldsa65|0.8.0:mldsa87)
+      printf '%s\n' "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
+      ;;
+    *)
+      printf '%s\n' 'target is not applicable to this liboqs capability profile'
+      ;;
+  esac
+}
+
+write_capability_manifest() {
+  local manifest_file="${WORKSPACE_ROOT_ABS}/capabilities.json"
+  CAPABILITY_MANIFEST_FILE="$manifest_file" CAPABILITY_VERSION="$VERSION" python3 - <<'PY'
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+version = os.environ["CAPABILITY_VERSION"]
+canonical_layouts = {
+    "mlkem512": {"public_key": 800, "secret_key": 1632, "ciphertext": 768, "shared_secret": 32},
+    "mlkem768": {"public_key": 1184, "secret_key": 2400, "ciphertext": 1088, "shared_secret": 32},
+    "mlkem1024": {"public_key": 1568, "secret_key": 3168, "ciphertext": 1568, "shared_secret": 32},
+    "mldsa44": {"public_key": 1312, "secret_key": 2560, "signature": 2420},
+    "mldsa65": {"public_key": 1952, "secret_key": 4032, "signature": 3309},
+    "mldsa87": {"public_key": 2592, "secret_key": 4896, "signature": 4627},
+}
+algorithms = {
+    "mlkem512": "ML-KEM-512", "mlkem768": "ML-KEM-768", "mlkem1024": "ML-KEM-1024",
+    "mldsa44": "ML-DSA-44", "mldsa65": "ML-DSA-65", "mldsa87": "ML-DSA-87",
+}
+targets = []
+for target, algorithm in algorithms.items():
+    comparable = True
+    reason = None
+    observed_layout = None
+    if version == "0.4.0" and target == "mlkem512":
+        comparable = False
+        reason = "legacy Kyber512 ciphertext length is 736 bytes; canonical ML-KEM-512 requires 768 bytes"
+        observed_layout = {"public_key": 800, "secret_key": 1632, "ciphertext": 736, "shared_secret": 32}
+    elif version != "0.14.0" and target.startswith("mldsa"):
+        comparable = False
+        reason = "historical Dilithium parameter lengths are not the canonical FIPS ML-DSA lengths"
+    targets.append({
+        "target": target,
+        "algorithm": algorithm,
+        "state": "comparable" if comparable else "not-applicable",
+        "comparable": comparable,
+        "reason": reason,
+        "canonical_layout": canonical_layouts[target],
+        "observed_layout": observed_layout,
+        "preflight_state": "pending" if comparable else "not-applicable",
+    })
+
+doc = {
+    "schema_version": 1,
+    "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "version": version,
+    "targets": targets,
+}
+path = Path(os.environ["CAPABILITY_MANIFEST_FILE"])
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
+  printf '%s\n' "$manifest_file"
+}
+
+record_target_preflight() {
+  local target="$1" state="$2" detail="${3:-}"
+  [ -n "${CAPABILITY_MANIFEST:-}" ] || return 0
+  CAPABILITY_MANIFEST_FILE="$CAPABILITY_MANIFEST" CAPABILITY_TARGET="$target" \
+  CAPABILITY_PREFLIGHT_STATE="$state" CAPABILITY_PREFLIGHT_DETAIL="$detail" python3 - <<'PY'
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+path = Path(os.environ["CAPABILITY_MANIFEST_FILE"])
+try:
+    doc = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    raise SystemExit("cannot update missing capability manifest")
+for target in doc.get("targets", []):
+    if target.get("target") == os.environ["CAPABILITY_TARGET"]:
+        target["preflight_state"] = os.environ["CAPABILITY_PREFLIGHT_STATE"]
+        target["preflight_detail"] = os.environ["CAPABILITY_PREFLIGHT_DETAIL"] or None
+        break
+else:
+    raise SystemExit("target is missing from capability manifest")
+doc["updated_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+PY
 }
 
 collect_sanitizer_findings() {
@@ -1284,6 +1427,11 @@ doc = {
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
     "skipped": True,
     "skip_reason": os.environ["RUN_SKIP_REASON"],
+    "oracle_coverage_state": "not-applicable",
+    "oracle_coverage_complete": None,
+    "scheduled_oracles": [],
+    "preflight_oracle_coverage": {"schema_version": 1, "totals": {}, "oracles": {}},
+    "fuzz_oracle_coverage": {"schema_version": 1, "totals": {}, "oracles": {}},
 }
 with open(path, "w", encoding="utf-8") as f:
     json.dump(doc, f, indent=2, sort_keys=True)
@@ -1459,6 +1607,10 @@ build_pqcfuzz() {
   # can no longer select (or relabel) an adapter at runtime.
   build_target() {
     local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" algorithm_enum="$6" oracle_specs config_file right_implementation
+    if [ "$(target_capability_state "$job")" != "comparable" ]; then
+      echo "[pqcfuzz-eval] not building non-comparable target ${job}: $(target_skip_reason "$job")"
+      return 0
+    fi
     oracle_specs="$(oracle_specs_for_primitive "$primitive" | cut -d: -f1 | paste -sd, -)"
     case "$job" in
       mlkem512) right_implementation="selfref_mlkem512_via_liboqs" ;;
@@ -1553,15 +1705,17 @@ run_fuzzer() {
   fi
   if [ "$preflight_status" -ne 0 ] || ! verify_oracle_coverage "$preflight_coverage" "$primitive"; then
     echo "oracle preflight failed for ${target}" >&2
-    write_run_summary "$summary_file" "$target" 70 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+    record_target_preflight "$target" "failed" "seeded oracle corpus did not satisfy the preflight contract"
+    write_run_summary "$summary_file" "$target" 70 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir" "$preflight_coverage"
     return 70
   fi
+  record_target_preflight "$target" "passed" "every scheduled oracle produced a valid, evaluable, effective observation"
 
   # This allocation is part of the campaign-wide fuzzing budget.  A very
   # small requested budget can legitimately leave later targets with no fuzz
   # time; they were nevertheless preflighted above so coverage is explicit.
   if [ "$seconds" -le 0 ]; then
-    write_run_summary "$summary_file" "$target" 0 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+    write_run_summary "$summary_file" "$target" 0 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir" "$preflight_coverage"
     return 0
   fi
 
@@ -1579,7 +1733,7 @@ run_fuzzer() {
   sanitizer_summary="${run_root}/fuzz-sanitizer-findings.json"
   collect_sanitizer_findings "$target" "fuzz" "$log_file" "$result_dir" "$seed_file" "$binary" "$sanitizer_summary" || return $?
   write_replay_manifest "${run_root}/replay_manifest.json" "$target" "$result_dir"
-  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir"
+  write_run_summary "$summary_file" "$target" "$status" "$seconds" "$binary" "$log_file" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir" "$preflight_coverage"
   if [ "$SANITIZER_FINDING_COUNT" -gt 0 ]; then
     return 0
   fi
@@ -1761,6 +1915,10 @@ if [ "$PQCFUZZ_BUILD_STATUS" -ne 0 ]; then
   finish_campaign "build-failed" "$PQCFUZZ_BUILD_STATUS" "PQCFuzz target compilation failed"
 fi
 
+write_status "capability-manifest" "running"
+CAPABILITY_MANIFEST="$(write_capability_manifest)"
+echo "[pqcfuzz-eval] capability manifest: $CAPABILITY_MANIFEST"
+
 KEM_ORACLE_ENUM=1
 SIG_ORACLE_ENUM=5
 if [ "$ORACLE_SUITE" = "metamorphic" ]; then
@@ -1769,13 +1927,13 @@ if [ "$ORACLE_SUITE" = "metamorphic" ]; then
 fi
 
 active_target_count() {
-  if [ "$VERSION" = "0.14.0" ]; then
-    printf '%s\n' 6
-  else
-    # ML-DSA uses FIPS canonical parameter sizes.  Those do not match the
-    # historical Dilithium APIs, so only ML-KEM is active for these versions.
-    printf '%s\n' 3
-  fi
+  local target count=0
+  for target in mlkem512 mlkem768 mlkem1024 mldsa44 mldsa65 mldsa87; do
+    if [ "$(target_capability_state "$target")" = "comparable" ]; then
+      count=$((count + 1))
+    fi
+  done
+  printf '%s\n' "$count"
 }
 
 target_budget_seconds() {
@@ -1795,23 +1953,37 @@ run_mldsa_empty_context_regression || finish_campaign "harness-error" "$?" "ML-D
 
 KEM_STATUS=0
 SIG_STATUS=0
-for job_spec in "mlkem512:1:0" "mlkem768:2:1" "mlkem1024:3:2"; do
-  IFS=: read -r job enum budget_ordinal <<<"$job_spec"
-  target_seconds="$(target_budget_seconds "$budget_ordinal")"
+kem_budget_ordinal=0
+for job_spec in "mlkem512:1" "mlkem768:2" "mlkem1024:3"; do
+  IFS=: read -r job enum <<<"$job_spec"
   write_status "run-${job}" "running"
-  run_fuzzer "$job" "$target_seconds" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
-  run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+  if [ "$(target_capability_state "$job")" = "comparable" ]; then
+    target_seconds="$(target_budget_seconds "$kem_budget_ordinal")"
+    if [ "$PREFLIGHT_ONLY" -eq 1 ]; then target_seconds=0; fi
+    run_fuzzer "$job" "$target_seconds" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+    if [ "$PREFLIGHT_ONLY" -eq 0 ]; then
+      run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$KEM_ORACLE_ENUM" || KEM_STATUS="$?"
+    fi
+    kem_budget_ordinal=$((kem_budget_ordinal + 1))
+  else
+    skip_fuzzer "$job" 0 "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$(target_skip_reason "$job")"
+  fi
 done
 
-for job_spec in "mldsa44:4:3" "mldsa65:5:4" "mldsa87:6:5"; do
-  IFS=: read -r job enum budget_ordinal <<<"$job_spec"
+sig_budget_ordinal="$kem_budget_ordinal"
+for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
+  IFS=: read -r job enum <<<"$job_spec"
   write_status "run-${job}" "running"
-  if [ "$VERSION" = "0.14.0" ]; then
-    target_seconds="$(target_budget_seconds "$budget_ordinal")"
+  if [ "$(target_capability_state "$job")" = "comparable" ]; then
+    target_seconds="$(target_budget_seconds "$sig_budget_ordinal")"
+    if [ "$PREFLIGHT_ONLY" -eq 1 ]; then target_seconds=0; fi
     run_fuzzer "$job" "$target_seconds" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
-    run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
+    if [ "$PREFLIGHT_ONLY" -eq 0 ]; then
+      run_leak_check "$job" "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$enum" "$SIG_ORACLE_ENUM" || SIG_STATUS="$?"
+    fi
+    sig_budget_ordinal=$((sig_budget_ordinal + 1))
   else
-    skip_fuzzer "$job" 0 "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "historical Dilithium parameters for liboqs ${VERSION} do not match FIPS ML-DSA canonical lengths"
+    skip_fuzzer "$job" 0 "${PQCFUZZ_BUILD_DIR}/pqcfuzz_${job}" "$(target_skip_reason "$job")"
   fi
 done
 
@@ -1822,6 +1994,13 @@ if [ "$FUZZ_STATUS" -ne 0 ]; then
     finish_campaign "timed-out" "$FUZZ_STATUS" "one or more per-algorithm fuzz jobs exceeded their wall-clock budget"
   fi
   finish_campaign "harness-error" "$FUZZ_STATUS" "one or more per-algorithm fuzz jobs exited nonzero"
+fi
+
+if [ "$PREFLIGHT_ONLY" -eq 1 ]; then
+  if find "${WORKSPACE_ROOT_ABS}/results" -name finding.json -print -quit | grep -q .; then
+    finish_campaign "preflight-completed-with-findings" 0
+  fi
+  finish_campaign "preflight-completed" 0
 fi
 
 if find "${WORKSPACE_ROOT_ABS}/results" -name finding.json -print -quit | grep -q .; then
@@ -1958,6 +2137,8 @@ for campaign in campaigns:
     status_path = Path(campaign["status_file_abs"])
     workspace_root = Path(campaign["workspace_root_abs"])
     status = load_json(status_path) or {}
+    capability_manifest_path = workspace_root / "capabilities.json"
+    capability_manifest = load_json(capability_manifest_path)
     run_summary_paths = sorted((workspace_root / "runs").rglob("summary.json")) if (workspace_root / "runs").is_dir() else []
     run_summaries = []
     for path in run_summary_paths:
@@ -1977,6 +2158,18 @@ for campaign in campaigns:
             "sanitizer_findings": sanitizer_findings,
             "scheduled_oracles": parsed.get("scheduled_oracles", []) if isinstance(parsed, dict) else [],
             "oracle_coverage": parsed.get("oracle_coverage", {}) if isinstance(parsed, dict) else {},
+            "preflight_oracle_coverage": (
+                parsed.get("preflight_oracle_coverage", parsed.get("oracle_coverage", {}))
+                if isinstance(parsed, dict) else {}
+            ),
+            "fuzz_oracle_coverage": (
+                parsed.get("fuzz_oracle_coverage", parsed.get("oracle_coverage", {}))
+                if isinstance(parsed, dict) else {}
+            ),
+            "oracle_coverage_state": (
+                parsed.get("oracle_coverage_state", "passed" if parsed.get("oracle_coverage_complete") else "failed")
+                if isinstance(parsed, dict) else "not-run"
+            ),
             "oracle_coverage_complete": bool(parsed.get("oracle_coverage_complete", False)) if isinstance(parsed, dict) else False,
             "uncovered_oracles": parsed.get("uncovered_oracles", []) if isinstance(parsed, dict) else [],
         })
@@ -2002,29 +2195,45 @@ for campaign in campaigns:
         "oracle_invocations": 0,
         "valid_setup": 0,
         "relation_evaluable": 0,
+        "not_evaluable": 0,
         "intervention_effective": 0,
         "rng_intervention_observed": 0,
         "skipped": 0,
         "unsupported": 0,
         "finding_records": 0,
     }
+    oracle_reason_totals = {"skipped_subtest_reasons": {}, "non_evaluable_reasons": {}}
     uncovered_oracles = []
     scheduled_oracle_count = 0
     covered_oracle_count = 0
+    coverage_states = []
     for item in run_summaries:
         scheduled = item.get("scheduled_oracles") or []
+        if scheduled:
+            coverage_states.append(item.get("oracle_coverage_state") or "not-run")
         scheduled_oracle_count += len(scheduled)
-        coverage = item.get("oracle_coverage") if isinstance(item.get("oracle_coverage"), dict) else {}
-        totals = coverage.get("totals") if isinstance(coverage.get("totals"), dict) else {}
+        fuzz_coverage = item.get("fuzz_oracle_coverage") if isinstance(item.get("fuzz_oracle_coverage"), dict) else {}
+        totals = fuzz_coverage.get("totals") if isinstance(fuzz_coverage.get("totals"), dict) else {}
         for key in oracle_totals:
             oracle_totals[key] += int(totals.get(key, 0) or 0)
-        oracle_map = coverage.get("oracles") if isinstance(coverage.get("oracles"), dict) else {}
+        for reason_field, aggregate in oracle_reason_totals.items():
+            reasons = totals.get(reason_field) if isinstance(totals.get(reason_field), dict) else {}
+            for reason, count in reasons.items():
+                aggregate[str(reason)] = aggregate.get(str(reason), 0) + int(count or 0)
+        preflight_coverage = item.get("preflight_oracle_coverage") if isinstance(item.get("preflight_oracle_coverage"), dict) else {}
+        oracle_map = preflight_coverage.get("oracles") if isinstance(preflight_coverage.get("oracles"), dict) else {}
         for scheduled_item in scheduled:
             oracle_id = scheduled_item.get("oracle_id") if isinstance(scheduled_item, dict) else None
             if oracle_id and int(oracle_map.get(oracle_id, {}).get("oracle_invocations", 0) or 0) > 0:
                 covered_oracle_count += 1
         for oracle_id in item.get("uncovered_oracles") or []:
             uncovered_oracles.append({"target": item.get("target"), "oracle_id": oracle_id})
+    if not coverage_states:
+        oracle_coverage_state = "not-run"
+    elif uncovered_oracles or any(state != "passed" for state in coverage_states):
+        oracle_coverage_state = "failed"
+    else:
+        oracle_coverage_state = "passed"
     sanitizer_counts = {"address": 0, "undefined": 0, "memory": 0, "leak": 0}
     for finding in sanitizer_findings:
         sanitizer = str(finding.get("sanitizer") or "")
@@ -2041,7 +2250,7 @@ for campaign in campaigns:
     if aggregate_status == 0 and len(run_summaries) < 2:
         aggregate_status = 1
         result = "missing-run-summary"
-    if aggregate_status == 0 and uncovered_oracles:
+    if aggregate_status == 0 and oracle_coverage_state == "failed":
         aggregate_status = 1
         result = "oracle-coverage-incomplete"
     if aggregate_status != 0:
@@ -2070,16 +2279,21 @@ for campaign in campaigns:
         "relation_mode": status.get("relation_mode") or os.environ.get("RELATION_MODE", "single-target"),
         "sanitizers": status.get("sanitizers") or os.environ.get("SANITIZERS", "address,undefined"),
         "leak_check": status.get("leak_check") or os.environ.get("LEAK_CHECK", "off"),
+        "preflight_only": bool(status.get("preflight_only", False)),
         "skipped_families": status.get("skipped_families") or ["SLH-DSA"],
         "skipped_targets": skipped_targets,
         "log": campaign["log_file_abs"],
         "status_file": campaign["status_file_abs"],
+        "capability_manifest": capability_manifest,
+        "capability_manifest_path": rel(capability_manifest_path),
         "run_summaries": run_summaries,
-        "oracle_coverage_complete": not uncovered_oracles,
+        "oracle_coverage_state": oracle_coverage_state,
+        "oracle_coverage_complete": oracle_coverage_state == "passed",
         "scheduled_oracle_count": scheduled_oracle_count,
         "covered_oracle_count": covered_oracle_count,
         "uncovered_oracles": uncovered_oracles,
         "oracle_totals": oracle_totals,
+        "oracle_reason_totals": oracle_reason_totals,
         "crash_count": counts["crash"],
         "timeout_count": counts["timeout"],
         "leak_count": counts["leak"],
@@ -2118,6 +2332,8 @@ columns = [
     "relation_mode",
     "sanitizers",
     "leak_check",
+    "preflight_only",
+    "oracle_coverage_state",
     "oracle_coverage_complete",
     "scheduled_oracle_count",
     "covered_oracle_count",
@@ -2180,6 +2396,7 @@ FINDING_SAVE_MODE="grouped"
 MAX_FINDING_EXEMPLARS_PER_GROUP="1"
 PAIR_ALG="src/config/pair_alg.default.json"
 DRY_RUN=0
+PREFLIGHT_ONLY=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -2370,6 +2587,10 @@ while [ "$#" -gt 0 ]; do
       BASE_IMAGE="${1#--base-image=}"
       shift
       ;;
+    --preflight-only)
+      PREFLIGHT_ONLY=1
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -2504,6 +2725,7 @@ echo "[pqcfuzz-eval] report timeout: ${REPORT_TIMEOUT_SECONDS}s"
 echo "[pqcfuzz-eval] finding save mode: $FINDING_SAVE_MODE"
 echo "[pqcfuzz-eval] max finding exemplars per group: $MAX_FINDING_EXEMPLARS_PER_GROUP"
 echo "[pqcfuzz-eval] skipped families: SLH-DSA"
+echo "[pqcfuzz-eval] preflight only: $PREFLIGHT_ONLY"
 echo "[pqcfuzz-eval] dry run: $DRY_RUN"
 echo
 

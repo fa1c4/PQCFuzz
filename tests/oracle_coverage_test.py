@@ -60,7 +60,7 @@ def test_oracle_coverage_records_execution_and_interventions(tmp_path: Path) -> 
     subprocess.run([str(binary), str(result_dir)], cwd=REPO_ROOT, check=True)
 
     coverage = json.loads((result_dir / "oracle_coverage.json").read_text(encoding="utf-8"))
-    assert coverage["schema_version"] == 1
+    assert coverage["schema_version"] == 2
     assert coverage["totals"] == {
         "inputs": 2,
         "parse_rejected": 1,
@@ -70,10 +70,13 @@ def test_oracle_coverage_records_execution_and_interventions(tmp_path: Path) -> 
         "oracle_invocations": 1,
         "valid_setup": 1,
         "relation_evaluable": 1,
+        "not_evaluable": 0,
         "intervention_effective": 1,
         "rng_intervention_observed": 1,
         "skipped": 0,
         "unsupported": 0,
         "finding_records": 1,
+        "skipped_subtest_reasons": {},
+        "non_evaluable_reasons": {},
     }
     assert coverage["oracles"]["kem_encaps_badrng"]["oracle_invocations"] == 1

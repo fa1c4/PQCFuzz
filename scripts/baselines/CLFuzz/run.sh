@@ -804,15 +804,31 @@ supported_algorithms = string_values(metadata_records, (
     "enabled_algorithms", "enabled_kem_algorithms", "enabled_sig_algorithms",
 ))
 supported_properties = string_values(metadata_records, ("property_ids", "kem_property_ids", "sig_property_ids"))
+
+def pairs_for(metadata, primitive, algorithms_key, properties_key):
+    algorithms = string_values([metadata], (algorithms_key,))
+    properties = string_values([metadata], (properties_key,))
+    return {f"{primitive}|{algorithm}|{property_id}" for algorithm in algorithms for property_id in properties}
+
+supported_pairs = set()
+for metadata in metadata_records:
+    supported_pairs |= pairs_for(metadata, "kem", "enabled_kem_algorithms", "kem_property_ids")
+    supported_pairs |= pairs_for(metadata, "sig", "enabled_sig_algorithms", "sig_property_ids")
+covered_pairs = {
+    f"{record['primitive']}|{record['algorithm']}|{record['property_id']}"
+    for record in outcome_records
+    if record.get("classification") in ("property_passed", "skipped")
+    and all(isinstance(record.get(key), str) and record.get(key) for key in ("primitive", "algorithm", "property_id"))
+}
 if os.environ["CLFUZZ_MODE"] == "replay":
     coverage_status = "not-applicable"
-    unexercised_properties = []
-elif not supported_properties:
+    unexercised_pairs = []
+elif not supported_pairs:
     coverage_status = "unknown"
-    unexercised_properties = []
+    unexercised_pairs = []
 else:
-    unexercised_properties = sorted(set(supported_properties) - set(exercised_properties))
-    coverage_status = "complete" if not unexercised_properties else "incomplete"
+    unexercised_pairs = sorted(supported_pairs - covered_pairs)
+    coverage_status = "complete" if not unexercised_pairs else "incomplete"
 module_versions = string_values(all_records + metadata_records, ("module_version",))
 relations = string_values(records, ("semantic_relation", "relation"))
 replays = [value.get("replay") for value in records if isinstance(value.get("replay"), dict)]
@@ -909,7 +925,11 @@ summary = {
     "supported_algorithm_list": supported_algorithms,
     "supported_property_list": supported_properties,
     "coverage_status": coverage_status,
-    "unexercised_property_list": unexercised_properties,
+    "supported_pair_count": len(supported_pairs),
+    "covered_pair_count": len(covered_pairs),
+    "covered_pair_list": sorted(covered_pairs),
+    "unexercised_pair_list": unexercised_pairs,
+    "unexercised_property_list": sorted({pair.rsplit("|", 1)[-1] for pair in unexercised_pairs}),
     "campaign_root": str(root),
     "working_directory": str(log_dir),
     "resolved_working_directory": str(log_dir),

@@ -127,8 +127,7 @@ DESIRED_ALG_TO_FUZZ?=0
 # timeout after which to kill GenInput
 GITIMEOUT?=10
 
-AFLFUZZCMD=$(AFLFUZZ)  -V 900 -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR)/fuzz_harness.afl.out @@
-# -V 90 above would set a time limit to afl-fuzz
+AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR)/fuzz_harness.afl.out @@
 
 # run_afl: export AFL_PYTHON_MODULE=Maul
 # run_afl: export AFL_CUSTOM_MUTATOR_ONLY=1
@@ -136,15 +135,20 @@ AFLFUZZCMD=$(AFLFUZZ)  -V 900 -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR
 run_afl: export PYTHONPATH=$(shell pwd)
 run_afl: export AFL_SKIP_CPUFREQ=1
 run_afl: export AFL_DISABLE_TRIM=1
-run_afl: export AFL_EXIT_WHEN_DONE=1
-run_afl: export AFL_EXIT_ON_TIME=300 #1800
 run_afl: export AFL_DEBUG_CHILD=0
 run_afl: export AFL_INPUT_LEN_MAX=100000000
 run_afl: export AFL_TESTCACHE_SIZE=200
 run_afl: export BASEDIR_LVL=$(BASEDIR)
 run_afl: dirs all
-	$(BINDIR)/gen_input.out $(FUZZINPUTS)/input.bin
-	-$(AFLFUZZCMD)
+	timeout -s SIGKILL $(GITIMEOUT)s $(BINDIR)/gen_input.out $(FUZZINPUTS)/input.bin; \\
+	setup_status=$$?; if [ $$setup_status -eq 124 ] || [ $$setup_status -eq 137 ]; then \\
+		mkdir -p $(FUZZOUTPUTS)/default/crashes; \\
+		mkdir -p $(FUZZOUTPUTS)/default/hangs; \\
+		mkdir -p $(FUZZOUTPUTS)/default/setup-timeout; \\
+		touch $(FUZZOUTPUTS)/default/setup-timeout/GenInput; \\
+	else \\
+		$(AFLFUZZCMD); \\
+	fi
 	ls -l $(FUZZOUTPUTS)/default/crashes
 	ls -l $(FUZZOUTPUTS)/default/hangs
 

@@ -131,8 +131,7 @@ clean:
 # loops in makefiles: https://stackoverflow.com/a/1490961
 
 GENINPUTCMD=$(BINDIR)/GenInput.out $(FUZZINPUTS)/test.bin
-FUZZTIME?=$(CRYPTO_TESTING_TASK_MAX_TIME)
-FUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -G 100000000 -t 100000000 -D $(if $(FUZZTIME),-V $(FUZZTIME)) -- $(BINDIR)/Match.afl.out @@
+FUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -G 100000000 -t 100000000 -D -- $(BINDIR)/Match.afl.out @@
 
 # setting default overwritable value for DESIRED_ALG_TO_FUZZ
 DESIRED_ALG_TO_FUZZ?=0
@@ -145,8 +144,6 @@ run_python: export AFL_PYTHON_MODULE=Maul
 run_python: export AFL_CUSTOM_MUTATOR_ONLY=1
 run_python: export AFL_SKIP_CPUFREQ=1
 run_python: export AFL_DISABLE_TRIM=1
-run_python: export AFL_EXIT_WHEN_DONE=1
-run_python: export AFL_EXIT_ON_TIME=1
 run_python: export AFL_DEBUG_CHILD=0
 run_python: export AFL_NO_UI=0
 run_python: export AFL_INPUT_LEN_MAX=100000000
@@ -154,7 +151,7 @@ run_python: export AFL_TESTCACHE_SIZE=200
 run_python: export BASEDIR_LVL=$(BASEDIR)
 run_python: dirs all
 	-timeout -s SIGKILL $(GITIMEOUT)s $(BINDIR)/GenInput.out $(FUZZINPUTS)/clean_input.bin $(DESIRED_ALG_TO_FUZZ); \
-	if [ $$? -eq 137 ]; then \
+	setup_status=$$?; if [ $$setup_status -eq 124 ] || [ $$setup_status -eq 137 ]; then \
 		mkdir -p $(FUZZOUTPUTS)/default/crashes; \
 		mkdir -p $(FUZZOUTPUTS)/default/hangs; \
 		mkdir -p $(FUZZOUTPUTS)/default/setup-timeout; \
@@ -170,14 +167,12 @@ run_c: export AFL_CUSTOM_MUTATOR_LIBRARY=$(CURDIR)/$(BINDIR)/Maul.so
 run_c: export AFL_CUSTOM_MUTATOR_ONLY=1
 run_c: export AFL_SKIP_CPUFREQ=1
 run_c: export AFL_DISABLE_TRIM=1
-run_c: export AFL_EXIT_WHEN_DONE=1
-run_c: export AFL_EXIT_ON_TIME=1
 run_c: export AFL_DEBUG_CHILD=0
 run_c: export AFL_NO_UI=0
 run_c: dirs all
 	min=0; max=60; for bits in `seq $$min $$max`; do $(GENINPUTCMD) $$bits; $(FUZZCMD); cp $(AFLCRASHDIR)/* $(CRASHDIR); done
 
-AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D $(if $(FUZZTIME),-V $(FUZZTIME)) -- $(BINDIR)/Match.afl.out clean_input.bin @@
+AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D -- $(BINDIR)/Match.afl.out clean_input.bin @@
 
 # run_afl: export AFL_PYTHON_MODULE=Maul
 # run_afl: export AFL_CUSTOM_MUTATOR_ONLY=1
@@ -185,15 +180,13 @@ AFLFUZZCMD=$(AFLFUZZ) -i $(FUZZINPUTS)/ -o $(FUZZOUTPUTS) -D $(if $(FUZZTIME),-V
 run_afl: export PYTHONPATH=$(shell pwd)
 run_afl: export AFL_SKIP_CPUFREQ=1
 run_afl: export AFL_DISABLE_TRIM=1
-run_afl: export AFL_EXIT_WHEN_DONE=1
-run_afl: export AFL_EXIT_ON_TIME=1
 run_afl: export AFL_DEBUG_CHILD=0
 run_afl: export AFL_INPUT_LEN_MAX=100000000
 run_afl: export AFL_TESTCACHE_SIZE=200
 run_afl: export BASEDIR_LVL=$(BASEDIR)
 run_afl: dirs all
 	$(BINDIR)/GenInput.out clean_input.bin $(DESIRED_ALG_TO_FUZZ) $(FUZZINPUTS)/zero_mask.bin
-	-$(AFLFUZZCMD)
+	$(AFLFUZZCMD)
 	ls -l $(FUZZOUTPUTS)/default/crashes
 	ls -l $(FUZZOUTPUTS)/default/hangs
 

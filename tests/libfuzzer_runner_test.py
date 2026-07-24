@@ -30,9 +30,11 @@ mkdir -p "$(dirname "$metadata")"
 printf '%s\\n' '{"enabled_algorithms":["fake-'"$target"'"],"property_ids":["fake_property"]}' > "$metadata"
 
 if [ "$profile" = semantic ]; then
-  mkdir -p "${PQCDF_LIBFUZZER_FINDINGS_DIR:?}"
+  mkdir -p "${PQCDF_LIBFUZZER_FINDINGS_DIR:?}" "${PQCDF_LIBFUZZER_OUTCOMES_DIR:?}"
   printf '%s\\n' '{"algorithm":"fake-'"$target"'","property_id":"fake_property","outcome":"invariant_violation"}' \\
     > "${PQCDF_LIBFUZZER_FINDINGS_DIR}/${target}.json"
+  printf '%s\\n' '{"classification":"property_exercised","algorithm":"fake-'"$target"'","property_id":"fake_property"}' \\
+    > "${PQCDF_LIBFUZZER_OUTCOMES_DIR}/${target}.json"
 fi
 
 if [ "${FAKE_ASAN_TARGET:-}" = "$target" ]; then

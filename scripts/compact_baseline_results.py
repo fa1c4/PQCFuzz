@@ -1357,6 +1357,17 @@ class Compactor:
             raise ReplayValidationError(
                 f"cryptoTesting reports {groups_missing} group(s) without retained raw reproducers"
             )
+        result_counts = {
+            key: self.summary_count_value(source_manifest.get(key, 0), field=key)
+            for key in (
+                "semantic_finding_count",
+                "malleability_count",
+                "mismatch_count",
+                "sanitizer_crash_count",
+                "hang_count",
+                "operation_diagnostic_count",
+            )
+        }
 
         self.retain_tree_files(raw_root)
         task_coverage = source_manifest.get("task_coverage")
@@ -1385,9 +1396,11 @@ class Compactor:
             "groups_missing_reproducer": groups_missing,
             "validated_target_hangs": validated_target_hangs,
             "tasks_terminal": bool(source_manifest.get("tasks_terminal")),
+            "full_matrix_complete": bool(source_manifest.get("full_matrix_complete")),
             "budget_exhausted": bool(source_manifest.get("budget_exhausted")),
             "task_coverage": task_coverage,
             "unvalidated_artifact_count": source_manifest.get("unvalidated_artifact_count", 0),
+            "result_counts": result_counts,
         }
 
     def compact_crypto_testing(self) -> None:
@@ -1419,9 +1432,11 @@ class Compactor:
                     "groups_missing_reproducer": info["groups_missing_reproducer"],
                     "validated_target_hangs": info["validated_target_hangs"],
                     "tasks_terminal": info["tasks_terminal"],
+                    "full_matrix_complete": info["full_matrix_complete"],
                     "budget_exhausted": info["budget_exhausted"],
                     "task_coverage": info["task_coverage"],
                     "unvalidated_artifact_count": info["unvalidated_artifact_count"],
+                    **info["result_counts"],
                 }
                 for mode, info in sorted(self.crypto_testing_campaigns.items())
             },
@@ -1887,6 +1902,12 @@ class Compactor:
             raw_root = info["raw_root"]
             source = info["source_manifest"]
             summary_path = raw_root / "summary.json"
+            finding_count = (
+                info["result_counts"]["semantic_finding_count"]
+                + info["result_counts"]["sanitizer_crash_count"]
+                + info["result_counts"]["hang_count"]
+                + info["result_counts"]["operation_diagnostic_count"]
+            )
             data: dict[str, Any] = {
                 "baseline": "cryptoTesting",
                 "label": f"cryptoTesting-{mode}",
@@ -1894,12 +1915,15 @@ class Compactor:
                 "target": self.crypto_testing_target(),
                 "mode": mode,
                 "status": (
+                    "completed-with-findings" if info["tasks_terminal"] and finding_count else
                     "completed" if info["tasks_terminal"] else
                     "completed-at-budget-incomplete" if info["budget_exhausted"] else
                     "timed-out-partial"
                 ),
-                "normalized_outcome": "ok" if info["tasks_terminal"] else (
+                "normalized_outcome": "invariant_violation" if info["tasks_terminal"] and finding_count else (
+                    "ok" if info["tasks_terminal"] else (
                     "coverage_incomplete" if info["budget_exhausted"] else "process_hang"
+                    )
                 ),
                 "stop_reason": "fuzzing-time-budget" if info["budget_exhausted"] else (
                     "all-tasks-terminal" if info["tasks_terminal"] else "interrupted"
@@ -1910,6 +1934,8 @@ class Compactor:
                 "task_states": source.get("task_states", {}),
                 "scheduled_tasks": source.get("scheduled_tasks", 0),
                 "task_coverage": info["task_coverage"],
+                "tasks_terminal": info["tasks_terminal"],
+                "full_matrix_complete": info["full_matrix_complete"],
                 "unvalidated_artifact_count": info["unvalidated_artifact_count"],
                 "worker_count": source.get("resource_allocation", {}).get("effective_workers"),
                 "requested_workers": source.get("resource_allocation", {}).get("requested_workers"),
@@ -1931,6 +1957,7 @@ class Compactor:
                 "groups_replayed": info["groups_replayed"],
                 "groups_missing_reproducer": info["groups_missing_reproducer"],
                 "validated_target_hang_count": info["validated_target_hangs"],
+                **info["result_counts"],
             }
             data.update(self.compaction_common_updates(manifest))
             with summary_path.open("w", encoding="utf-8") as f:

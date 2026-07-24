@@ -148,14 +148,22 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		goto cleanup;
 	}
 
+	int property_exercised = 0;
 	switch (envelope->property_id) {
 	case PQCDF_KEM_PROPERTY_ROUNDTRIP:
+		property_exercised = 1;
 		break;
 
 	case PQCDF_KEM_PROPERTY_DECAPS_C:
+		if (!kem->ind_cca) {
+			pqcdf_record_property_outcome("kem", algorithm, "kem_decaps_c", "skipped",
+				envelope->raw, envelope->raw_size);
+			break;
+		}
 		if (!pqcdf_mutate_copy(mutated_ciphertext, ciphertext, ciphertext_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		rc = OQS_KEM_decaps(kem, mutated_shared_secret, mutated_ciphertext, secret_key);
 		if (rc == OQS_SUCCESS &&
 			memcmp(shared_secret_encaps, mutated_shared_secret, shared_secret_len) == 0) {
@@ -173,6 +181,7 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_secret_key, secret_key, secret_key_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		rc = OQS_KEM_decaps(kem, mutated_shared_secret, ciphertext, mutated_secret_key);
 		if (rc == OQS_SUCCESS &&
 			memcmp(shared_secret_encaps, mutated_shared_secret, shared_secret_len) == 0) {
@@ -190,6 +199,7 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_public_key, public_key, public_key_len, envelope)) {
 			break;
 		}
+		property_exercised = 1;
 		pqcdf_seed_envelope_rng(envelope, 0);
 		rc = OQS_KEM_encaps(kem, alternate_ciphertext, alternate_shared_secret,
 			mutated_public_key);
@@ -205,6 +215,7 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 
 	case PQCDF_KEM_PROPERTY_KEYGEN_BADRNG:
+		property_exercised = 1;
 		pqcdf_seed_envelope_rng(envelope, 1);
 		rc = OQS_KEM_keypair(kem, alternate_public_key, alternate_secret_key);
 		if (rc != OQS_SUCCESS) {
@@ -226,6 +237,7 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 
 	case PQCDF_KEM_PROPERTY_ENCAPS_BADRNG:
+		property_exercised = 1;
 		pqcdf_seed_envelope_rng(envelope, 1);
 		rc = OQS_KEM_encaps(kem, alternate_ciphertext, alternate_shared_secret, public_key);
 		if (rc != OQS_SUCCESS) {
@@ -247,6 +259,11 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 	default:
 		break;
+	}
+	if (property_exercised) {
+		pqcdf_record_property_outcome("kem", algorithm,
+			pqcdf_kem_property_name(envelope->property_id), "property_exercised",
+			envelope->raw, envelope->raw_size);
 	}
 
 cleanup:

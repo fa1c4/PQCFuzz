@@ -38,3 +38,11 @@ def test_invalid_sanitizer_combinations_fail_before_creating_eval_artifacts() ->
 
     assert result.returncode == 2
     assert "memory cannot be combined with address" in result.stderr
+
+
+def test_preflight_only_is_visible_in_dry_run_and_keeps_the_fast_gate_explicit() -> None:
+    result = run_dry("--preflight-only")
+
+    assert result.returncode == 0, result.stderr
+    assert "preflight only: 1" in result.stdout
+    assert "preflight-only; execute each comparable target's complete seeded oracle corpus" in result.stdout

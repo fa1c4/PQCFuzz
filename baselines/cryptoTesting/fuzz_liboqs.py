@@ -71,6 +71,18 @@ def property_name(testpath):
     return testpath.split(marker, 1)[1] if marker in testpath else testpath
 
 
+def setup_timeout_record(output_root, testpath, alg):
+    directory = (
+        Path(output_root) / "afl" / property_name(testpath) / str(alg) /
+        "fuzzoutputs" / "default" / "setup-timeout"
+    )
+    for name in ("GenInput.json", "GenInput"):
+        record = directory / name
+        if record.is_file():
+            return record
+    return None
+
+
 def configured_workers(raw):
     if raw and raw != "auto":
         value = int(raw)
@@ -107,14 +119,10 @@ TESTPATHS=(
 )
 
 
-BLACKLIST=(
-    # the three entries below slow significantly the process
-    # full results do however include these experiments
-    ("McEliece", "Encaps/pk"),      # huge pk, makes the test take really long
-    ("BIKE", "Encaps/pk"),          # ditto
-    ("Frodo", "Encaps/pk"),         # ditto
-    ("sntrup761", "Keygen/badrng"),  # hangs
-)
+# Functional evaluation intentionally schedules every algorithm advertised by
+# the selected upstream liboqs checkout.  The paper's large-key and setup-hang
+# cases are results, not exclusions.
+BLACKLIST=()
 
 
 def blacklisted(alg, testpath):
@@ -129,14 +137,19 @@ def blacklisted(alg, testpath):
 
 
 def get_algs(testpath, liboqs):
-    shellcmd = f'bash -c "cd {testpath}; DIRNAME={liboqs} make clean all > /dev/null 2>&1; python3 run_all.py --n_algs_only; exit $?"'
+    shellcmd = f'cd {testpath} && DIRNAME={liboqs} make clean all > /dev/null 2>&1 && python3 run_all.py --n_algs_only'
     proc = subprocess.run(shellcmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    algs_d = collections.OrderedDict(json.loads(proc.stdout.decode('ascii').strip()))
-    return algs_d
+    output = proc.stdout.decode("utf-8", errors="replace").strip()
+    if proc.returncode != 0:
+        raise RuntimeError(f"algorithm discovery failed for {testpath} with exit status {proc.returncode}")
+    try:
+        return collections.OrderedDict(json.loads(output))
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"algorithm discovery emitted invalid JSON for {testpath}: {output[-1000:]}") from error
 
 
 def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
-    ctr, testpath, alg, mutator, liboqs, algs_d, output_root, workers, geninput_timeout, task_max_time = ctr_testpath_alg_mutator_liboqs_algsd
+    ctr, testpath, alg, mutator, liboqs, algs_d, output_root, workers, geninput_timeout = ctr_testpath_alg_mutator_liboqs_algsd
     task = {
         "id": task_id(testpath, alg),
         "algorithm": algs_d[alg],
@@ -152,18 +165,16 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
 
     raw_property = Path(output_root) / "afl" / property_name(testpath)
-    task_time_argument = f" --task-max-time {task_max_time}" if task_max_time else ""
     shellcmd = (
         f"cd {testpath}; make clone; bash clone.sh {alg}; cd {alg}; "
         f"DIRNAME={liboqs} make clean all > /dev/null 2>&1; "
         f"python3 run_all.py --mutator {mutator} --base_path {raw_property} "
-        f"--run_specific_alg_only {alg} --run_inside_clone --geninput-timeout {geninput_timeout}{task_time_argument}"
+        f"--run_specific_alg_only {alg} --run_inside_clone --geninput-timeout {geninput_timeout}"
     )
     task.update({
         "state": "running",
         "command": shellcmd,
         "geninput_timeout_seconds": geninput_timeout,
-        "task_max_time_seconds": task_max_time,
         "workers": workers,
         "started_at": timestamp(),
     })
@@ -175,8 +186,15 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
                         stderr = subprocess.STDOUT,
                         check=True,
                         universal_newlines=True)
-        setup_timeout = raw_property / str(alg) / "fuzzoutputs" / "default" / "setup-timeout" / "GenInput.json"
-        task["state"] = "setup-timeout" if setup_timeout.exists() else "completed"
+        timeout_record = setup_timeout_record(output_root, testpath, alg)
+        if timeout_record is not None:
+            task.update({
+                "state": "setup-timeout",
+                "stop_reason": "GenInput-timeout",
+                "setup_timeout_record": str(timeout_record.relative_to(output_root)),
+            })
+        else:
+            task["state"] = "completed"
         task["elapsed_seconds"] = round(time.monotonic() - started, 6)
         write_task(output_root, task)
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
@@ -186,6 +204,9 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
             "elapsed_seconds": round(time.monotonic() - started, 6),
             "error": str(error),
         })
+        output = getattr(error, "stdout", None)
+        if output:
+            task["output_tail"] = output[-2000:]
         write_task(output_root, task)
         if LOGFILE:
             print(shellcmd, file=LOGFILE)
@@ -194,8 +215,7 @@ def experiment(ctr_testpath_alg_mutator_liboqs_algsd):
             print(shellcmd)
         return { 'ctr': ctr, 'testpath': testpath, 'alg': alg, 'state': task['state'] }
 
-def main(mutator, liboqs, version, output_root, requested_workers, geninput_timeout,
-         task_max_time, max_total_time):
+def main(mutator, liboqs, version, output_root, requested_workers, geninput_timeout):
     requested_workers, nproc = configured_workers(requested_workers)
     print(f"Using pool of size {nproc} (requested: {requested_workers})")
     metadata_root = Path(output_root) / "metadata"
@@ -218,16 +238,7 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
         bars.append(tqdm.tqdm(total=len(list(algs_d.keys())), position=ctr, desc='/'.join(testpath.split('/')[-3:])))
 
     schedule = collect_tasks(output_root)
-    scheduled_count = sum(task.get("state") != "skipped" for task in schedule)
-    if task_max_time is not None:
-        effective_task_max_time = task_max_time
-        task_budget_strategy = "explicit"
-    elif max_total_time is not None and scheduled_count:
-        effective_task_max_time = max(1, max_total_time // scheduled_count)
-        task_budget_strategy = "equal-share"
-    else:
-        effective_task_max_time = None
-        task_budget_strategy = "unbounded"
+    scheduled_count = len(schedule)
     campaign = {
         "baseline": "cryptoTesting",
         "mode": "functional",
@@ -237,10 +248,7 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
         "effective_workers": nproc,
         "cpu_allocation": os.environ.get("CRYPTO_TESTING_CPU_QUOTA", f"workers:{nproc}"),
         "geninput_timeout_seconds": geninput_timeout,
-        "requested_task_max_time_seconds": task_max_time,
-        "effective_task_max_time_seconds": effective_task_max_time,
-        "task_budget_strategy": task_budget_strategy,
-        "max_total_time_seconds": max_total_time,
+        "task_budget_strategy": "campaign-wall-clock-only",
         "scheduled_task_count": scheduled_count,
         "created_at": timestamp(),
     }
@@ -262,7 +270,7 @@ def main(mutator, liboqs, version, output_root, requested_workers, geninput_time
     work_by_property = [
         [
             (ctr, TESTPATHS[ctr], alg, mutator, liboqs, algs[ctr], output_root, nproc,
-             geninput_timeout, effective_task_max_time)
+             geninput_timeout)
             for alg in algs[ctr].keys()
         ]
         for ctr in range(len(TESTPATHS))
@@ -320,13 +328,9 @@ if __name__ == "__main__":
     parser.add_argument('--testpath', type=str, default=None)
     parser.add_argument('--logfile', type=str, default=None)
     parser.add_argument('--output-root', type=str, default=os.environ.get("CRYPTO_TESTING_OUTPUT_ROOT", "aggregatedfuzzingoutputs"))
-    parser.add_argument('--workers', default=os.environ.get("CRYPTO_TESTING_WORKERS", "1"))
+    parser.add_argument('--workers', default=os.environ.get("CRYPTO_TESTING_WORKERS", "auto"))
     parser.add_argument('--geninput-timeout', type=int, default=int(os.environ.get("CRYPTO_TESTING_GENINPUT_TIMEOUT", "10")))
     parser.add_argument('--version', default=os.environ.get("CRYPTO_TESTING_VERSION", "unknown"))
-    parser.add_argument('--task-max-time', type=int, default=None,
-                        help='maximum AFL seconds per scheduled task')
-    parser.add_argument('--max-total-time', type=int, default=None,
-                        help='campaign budget used to derive an equal per-task AFL limit')
 
     args = parser.parse_args()
     mutator = args.mutator
@@ -338,18 +342,15 @@ if __name__ == "__main__":
     if logfile:
         LOGFILE = open(logfile, 'w')
 
-    if args.task_max_time is not None and args.task_max_time <= 0:
-        parser.error('--task-max-time must be positive')
-    if args.max_total_time is not None and args.max_total_time <= 0:
-        parser.error('--max-total-time must be positive')
-
-    # print (args)
-    if "old" in liboqs:
-        TESTPATHS = [_ for _ in TESTPATHS if "Verify" not in _]
-
     dt = time.time()
-    status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout,
-                  args.task_max_time, args.max_total_time)
+    try:
+        status = main(mutator, liboqs, args.version, args.output_root, args.workers, args.geninput_timeout)
+    except Exception as error:
+        write_json(Path(args.output_root) / "metadata" / "driver-error.json", {
+            "state": "harness-error", "stage": "driver", "error": str(error), "at": timestamp(),
+        })
+        print(f"Driver failure: {error}")
+        status = 1
     dt = time.time() - dt
 
     print("Wall time:", dt)
