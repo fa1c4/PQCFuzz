@@ -81,11 +81,21 @@ export CRYPTO_TESTING_VERSION="$VERSION"
 
 run_fuzz_driver() {
   if [ -n "$MAX_TOTAL_TIME" ]; then
+    local started_at
+    local finished_at
+    started_at="$(date +%s)"
     set +e
-    timeout --signal=TERM --kill-after=30s "${MAX_TOTAL_TIME}s" "$@"
+    # Pool workers can need longer than the original 30 seconds to flush their
+    # durable task state after the parent receives SIGTERM.  Keep the fuzzing
+    # budget strict, but leave a bounded grace period for that finalization.
+    timeout --signal=TERM --kill-after=5m "${MAX_TOTAL_TIME}s" "$@"
     local status="$?"
     set -e
-    if [ "$status" -eq 124 ]; then
+    finished_at="$(date +%s)"
+    # GNU timeout exits 137, rather than 124, when its kill-after escalation
+    # is needed.  Accept that only after this invocation has reached its
+    # configured wall-clock budget; an early SIGKILL remains a real failure.
+    if [ "$status" -eq 124 ] || { [ "$status" -eq 137 ] && [ "$((finished_at - started_at))" -ge "$MAX_TOTAL_TIME" ]; }; then
       BUDGET_EXHAUSTED=1
       export CRYPTO_TESTING_BUDGET_EXHAUSTED=1
       return 0

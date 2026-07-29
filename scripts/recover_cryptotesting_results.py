@@ -54,6 +54,17 @@ def main(argv: list[str]) -> int:
     if not status_path.is_file():
         raise RuntimeError(f"missing evaluator status for {campaign}")
 
+    previous_manifest = load_json(raw_root / "manifest.json") if (raw_root / "manifest.json").is_file() else {}
+    budget_exhausted = bool(previous_manifest.get("budget_exhausted"))
+    manifest_environment = os.environ.copy()
+    if budget_exhausted:
+        # The scanner cannot infer a wall-clock stop from retained AFL output.
+        # Preserve the runner's durable budget marker while regenerating its
+        # manifest and summary.
+        manifest_environment["CRYPTO_TESTING_BUDGET_EXHAUSTED"] = "1"
+    else:
+        manifest_environment.pop("CRYPTO_TESTING_BUDGET_EXHAUSTED", None)
+
     subprocess.run(
         [
             sys.executable,
@@ -69,14 +80,22 @@ def main(argv: list[str]) -> int:
             "--require-report-evidence",
         ],
         cwd=ROOT,
+        env=manifest_environment,
         check=True,
     )
     manifest = load_json(raw_root / "manifest.json")
     summary = load_json(raw_root / "summary.json")
     if not manifest.get("tasks_terminal") or manifest.get("groups_missing_reproducer", 0):
         raise RuntimeError(f"{campaign} does not have complete, validated report evidence")
-    if summary.get("status") != "completed":
-        raise RuntimeError(f"{campaign} recovery produced {summary.get('status')!r}, expected 'completed'")
+    expected_result = (
+        "completed-at-budget-incomplete"
+        if manifest.get("budget_exhausted") and not manifest.get("full_matrix_complete")
+        else "completed"
+    )
+    if summary.get("status") != expected_result:
+        raise RuntimeError(
+            f"{campaign} recovery produced {summary.get('status')!r}, expected {expected_result!r}"
+        )
 
     compaction_status = 0
     compaction_manifest = workspace_root / "cryptoTesting" / "compaction_manifest.json"
@@ -104,7 +123,7 @@ def main(argv: list[str]) -> int:
         {
             "phase": "finished",
             "state": "finished",
-            "result": "completed",
+            "result": expected_result,
             "final_status": 0,
             "fuzz_status": 0,
             "compaction_status": compaction_status,
@@ -112,8 +131,13 @@ def main(argv: list[str]) -> int:
             "recovered_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "recovery": {
                 "previous_result": previous_result,
-                "reason": "manifest finalization failed after terminal task completion",
+                "reason": (
+                    "manifest finalization failed after controlled fuzzing-time stop"
+                    if expected_result == "completed-at-budget-incomplete"
+                    else "manifest finalization failed after terminal task completion"
+                ),
                 "tasks_terminal": True,
+                "budget_exhausted": bool(manifest.get("budget_exhausted")),
                 "reported_groups": manifest.get("reported_groups", 0),
                 "groups_missing_reproducer": manifest.get("groups_missing_reproducer", 0),
             },

@@ -703,6 +703,7 @@ def test_cryptotesting_compaction_retains_mounted_afl_output_without_flattening(
             "mode": "functional",
             "version": "0.14.0",
             "tasks_terminal": True,
+            "budget_exhausted": True,
             "task_states": {"completed": 1, "setup-timeout": 1},
             "semantic_finding_count": 3,
             "malleability_count": 2,
@@ -767,6 +768,8 @@ def test_cryptotesting_compaction_retains_mounted_afl_output_without_flattening(
     assert summary["mismatch_count"] == 1
     assert summary["sanitizer_crash_count"] == 4
     assert summary["hang_count"] == 5
+    assert summary["status"] == "completed-at-budget-incomplete"
+    assert summary["normalized_outcome"] == "coverage_incomplete"
 
 
 def test_cryptotesting_compaction_rejects_report_group_without_raw_reproducer(tmp_path: Path) -> None:

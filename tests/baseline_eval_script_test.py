@@ -285,6 +285,36 @@ def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path)
     }
 
 
+def test_cryptotesting_manifest_keeps_terminal_budget_stop_distinct_from_coverage_gap(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    task_dir = output_root / "metadata" / "tasks"
+    task_dir.mkdir(parents=True)
+    (task_dir / "completed.json").write_text(json.dumps({"state": "completed"}), encoding="utf-8")
+    (task_dir / "interrupted.json").write_text(json.dumps({"state": "interrupted"}), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            "python3", str(ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py"),
+            "--output-root", str(output_root), "--mode", "functional", "--version", "0.14.0",
+            "--reports-dir", str(reports),
+        ],
+        cwd=ROOT,
+        env={**os.environ, "CRYPTO_TESTING_BUDGET_EXHAUSTED": "1"},
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    summary = json.loads((output_root / "summary.json").read_text(encoding="utf-8"))
+    assert summary["tasks_terminal"] is True
+    assert summary["full_matrix_complete"] is False
+    assert summary["status"] == "completed-at-budget-incomplete"
+    assert summary["stop_reason"] == "fuzzing-time-budget"
+
+
 def test_cryptotesting_uses_campaign_wall_clock_without_per_task_afl_limits() -> None:
     driver = (ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs.py").read_text(encoding="utf-8")
     run_all = (
@@ -632,6 +662,49 @@ def test_cryptotesting_recovery_regenerates_terminal_campaign_evidence(tmp_path:
     assert manifest["groups_missing_reproducer"] == 0
 
 
+def test_cryptotesting_recovery_preserves_a_terminal_budget_stop(tmp_path: Path) -> None:
+    eval_root = tmp_path / "baselines_eval"
+    campaign = "cryptoTesting-0.14.0"
+    workspace = eval_root / "campaigns" / campaign / "workspace"
+    raw = workspace / "cryptoTesting" / "targets-run" / "raw" / campaign / "functional"
+    reports = workspace / "cryptoTesting" / "targets-run" / "reports" / f"{campaign}-functional"
+    crash = raw / "afl" / "KEM" / "Decaps" / "sk" / "0" / "fuzzoutputs" / "default" / "crashes" / "id:000000"
+    crash.parent.mkdir(parents=True)
+    crash.write_text("crash", encoding="utf-8")
+    (crash.parents[3] / "alg.txt").write_text("ML-KEM-512", encoding="utf-8")
+    (raw / "metadata" / "tasks").mkdir(parents=True)
+    (raw / "metadata" / "tasks" / "completed.json").write_text(
+        '{"state":"completed"}', encoding="utf-8"
+    )
+    (raw / "metadata" / "tasks" / "interrupted.json").write_text(
+        '{"state":"interrupted"}', encoding="utf-8"
+    )
+    (raw / "manifest.json").write_text('{"budget_exhausted":true}', encoding="utf-8")
+    reports.mkdir(parents=True)
+    import sqlite3
+    with sqlite3.connect(str(reports / "report.db")) as connection:
+        connection.execute("CREATE TABLE crashes(test TEXT, name TEXT)")
+        connection.execute("INSERT INTO crashes VALUES ('KEM/Decaps/sk', 'ML-KEM-512')")
+    status_path = eval_root / "status" / f"{campaign}.json"
+    status_path.parent.mkdir(parents=True)
+    status_path.write_text('{"result":"fuzzing-failed","final_status":1}', encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(CRYPTOTESTING_RECOVERY), "--eval-root", str(eval_root), "--version", "0.14.0"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    status = json.loads(status_path.read_text(encoding="utf-8"))
+    assert status["result"] == "completed-at-budget-incomplete"
+    assert status["final_status"] == 0
+    assert status["recovery"]["budget_exhausted"] is True
+    summary = json.loads((raw / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "completed-at-budget-incomplete"
+
+
 def test_cryptotesting_reproduce_selects_functional_and_vanilla_drivers(tmp_path: Path) -> None:
     source_dir = ROOT / "baselines" / "cryptoTesting"
     work = tmp_path / "cryptoTesting"
@@ -683,6 +756,70 @@ directory.mkdir(parents=True, exist_ok=True)
         assert result.returncode == 0, result.stderr
         assert (raw / marker).is_file()
         assert json.loads((raw / "manifest.json").read_text(encoding="utf-8"))["mode"] == mode
+
+
+def test_cryptotesting_reproduce_finalizes_a_timeout_kill_after_the_budget(tmp_path: Path) -> None:
+    source_dir = ROOT / "baselines" / "cryptoTesting"
+    work = tmp_path / "cryptoTesting"
+    work.mkdir()
+    write_executable(work / "reproduce.sh", (source_dir / "reproduce.sh").read_text(encoding="utf-8"))
+    (work / "crypto_testing_manifest.py").write_text(
+        (source_dir / "crypto_testing_manifest.py").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    write_executable(tmp_path / "bin" / "make", "#!/usr/bin/env bash\nexit 0\n")
+    write_executable(
+        tmp_path / "bin" / "timeout",
+        """#!/usr/bin/env bash
+set -eu
+while [[ "$1" = --* ]]; do
+  shift
+done
+budget="${1%s}"
+shift
+sleep "$budget"
+"$@"
+exit 137
+""",
+    )
+    driver = """from pathlib import Path
+import json
+import sys
+
+root = Path(sys.argv[sys.argv.index('--output-root') + 1])
+(root / 'metadata' / 'tasks').mkdir(parents=True, exist_ok=True)
+(root / 'metadata' / 'tasks' / 'running.json').write_text(json.dumps({'state': 'running'}))
+(root / 'metadata' / 'schedule.json').write_text(json.dumps({'tasks': []}))
+"""
+    report = """from pathlib import Path
+import sys
+
+directory = Path(sys.argv[sys.argv.index('--report-dir') + 1])
+directory.mkdir(parents=True, exist_ok=True)
+(directory / 'report.xlsx').write_text('report')
+"""
+    (work / "fuzz_liboqs.py").write_text(driver, encoding="utf-8")
+    (work / "report.py").write_text(report, encoding="utf-8")
+
+    raw = tmp_path / "raw"
+    reports = tmp_path / "reports"
+    result = subprocess.run(
+        [
+            "bash", "reproduce.sh", "ches_liboqs", "--output-root", str(raw),
+            "--reports-dir", str(reports), "--workers", "1", "--version", "0.14.0",
+            "--max-total-time", "1",
+        ],
+        cwd=work,
+        env={**os.environ, "PATH": f"{tmp_path / 'bin'}{os.pathsep}{os.environ['PATH']}"},
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads((raw / "manifest.json").read_text(encoding="utf-8"))
+    summary = json.loads((raw / "summary.json").read_text(encoding="utf-8"))
+    assert manifest["budget_exhausted"] is True
+    assert summary["status"] == "completed-at-budget-incomplete"
+    assert (reports / "report.xlsx").is_file()
 
 
 def test_cryptotesting_runner_rejects_nonpositive_worker_count(tmp_path: Path) -> None:

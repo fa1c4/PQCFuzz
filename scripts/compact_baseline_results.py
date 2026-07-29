@@ -1915,18 +1915,30 @@ class Compactor:
                 "target": self.crypto_testing_target(),
                 "mode": mode,
                 "status": (
+                    "completed-at-budget-incomplete" if (
+                        info["budget_exhausted"] and not info["full_matrix_complete"]
+                    ) else
+                    "completed-with-coverage-gap" if (
+                        info["tasks_terminal"] and not info["full_matrix_complete"]
+                    ) else
                     "completed-with-findings" if info["tasks_terminal"] and finding_count else
                     "completed" if info["tasks_terminal"] else
-                    "completed-at-budget-incomplete" if info["budget_exhausted"] else
                     "timed-out-partial"
                 ),
-                "normalized_outcome": "invariant_violation" if info["tasks_terminal"] and finding_count else (
-                    "ok" if info["tasks_terminal"] else (
-                    "coverage_incomplete" if info["budget_exhausted"] else "process_hang"
+                "normalized_outcome": "coverage_incomplete" if (
+                    (info["budget_exhausted"] or info["tasks_terminal"])
+                    and not info["full_matrix_complete"]
+                ) else (
+                    "invariant_violation" if info["tasks_terminal"] and finding_count else (
+                        "ok" if info["tasks_terminal"] else "process_hang"
                     )
                 ),
-                "stop_reason": "fuzzing-time-budget" if info["budget_exhausted"] else (
-                    "all-tasks-terminal" if info["tasks_terminal"] else "interrupted"
+                "stop_reason": "fuzzing-time-budget" if (
+                    info["budget_exhausted"] and not info["full_matrix_complete"]
+                ) else (
+                    "task-coverage-incomplete" if (
+                        info["tasks_terminal"] and not info["full_matrix_complete"]
+                    ) else ("all-tasks-terminal" if info["tasks_terminal"] else "interrupted")
                 ),
                 "budget_exhausted": info["budget_exhausted"],
                 "raw_output_root": rel(raw_root),

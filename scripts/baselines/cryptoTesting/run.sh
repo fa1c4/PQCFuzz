@@ -276,9 +276,9 @@ except (OSError, json.JSONDecodeError) as error:
     raise SystemExit(f"invalid cryptoTesting manifest: {error}")
 if not manifest.get("tasks_terminal") and not manifest.get("budget_exhausted"):
     raise SystemExit("cryptoTesting did not finish all scheduled tasks")
-if manifest.get("tasks_terminal") and not manifest.get("full_matrix_complete"):
+if manifest.get("tasks_terminal") and not manifest.get("full_matrix_complete") and not manifest.get("budget_exhausted"):
     raise SystemExit("cryptoTesting completed with skipped or failed available tasks")
-if manifest.get("tasks_terminal") and not any(reports_dir.glob("*.xlsx")):
+if (manifest.get("tasks_terminal") or manifest.get("budget_exhausted")) and not any(reports_dir.glob("*.xlsx")):
     raise SystemExit("cryptoTesting completed without its required XLSX report")
 PY
 then

@@ -334,6 +334,13 @@ def main(argv: List[str]) -> int:
         status = "target-failed"
         normalized_outcome = "operation_error"
         stop_reason = "target-failed"
+    elif document["budget_exhausted"] and not document["full_matrix_complete"]:
+        # A controlled wall-clock stop makes outstanding work incomplete even
+        # if the driver has already converted it to terminal ``interrupted``
+        # records.  Preserve that distinction for the evaluator.
+        status = "completed-at-budget-incomplete"
+        normalized_outcome = "coverage_incomplete"
+        stop_reason = "fuzzing-time-budget"
     elif document["tasks_terminal"] and not document["full_matrix_complete"]:
         status = "completed-with-coverage-gap"
         normalized_outcome = "coverage_incomplete"
