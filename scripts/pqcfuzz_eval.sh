@@ -32,6 +32,8 @@ Options:
                                 Replayable exemplars kept per finding group. Default: 1.
   --preflight-only              Build each campaign and validate every comparable target's
                                 seeded oracle corpus without starting a fuzzing campaign.
+  --fuzz-effectiveness-min-evaluable-rate R
+                                Minimum per-oracle fuzz-time evaluability rate. Default: 0.95.
   --base-image IMAGE            Docker base image. Default: ubuntu:22.04.
   --dry-run                     Print campaigns and commands without starting tmux.
   -h, --help                    Show this help.
@@ -214,6 +216,7 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: leak_check: ${LEAK_CHECK}"
   echo "docker run pqcfuzz-eval: finding_save_mode: ${FINDING_SAVE_MODE}"
   echo "docker run pqcfuzz-eval: max_finding_exemplars_per_group: ${MAX_FINDING_EXEMPLARS_PER_GROUP}"
+  echo "docker run pqcfuzz-eval: fuzz_effectiveness_min_evaluable_rate: ${FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE}"
   echo "docker run pqcfuzz-eval: build one fixed binary per ML-KEM/ML-DSA algorithm"
   echo "docker run pqcfuzz-eval: seed every enabled oracle with a valid structured input"
   echo "docker run pqcfuzz-eval: distribute the ${seconds}s campaign budget across active targets"
@@ -300,7 +303,8 @@ write_launcher() {
     printf 'INPUT_TIMEOUT_SECONDS=%q\n' "$INPUT_TIMEOUT_SECONDS"
     printf 'RSS_MB=%q\n' "$RSS_MB"
     printf 'FINDING_SAVE_MODE=%q\n' "$FINDING_SAVE_MODE"
-    printf 'MAX_FINDING_EXEMPLARS_PER_GROUP=%q\n\n' "$MAX_FINDING_EXEMPLARS_PER_GROUP"
+    printf 'MAX_FINDING_EXEMPLARS_PER_GROUP=%q\n' "$MAX_FINDING_EXEMPLARS_PER_GROUP"
+    printf 'FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE=%q\n\n' "$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE"
     printf 'PREFLIGHT_ONLY=%q\n\n' "$PREFLIGHT_ONLY"
     cat <<'EOF'
 if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" = "1" ]; then
@@ -346,6 +350,7 @@ SANITIZERS="${SANITIZERS:-address,undefined}"
 LEAK_CHECK="${LEAK_CHECK:-auto}"
 INPUT_TIMEOUT_SECONDS="${INPUT_TIMEOUT_SECONDS:-30}"
 RSS_MB="${RSS_MB:-2048}"
+FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="${FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE:-0.95}"
 PREFLIGHT_ONLY="${PREFLIGHT_ONLY:-0}"
 SKIPPED_FAMILIES_JSON='["SLH-DSA"]'
 
@@ -416,6 +421,7 @@ write_status() {
   EVAL_SANITIZERS="$SANITIZERS" \
   EVAL_LEAK_CHECK="$LEAK_CHECK" \
   EVAL_PREFLIGHT_ONLY="$PREFLIGHT_ONLY" \
+  EVAL_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE" \
   EVAL_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
   python3 - <<'PY'
 import json
@@ -474,6 +480,7 @@ doc.update({
     "sanitizers": os.environ["EVAL_SANITIZERS"],
     "leak_check": os.environ["EVAL_LEAK_CHECK"],
     "preflight_only": os.environ["EVAL_PREFLIGHT_ONLY"] == "1",
+    "fuzz_effectiveness_min_evaluable_rate": float(os.environ["EVAL_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE"]),
     "skipped_families": json.loads(os.environ["EVAL_SKIPPED_FAMILIES_JSON"]),
 })
 if os.environ["EVAL_ENDED_AT"]:
@@ -561,6 +568,12 @@ struct SigSpec {
   size_t sk_len;
   size_t sig_len;
 };
+
+#if defined(OQS_ENABLE_SIG_ML_DSA)
+constexpr int kMlDsaSupportsContext = 1;
+#else
+constexpr int kMlDsaSupportsContext = 0;
+#endif
 
 void EnsureOqsInit() {
   static bool initialized = false;
@@ -661,16 +674,28 @@ pqcfuzz_status SigSign(
     const uint8_t *message,
     size_t message_len,
     const uint8_t *secret_key,
-    const uint8_t *,
+    const uint8_t *context,
     size_t context_len) {
-  if (context_len != 0) {
-    return PQCFUZZ_API_UNSUPPORTED;
-  }
   OQS_SIG *sig = OpenSig(spec);
   if (sig == nullptr) {
     return PQCFUZZ_API_UNSUPPORTED;
   }
-  OQS_STATUS status = OQS_SIG_sign(sig, signature, signature_len, message, message_len, secret_key);
+  OQS_STATUS status;
+  if (context_len != 0) {
+#if defined(OQS_ENABLE_SIG_ML_DSA)
+    if (!sig->sig_with_ctx_support || sig->sign_with_ctx_str == nullptr) {
+      OQS_SIG_free(sig);
+      return PQCFUZZ_API_UNSUPPORTED;
+    }
+    status = OQS_SIG_sign_with_ctx_str(
+        sig, signature, signature_len, message, message_len, context, context_len, secret_key);
+#else
+    OQS_SIG_free(sig);
+    return PQCFUZZ_API_UNSUPPORTED;
+#endif
+  } else {
+    status = OQS_SIG_sign(sig, signature, signature_len, message, message_len, secret_key);
+  }
   OQS_SIG_free(sig);
   return ToStatus(status);
 }
@@ -682,16 +707,28 @@ pqcfuzz_status SigVerify(
     const uint8_t *message,
     size_t message_len,
     const uint8_t *public_key,
-    const uint8_t *,
+    const uint8_t *context,
     size_t context_len) {
-  if (context_len != 0) {
-    return PQCFUZZ_API_UNSUPPORTED;
-  }
   OQS_SIG *sig = OpenSig(spec);
   if (sig == nullptr) {
     return PQCFUZZ_API_UNSUPPORTED;
   }
-  OQS_STATUS status = OQS_SIG_verify(sig, message, message_len, signature, signature_len, public_key);
+  OQS_STATUS status;
+  if (context_len != 0) {
+#if defined(OQS_ENABLE_SIG_ML_DSA)
+    if (!sig->sig_with_ctx_support || sig->verify_with_ctx_str == nullptr) {
+      OQS_SIG_free(sig);
+      return PQCFUZZ_API_UNSUPPORTED;
+    }
+    status = OQS_SIG_verify_with_ctx_str(
+        sig, message, message_len, signature, signature_len, context, context_len, public_key);
+#else
+    OQS_SIG_free(sig);
+    return PQCFUZZ_API_UNSUPPORTED;
+#endif
+  } else {
+    status = OQS_SIG_verify(sig, message, message_len, signature, signature_len, public_key);
+  }
   OQS_SIG_free(sig);
   return ToStatus(status);
 }
@@ -757,12 +794,12 @@ pqcfuzz_status Dsa87Verify(const uint8_t *sig, size_t sig_len, const uint8_t *ms
   return SigVerify(kDsa87Spec, sig, sig_len, msg, msg_len, pk, ctx, ctx_len);
 }
 
-const pqcfuzz_sig_adapter kLeftDsa44 = {"liboqs", "liboqs_mldsa44_wrapper_generic", "ML-DSA-44", 1312, 2560, 2420, 0, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kLeftDsa65 = {"liboqs", "liboqs_mldsa65_wrapper_generic", "ML-DSA-65", 1952, 4032, 3309, 0, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kLeftDsa87 = {"liboqs", "liboqs_mldsa87_wrapper_generic", "ML-DSA-87", 2592, 4896, 4627, 0, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa44 = {"liboqs_self_reference", "selfref_mldsa44_via_liboqs", "ML-DSA-44", 1312, 2560, 2420, 0, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa65 = {"liboqs_self_reference", "selfref_mldsa65_via_liboqs", "ML-DSA-65", 1952, 4032, 3309, 0, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa87 = {"liboqs_self_reference", "selfref_mldsa87_via_liboqs", "ML-DSA-87", 2592, 4896, 4627, 0, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kLeftDsa44 = {"liboqs", "liboqs_mldsa44_wrapper_generic", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kLeftDsa65 = {"liboqs", "liboqs_mldsa65_wrapper_generic", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kLeftDsa87 = {"liboqs", "liboqs_mldsa87_wrapper_generic", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kRightDsa44 = {"liboqs_self_reference", "selfref_mldsa44_via_liboqs", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kRightDsa65 = {"liboqs_self_reference", "selfref_mldsa65_via_liboqs", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kRightDsa87 = {"liboqs_self_reference", "selfref_mldsa87_via_liboqs", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
 
 #define PQCFUZZ_UNSUPPORTED_SLH(symbol, project, impl, algorithm, pk, sk, sig) \
   const pqcfuzz_sig_adapter symbol = {project, impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedSigKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded}
@@ -1060,6 +1097,8 @@ write_run_summary() {
   RUN_ORACLE_SPECS="$(oracle_specs_for_primitive "$(target_metadata "$target" | cut -f1)")" \
   RUN_PREFLIGHT_ORACLE_COVERAGE_FILE="$preflight_coverage" \
   RUN_FUZZ_ORACLE_COVERAGE_FILE="${result_dir}/oracle_coverage.json" \
+  RUN_PREFLIGHT_ONLY="$PREFLIGHT_ONLY" \
+  RUN_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE" \
   RUN_RELATION_MODE="$RELATION_MODE" \
   RUN_SANITIZERS="$SANITIZERS" \
   RUN_LEAK_CHECK="$LEAK_CHECK" \
@@ -1120,11 +1159,62 @@ for item in scheduled_oracles:
             int(counters.get("unsupported", 0)) > 0 or int(counters.get("skipped", 0)) > 0):
         uncovered_oracles.append(item["oracle_id"])
 if not preflight_coverage_present:
-    oracle_coverage_state = "not-run"
+    preflight_coverage_state = "not-run"
 elif uncovered_oracles:
-    oracle_coverage_state = "failed"
+    preflight_coverage_state = "failed"
 else:
+    preflight_coverage_state = "passed"
+
+min_evaluable_rate = float(os.environ["RUN_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE"])
+preflight_only = os.environ["RUN_PREFLIGHT_ONLY"] == "1"
+fuzz_effectiveness_by_oracle = {}
+fuzz_effectiveness_failures = []
+if preflight_only:
+    fuzz_effectiveness_state = "not-run"
+elif not fuzz_coverage_present:
+    fuzz_effectiveness_state = "not-run"
+else:
+    fuzz_oracles = fuzz_coverage.get("oracles", {}) if isinstance(fuzz_coverage, dict) else {}
+    for item in scheduled_oracles:
+        oracle_id = item["oracle_id"]
+        counters = fuzz_oracles.get(oracle_id, {})
+        invocations = int(counters.get("oracle_invocations", 0) or 0)
+        evaluable = int(counters.get("relation_evaluable", 0) or 0)
+        unsupported = int(counters.get("unsupported", 0) or 0)
+        skipped = int(counters.get("skipped", 0) or 0)
+        rate = (evaluable / invocations) if invocations else 0.0
+        record = {
+            "oracle_id": oracle_id,
+            "oracle_invocations": invocations,
+            "relation_evaluable": evaluable,
+            "evaluable_rate": rate,
+            "unsupported": unsupported,
+            "skipped": skipped,
+            "non_evaluable_reasons": counters.get("non_evaluable_reasons", {}),
+        }
+        fuzz_effectiveness_by_oracle[oracle_id] = record
+        reason = None
+        if invocations < 1:
+            reason = "not_invoked"
+        elif unsupported > 0:
+            reason = "unexpected_unsupported"
+        elif rate < min_evaluable_rate:
+            reason = "evaluable_rate_below_threshold"
+        if reason is not None:
+            failure = dict(record)
+            failure["reason"] = reason
+            failure["min_evaluable_rate"] = min_evaluable_rate
+            fuzz_effectiveness_failures.append(failure)
+    fuzz_effectiveness_state = "failed" if fuzz_effectiveness_failures else "passed"
+
+if preflight_coverage_state != "passed":
+    oracle_coverage_state = "failed" if preflight_coverage_state == "failed" else "not-run"
+elif preflight_only:
     oracle_coverage_state = "passed"
+elif fuzz_effectiveness_state == "passed":
+    oracle_coverage_state = "passed"
+else:
+    oracle_coverage_state = "failed"
 doc = {
     "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "target": os.environ["RUN_TARGET"],
@@ -1141,6 +1231,12 @@ doc = {
     "fuzz_oracle_coverage": fuzz_coverage,
     "fuzz_oracle_coverage_present": fuzz_coverage_present,
     "oracle_coverage": fuzz_coverage,
+    "preflight_coverage_state": preflight_coverage_state,
+    "preflight_uncovered_oracles": uncovered_oracles,
+    "fuzz_effectiveness_state": fuzz_effectiveness_state,
+    "fuzz_effectiveness_min_evaluable_rate": min_evaluable_rate,
+    "fuzz_effectiveness_by_oracle": fuzz_effectiveness_by_oracle,
+    "fuzz_effectiveness_failures": fuzz_effectiveness_failures,
     "oracle_coverage_state": oracle_coverage_state,
     "oracle_coverage_complete": oracle_coverage_state == "passed",
     "uncovered_oracles": uncovered_oracles,
@@ -1427,6 +1523,12 @@ doc = {
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
     "skipped": True,
     "skip_reason": os.environ["RUN_SKIP_REASON"],
+    "preflight_coverage_state": "not-applicable",
+    "preflight_uncovered_oracles": [],
+    "fuzz_effectiveness_state": "not-applicable",
+    "fuzz_effectiveness_min_evaluable_rate": None,
+    "fuzz_effectiveness_by_oracle": {},
+    "fuzz_effectiveness_failures": [],
     "oracle_coverage_state": "not-applicable",
     "oracle_coverage_complete": None,
     "scheduled_oracles": [],
@@ -1709,7 +1811,7 @@ run_fuzzer() {
     write_run_summary "$summary_file" "$target" 70 "$seconds" "$binary" "$preflight_log" "$crash_dir" "$corpus_dir" "$algorithm_enum" "$oracle_enum" "$result_dir" "$preflight_coverage"
     return 70
   fi
-  record_target_preflight "$target" "passed" "every scheduled oracle produced a valid, evaluable, effective observation"
+  record_target_preflight "$target" "passed" "preflight seed corpus produced a valid, evaluable, effective observation for every scheduled oracle"
 
   # This allocation is part of the campaign-wide fuzzing budget.  A very
   # small requested budget can legitimately leave later targets with no fuzz
@@ -2166,6 +2268,12 @@ for campaign in campaigns:
                 parsed.get("fuzz_oracle_coverage", parsed.get("oracle_coverage", {}))
                 if isinstance(parsed, dict) else {}
             ),
+            "preflight_coverage_state": parsed.get("preflight_coverage_state", "not-run") if isinstance(parsed, dict) else "not-run",
+            "preflight_uncovered_oracles": parsed.get("preflight_uncovered_oracles", []) if isinstance(parsed, dict) else [],
+            "fuzz_effectiveness_state": parsed.get("fuzz_effectiveness_state", "not-run") if isinstance(parsed, dict) else "not-run",
+            "fuzz_effectiveness_min_evaluable_rate": parsed.get("fuzz_effectiveness_min_evaluable_rate") if isinstance(parsed, dict) else None,
+            "fuzz_effectiveness_by_oracle": parsed.get("fuzz_effectiveness_by_oracle", {}) if isinstance(parsed, dict) else {},
+            "fuzz_effectiveness_failures": parsed.get("fuzz_effectiveness_failures", []) if isinstance(parsed, dict) else [],
             "oracle_coverage_state": (
                 parsed.get("oracle_coverage_state", "passed" if parsed.get("oracle_coverage_complete") else "failed")
                 if isinstance(parsed, dict) else "not-run"
@@ -2207,10 +2315,15 @@ for campaign in campaigns:
     scheduled_oracle_count = 0
     covered_oracle_count = 0
     coverage_states = []
+    preflight_coverage_states = []
+    fuzz_effectiveness_states = []
+    fuzz_effectiveness_failures = []
     for item in run_summaries:
         scheduled = item.get("scheduled_oracles") or []
         if scheduled:
             coverage_states.append(item.get("oracle_coverage_state") or "not-run")
+            preflight_coverage_states.append(item.get("preflight_coverage_state") or "not-run")
+            fuzz_effectiveness_states.append(item.get("fuzz_effectiveness_state") or "not-run")
         scheduled_oracle_count += len(scheduled)
         fuzz_coverage = item.get("fuzz_oracle_coverage") if isinstance(item.get("fuzz_oracle_coverage"), dict) else {}
         totals = fuzz_coverage.get("totals") if isinstance(fuzz_coverage.get("totals"), dict) else {}
@@ -2228,6 +2341,26 @@ for campaign in campaigns:
                 covered_oracle_count += 1
         for oracle_id in item.get("uncovered_oracles") or []:
             uncovered_oracles.append({"target": item.get("target"), "oracle_id": oracle_id})
+        for failure in item.get("fuzz_effectiveness_failures") or []:
+            if isinstance(failure, dict):
+                item_failure = dict(failure)
+                item_failure["target"] = item.get("target")
+                fuzz_effectiveness_failures.append(item_failure)
+    if not preflight_coverage_states:
+        preflight_coverage_state = "not-run"
+    elif any(state != "passed" for state in preflight_coverage_states):
+        preflight_coverage_state = "failed"
+    else:
+        preflight_coverage_state = "passed"
+    preflight_only = bool(status.get("preflight_only", False))
+    if not fuzz_effectiveness_states:
+        fuzz_effectiveness_state = "not-run"
+    elif preflight_only and all(state == "not-run" for state in fuzz_effectiveness_states):
+        fuzz_effectiveness_state = "not-run"
+    elif any(state != "passed" for state in fuzz_effectiveness_states):
+        fuzz_effectiveness_state = "failed"
+    else:
+        fuzz_effectiveness_state = "passed"
     if not coverage_states:
         oracle_coverage_state = "not-run"
     elif uncovered_oracles or any(state != "passed" for state in coverage_states):
@@ -2250,7 +2383,7 @@ for campaign in campaigns:
     if aggregate_status == 0 and len(run_summaries) < 2:
         aggregate_status = 1
         result = "missing-run-summary"
-    if aggregate_status == 0 and oracle_coverage_state == "failed":
+    if aggregate_status == 0 and oracle_coverage_state != "passed":
         aggregate_status = 1
         result = "oracle-coverage-incomplete"
     if aggregate_status != 0:
@@ -2287,6 +2420,10 @@ for campaign in campaigns:
         "capability_manifest": capability_manifest,
         "capability_manifest_path": rel(capability_manifest_path),
         "run_summaries": run_summaries,
+        "preflight_coverage_state": preflight_coverage_state,
+        "fuzz_effectiveness_state": fuzz_effectiveness_state,
+        "fuzz_effectiveness_min_evaluable_rate": status.get("fuzz_effectiveness_min_evaluable_rate"),
+        "fuzz_effectiveness_failures": fuzz_effectiveness_failures,
         "oracle_coverage_state": oracle_coverage_state,
         "oracle_coverage_complete": oracle_coverage_state == "passed",
         "scheduled_oracle_count": scheduled_oracle_count,
@@ -2333,6 +2470,10 @@ columns = [
     "sanitizers",
     "leak_check",
     "preflight_only",
+    "preflight_coverage_state",
+    "fuzz_effectiveness_state",
+    "fuzz_effectiveness_min_evaluable_rate",
+    "fuzz_effectiveness_failures",
     "oracle_coverage_state",
     "oracle_coverage_complete",
     "scheduled_oracle_count",
@@ -2369,6 +2510,10 @@ with open(summary_tsv, "w", encoding="utf-8", newline="") as f:
         out["uncovered_oracles"] = ",".join(
             f"{item.get('target')}:{item.get('oracle_id')}" for item in row.get("uncovered_oracles") or []
         )
+        out["fuzz_effectiveness_failures"] = ",".join(
+            f"{item.get('target')}:{item.get('oracle_id')}:{item.get('reason')}:{float(item.get('evaluable_rate') or 0):.6f}"
+            for item in row.get("fuzz_effectiveness_failures") or []
+        )
         writer.writerow(out)
 
 print(summary_json)
@@ -2394,6 +2539,7 @@ REPORT_FORMATS="json,tsv"
 REPORT_TIMEOUT="10m"
 FINDING_SAVE_MODE="grouped"
 MAX_FINDING_EXEMPLARS_PER_GROUP="1"
+FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="0.95"
 PAIR_ALG="src/config/pair_alg.default.json"
 DRY_RUN=0
 PREFLIGHT_ONLY=0
@@ -2565,6 +2711,17 @@ while [ "$#" -gt 0 ]; do
       MAX_FINDING_EXEMPLARS_PER_GROUP="${1#--max-finding-exemplars-per-group=}"
       shift
       ;;
+    --fuzz-effectiveness-min-evaluable-rate)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --fuzz-effectiveness-min-evaluable-rate"
+      fi
+      FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="$2"
+      shift 2
+      ;;
+    --fuzz-effectiveness-min-evaluable-rate=*)
+      FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="${1#--fuzz-effectiveness-min-evaluable-rate=}"
+      shift
+      ;;
     --pair-alg)
       if [ "$#" -lt 2 ]; then
         die "missing value for --pair-alg"
@@ -2647,6 +2804,9 @@ fi
 if [ "$FINDING_SAVE_MODE" = "grouped" ] && [ "$MAX_FINDING_EXEMPLARS_PER_GROUP" -le 0 ]; then
   die "--max-finding-exemplars-per-group must be positive in grouped mode"
 fi
+if ! [[ "$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE" =~ ^(0(\.[0-9]+)?|1(\.0+)?)$ ]]; then
+  die "--fuzz-effectiveness-min-evaluable-rate must be between 0 and 1"
+fi
 
 validate_session_prefix "$SESSION_PREFIX"
 FUZZING_SECONDS="$(parse_duration_seconds "$FUZZING_TIME")"
@@ -2724,6 +2884,7 @@ echo "[pqcfuzz-eval] report formats: $REPORT_FORMATS"
 echo "[pqcfuzz-eval] report timeout: ${REPORT_TIMEOUT_SECONDS}s"
 echo "[pqcfuzz-eval] finding save mode: $FINDING_SAVE_MODE"
 echo "[pqcfuzz-eval] max finding exemplars per group: $MAX_FINDING_EXEMPLARS_PER_GROUP"
+echo "[pqcfuzz-eval] fuzz effectiveness min evaluable rate: $FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE"
 echo "[pqcfuzz-eval] skipped families: SLH-DSA"
 echo "[pqcfuzz-eval] preflight only: $PREFLIGHT_ONLY"
 echo "[pqcfuzz-eval] dry run: $DRY_RUN"

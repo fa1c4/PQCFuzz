@@ -131,6 +131,56 @@ def test_unsupported_adapter_reports_unsupported(tmp_path: Path) -> None:
     )
 
 
+def test_sig_sign_badrng_classifies_unsupported_before_rng_consumption(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include <cstring>
+        #include "oracles/metamorphic_executor.h"
+
+        namespace {
+        pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
+          std::memset(pk, 0x40, 4);
+          std::memset(sk, 0x50, 4);
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Sign(uint8_t *, size_t *, const uint8_t *, size_t, const uint8_t *, const uint8_t *, size_t) {
+          return PQCFUZZ_API_UNSUPPORTED;
+        }
+        pqcfuzz_status Verify(const uint8_t *, size_t, const uint8_t *, size_t, const uint8_t *, const uint8_t *, size_t) {
+          return PQCFUZZ_API_UNSUPPORTED;
+        }
+        }
+
+        int main() {
+          static const pqcfuzz_sig_adapter adapter = {
+              "fake", "fake_sign_unsupported", "ML-DSA-44", 4, 4, 4,
+              1, 0, 0, Keygen, Sign, Verify, nullptr};
+          pqcfuzz::MetamorphicSigConfig cfg;
+          cfg.job_id = "test";
+          cfg.pair_id = "test";
+          cfg.algorithm = "ML-DSA-44";
+          cfg.oracle_id = "sig_sign_badrng";
+          cfg.target = &adapter;
+          cfg.seed = {1, 2, 3};
+          cfg.message = {'m'};
+          cfg.context = {'c'};
+          auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
+          return trace.finding_class == "unsupported" &&
+                         trace.observed_relation == "OBSERVED_UNSUPPORTED" &&
+                         !trace.subtests.empty() &&
+                         trace.subtests[0].note == "adapter API unsupported" &&
+                         !trace.rng_interventions.empty() &&
+                         trace.rng_interventions[0].baseline_bytes_consumed == 0 &&
+                         trace.diagnostic_event.find("API_UNSUPPORTED") != std::string::npos
+                     ? 0
+                     : 1;
+        }
+        """,
+        [],
+    )
+
+
 def test_every_metamorphic_oracle_executes_with_effective_controls(tmp_path: Path) -> None:
     compile_and_run(
         tmp_path,

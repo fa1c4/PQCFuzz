@@ -53,13 +53,29 @@ def test_launcher_seeds_and_verifies_every_selected_oracle_with_a_global_budget(
     assert '-DPQCFUZZ_RIGHT_PROJECT_ID="\\\"liboqs_self_reference\\\""' in script
 
 
-def test_launcher_uses_preflight_coverage_for_gating_and_fuzz_coverage_for_telemetry() -> None:
+def test_generated_liboqs_mldsa_wrapper_uses_context_api_when_available() -> None:
+    script = (REPO_ROOT / "scripts" / "pqcfuzz_eval.sh").read_text(encoding="utf-8")
+
+    assert "OQS_SIG_sign_with_ctx_str" in script
+    assert "OQS_SIG_verify_with_ctx_str" in script
+    assert "kMlDsaSupportsContext" in script
+    assert "PQCFUZZ_API_UNSUPPORTED" in script
+
+
+def test_launcher_reports_preflight_and_fuzz_effectiveness_as_distinct_gates() -> None:
     script = (REPO_ROOT / "scripts" / "pqcfuzz_eval.sh").read_text(encoding="utf-8")
 
     assert 'RUN_PREFLIGHT_ORACLE_COVERAGE_FILE="$preflight_coverage"' in script
     assert '"preflight_oracle_coverage": preflight_coverage' in script
     assert '"fuzz_oracle_coverage": fuzz_coverage' in script
+    assert '"preflight_coverage_state": preflight_coverage_state' in script
+    assert '"fuzz_effectiveness_state": fuzz_effectiveness_state' in script
+    assert '"fuzz_effectiveness_min_evaluable_rate": min_evaluable_rate' in script
+    assert '"fuzz_effectiveness_failures": fuzz_effectiveness_failures' in script
     assert '"oracle_coverage_state": oracle_coverage_state' in script
     assert 'coverage_states.append(item.get("oracle_coverage_state") or "not-run")' in script
+    assert 'elif unsupported > 0:' in script
+    assert 'elif rate < min_evaluable_rate:' in script
+    assert 'oracle_coverage_state != "passed"' in script
     assert '0.4.0:mlkem512' in script
     assert 'PREFLIGHT_ONLY' in script

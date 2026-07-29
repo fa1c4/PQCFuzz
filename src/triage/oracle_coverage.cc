@@ -163,6 +163,41 @@ bool HasSkippedSubtest(const KEMOracleTrace &trace) {
   return false;
 }
 
+const char *StatusName(pqcfuzz_status status) {
+  switch (status) {
+    case PQCFUZZ_OK:
+      return "OK";
+    case PQCFUZZ_REJECT:
+      return "REJECT";
+    case PQCFUZZ_INVALID_INPUT:
+      return "INVALID_INPUT";
+    case PQCFUZZ_CRASH:
+      return "CRASH";
+    case PQCFUZZ_TIMEOUT:
+      return "TIMEOUT";
+    case PQCFUZZ_API_UNSUPPORTED:
+      return "API_UNSUPPORTED";
+  }
+  return "INVALID_INPUT";
+}
+
+std::string ObservationReason(const KEMOracleTrace &trace) {
+  std::ostringstream out;
+  out << "baseline_status=" << StatusName(trace.baseline.status)
+      << ";mutated_status=" << StatusName(trace.mutated.status);
+  if (trace.mutations.empty()) {
+    out << ";mutation_operation=none;target=none;operation=none;original_len=0;mutated_len=0";
+  } else {
+    const MutationRecord &mutation = trace.mutations.front();
+    out << ";mutation_operation=" << (mutation.operation.empty() ? "unknown" : mutation.operation)
+        << ";target=" << (mutation.target.empty() ? "unknown" : mutation.target)
+        << ";operation=" << (mutation.operation.empty() ? "unknown" : mutation.operation)
+        << ";original_len=" << mutation.original_length
+        << ";mutated_len=" << mutation.mutated_length;
+  }
+  return out.str();
+}
+
 std::string TraceReason(const KEMOracleTrace &trace) {
   if (!trace.diagnostic_event.empty()) {
     return trace.diagnostic_event;
@@ -172,7 +207,7 @@ std::string TraceReason(const KEMOracleTrace &trace) {
       return subtest.note;
     }
   }
-  return "unspecified";
+  return ObservationReason(trace);
 }
 
 bool RngInterventionObserved(const KEMOracleTrace &trace) {

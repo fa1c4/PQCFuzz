@@ -18,6 +18,10 @@ MaulResult MaulBytes(
     const std::vector<uint8_t> &input,
     const std::vector<uint8_t> &mutation,
     const std::string &field_name);
+MaulResult MaulBytesFixedSize(
+    const std::vector<uint8_t> &input,
+    const std::vector<uint8_t> &mutation,
+    const std::string &field_name);
 
 }  // namespace pqcfuzz
 

@@ -26,8 +26,14 @@ def test_generic_mutations_record_effectiveness(tmp_path: Path) -> None:
               if (!MaulBytes({1, 2}, {4, 2, 0}, "x").record.skipped) return 5;
               auto flip = MaulBytes({0}, {0, 0, 0}, "x");
               auto append = MaulBytes({0}, {5, 0, 7}, "x");
+              auto fixed_retry = pqcfuzz::MaulBytesFixedSize({0}, {2, 0, 0}, "x");
+              auto fixed_from_length_changing_plan = pqcfuzz::MaulBytesFixedSize({1, 2}, {5, 0, 7}, "x");
               return flip.record.effective && append.record.effective &&
                              flip.record.original_length == 1 && append.record.mutated_length == 2 &&
+                             fixed_retry.record.effective && fixed_retry.record.mutated_length == 1 &&
+                             fixed_from_length_changing_plan.record.effective &&
+                             fixed_from_length_changing_plan.record.original_length == 2 &&
+                             fixed_from_length_changing_plan.record.mutated_length == 2 &&
                              flip.record.original_sha256.size() == 64 &&
                              flip.record.original_sha256 != flip.record.mutated_sha256 ? 0 : 6;
             }

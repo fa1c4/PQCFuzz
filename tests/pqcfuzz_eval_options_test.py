@@ -46,3 +46,11 @@ def test_preflight_only_is_visible_in_dry_run_and_keeps_the_fast_gate_explicit()
     assert result.returncode == 0, result.stderr
     assert "preflight only: 1" in result.stdout
     assert "preflight-only; execute each comparable target's complete seeded oracle corpus" in result.stdout
+
+
+def test_fuzz_effectiveness_threshold_is_visible_in_dry_run() -> None:
+    result = run_dry("--fuzz-effectiveness-min-evaluable-rate", "0.8")
+
+    assert result.returncode == 0, result.stderr
+    assert "fuzz effectiveness min evaluable rate: 0.8" in result.stdout
+    assert "fuzz_effectiveness_min_evaluable_rate: 0.8" in result.stdout
