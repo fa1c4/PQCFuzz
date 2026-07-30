@@ -52,21 +52,24 @@ def test_collector_deduplicates_ubsan_and_writes_reportable_artifacts(tmp_path: 
     finding = json.loads(finding_path.read_text(encoding="utf-8"))
     trace = json.loads((finding_path.parent / "oracle_trace.json").read_text(encoding="utf-8"))
     assert finding["evidence_kind"] == "sanitizer"
-    assert finding["validated"] is True
+    assert finding["validated"] is False
+    assert finding["validation_state"] == "raw"
+    assert finding["finding_class"] == "ub"
     assert finding["finding_subclass"] == "undefined_behavior"
     assert trace["observed_relation"] == "SANITIZER_DIAGNOSTIC"
     assert (finding_path.parent / "structured_input.bin").read_bytes() == b"seed"
 
     output = tmp_path / "report"
     write_reports([tmp_path / "results"], output, {"tsv"}, trace_mode="all")
+    diagnostics = (output / "diagnostics.tsv").read_text(encoding="utf-8")
     findings = (output / "findings.tsv").read_text(encoding="utf-8")
-    assert "sanitizer" in findings
-    assert "undefined_behavior" in findings
+    assert "undefined_behavior" in diagnostics
+    assert "undefined_behavior" not in findings
 
     fast_output = tmp_path / "fast-report"
     write_reports([tmp_path / "results"], fast_output, {"tsv"}, trace_mode="exemplar", findings_mode="fast-summary")
     fast_summary = (fast_output / "findings_summary.tsv").read_text(encoding="utf-8")
-    assert "sanitizer" in fast_summary
+    assert "undefined_behavior" not in fast_summary
 
 
 def test_collector_keeps_distinct_sanitizer_signatures(tmp_path: Path) -> None:

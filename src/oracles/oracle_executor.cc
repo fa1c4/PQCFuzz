@@ -83,6 +83,19 @@ void AddCall(OracleSubtestTrace *subtest, const std::string &adapter, const std:
   subtest->calls.push_back(MakeCallTrace(adapter, api, status, false, false));
 }
 
+void AddExecutorRejection(OracleSubtestTrace *subtest, const std::string &adapter, const std::string &api, pqcfuzz_status status) {
+  OracleCallTrace call;
+  call.adapter = adapter;
+  call.api = api;
+  call.status = status;
+  call.executor_dispatched = false;
+  call.adapter_entered = false;
+  call.target_entered = false;
+  call.target_returned = false;
+  call.rejection_layer = "executor";
+  subtest->calls.push_back(call);
+}
+
 void AddBoolCall(
     OracleSubtestTrace *subtest,
     const std::string &adapter,
@@ -126,7 +139,7 @@ KEMCiphertext Encaps(
     if (shared_secret != nullptr) {
       shared_secret->status = out.status;
     }
-    AddCall(subtest, label, "encaps", out.status);
+    AddExecutorRejection(subtest, label, "encaps", out.status);
     return out;
   }
   out.ct.resize(adapter->ct_len);
@@ -156,7 +169,7 @@ KEMSharedSecret Decaps(
   }
   if (ct.size() != adapter->ct_len || sk.size() != adapter->sk_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddCall(subtest, label, "decaps", out.status);
+    AddExecutorRejection(subtest, label, "decaps", out.status);
     return out;
   }
   out.ss.resize(adapter->ss_len);
@@ -215,13 +228,13 @@ OracleSubtestTrace KemRandomnessSanity(
   KEMCiphertext baseline_ct;
   KEMCiphertext mutated_ct;
   {
-    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
     rng_trace->baseline_override_active = rng.active();
     baseline_ct = Encaps(config.left, "left", keypair.pk, &subtest, &baseline_ss);
     rng_trace->baseline_bytes_consumed = rng.bytes_consumed();
   }
   {
-    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
     rng_trace->mutated_override_active = rng.active();
     mutated_ct = Encaps(config.left, "left", keypair.pk, &subtest, &mutated_ss);
     rng_trace->mutated_bytes_consumed = rng.bytes_consumed();
@@ -348,6 +361,14 @@ OracleSubtestTrace TamperedCiphertext(
   std::vector<uint8_t> mutated = ciphertext.ct;
   auto records = MutateMlKemCiphertext(config.params, config.mutation, &mutated);
   mutations->insert(mutations->end(), records.begin(), records.end());
+  const bool ineffective = !records.empty() &&
+      std::any_of(records.begin(), records.end(), [](const MutationRecord &record) { return !record.effective; });
+  if (ineffective) {
+    subtest.passed = true;
+    subtest.skipped = true;
+    subtest.note = "no_effect";
+    return subtest;
+  }
   KEMSharedSecret decaps_ss = Decaps(config.left, "left", mutated, keypair.sk, &subtest);
   if (decaps_ss.status == PQCFUZZ_REJECT || decaps_ss.status == PQCFUZZ_INVALID_INPUT) {
     subtest.passed = true;
@@ -412,7 +433,7 @@ SIGSignature SigSign(
   }
   if (context.size() > 255 || sk.size() != adapter->sk_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddCall(subtest, label, "sign", out.status);
+    AddExecutorRejection(subtest, label, "sign", out.status);
     return out;
   }
   out.sig.resize(adapter->sig_max_len);
@@ -445,7 +466,7 @@ SIGVerifyResult SigVerify(
   }
   if (context.size() > 255 || pk.size() != adapter->pk_len || signature.size() > adapter->sig_max_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddCall(subtest, label, "verify", out.status);
+    AddExecutorRejection(subtest, label, "verify", out.status);
     return out;
   }
   const uint8_t *ctx = context.empty() ? nullptr : context.data();
@@ -551,13 +572,13 @@ OracleSubtestTrace SigRandomnessSanity(
   SIGSignature baseline;
   SIGSignature mutated;
   {
-    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+    ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
     rng_trace->baseline_override_active = rng.active();
     baseline = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
     rng_trace->baseline_bytes_consumed = rng.bytes_consumed();
   }
   {
-    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+    ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
     rng_trace->mutated_override_active = rng.active();
     mutated = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
     rng_trace->mutated_bytes_consumed = rng.bytes_consumed();
@@ -842,8 +863,8 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
     return fingerprint.str();
   };
   out << "{\n";
-  out << "  \"version\": 3,\n";
-  out << "  \"oracle_semantics_version\": 3,\n";
+  out << "  \"version\": 4,\n";
+  out << "  \"oracle_semantics_version\": 4,\n";
   out << "  \"disposition\": \"" << OracleDispositionName(disposition) << "\",\n";
   out << "  \"oracle_suite\": \"" << JsonEscape(trace.oracle_suite) << "\",\n";
   out << "  \"relation_mode\": \"" << JsonEscape(trace.relation_mode) << "\",\n";

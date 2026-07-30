@@ -25,6 +25,19 @@ void AddCall(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status
   subtest->calls.push_back(call);
 }
 
+void AddExecutorRejection(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status status) {
+  OracleCallTrace call;
+  call.adapter = "left";
+  call.api = api;
+  call.status = status;
+  call.executor_dispatched = false;
+  call.adapter_entered = false;
+  call.target_entered = false;
+  call.target_returned = false;
+  call.rejection_layer = "executor";
+  subtest->calls.push_back(call);
+}
+
 void AddBoolCall(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status status, bool accepted) {
   OracleCallTrace call;
   call.adapter = "left";
@@ -73,7 +86,7 @@ KEMCiphertext Encaps(
     if (shared_secret != nullptr) {
       shared_secret->status = out.status;
     }
-    AddCall(subtest, "encaps", out.status);
+    AddExecutorRejection(subtest, "encaps", out.status);
     return out;
   }
   out.ct.resize(adapter->ct_len);
@@ -102,13 +115,17 @@ KEMSharedSecret Decaps(
   }
   if (ct.size() != adapter->ct_len || sk.size() != adapter->sk_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddCall(subtest, "decaps", out.status);
+    AddExecutorRejection(subtest, "decaps", out.status);
     return out;
   }
   out.ss.resize(adapter->ss_len);
   out.status = adapter->decaps(out.ss.data(), ct.data(), sk.data());
   AddCall(subtest, "decaps", out.status);
   return out;
+}
+
+bool SameSecret(const KEMSharedSecret &left, const KEMSharedSecret &right) {
+  return left.status == PQCFUZZ_OK && right.status == PQCFUZZ_OK && left.ss == right.ss;
 }
 
 SIGKeyPair SigKeygen(const pqcfuzz_sig_adapter *adapter, OracleSubtestTrace *subtest) {
@@ -139,7 +156,7 @@ SIGSignature Sign(
   }
   if (context.size() > 255 || sk.size() != adapter->sk_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddCall(subtest, "sign", out.status);
+    AddExecutorRejection(subtest, "sign", out.status);
     return out;
   }
   out.sig.resize(adapter->sig_max_len);
@@ -171,7 +188,7 @@ SIGVerifyResult Verify(
   }
   if (context.size() > 255 || pk.size() != adapter->pk_len || signature.size() > adapter->sig_max_len) {
     out.status = PQCFUZZ_INVALID_INPUT;
-    AddBoolCall(subtest, "verify", out.status, false);
+    AddExecutorRejection(subtest, "verify", out.status);
     return out;
   }
   const uint8_t *ctx = context.empty() ? nullptr : context.data();
@@ -384,6 +401,26 @@ bool HasUnsupportedObservation(const Observation &baseline, const Observation &m
          mutated.status == PQCFUZZ_API_UNSUPPORTED;
 }
 
+bool IsVerifyOracle(const std::string &oracle_id) {
+  return oracle_id == "sig_verify_m" || oracle_id == "sig_verify_sig" || oracle_id == "sig_verify_pk";
+}
+
+bool IsKemDecapsCiphertextOracle(const std::string &oracle_id) {
+  return oracle_id == "kem_decaps_c";
+}
+
+void SetTraceReachabilityFromSubtest(KEMOracleTrace *trace, const OracleSubtestTrace &subtest) {
+  if (trace == nullptr || subtest.calls.empty()) {
+    return;
+  }
+  const OracleCallTrace &baseline = subtest.calls.front();
+  const OracleCallTrace &mutated = subtest.calls.back();
+  trace->baseline_adapter_entered = baseline.adapter_entered;
+  trace->baseline_target_entered = baseline.target_entered;
+  trace->mutated_adapter_entered = mutated.adapter_entered;
+  trace->mutated_target_entered = mutated.target_entered;
+}
+
 std::string MutationDiagnostics(const MutationRecord *mutation) {
   if (mutation == nullptr) {
     return "mutation_operation=none;target=none;operation=none;original_len=0;mutated_len=0";
@@ -429,6 +466,7 @@ void FinalizeTrace(
   trace->observed_relation = ObservedRelationName(observed);
   trace->baseline = ToObservationTrace(baseline);
   trace->mutated = ToObservationTrace(mutated);
+  SetTraceReachabilityFromSubtest(trace, *subtest);
   if (mutation != nullptr) {
     trace->mutations.push_back(*mutation);
     trace->intervention_effective = mutation->effective;
@@ -436,16 +474,44 @@ void FinalizeTrace(
   trace->valid_setup = IsEvaluableObservation(baseline) && IsEvaluableObservation(mutated);
   trace->baseline_setup_valid = IsEvaluableObservation(baseline);
   trace->mutated_setup_valid = IsEvaluableObservation(mutated);
+
+  if (IsVerifyOracle(spec.oracle_id)) {
+    trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK && baseline.has_bool && baseline.bool_value &&
+                                  trace->baseline_target_entered;
+    trace->mutated_setup_valid =
+        (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
+        trace->mutated_target_entered;
+  } else if (IsKemDecapsCiphertextOracle(spec.oracle_id)) {
+    trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK && trace->baseline_target_entered;
+    trace->mutated_setup_valid =
+        (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
+        trace->mutated_target_entered;
+  }
+
+  trace->valid_setup = trace->baseline_setup_valid && trace->mutated_setup_valid;
   trace->relation_evaluable = trace->baseline_setup_valid && trace->mutated_setup_valid && trace->intervention_supported &&
-                              trace->intervention_effective;
+                              trace->intervention_effective && trace->baseline_target_entered &&
+                              trace->mutated_target_entered;
   if (!trace->relation_evaluable) {
-    trace->diagnostic_event = NonEvaluableDiagnostic(baseline, mutated, mutation, "relation_not_evaluable");
+    const std::string reason = !trace->baseline_setup_valid ? "baseline_precondition_failed" : "relation_not_evaluable";
+    trace->diagnostic_event = NonEvaluableDiagnostic(baseline, mutated, mutation, reason);
     trace->diagnostics.push_back(
         {"non_evaluable", "metamorphic_relation", trace->diagnostic_event});
   }
 
-  const std::string finding_class = FindingClassFor(spec.expected_relation, observed);
-  if (finding_class == "unsupported") {
+  std::string finding_class;
+  if (trace->relation_evaluable) {
+    finding_class = FindingClassFor(spec.expected_relation, observed);
+    if (IsVerifyOracle(spec.oracle_id)) {
+      finding_class = (mutated.status == PQCFUZZ_OK && mutated.has_bool && mutated.bool_value) ? "malleability" : "";
+    } else if (IsKemDecapsCiphertextOracle(spec.oracle_id)) {
+      finding_class = (mutated.status == PQCFUZZ_OK && observed == ObservedRelation::kObservedEqual) ? "malleability" : "";
+    } else if (spec.uses_rng && finding_class == "malleability") {
+      trace->diagnostics.push_back({"diagnostic", "rng_policy", "randomness contract evidence is not promotable"});
+      finding_class.clear();
+    }
+  }
+  if (observed == ObservedRelation::kObservedUnsupported || finding_class == "unsupported") {
     subtest->skipped = true;
     subtest->passed = true;
     subtest->note = "adapter API unsupported";
@@ -457,7 +523,7 @@ void FinalizeTrace(
   }
   trace->subtests.push_back(*subtest);
 
-  if (!finding_class.empty()) {
+  if (!finding_class.empty() && finding_class != "unsupported") {
     trace->finding_class = finding_class;
     trace->finding_subclass = spec.finding_subclass;
     trace->findings.push_back({finding_class, spec.finding_subclass, finding_class + ": " + spec.finding_subclass});
@@ -504,8 +570,9 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
     trace.pair_id = config.pair_id;
     trace.algorithm = config.algorithm;
     trace.oracle_id = config.oracle_id;
-    trace.finding_class = "unsupported";
-    trace.findings.push_back({"unsupported", "unknown_oracle", "unknown metamorphic KEM oracle"});
+    trace.intervention_supported = false;
+    trace.relation_evaluable = false;
+    trace.diagnostics.push_back({"diagnostic", "oracle_registry", "unknown metamorphic KEM oracle"});
     return trace;
   }
 
@@ -531,13 +598,13 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
     KEMKeyPair baseline_keypair;
     KEMKeyPair mutated_keypair;
     {
-      ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+      ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
       rng_trace.baseline_override_active = rng.active();
       baseline_keypair = Keygen(config.target, &subtest);
       rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
     }
     {
-      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
       rng_trace.mutated_override_active = rng.active();
       mutated_keypair = Keygen(config.target, &subtest);
       rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
@@ -574,13 +641,13 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
         KEMSharedSecret mutated_ss;
         KEMCiphertext mutated_ct;
         {
-          ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+          ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
           rng_trace.baseline_override_active = rng.active();
           ciphertext = Encaps(config.target, keypair.pk, &subtest, &encaps_ss);
           rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
         }
         {
-          ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+          ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
           rng_trace.mutated_override_active = rng.active();
           mutated_ct = Encaps(config.target, keypair.pk, &subtest, &mutated_ss);
           rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
@@ -666,17 +733,25 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
       observations_ready = true;
     } else if (config.oracle_id == "kem_decaps_c" && ciphertext.status == PQCFUZZ_OK) {
       KEMSharedSecret baseline_decaps = Decaps(config.target, ciphertext.ct, keypair.sk, &subtest);
+      if (!SameSecret(encaps_ss, baseline_decaps)) {
+        setup_failure = BytesObservation(baseline_decaps.status, baseline_decaps.ss);
+        setup_failure_note = "baseline decapsulation did not recover encapsulated shared secret";
+        setup_failed = true;
+      }
       MaulResult maul = MaulBytesFixedSize(ciphertext.ct, config.mutation, "ciphertext");
       mutation_record = maul.record;
       RecordMutationEvidence(&mutation_record, ciphertext.ct, maul.mutated);
       baseline = BytesObservation(baseline_decaps.status, baseline_decaps.ss);
-      if (!mutation_record.effective) {
+      if (setup_failed) {
+        observations_ready = false;
+      } else if (!mutation_record.effective) {
         FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
         return trace;
+      } else {
+        KEMSharedSecret mutated_decaps = Decaps(config.target, maul.mutated, keypair.sk, &subtest);
+        mutated = BytesObservation(mutated_decaps.status, mutated_decaps.ss);
+        observations_ready = true;
       }
-      KEMSharedSecret mutated_decaps = Decaps(config.target, maul.mutated, keypair.sk, &subtest);
-      mutated = BytesObservation(mutated_decaps.status, mutated_decaps.ss);
-      observations_ready = true;
     } else if (config.oracle_id == "kem_decaps_sk" && ciphertext.status == PQCFUZZ_OK) {
       KEMSharedSecret baseline_decaps = Decaps(config.target, ciphertext.ct, keypair.sk, &subtest);
       MaulResult maul = MaulBytesFixedSize(keypair.sk, config.mutation, "secret_key");
@@ -711,8 +786,9 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
     trace.pair_id = config.pair_id;
     trace.algorithm = config.algorithm;
     trace.oracle_id = config.oracle_id;
-    trace.finding_class = "unsupported";
-    trace.findings.push_back({"unsupported", "unknown_oracle", "unknown metamorphic SIG oracle"});
+    trace.intervention_supported = false;
+    trace.relation_evaluable = false;
+    trace.diagnostics.push_back({"diagnostic", "oracle_registry", "unknown metamorphic SIG oracle"});
     return trace;
   }
 
@@ -741,13 +817,13 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
     SIGKeyPair baseline_keypair;
     SIGKeyPair mutated_keypair;
     {
-      ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+      ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
       rng_trace.baseline_override_active = rng.active();
       baseline_keypair = SigKeygen(config.target, &subtest);
       rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
     }
     {
-      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+      ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
       rng_trace.mutated_override_active = rng.active();
       mutated_keypair = SigKeygen(config.target, &subtest);
       rng_trace.mutated_bytes_consumed = rng.bytes_consumed();
@@ -787,13 +863,13 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
           if (!RequireDistinctRngTapes(&trace, &subtest, rng_trace)) return trace;
           SIGSignature mutated_signature;
           {
-            ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), true});
+            ScopedRngOverride rng({baseline_tape.data(), baseline_tape.size(), false});
             rng_trace.baseline_override_active = rng.active();
             signature = Sign(config.target, message, config.context, keypair.sk, &subtest);
             rng_trace.baseline_bytes_consumed = rng.bytes_consumed();
           }
           {
-            ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), true});
+            ScopedRngOverride rng({mutated_tape.data(), mutated_tape.size(), false});
             rng_trace.mutated_override_active = rng.active();
             mutated_signature = Sign(config.target, message, config.context, keypair.sk, &subtest);
             rng_trace.mutated_bytes_consumed = rng.bytes_consumed();

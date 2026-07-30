@@ -98,6 +98,24 @@ def metamorphic_oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
         "sig_verify_pk",
     ]
 
+ORACLE_ENUM_BY_NAME = {
+    "kem_decaps_c": 18,
+    "kem_decaps_sk": 19,
+    "kem_encaps_badrng": 20,
+    "kem_encaps_pk_0": 21,
+    "kem_encaps_pk": 22,
+    "kem_keygen_badrng": 23,
+    "sig_keygen_badrng": 24,
+    "sig_sign_badrng": 25,
+    "sig_sign_m": 26,
+    "sig_sign_sk": 27,
+    "sig_verify_m": 28,
+    "sig_verify_sig": 29,
+    "sig_verify_pk": 30,
+}
+
+SECURITY_TIER_ORACLES = {"kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"}
+
 
 def metamorphic_oracle_spec_for_pair(pair: dict[str, Any]) -> str:
     if pair["primitive_type"] == "kem":
@@ -262,10 +280,14 @@ def make_metamorphic_job_record(
     repo_root: Path,
     target_runtime: str = "liboqs",
     target_version: str | None = None,
+    oracle_id: str | None = None,
+    oracle_budget_seconds: int | None = None,
 ) -> dict[str, Any]:
     target = pair["left"] if pair["left"]["project_id"] == target_runtime else pair["right"]
     algorithm_token = pair["algorithm"].lower().replace("-", "").replace("_", "")
-    pair_id = f"{algorithm_token}_{target_runtime}_single_target"
+    selected_oracles = [oracle_id] if oracle_id else metamorphic_oracle_ids_for_pair(pair)
+    oracle_token = f"_{oracle_id}" if oracle_id else ""
+    pair_id = f"{algorithm_token}_{target_runtime}{oracle_token}_single_target"
     job_id = make_job_id(pair_id)
     paths = make_workspace_paths(job_id)
     return {
@@ -285,7 +307,10 @@ def make_metamorphic_job_record(
             "version": target_version or "",
         },
         "oracle_spec": metamorphic_oracle_spec_for_pair(pair),
-        "oracles": metamorphic_oracle_ids_for_pair(pair),
+        "oracle_id": oracle_id or "",
+        "expected_oracle_enum": ORACLE_ENUM_BY_NAME.get(oracle_id or "", 0),
+        "oracle_budget_seconds": oracle_budget_seconds or 0,
+        "oracles": selected_oracles,
         "enabled_subtests": [
             {
                 "subtest_id": oracle_id,
@@ -293,7 +318,7 @@ def make_metamorphic_job_record(
                 "required_exchange": [],
                 "enabled": True,
             }
-            for oracle_id in metamorphic_oracle_ids_for_pair(pair)
+            for oracle_id in selected_oracles
         ],
         "fuzzer_source": fuzzer_source_for_pair(pair),
         "paths": paths,
@@ -313,6 +338,9 @@ def make_generated_config(job: dict[str, Any]) -> dict[str, Any]:
         "primitive_type": job["primitive_type"],
         "algorithm_metadata": job["algorithm_metadata"],
         "oracles": job["oracles"],
+        "oracle_id": job.get("oracle_id", ""),
+        "expected_oracle_enum": job.get("expected_oracle_enum", 0),
+        "oracle_budget_seconds": job.get("oracle_budget_seconds", 0),
         "enabled_subtests": job["enabled_subtests"],
         "paths": {
             "result_dir": job["paths"]["result_dir"],

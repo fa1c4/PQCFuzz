@@ -54,3 +54,25 @@ def test_fuzz_effectiveness_threshold_is_visible_in_dry_run() -> None:
     assert result.returncode == 0, result.stderr
     assert "fuzz effectiveness min evaluable rate: 0.8" in result.stdout
     assert "fuzz_effectiveness_min_evaluable_rate: 0.8" in result.stdout
+
+
+def test_oracle_set_security_is_visible_in_dry_run() -> None:
+    result = run_dry("--oracle-set", "security")
+
+    assert result.returncode == 0, result.stderr
+    assert "oracle_set: security" in result.stdout
+
+
+def test_output_root_can_isolate_concurrent_eval_runs() -> None:
+    result = run_dry("--output-root", "workspace/pqcfuzz_eval_gate")
+
+    assert result.returncode == 0, result.stderr
+    assert "output root: " in result.stdout
+    assert "workspace/pqcfuzz_eval_gate" in result.stdout
+
+
+def test_output_root_rejects_paths_that_escape_the_repository() -> None:
+    result = run_dry("--output-root", "../pqcfuzz_eval")
+
+    assert result.returncode == 2
+    assert "--output-root must be a nonempty relative path without '..'" in result.stderr

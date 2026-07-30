@@ -113,7 +113,7 @@ struct RngInterventionTrace {
 };
 
 struct KEMOracleTrace {
-  int oracle_semantics_version = 3;
+  int oracle_semantics_version = 4;
   std::string oracle_suite = "fips";
   std::string relation_mode = "cross-implementation";
   std::string job_id;
@@ -140,12 +140,10 @@ struct KEMOracleTrace {
   bool valid_setup = true;
   bool baseline_setup_valid = true;
   bool mutated_setup_valid = true;
-  // P0-04 will populate phase-specific reachability with target hooks.  The
-  // compatibility defaults preserve existing execution behavior until then.
-  bool baseline_adapter_entered = true;
-  bool baseline_target_entered = true;
-  bool mutated_adapter_entered = true;
-  bool mutated_target_entered = true;
+  bool baseline_adapter_entered = false;
+  bool baseline_target_entered = false;
+  bool mutated_adapter_entered = false;
+  bool mutated_target_entered = false;
   bool relation_evaluable = true;
   bool intervention_supported = true;
   bool intervention_effective = true;

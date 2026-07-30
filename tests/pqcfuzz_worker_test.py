@@ -112,7 +112,33 @@ def test_worker_trace_exit_70_is_preserved(tmp_path: Path) -> None:
         """
 import json, sys
 trace = sys.argv[sys.argv.index('--trace') + 1]
-open(trace, 'w', encoding='utf-8').write(json.dumps({'version': 1, 'oracle_suite': 'metamorphic', 'relation_mode': 'single-target', 'job_id': 'job_worker_test', 'pair_id': 'worker_test', 'algorithm': 'ML-KEM-768', 'oracle_id': 'kem_decaps_c', 'findings': [{'class': 'malleability', 'summary': 'kept'}], 'subtests': [], 'mutations': []}) + '\\n')
+open(trace, 'w', encoding='utf-8').write(json.dumps({
+    'version': 4,
+    'oracle_semantics_version': 4,
+    'disposition': 'raw_candidate',
+    'oracle_suite': 'metamorphic',
+    'relation_mode': 'single-target',
+    'job_id': 'job_worker_test',
+    'pair_id': 'worker_test',
+    'algorithm': 'ML-KEM-768',
+    'configured_algorithm': 'ML-KEM-768',
+    'adapter_algorithm': 'ML-KEM-768',
+    'oracle_id': 'kem_decaps_c',
+    'observed_relation': 'OBSERVED_EQUAL',
+    'baseline_setup_valid': True,
+    'mutated_setup_valid': True,
+    'baseline_adapter_entered': True,
+    'baseline_target_entered': True,
+    'mutated_adapter_entered': True,
+    'mutated_target_entered': True,
+    'relation_evaluable': True,
+    'intervention_supported': True,
+    'intervention_effective': True,
+    'findings': [{'evidence_kind': 'semantic', 'class': 'malleability', 'summary': 'kept'}],
+    'subtests': [],
+    'mutations': [],
+    'rng_interventions': [],
+}) + '\\n')
 sys.exit(70)
 """,
     )

@@ -15,7 +15,6 @@ FINDING_CLASSES = {
     "non_malleability",
     "crash",
     "hang",
-    "unsupported",
     "confirmed_semantic_bug",
     "potential_crypto_vuln",
     "memory_safety",
@@ -26,6 +25,17 @@ FINDING_CLASSES = {
 
 
 def classify_trace(trace: dict[str, Any]) -> str | None:
+    semantics_version = trace.get("oracle_semantics_version")
+    if semantics_version == 4:
+        for item in trace.get("findings", []):
+            finding_class = item.get("class")
+            if finding_class in FINDING_CLASSES:
+                return finding_class
+        finding_class = trace.get("finding_class")
+        if finding_class in FINDING_CLASSES and trace.get("findings"):
+            return str(finding_class)
+        return None
+
     statuses = [
         call.get("status")
         for subtest in trace.get("subtests", [])

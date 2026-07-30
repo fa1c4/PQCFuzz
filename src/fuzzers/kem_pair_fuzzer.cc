@@ -164,7 +164,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   trace.adapter_ct_len = target->ct_len;
   trace.adapter_ss_len = target->ss_len;
   pqcfuzz::RecordOracleTrace(PQCFUZZ_RESULT_DIR, trace);
-  if (!trace.findings.empty()) {
+  if (pqcfuzz::IsPersistableRawEvidence(trace)) {
     pqcfuzz::FindingArtifactInput artifacts;
     artifacts.job_id = PQCFUZZ_JOB_ID;
     artifacts.pair_id = PQCFUZZ_PAIR_ID;

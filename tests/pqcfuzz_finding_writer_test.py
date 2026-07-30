@@ -14,6 +14,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 COMMON_SOURCES = [
     "src/adapters/status.cc",
+    "src/adapters/rng_control.cc",
+    "src/adapters/liboqs/rng_control.cc",
     "src/mutators/maul.cc",
     "src/mutators/ml_kem_layout.cc",
     "src/mutators/ml_kem_mutator.cc",
@@ -21,6 +23,7 @@ COMMON_SOURCES = [
     "src/mutators/ml_dsa_mutator.cc",
     "src/mutators/slh_dsa_layout.cc",
     "src/mutators/slh_dsa_mutator.cc",
+    "src/oracles/metamorphic_observation.cc",
     "src/oracles/oracle_result.cc",
     "src/oracles/oracle_executor.cc",
     "src/triage/finding_writer.cc",
@@ -59,6 +62,10 @@ pqcfuzz::FindingArtifactInput MakeInput(const std::string &result_dir, const std
   input.trace.finding_subclass = oracle_id == "kem_keygen_badrng" ? "keygen_rng_ignored" : "encaps_rng_ignored";
   input.trace.baseline.status = PQCFUZZ_OK;
   input.trace.mutated.status = PQCFUZZ_OK;
+  input.trace.baseline_adapter_entered = true;
+  input.trace.baseline_target_entered = true;
+  input.trace.mutated_adapter_entered = true;
+  input.trace.mutated_target_entered = true;
   input.trace.findings.push_back({"malleability", input.trace.finding_subclass, "malleability"});
   return input;
 }
@@ -143,10 +150,10 @@ def test_grouped_writer_keeps_one_exemplar_per_group_and_counts_raw_hits(tmp_pat
     trace = json.loads((dirs[0] / "oracle_trace.json").read_text(encoding="utf-8"))
     trace_schema = json.loads((REPO_ROOT / "src/schemas/oracle_trace.schema.json").read_text(encoding="utf-8"))
     finding_schema = json.loads((REPO_ROOT / "src/schemas/finding.schema.json").read_text(encoding="utf-8"))
-    assert trace["version"] == trace["oracle_semantics_version"] == 3
+    assert trace["version"] == trace["oracle_semantics_version"] == 4
     assert trace["disposition"] == "raw_candidate"
     assert "valid_setup" not in trace
-    assert finding["version"] == finding["oracle_semantics_version"] == 3
+    assert finding["version"] == finding["oracle_semantics_version"] == 4
     assert finding["validation_state"] == "raw"
     assert not list(Draft202012Validator(trace_schema).iter_errors(trace))
     assert not list(Draft202012Validator(finding_schema).iter_errors(finding))

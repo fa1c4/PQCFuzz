@@ -58,3 +58,37 @@ def test_structured_custom_mutator_keeps_fixed_algorithm_and_allowed_oracles(tmp
     ]
     subprocess.run(command, cwd=REPO_ROOT, check=True)
     subprocess.run([str(binary)], cwd=REPO_ROOT, check=True)
+
+
+def test_envelope_parser_rejects_unknown_algorithm_and_oracle_enums(tmp_path: Path) -> None:
+    main = tmp_path / "main.cc"
+    binary = tmp_path / "parser_case"
+    main.write_text(
+        textwrap.dedent(
+            """
+            #include <cstdint>
+            #include <string>
+            #include "mutators/envelope.h"
+
+            bool Parse(const uint8_t algorithm, const uint8_t oracle) {
+              const uint8_t data[] = {'P', 'Q', 'C', 'F', 1, algorithm, oracle, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+              pqcfuzz::Envelope envelope;
+              std::string error;
+              return pqcfuzz::ParseEnvelope(data, sizeof(data), &envelope, &error);
+            }
+
+            int main() {
+              if (Parse(255, 18)) return 1;
+              if (Parse(2, 255)) return 2;
+              return Parse(2, 18) ? 0 : 3;
+            }
+            """
+        ),
+        encoding="utf-8",
+    )
+    subprocess.run(
+        [os.environ.get("CXX", "clang++"), "-std=c++17", "-Isrc", str(main), "src/mutators/envelope.cc", "-o", str(binary)],
+        cwd=REPO_ROOT,
+        check=True,
+    )
+    subprocess.run([str(binary)], cwd=REPO_ROOT, check=True)

@@ -23,6 +23,72 @@ bool ReadSlice(const uint8_t *data, size_t size, size_t *offset, uint16_t length
   return true;
 }
 
+bool IsKnownAlgorithmId(AlgorithmId algorithm) {
+  switch (algorithm) {
+    case AlgorithmId::kMlKem512:
+    case AlgorithmId::kMlKem768:
+    case AlgorithmId::kMlKem1024:
+    case AlgorithmId::kMlDsa44:
+    case AlgorithmId::kMlDsa65:
+    case AlgorithmId::kMlDsa87:
+    case AlgorithmId::kSlhDsaSha2_128s:
+    case AlgorithmId::kSlhDsaShake_128s:
+    case AlgorithmId::kSlhDsaSha2_128f:
+    case AlgorithmId::kSlhDsaShake_128f:
+    case AlgorithmId::kSlhDsaSha2_192s:
+    case AlgorithmId::kSlhDsaShake_192s:
+    case AlgorithmId::kSlhDsaSha2_192f:
+    case AlgorithmId::kSlhDsaShake_192f:
+    case AlgorithmId::kSlhDsaSha2_256s:
+    case AlgorithmId::kSlhDsaShake_256s:
+    case AlgorithmId::kSlhDsaSha2_256f:
+    case AlgorithmId::kSlhDsaShake_256f:
+      return true;
+    case AlgorithmId::kUnknown:
+      return false;
+  }
+  return false;
+}
+
+bool IsKnownOracleId(OracleId oracle_id) {
+  switch (oracle_id) {
+    case OracleId::kMlKemLocalRoundtrip:
+    case OracleId::kMlKemCrossExchangeRoundtrip:
+    case OracleId::kMlKemTamperedCiphertextImplicitRejection:
+    case OracleId::kMlKemBadRandomnessSanity:
+    case OracleId::kMlDsaLocalSignVerify:
+    case OracleId::kMlDsaCrossVerify:
+    case OracleId::kMlDsaMutatedSignatureNegative:
+    case OracleId::kMlDsaMutatedMessageNegative:
+    case OracleId::kMlDsaMutatedContextNegative:
+    case OracleId::kMlDsaOidFieldMutationSanity:
+    case OracleId::kMlDsaBadRandomnessSanity:
+    case OracleId::kSlhDsaLocalSignVerify:
+    case OracleId::kSlhDsaCrossVerify:
+    case OracleId::kSlhDsaMutatedSignatureNegative:
+    case OracleId::kSlhDsaMutatedMessageNegative:
+    case OracleId::kSlhDsaMutatedContextNegative:
+    case OracleId::kSlhDsaBadRandomnessSanity:
+    case OracleId::kKemDecapsCiphertext:
+    case OracleId::kKemDecapsSecretKey:
+    case OracleId::kKemEncapsBadRng:
+    case OracleId::kKemEncapsZeroPublicKey:
+    case OracleId::kKemEncapsPublicKey:
+    case OracleId::kKemKeygenBadRng:
+    case OracleId::kSigKeygenBadRng:
+    case OracleId::kSigSignBadRng:
+    case OracleId::kSigSignMessage:
+    case OracleId::kSigSignSecretKey:
+    case OracleId::kSigVerifyMessage:
+    case OracleId::kSigVerifySignature:
+    case OracleId::kSigVerifyPublicKey:
+      return true;
+    case OracleId::kUnknown:
+      return false;
+  }
+  return false;
+}
+
 }  // namespace
 
 const char *AlgorithmName(AlgorithmId algorithm) {
@@ -339,7 +405,7 @@ bool ParseEnvelope(const uint8_t *data, size_t size, Envelope *envelope, std::st
     }
     return false;
   }
-  if (parsed.algorithm == AlgorithmId::kUnknown || parsed.oracle_id == OracleId::kUnknown) {
+  if (!IsKnownAlgorithmId(parsed.algorithm) || !IsKnownOracleId(parsed.oracle_id)) {
     if (error != nullptr) {
       *error = "unknown algorithm or oracle enum";
     }

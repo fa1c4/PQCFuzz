@@ -351,8 +351,8 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   const std::string finding_subclass = FindingSubclass(input.trace);
   std::ostringstream out;
   out << "{\n";
-  out << "  \"version\": 3,\n";
-  out << "  \"oracle_semantics_version\": 3,\n";
+  out << "  \"version\": 4,\n";
+  out << "  \"oracle_semantics_version\": 4,\n";
   out << "  \"evidence_kind\": \"" << JsonEscape(FindingEvidenceKind(input.trace)) << "\",\n";
   out << "  \"finding_id\": \"" << JsonEscape(finding_id) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(input.job_id) << "\",\n";
@@ -514,9 +514,10 @@ uint64_t MaxExemplarsPerGroup() {
 }  // namespace
 
 bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artifact_dir, std::string *error) {
-  if (!HasSecurityEvidence(input.trace)) {
+  const TraceValidationResult validation = ValidateTraceForPersistence(input.trace);
+  if (!validation.persistable) {
     if (error != nullptr) {
-      *error = "no_security_evidence";
+      *error = validation.reason;
     }
     return false;
   }

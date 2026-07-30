@@ -71,6 +71,12 @@ int main(int argc, char **argv) {
               << args.algorithm << "\n";
     return pqcfuzz::kExitInvalidInputOrConfig;
   }
+  const std::string envelope_oracle = pqcfuzz::OracleName(envelope.oracle_id);
+  if (envelope_oracle != args.oracle_id) {
+    std::cerr << "input oracle " << envelope_oracle << " does not match job oracle "
+              << args.oracle_id << "\n";
+    return pqcfuzz::kExitInvalidInputOrConfig;
+  }
 
   pqcfuzz::KEMOracleTrace trace;
   if (args.primitive_type == "sig") {
@@ -100,9 +106,7 @@ int main(int argc, char **argv) {
       config.target = target;
       config.seed = envelope.seed;
       config.message = DefaultMessage(envelope.msg);
-      config.context = envelope.extra.size() > 255
-                           ? std::vector<uint8_t>(envelope.extra.begin(), envelope.extra.begin() + 255)
-                           : envelope.extra;
+      config.context = envelope.extra;
       config.mutation = envelope.mutation;
       trace = pqcfuzz::ExecuteMetamorphicSigOracle(config);
     } else {
@@ -118,9 +122,7 @@ int main(int argc, char **argv) {
       config.exchange_contract.signature_exchange = args.signature_exchange;
       config.seed = envelope.seed;
       config.message = DefaultMessage(envelope.msg);
-      config.context = envelope.extra.size() > 255
-                           ? std::vector<uint8_t>(envelope.extra.begin(), envelope.extra.begin() + 255)
-                           : envelope.extra;
+      config.context = envelope.extra;
       config.mutation = envelope.mutation;
       trace = pqcfuzz::ExecuteSigOracle(config);
     }

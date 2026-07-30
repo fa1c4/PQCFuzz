@@ -79,3 +79,15 @@ def test_launcher_reports_preflight_and_fuzz_effectiveness_as_distinct_gates() -
     assert 'oracle_coverage_state != "passed"' in script
     assert '0.4.0:mlkem512' in script
     assert 'PREFLIGHT_ONLY' in script
+
+
+def test_security_oracle_set_filters_eval_launcher_oracles() -> None:
+    script = (REPO_ROOT / "scripts" / "pqcfuzz_eval.sh").read_text(encoding="utf-8")
+
+    assert 'if [ "$ORACLE_SET" = "security" ]; then' in script
+    assert "printf 'ORACLE_SET=%q\\n' \"$ORACLE_SET\"" in script
+    assert "printf '%s\\n' '18:kem_decaps_c'" in script
+    assert "printf '%s\\n' '28:sig_verify_m' '29:sig_verify_sig' '30:sig_verify_pk'" in script
+    assert "SIG_ORACLE_ENUM=28" in script
+    assert '"oracle_set": os.environ["EVAL_ORACLE_SET"]' in script
+    assert '"oracle_set": os.environ.get("ORACLE_SET", "all")' in script

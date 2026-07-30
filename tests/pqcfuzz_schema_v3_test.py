@@ -13,10 +13,10 @@ def load_schema(name: str) -> dict:
     return json.loads((REPO_ROOT / "src" / "schemas" / name).read_text(encoding="utf-8"))
 
 
-def test_v3_trace_requires_disposition() -> None:
+def test_canonical_v4_trace_requires_disposition_and_version() -> None:
     trace = {
-        "version": 3,
-        "oracle_semantics_version": 3,
+        "version": 4,
+        "oracle_semantics_version": 4,
         "job_id": "schema-test",
         "pair_id": "schema-test",
         "algorithm": "ML-KEM-768",
@@ -47,10 +47,10 @@ def test_v3_trace_requires_disposition() -> None:
     assert any(error.validator == "required" and "disposition" in error.message for error in errors)
 
 
-def test_v3_finding_rejects_unsupported_class() -> None:
+def test_canonical_v4_finding_rejects_unsupported_class() -> None:
     finding = {
-        "version": 3,
-        "oracle_semantics_version": 3,
+        "version": 4,
+        "oracle_semantics_version": 4,
         "evidence_kind": "semantic",
         "finding_id": "schema-test",
         "job_id": "schema-test",
@@ -72,3 +72,13 @@ def test_v3_finding_rejects_unsupported_class() -> None:
     errors = list(Draft202012Validator(load_schema("finding.schema.json")).iter_errors(finding))
 
     assert any(error.validator == "enum" and list(error.path) == ["finding_class"] for error in errors)
+
+
+def test_v3_schemas_are_retained_for_legacy_artifacts() -> None:
+    trace_schema = load_schema("v3/oracle_trace.schema.json")
+    finding_schema = load_schema("v3/finding.schema.json")
+
+    assert trace_schema["properties"]["version"]["const"] == 3
+    assert trace_schema["properties"]["oracle_semantics_version"]["const"] == 3
+    assert finding_schema["properties"]["version"]["const"] == 3
+    assert finding_schema["properties"]["oracle_semantics_version"]["const"] == 3

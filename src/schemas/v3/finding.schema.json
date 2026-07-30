@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://pqcfuzz.local/schemas/finding.schema.json",
+  "$id": "https://pqcfuzz.local/schemas/v3/finding.schema.json",
   "type": "object",
   "required": [
     "version",
@@ -24,10 +24,10 @@
   ],
   "properties": {
     "version": {
-      "const": 4
+      "const": 3
     },
     "oracle_semantics_version": {
-      "const": 4
+      "const": 3
     },
     "evidence_kind": {
       "enum": ["semantic", "sanitizer", "process"]
@@ -46,15 +46,8 @@
         "api_policy_difference"
       ]
     },
-    "validated": {
-      "type": "boolean"
-    },
     "validation_state": {
       "enum": ["raw", "validated", "invalidated"]
-    },
-    "validation_attempts": {
-      "type": "integer",
-      "minimum": 0
     }
   }
 }

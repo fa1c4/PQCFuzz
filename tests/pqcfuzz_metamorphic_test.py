@@ -124,7 +124,9 @@ def test_unsupported_adapter_reports_unsupported(tmp_path: Path) -> None:
           cfg.algorithm = "ML-KEM-768";
           cfg.oracle_id = "kem_decaps_c";
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
-          return trace.finding_class == "unsupported" ? 0 : 1;
+          return trace.findings.empty() && !trace.relation_evaluable &&
+                         !trace.diagnostics.empty() &&
+                         trace.diagnostics[0].summary.find("API_UNSUPPORTED") != std::string::npos ? 0 : 1;
         }
         """,
         [],
@@ -166,7 +168,7 @@ def test_sig_sign_badrng_classifies_unsupported_before_rng_consumption(tmp_path:
           cfg.message = {'m'};
           cfg.context = {'c'};
           auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
-          return trace.finding_class == "unsupported" &&
+          return trace.findings.empty() &&
                          trace.observed_relation == "OBSERVED_UNSUPPORTED" &&
                          !trace.subtests.empty() &&
                          trace.subtests[0].note == "adapter API unsupported" &&
@@ -320,5 +322,6 @@ def test_sig_setup_sign_failure_is_skipped_not_malleability(tmp_path: Path) -> N
 def test_classification_relation_cases() -> None:
     assert classify_trace({"expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) == "malleability"
     assert classify_trace({"expected_relation": "EXPECT_EQUAL", "observed_relation": "OBSERVED_DIFFERENT", "findings": []}) == "non_malleability"
+    assert classify_trace({"oracle_semantics_version": 4, "expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) is None
     assert classify_trace({"findings": [{"class": "crash", "summary": "boom"}]}) == "crash"
     assert classify_trace({"findings": [{"class": "hang", "summary": "slow"}]}) == "hang"

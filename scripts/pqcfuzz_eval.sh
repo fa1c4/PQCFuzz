@@ -11,9 +11,11 @@ Options:
                                 Accepts seconds or s/m/h/d suffixes, e.g. 86400, 60m, 24h.
   --progress-interval SECONDS   Seconds between progress reports. Default: 3600.
   --session-prefix NAME         Prefix for tmux session names. Default: pqcfuzz.
+  --output-root PATH            Relative output root. Default: workspace/pqcfuzz_eval.
   --versions CSV                Comma-separated liboqs versions. Default: 0.14.0,0.8.0,0.4.0.
   --oracle-suite fips|metamorphic
                                 Oracle suite. Default: metamorphic.
+  --oracle-set all|security     Metamorphic oracle subset. Default: all.
   --relation-mode single-target|self-reference|cross-implementation
                                 Relation mode. Default: single-target.
   --target-runtime liboqs       Target runtime. Default: liboqs.
@@ -87,6 +89,13 @@ validate_session_prefix() {
   local prefix="$1"
   if [[ ! "$prefix" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]]; then
     die "--session-prefix must match [A-Za-z0-9][A-Za-z0-9_.-]*"
+  fi
+}
+
+validate_output_root() {
+  local path="$1"
+  if [ -z "$path" ] || [[ "$path" = /* ]] || [[ "$path" == *".."* ]]; then
+    die "--output-root must be a nonempty relative path without '..'"
   fi
 }
 
@@ -210,6 +219,7 @@ print_campaign_commands() {
   echo "docker run pqcfuzz-eval: build static liboqs.a for $version"
   echo "docker run pqcfuzz-eval: generate self-reference compatibility adapter"
   echo "docker run pqcfuzz-eval: oracle_suite: ${ORACLE_SUITE}"
+  echo "docker run pqcfuzz-eval: oracle_set: ${ORACLE_SET}"
   echo "docker run pqcfuzz-eval: relation_mode: ${RELATION_MODE}"
   echo "docker run pqcfuzz-eval: target_runtime: ${TARGET_RUNTIME}"
   echo "docker run pqcfuzz-eval: sanitizers: ${SANITIZERS}"
@@ -296,6 +306,7 @@ write_launcher() {
     printf 'STATUS_FILE_ABS_HOST=%q\n' "$status_file_abs"
     printf 'FUZZING_SECONDS=%q\n\n' "$seconds"
     printf 'ORACLE_SUITE=%q\n' "$ORACLE_SUITE"
+    printf 'ORACLE_SET=%q\n' "$ORACLE_SET"
     printf 'RELATION_MODE=%q\n' "$RELATION_MODE"
     printf 'TARGET_RUNTIME=%q\n' "$TARGET_RUNTIME"
     printf 'SANITIZERS=%q\n' "$SANITIZERS"
@@ -344,6 +355,7 @@ RESULT="${RESULT:-}"
 ENDED_AT="${ENDED_AT:-}"
 FAILURE_REASON="${FAILURE_REASON:-}"
 ORACLE_SUITE="${ORACLE_SUITE:-metamorphic}"
+ORACLE_SET="${ORACLE_SET:-all}"
 RELATION_MODE="${RELATION_MODE:-single-target}"
 TARGET_RUNTIME="${TARGET_RUNTIME:-liboqs}"
 SANITIZERS="${SANITIZERS:-address,undefined}"
@@ -416,6 +428,7 @@ write_status() {
   EVAL_RESULT="$RESULT" \
   EVAL_FAILURE_REASON="$FAILURE_REASON" \
   EVAL_ORACLE_SUITE="$ORACLE_SUITE" \
+  EVAL_ORACLE_SET="$ORACLE_SET" \
   EVAL_RELATION_MODE="$RELATION_MODE" \
   EVAL_TARGET_RUNTIME="$TARGET_RUNTIME" \
   EVAL_SANITIZERS="$SANITIZERS" \
@@ -475,6 +488,7 @@ doc.update({
     "result": os.environ["EVAL_RESULT"] or None,
     "failure_reason": os.environ["EVAL_FAILURE_REASON"] or None,
     "oracle_suite": os.environ["EVAL_ORACLE_SUITE"],
+    "oracle_set": os.environ["EVAL_ORACLE_SET"],
     "relation_mode": os.environ["EVAL_RELATION_MODE"],
     "target_runtime": os.environ["EVAL_TARGET_RUNTIME"],
     "sanitizers": os.environ["EVAL_SANITIZERS"],
@@ -983,14 +997,22 @@ oracle_specs_for_primitive() {
   local primitive="$1"
   case "${ORACLE_SUITE}:${primitive}" in
     metamorphic:kem)
-      printf '%s\n' \
-        '18:kem_decaps_c' '19:kem_decaps_sk' '20:kem_encaps_badrng' \
-        '21:kem_encaps_pk_0' '22:kem_encaps_pk' '23:kem_keygen_badrng'
+      if [ "$ORACLE_SET" = "security" ]; then
+        printf '%s\n' '18:kem_decaps_c'
+      else
+        printf '%s\n' \
+          '18:kem_decaps_c' '19:kem_decaps_sk' '20:kem_encaps_badrng' \
+          '21:kem_encaps_pk_0' '22:kem_encaps_pk' '23:kem_keygen_badrng'
+      fi
       ;;
     metamorphic:sig)
-      printf '%s\n' \
-        '24:sig_keygen_badrng' '25:sig_sign_badrng' '26:sig_sign_m' \
-        '27:sig_sign_sk' '28:sig_verify_m' '29:sig_verify_sig' '30:sig_verify_pk'
+      if [ "$ORACLE_SET" = "security" ]; then
+        printf '%s\n' '28:sig_verify_m' '29:sig_verify_sig' '30:sig_verify_pk'
+      else
+        printf '%s\n' \
+          '24:sig_keygen_badrng' '25:sig_sign_badrng' '26:sig_sign_m' \
+          '27:sig_sign_sk' '28:sig_verify_m' '29:sig_verify_sig' '30:sig_verify_pk'
+      fi
       ;;
     fips:kem)
       printf '%s\n' \
@@ -2025,7 +2047,7 @@ KEM_ORACLE_ENUM=1
 SIG_ORACLE_ENUM=5
 if [ "$ORACLE_SUITE" = "metamorphic" ]; then
   KEM_ORACLE_ENUM=18
-  SIG_ORACLE_ENUM=29
+  SIG_ORACLE_ENUM=28
 fi
 
 active_target_count() {
@@ -2188,7 +2210,7 @@ print_progress() {
 }
 
 write_final_summary() {
-  SANITIZERS="$SANITIZERS" LEAK_CHECK="$LEAK_CHECK" python3 - "$INDEX_FILE" "$SUMMARY_JSON" "$SUMMARY_TSV" "$FUZZING_SECONDS" <<'PY'
+  SANITIZERS="$SANITIZERS" LEAK_CHECK="$LEAK_CHECK" ORACLE_SET="$ORACLE_SET" python3 - "$INDEX_FILE" "$SUMMARY_JSON" "$SUMMARY_TSV" "$FUZZING_SECONDS" <<'PY'
 import csv
 import json
 import os
@@ -2409,6 +2431,7 @@ for campaign in campaigns:
         "result": result,
         "failure_reason": status.get("failure_reason"),
         "oracle_suite": status.get("oracle_suite") or os.environ.get("ORACLE_SUITE", "metamorphic"),
+        "oracle_set": status.get("oracle_set") or os.environ.get("ORACLE_SET", "all"),
         "relation_mode": status.get("relation_mode") or os.environ.get("RELATION_MODE", "single-target"),
         "sanitizers": status.get("sanitizers") or os.environ.get("SANITIZERS", "address,undefined"),
         "leak_check": status.get("leak_check") or os.environ.get("LEAK_CHECK", "off"),
@@ -2448,6 +2471,7 @@ summary = {
     "fuzzing_seconds": fuzzing_seconds,
     "overall_status": overall_status,
     "oracle_suite": os.environ.get("ORACLE_SUITE", "metamorphic"),
+    "oracle_set": os.environ.get("ORACLE_SET", "all"),
     "relation_mode": os.environ.get("RELATION_MODE", "single-target"),
     "sanitizers": os.environ.get("SANITIZERS", "address,undefined"),
     "leak_check": os.environ.get("LEAK_CHECK", "off"),
@@ -2526,9 +2550,11 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FUZZING_TIME="24h"
 PROGRESS_INTERVAL="3600"
 SESSION_PREFIX="pqcfuzz"
+EVAL_ROOT_REL="workspace/pqcfuzz_eval"
 VERSIONS_CSV="0.14.0,0.8.0,0.4.0"
 BASE_IMAGE="ubuntu:22.04"
 ORACLE_SUITE="metamorphic"
+ORACLE_SET="all"
 RELATION_MODE="single-target"
 TARGET_RUNTIME="liboqs"
 SANITIZERS="address,undefined"
@@ -2579,6 +2605,17 @@ while [ "$#" -gt 0 ]; do
       SESSION_PREFIX="${1#--session-prefix=}"
       shift
       ;;
+    --output-root)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --output-root"
+      fi
+      EVAL_ROOT_REL="$2"
+      shift 2
+      ;;
+    --output-root=*)
+      EVAL_ROOT_REL="${1#--output-root=}"
+      shift
+      ;;
     --versions)
       if [ "$#" -lt 2 ]; then
         die "missing value for --versions"
@@ -2599,6 +2636,17 @@ while [ "$#" -gt 0 ]; do
       ;;
     --oracle-suite=*)
       ORACLE_SUITE="${1#--oracle-suite=}"
+      shift
+      ;;
+    --oracle-set)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --oracle-set"
+      fi
+      ORACLE_SET="$2"
+      shift 2
+      ;;
+    --oracle-set=*)
+      ORACLE_SET="${1#--oracle-set=}"
       shift
       ;;
     --relation-mode)
@@ -2766,6 +2814,10 @@ case "$ORACLE_SUITE" in
   fips|metamorphic) ;;
   *) die "--oracle-suite must be fips or metamorphic" ;;
 esac
+case "$ORACLE_SET" in
+  all|security) ;;
+  *) die "--oracle-set must be all or security" ;;
+esac
 case "$RELATION_MODE" in
   single-liboqs) RELATION_MODE="single-target" ;;
   liboqs-vs-pqclean) RELATION_MODE="cross-implementation" ;;
@@ -2809,6 +2861,7 @@ if ! [[ "$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE" =~ ^(0(\.[0-9]+)?|1(\.0+)?)$ ]]
 fi
 
 validate_session_prefix "$SESSION_PREFIX"
+validate_output_root "$EVAL_ROOT_REL"
 FUZZING_SECONDS="$(parse_duration_seconds "$FUZZING_TIME")"
 REPORT_TIMEOUT_SECONDS="$(parse_duration_seconds "$REPORT_TIMEOUT")"
 if [[ ! "$PROGRESS_INTERVAL" =~ ^[0-9]+$ ]] || [ "$PROGRESS_INTERVAL" -le 0 ]; then
@@ -2817,7 +2870,6 @@ fi
 
 mapfile -t VERSIONS < <(parse_versions "$VERSIONS_CSV")
 
-EVAL_ROOT_REL="workspace/pqcfuzz_eval"
 EVAL_ROOT="${ROOT_DIR}/${EVAL_ROOT_REL}"
 CAMPAIGN_ROOT="${EVAL_ROOT}/campaigns"
 LOG_DIR="${EVAL_ROOT}/logs"
@@ -2874,6 +2926,7 @@ echo "[pqcfuzz-eval] session prefix: $SESSION_PREFIX"
 echo "[pqcfuzz-eval] versions: ${VERSIONS[*]}"
 echo "[pqcfuzz-eval] base image: $BASE_IMAGE"
 echo "[pqcfuzz-eval] oracle_suite: $ORACLE_SUITE"
+echo "[pqcfuzz-eval] oracle_set: $ORACLE_SET"
 echo "[pqcfuzz-eval] relation_mode: $RELATION_MODE"
 echo "[pqcfuzz-eval] target_runtime: $TARGET_RUNTIME"
 echo "[pqcfuzz-eval] sanitizers: $SANITIZERS"

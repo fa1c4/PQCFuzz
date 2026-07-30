@@ -1,0 +1,4 @@
+==12345==ERROR: AddressSanitizer: heap-use-after-free on address 0x603000000040
+    #0 0x7f00 in pqcfuzz::VerifyDetached /tmp/build-a/src/adapters/liboqs/sig_adapter.cc:42:7
+    #1 0x7f11 in pqcfuzz::ExecuteVerify /tmp/build-a/src/oracles/metamorphic_executor.cc:884:3
+SUMMARY: AddressSanitizer: heap-use-after-free /tmp/build-a/src/adapters/liboqs/sig_adapter.cc:42:7

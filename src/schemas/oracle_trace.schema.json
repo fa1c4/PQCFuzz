@@ -32,7 +32,7 @@
   ],
   "properties": {
     "version": {
-      "const": 3
+      "const": 4
     },
     "subtests": {
       "type": "array",
@@ -63,7 +63,7 @@
       "type": "array"
     },
     "oracle_semantics_version": {
-      "const": 3
+      "const": 4
     },
     "rng_interventions": {
       "type": "array"
@@ -86,7 +86,7 @@
       "type": "boolean"
     },
     "disposition": {
-      "enum": ["pass", "diagnostic", "not_evaluable", "raw_candidate", "sanitizer_evidence", "harness_error"]
+      "enum": ["pass", "diagnostic", "not_evaluable", "raw_candidate", "sanitizer_evidence", "process_evidence", "harness_error"]
     },
     "baseline_setup_valid": {
       "type": "boolean"

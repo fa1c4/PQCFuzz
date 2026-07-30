@@ -1,6 +1,7 @@
 #include "adapters/rng_control.h"
 
 #include <algorithm>
+#include <mutex>
 #include <vector>
 
 namespace pqcfuzz {
@@ -13,6 +14,20 @@ struct TapeState {
 };
 
 thread_local std::vector<TapeState> g_tapes;
+std::mutex g_hook_mutex;
+size_t g_process_scope_depth = 0;
+
+uint8_t DerivedByte(const TapeState &tape, size_t offset) {
+  uint64_t hash = 1469598103934665603ull ^ static_cast<uint64_t>(offset);
+  for (uint8_t byte : tape.data) {
+    hash ^= byte;
+    hash *= 1099511628211ull;
+  }
+  hash ^= static_cast<uint64_t>(offset >> 8);
+  hash *= 1099511628211ull;
+  hash ^= static_cast<uint64_t>(offset << 17);
+  return static_cast<uint8_t>((hash >> ((offset % 8u) * 8u)) & 0xffu);
+}
 
 bool FillFromActiveTape(uint8_t *out, size_t out_len) {
   if (out == nullptr || g_tapes.empty()) {
@@ -28,7 +43,7 @@ bool FillFromActiveTape(uint8_t *out, size_t out_len) {
       if (tape.repeat) {
         tape.offset = 0;
       } else {
-        out[i] = 0;
+        out[i] = DerivedByte(tape, tape.offset++);
         continue;
       }
     }
@@ -46,14 +61,28 @@ pqcfuzz_status pqcfuzz_rng_push_tape(const RngTape &tape) {
   TapeState state;
   state.data.assign(tape.data, tape.data + tape.size);
   state.repeat = tape.repeat;
-  g_tapes.push_back(std::move(state));
-  pqcfuzz_install_liboqs_rng_hook();
+  {
+    std::lock_guard<std::mutex> lock(g_hook_mutex);
+    if (g_process_scope_depth == 0) {
+      pqcfuzz_install_liboqs_rng_hook();
+    }
+    ++g_process_scope_depth;
+    g_tapes.push_back(std::move(state));
+  }
   return PQCFUZZ_OK;
 }
 
 void pqcfuzz_rng_pop_tape() {
-  if (!g_tapes.empty()) {
-    g_tapes.pop_back();
+  std::lock_guard<std::mutex> lock(g_hook_mutex);
+  if (g_tapes.empty()) {
+    return;
+  }
+  g_tapes.pop_back();
+  if (g_process_scope_depth > 0) {
+    --g_process_scope_depth;
+  }
+  if (g_process_scope_depth == 0) {
+    pqcfuzz_restore_liboqs_rng_hook();
   }
 }
 

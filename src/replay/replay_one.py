@@ -82,7 +82,8 @@ ORACLE_ENUM_BY_NAME = {value: key for key, value in ORACLE_BY_ENUM.items()}
 
 EXIT_HANG = 71
 EXIT_NATIVE_CRASH = 72
-V3_ORACLE_SEMANTICS_VERSION = 3
+CURRENT_ORACLE_SEMANTICS_VERSION = 4
+LEGACY_ORACLE_SEMANTICS_VERSIONS = {2, 3}
 
 
 class ReplayError(RuntimeError):
@@ -119,11 +120,15 @@ def parse_binary_envelope(data: bytes) -> dict[str, Any]:
     extra, offset = read_slice(data, offset, extra_len, "extra")
     if offset != len(data):
         raise ReplayError("PQCFuzz envelope has trailing bytes after extra field")
+    if algorithm_enum not in ALGORITHM_BY_ENUM:
+        raise ReplayError(f"unknown algorithm enum in PQCFuzz envelope: {algorithm_enum}")
+    if oracle_enum not in ORACLE_BY_ENUM:
+        raise ReplayError(f"unknown oracle enum in PQCFuzz envelope: {oracle_enum}")
     return {
         "magic": "PQCF",
         "version": version,
-        "algorithm": ALGORITHM_BY_ENUM.get(algorithm_enum, f"UNKNOWN-{algorithm_enum}"),
-        "oracle_id": ORACLE_BY_ENUM.get(oracle_enum, f"UNKNOWN-{oracle_enum}"),
+        "algorithm": ALGORITHM_BY_ENUM[algorithm_enum],
+        "oracle_id": ORACLE_BY_ENUM[oracle_enum],
         "flags": flags,
         "seed": seed,
         "msg": msg,
@@ -210,10 +215,15 @@ def make_artifact_dir(job: dict[str, Any], input_bytes: bytes) -> Path:
 def selected_oracle_id(job: dict[str, Any], envelope: dict[str, Any]) -> str:
     envelope_oracle = str(envelope["oracle_id"])
     job_oracles = [str(item) for item in job.get("oracles", [])]
+    expected = str(job.get("oracle_id") or job.get("expected_oracle_id") or "")
+    if expected:
+        job_oracles = [expected]
     if envelope_oracle in job_oracles:
         return envelope_oracle
     if job_oracles:
-        return job_oracles[0]
+        raise ReplayError(
+            f"input oracle {envelope_oracle} does not match job oracle {job_oracles[0]}"
+        )
     return envelope_oracle
 
 
@@ -303,17 +313,17 @@ def sanitizer_class(stderr: str) -> str | None:
 
 def trace_semantics_status(trace: dict[str, Any]) -> str:
     """Classify a trace without upgrading historical evidence in-place."""
-    if trace.get("version") == V3_ORACLE_SEMANTICS_VERSION and trace.get("oracle_semantics_version") == V3_ORACLE_SEMANTICS_VERSION:
-        return "v3"
-    if trace.get("version") == 2 or trace.get("oracle_semantics_version") == 2:
+    if trace.get("version") == CURRENT_ORACLE_SEMANTICS_VERSION and trace.get("oracle_semantics_version") == CURRENT_ORACLE_SEMANTICS_VERSION:
+        return "v4"
+    if trace.get("version") in LEGACY_ORACLE_SEMANTICS_VERSIONS or trace.get("oracle_semantics_version") in LEGACY_ORACLE_SEMANTICS_VERSIONS:
         return "legacy_semantics"
     return "unknown_semantics"
 
 
-def v3_trace(job: dict[str, Any], oracle_id: str, disposition: str) -> dict[str, Any]:
+def current_trace(job: dict[str, Any], oracle_id: str, disposition: str) -> dict[str, Any]:
     return {
-        "version": V3_ORACLE_SEMANTICS_VERSION,
-        "oracle_semantics_version": V3_ORACLE_SEMANTICS_VERSION,
+        "version": CURRENT_ORACLE_SEMANTICS_VERSION,
+        "oracle_semantics_version": CURRENT_ORACLE_SEMANTICS_VERSION,
         "disposition": disposition,
         "oracle_suite": job.get("oracle_suite", "fips"),
         "relation_mode": job.get("relation_mode", "cross-implementation"),
@@ -363,7 +373,7 @@ def synthesize_trace(
     if sanitizer is not None:
         finding_class = sanitizer
         evidence_kind = "sanitizer"
-    disposition = "sanitizer_evidence" if evidence_kind == "sanitizer" else "raw_candidate"
+    disposition = "sanitizer_evidence" if evidence_kind == "sanitizer" else "process_evidence"
     finding: dict[str, Any] = {
         "evidence_kind": evidence_kind,
         "class": finding_class,
@@ -372,7 +382,7 @@ def synthesize_trace(
         "source_phase": "replay",
         "fingerprint": evidence_fingerprint(evidence_kind, finding_class, summary),
     }
-    trace = v3_trace(job, oracle_id, disposition)
+    trace = current_trace(job, oracle_id, disposition)
     trace["findings"] = [finding]
     if returncode is not None and returncode < 0:
         trace["crash_signal"] = -returncode
@@ -382,11 +392,11 @@ def synthesize_trace(
 
 
 def synthesize_no_finding_trace(job: dict[str, Any], oracle_id: str) -> dict[str, Any]:
-    return v3_trace(job, oracle_id, "pass")
+    return current_trace(job, oracle_id, "pass")
 
 
 def synthesize_diagnostic_trace(job: dict[str, Any], oracle_id: str, returncode: int | None) -> dict[str, Any]:
-    trace = v3_trace(job, oracle_id, "diagnostic")
+    trace = current_trace(job, oracle_id, "diagnostic")
     trace["relation_evaluable"] = False
     trace["diagnostic_event"] = "native_replay_api_or_harness_error"
     trace["diagnostics"] = [
@@ -437,16 +447,16 @@ def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[b
     semantics = trace_semantics_status(trace)
     if semantics == "legacy_semantics":
         return False, "legacy_semantics"
-    if semantics != "v3":
+    if semantics != "v4":
         return False, "oracle_semantics_version_mismatch"
     findings = trace.get("findings")
     if not isinstance(findings, list) or not findings:
         return False, "replay_has_no_finding"
     finding_class = classify_trace(trace)
     if finding_class in {"crash", "hang", "memory_safety", "ub"}:
-        # Process/sanitizer evidence is handled by the replay worker.  Do not
-        # require a mutation relation for those classes.
-        return True, ""
+        if trace.get("fingerprint_replay_matched") is True:
+            return True, ""
+        return False, "fingerprint_replay_required"
     if trace.get("algorithm") != job.get("algorithm"):
         return False, "algorithm_routing_mismatch"
     if trace.get("configured_algorithm") != job.get("algorithm"):
@@ -517,9 +527,9 @@ def maybe_write_finding(
     command: list[str],
     replay_validation_failure: str = "",
 ) -> None:
-    # A v2 trace remains readable for diagnostics, but it must never be
-    # wrapped in a new v3 finding or be treated as equivalent v3 evidence.
-    if trace_semantics_status(trace) != "v3":
+    # A v2/v3 trace remains readable for diagnostics, but it must never be
+    # wrapped in a new v4 finding or be treated as equivalent v4 evidence.
+    if trace_semantics_status(trace) != "v4":
         return
     finding_class = classify_trace(trace)
     if finding_class is None or finding_class == "unsupported":
@@ -530,8 +540,8 @@ def maybe_write_finding(
         validated = False
         validation_failure_reason = replay_validation_failure
     finding = {
-        "version": 3,
-        "oracle_semantics_version": 3,
+        "version": CURRENT_ORACLE_SEMANTICS_VERSION,
+        "oracle_semantics_version": CURRENT_ORACLE_SEMANTICS_VERSION,
         "evidence_kind": str(first_finding(trace).get("evidence_kind") or "semantic"),
         "finding_id": finding_id,
         "job_id": job["job_id"],

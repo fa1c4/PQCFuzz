@@ -27,7 +27,7 @@ def write_finding(
 ) -> Path:
     artifact = eval_root / "campaigns" / f"liboqs-{version}" / "workspace" / "results" / primitive / finding_id
     artifact.mkdir(parents=True, exist_ok=True)
-    semantics_version = None if legacy else (oracle_semantics_version or 3)
+    semantics_version = None if legacy else (oracle_semantics_version or 4)
     artifact_version = 1 if legacy else semantics_version
     finding = {
         "version": artifact_version,
@@ -198,7 +198,7 @@ def test_fast_summary_counts_artifact_dirs_and_reads_exemplars(tmp_path: Path) -
     assert len(summaries) == 1
     assert summaries[0]["count"] == "2"
     assert summaries[0]["summary_mode"] == "fast-directory"
-    assert summaries[0]["group_key"] == "0.8.0|3|v3|kem|confirmed_semantic_bug"
+    assert summaries[0]["group_key"] == "0.8.0|4|v4|kem|confirmed_semantic_bug"
     assert summaries[0]["finding_class"] == "confirmed_semantic_bug"
     assert summaries[0]["oracle_id"] == "kem_decaps_c"
 
@@ -232,7 +232,7 @@ def test_fast_summary_prefers_grouped_counter_counts(tmp_path: Path) -> None:
                 "42",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_keygen_badrng|rng|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|encaps_rng_ignored|OK|OK",
                 artifact.name,
-                "3",
+                "4",
                 "true",
                 "malleability",
                 "encaps_rng_ignored",
@@ -290,7 +290,7 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
                 "17",
                 "ML-KEM-768|kem|metamorphic|single-target|kem_decaps_c|ciphertext|EXPECT_DIFFERENT|OBSERVED_EQUAL|malleability|ciphertext_malleability|OK|OK",
                 "malleability_missing",
-                "3",
+                "4",
                 "true",
                 "ML-KEM-768",
                 "kem",
@@ -327,10 +327,10 @@ def test_fast_summary_uses_counter_fields_when_exemplar_is_missing(tmp_path: Pat
     assert summaries[0]["exemplar_artifact_path"] == str(missing_artifact)
 
 
-def test_v2_and_v3_findings_are_kept_in_separate_semantic_lanes(tmp_path: Path) -> None:
+def test_v3_and_v4_findings_are_kept_in_separate_semantic_lanes(tmp_path: Path) -> None:
     eval_root = tmp_path / "pqcfuzz_eval"
-    write_finding(eval_root, finding_id="legacy", oracle_semantics_version=2)
-    write_finding(eval_root, finding_id="v3", oracle_semantics_version=3)
+    write_finding(eval_root, finding_id="legacy", oracle_semantics_version=3)
+    write_finding(eval_root, finding_id="v4", oracle_semantics_version=4)
     output = tmp_path / "report"
 
     write_reports([eval_root], output, {"tsv"}, trace_mode="all")
@@ -338,7 +338,7 @@ def test_v2_and_v3_findings_are_kept_in_separate_semantic_lanes(tmp_path: Path) 
     summaries = read_tsv(output / "findings_summary.tsv")
     diagnostics = read_tsv(output / "diagnostics.tsv")
     assert len(summaries) == 1
-    assert summaries[0]["oracle_semantics_version"] == "3"
+    assert summaries[0]["oracle_semantics_version"] == "4"
     assert len(diagnostics) == 1
-    assert diagnostics[0]["oracle_semantics_version"] == "2"
+    assert diagnostics[0]["oracle_semantics_version"] == "3"
     assert diagnostics[0]["invalidation_reasons"] == "legacy_semantics"

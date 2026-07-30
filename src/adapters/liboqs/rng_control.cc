@@ -35,4 +35,10 @@ void pqcfuzz_install_liboqs_rng_hook() {
   }
 }
 
+void pqcfuzz_restore_liboqs_rng_hook() {
+  if (OQS_randombytes_custom_algorithm != nullptr) {
+    OQS_randombytes_custom_algorithm(OQS_randombytes_system);
+  }
+}
+
 }  // namespace pqcfuzz

@@ -36,6 +36,8 @@ const char *OracleDispositionName(OracleDisposition disposition) {
       return "raw_candidate";
     case OracleDisposition::kSanitizerEvidence:
       return "sanitizer_evidence";
+    case OracleDisposition::kProcessEvidence:
+      return "process_evidence";
     case OracleDisposition::kHarnessError:
       return "harness_error";
   }
@@ -63,6 +65,15 @@ bool HasSanitizerEvidence(const KEMOracleTrace &trace) {
   return false;
 }
 
+bool HasProcessEvidence(const KEMOracleTrace &trace) {
+  for (const auto &finding : trace.findings) {
+    if (finding.evidence_kind == EvidenceKind::kProcess && IsSecurityFindingClass(finding.finding_class)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool HasSecurityEvidence(const KEMOracleTrace &trace) {
   for (const auto &finding : trace.findings) {
     if (IsSecurityFindingClass(finding.finding_class) &&
@@ -75,13 +86,19 @@ bool HasSecurityEvidence(const KEMOracleTrace &trace) {
 }
 
 OracleDisposition FinalizeDisposition(const KEMOracleTrace &trace) {
-  if (HasSanitizerEvidence(trace)) {
-    return OracleDisposition::kSanitizerEvidence;
-  }
   if (HasHarnessError(trace)) {
     return OracleDisposition::kHarnessError;
   }
-  if (!trace.baseline_setup_valid || !trace.mutated_setup_valid || HasDiagnostic(trace)) {
+  if (HasSanitizerEvidence(trace)) {
+    return OracleDisposition::kSanitizerEvidence;
+  }
+  if (HasProcessEvidence(trace)) {
+    return OracleDisposition::kProcessEvidence;
+  }
+  if (!trace.baseline_setup_valid || !trace.mutated_setup_valid) {
+    return OracleDisposition::kNotEvaluable;
+  }
+  if (HasDiagnostic(trace)) {
     return OracleDisposition::kDiagnostic;
   }
   if (!trace.intervention_supported) {
@@ -95,6 +112,53 @@ OracleDisposition FinalizeDisposition(const KEMOracleTrace &trace) {
     return OracleDisposition::kRawCandidate;
   }
   return OracleDisposition::kPass;
+}
+
+TraceValidationResult ValidateTraceForPersistence(const KEMOracleTrace &trace) {
+  TraceValidationResult result;
+  result.disposition = FinalizeDisposition(trace);
+  switch (result.disposition) {
+    case OracleDisposition::kRawCandidate:
+      result.evidence_kind = EvidenceKind::kSemantic;
+      result.persistable = false;
+      for (const auto &finding : trace.findings) {
+        if (finding.evidence_kind == EvidenceKind::kSemantic && IsSecurityFindingClass(finding.finding_class)) {
+          result.persistable = true;
+          result.reason = "raw_candidate";
+          return result;
+        }
+      }
+      result.reason = "missing_semantic_evidence";
+      return result;
+    case OracleDisposition::kSanitizerEvidence:
+      result.evidence_kind = EvidenceKind::kSanitizer;
+      result.persistable = HasSanitizerEvidence(trace);
+      result.reason = result.persistable ? "sanitizer_evidence" : "missing_sanitizer_evidence";
+      return result;
+    case OracleDisposition::kProcessEvidence:
+      result.evidence_kind = EvidenceKind::kProcess;
+      result.persistable = HasProcessEvidence(trace);
+      result.reason = result.persistable ? "process_evidence" : "missing_process_evidence";
+      return result;
+    case OracleDisposition::kHarnessError:
+      result.reason = "harness_error";
+      return result;
+    case OracleDisposition::kPass:
+      result.reason = trace.findings.empty() ? "no_security_evidence" : "non_persistable_disposition";
+      return result;
+    case OracleDisposition::kDiagnostic:
+      result.reason = trace.findings.empty() ? "diagnostic" : "non_persistable_disposition";
+      return result;
+    case OracleDisposition::kNotEvaluable:
+      result.reason = trace.findings.empty() ? "not_evaluable" : "non_persistable_disposition";
+      return result;
+  }
+  result.reason = "harness_error";
+  return result;
+}
+
+bool IsPersistableRawEvidence(const KEMOracleTrace &trace) {
+  return ValidateTraceForPersistence(trace).persistable;
 }
 
 }  // namespace pqcfuzz

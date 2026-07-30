@@ -128,7 +128,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.target = target;
     config.seed = envelope.seed;
     config.message = envelope.msg.empty() ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'} : envelope.msg;
-    config.context = envelope.extra.size() > 255 ? std::vector<uint8_t>(envelope.extra.begin(), envelope.extra.begin() + 255) : envelope.extra;
+    config.context = envelope.extra;
     config.mutation = envelope.mutation;
     trace = pqcfuzz::ExecuteMetamorphicSigOracle(config);
   } else {
@@ -144,7 +144,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.exchange_contract.signature_exchange = PQCFUZZ_SIGNATURE_EXCHANGE != 0;
     config.seed = envelope.seed;
     config.message = envelope.msg.empty() ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'} : envelope.msg;
-    config.context = envelope.extra.size() > 255 ? std::vector<uint8_t>(envelope.extra.begin(), envelope.extra.begin() + 255) : envelope.extra;
+    config.context = envelope.extra;
     config.mutation = envelope.mutation;
     trace = pqcfuzz::ExecuteSigOracle(config);
   }
@@ -158,7 +158,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   trace.adapter_sk_len = target->sk_len;
   trace.adapter_sig_max_len = target->sig_max_len;
   pqcfuzz::RecordOracleTrace(PQCFUZZ_RESULT_DIR, trace);
-  if (!trace.findings.empty()) {
+  if (pqcfuzz::IsPersistableRawEvidence(trace)) {
     pqcfuzz::FindingArtifactInput artifacts;
     artifacts.job_id = PQCFUZZ_JOB_ID;
     artifacts.pair_id = PQCFUZZ_PAIR_ID;

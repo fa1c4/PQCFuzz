@@ -22,6 +22,7 @@ bool pqcfuzz_rng_is_active();
 // reached the adapter without exposing the tape itself.
 size_t pqcfuzz_rng_bytes_consumed();
 void pqcfuzz_install_liboqs_rng_hook();
+void pqcfuzz_restore_liboqs_rng_hook();
 
 class ScopedRngOverride {
  public:

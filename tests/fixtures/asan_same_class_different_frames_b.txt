@@ -1,0 +1,4 @@
+==67890==ERROR: AddressSanitizer: heap-use-after-free on address 0x604000000088
+    #0 0x8a00 in pqcfuzz::DecapsulateCiphertext /tmp/build-b/src/adapters/liboqs/kem_adapter.cc:77:9
+    #1 0x8a11 in pqcfuzz::ExecuteDecaps /tmp/build-b/src/oracles/metamorphic_executor.cc:721:3
+SUMMARY: AddressSanitizer: heap-use-after-free /tmp/build-b/src/adapters/liboqs/kem_adapter.cc:77:9

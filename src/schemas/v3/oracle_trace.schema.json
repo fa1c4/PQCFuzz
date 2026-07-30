@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pqcfuzz.local/schemas/v3/oracle_trace.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "oracle_semantics_version",
+    "disposition",
+    "job_id",
+    "pair_id",
+    "algorithm",
+    "oracle_id",
+    "mutation_target",
+    "left_status",
+    "right_status",
+    "verify_result",
+    "legal_negative_outcome",
+    "baseline_setup_valid",
+    "mutated_setup_valid",
+    "baseline_adapter_entered",
+    "baseline_target_entered",
+    "mutated_adapter_entered",
+    "mutated_target_entered",
+    "relation_evaluable",
+    "intervention_supported",
+    "intervention_effective",
+    "diagnostics",
+    "subtests",
+    "mutations",
+    "rng_interventions",
+    "findings"
+  ],
+  "properties": {
+    "version": {
+      "const": 3
+    },
+    "oracle_semantics_version": {
+      "const": 3
+    },
+    "disposition": {
+      "enum": ["pass", "diagnostic", "not_evaluable", "raw_candidate", "sanitizer_evidence", "harness_error"]
+    }
+  }
+}

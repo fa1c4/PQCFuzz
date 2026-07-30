@@ -98,9 +98,10 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
     input_path = artifact_dir / "structured_input.bin"
     replay_input = input_path if input_path.is_file() else Path(args.seed_file)
     replay_command = " ".join((shlex.quote(args.binary), shlex.quote(str(replay_input)))) if args.binary else ""
+    finding_class = "ub" if finding.sanitizer == "undefined" else "memory_safety"
     finding_json: dict[str, object] = {
-        "version": 3,
-        "oracle_semantics_version": 3,
+        "version": 4,
+        "oracle_semantics_version": 4,
         "job_id": args.job_id,
         "pair_id": args.pair_id,
         "liboqs_version": args.version,
@@ -110,7 +111,7 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "relation_mode": args.relation_mode,
         "oracle_id": f"sanitizer_{finding.sanitizer}",
         "finding_id": f"sanitizer_{finding.sanitizer}_{finding.fingerprint}",
-        "finding_class": "sanitizer",
+        "finding_class": finding_class,
         "finding_subclass": f"{finding.sanitizer}_behavior",
         "summary": finding.message,
         "source_phase": args.phase,
@@ -121,14 +122,14 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "artifact_dir": str(artifact_dir),
         "trace_path": str(artifact_dir / "oracle_trace.json"),
         "replay_command": replay_command,
-        "validation_state": "validated-log-evidence",
-        "validated": True,
-        "validation_attempts": 1,
-        "validation_failure_reason": "",
+        "validation_state": "raw",
+        "validated": False,
+        "validation_attempts": 0,
+        "validation_failure_reason": "pending_fingerprint_replay",
     }
     trace: dict[str, object] = {
-        "version": 3,
-        "oracle_semantics_version": 3,
+        "version": 4,
+        "oracle_semantics_version": 4,
         "job_id": args.job_id,
         "pair_id": args.pair_id,
         "liboqs_version": args.version,
@@ -139,7 +140,7 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "field": "memory-safety",
         "expected_relation": "NO_SANITIZER_DIAGNOSTIC",
         "observed_relation": "SANITIZER_DIAGNOSTIC",
-        "finding_class": "sanitizer",
+        "finding_class": finding_class,
         "finding_subclass": finding_json["finding_subclass"],
         "disposition": "sanitizer_evidence",
         "baseline": {"status": "SANITIZER", "accepted": False},
@@ -148,7 +149,7 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "findings": [
             {
                 "evidence_kind": "sanitizer",
-                "class": "sanitizer",
+                "class": finding_class,
                 "subclass": finding_json["finding_subclass"],
                 "source_phase": args.phase,
                 "fingerprint": finding.fingerprint,

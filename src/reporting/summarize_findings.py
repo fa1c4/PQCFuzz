@@ -168,8 +168,8 @@ def first_finding(trace: dict[str, Any]) -> dict[str, Any]:
 
 
 def semantics_status(oracle_semantics_version: str) -> str:
-    if oracle_semantics_version == "3":
-        return "v3"
+    if oracle_semantics_version == "4":
+        return "v4"
     return "legacy_semantics"
 
 
@@ -382,7 +382,7 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     row["mutated_accepted"] = "" if "accepted" not in mutated else str(bool(mutated.get("accepted"))).lower()
     row["crash_signal"] = str(trace.get("crash_signal") or "")
     row["timeout_seconds"] = str(trace.get("timeout_seconds") or "")
-    if row["semantics_status"] != "v3":
+    if row["semantics_status"] != "v4":
         row["invalidated"] = "true"
         row["invalidation_reasons"] = "legacy_semantics"
     else:
