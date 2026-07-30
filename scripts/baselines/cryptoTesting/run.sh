@@ -12,6 +12,12 @@ Options:
   --workers N|auto              Bound the driver pool (default: auto, or CRYPTO_TESTING_WORKERS).
   --geninput-timeout SECONDS    Independent GenInput setup timeout. Default: 10.
   --max-total-time SECONDS      End fuzzing cleanly after this many seconds.
+  --liboqs-cache PATH           Host path for a liboqs mirror cache.
+                                Default: <build-dir>/liboqs-cache/liboqs.git.
+  --liboqs-repo URL             liboqs repository or mirror URL.
+                                Default: upstream, or CRYPTO_TESTING_LIBOQS_REPO/LIBOQS_REPO.
+  --liboqs-clone-retries N      Retry count for liboqs clone/fetch. Default: 5.
+  --liboqs-clone-sleep SECONDS  Sleep between clone/fetch retries. Default: 5.
   --skip-core-pattern-check     Skip the host AFL core_pattern preflight.
   -h, --help                    Show this help.
 
@@ -39,6 +45,10 @@ SKIP_CORE_PATTERN_CHECK=0
 WORKERS="${CRYPTO_TESTING_WORKERS:-auto}"
 GENINPUT_TIMEOUT="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
 MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
+LIBOQS_CACHE_HOST="${CRYPTO_TESTING_LIBOQS_CACHE:-}"
+LIBOQS_REPO_VALUE="${CRYPTO_TESTING_LIBOQS_REPO:-${LIBOQS_REPO:-https://github.com/open-quantum-safe/liboqs.git}}"
+LIBOQS_CLONE_RETRIES_VALUE="${CRYPTO_TESTING_LIBOQS_CLONE_RETRIES:-${LIBOQS_CLONE_RETRIES:-5}}"
+LIBOQS_CLONE_SLEEP_VALUE="${CRYPTO_TESTING_LIBOQS_CLONE_SLEEP:-${LIBOQS_CLONE_SLEEP:-5}}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -102,6 +112,54 @@ while [ "$#" -gt 0 ]; do
       MAX_TOTAL_TIME="${1#--max-total-time=}"
       shift
       ;;
+    --liboqs-cache)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --liboqs-cache." >&2
+        exit 2
+      fi
+      LIBOQS_CACHE_HOST="$2"
+      shift 2
+      ;;
+    --liboqs-cache=*)
+      LIBOQS_CACHE_HOST="${1#--liboqs-cache=}"
+      shift
+      ;;
+    --liboqs-repo)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --liboqs-repo." >&2
+        exit 2
+      fi
+      LIBOQS_REPO_VALUE="$2"
+      shift 2
+      ;;
+    --liboqs-repo=*)
+      LIBOQS_REPO_VALUE="${1#--liboqs-repo=}"
+      shift
+      ;;
+    --liboqs-clone-retries)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --liboqs-clone-retries." >&2
+        exit 2
+      fi
+      LIBOQS_CLONE_RETRIES_VALUE="$2"
+      shift 2
+      ;;
+    --liboqs-clone-retries=*)
+      LIBOQS_CLONE_RETRIES_VALUE="${1#--liboqs-clone-retries=}"
+      shift
+      ;;
+    --liboqs-clone-sleep)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --liboqs-clone-sleep." >&2
+        exit 2
+      fi
+      LIBOQS_CLONE_SLEEP_VALUE="$2"
+      shift 2
+      ;;
+    --liboqs-clone-sleep=*)
+      LIBOQS_CLONE_SLEEP_VALUE="${1#--liboqs-clone-sleep=}"
+      shift
+      ;;
     --skip-core-pattern-check)
       SKIP_CORE_PATTERN_CHECK=1
       shift
@@ -136,6 +194,18 @@ if [ -n "$MAX_TOTAL_TIME" ] && ! [[ "$MAX_TOTAL_TIME" =~ ^[1-9][0-9]*$ ]]; then
   echo "--max-total-time must be a positive integer." >&2
   exit 2
 fi
+if [ -z "$LIBOQS_REPO_VALUE" ]; then
+  echo "--liboqs-repo must not be empty." >&2
+  exit 2
+fi
+if ! [[ "$LIBOQS_CLONE_RETRIES_VALUE" =~ ^[1-9][0-9]*$ ]]; then
+  echo "--liboqs-clone-retries must be a positive integer." >&2
+  exit 2
+fi
+if ! [[ "$LIBOQS_CLONE_SLEEP_VALUE" =~ ^[0-9]+$ ]]; then
+  echo "--liboqs-clone-sleep must be a non-negative integer." >&2
+  exit 2
+fi
 
 IMAGE_NAME="pqcdf-baseline-cryptotesting"
 
@@ -161,6 +231,21 @@ mkdir -p "$BUILD_DIR" "$RUN_DIR"
 BUILD_DIR_ABS="$(realpath "$BUILD_DIR")"
 RUN_DIR_ABS="$(realpath "$RUN_DIR")"
 BUILD_TARGET_DIR="${BUILD_DIR_ABS}/${LIBOQS_TARGET}"
+if [ -z "$LIBOQS_CACHE_HOST" ]; then
+  LIBOQS_CACHE_HOST="${BUILD_DIR_ABS}/liboqs-cache/liboqs.git"
+fi
+case "$LIBOQS_CACHE_HOST" in
+  "/"|"."|"..")
+    echo "--liboqs-cache must name a cache repository path, not '$LIBOQS_CACHE_HOST'." >&2
+    exit 2
+    ;;
+esac
+LIBOQS_CACHE_PARENT="$(dirname "$LIBOQS_CACHE_HOST")"
+mkdir -p "$LIBOQS_CACHE_PARENT"
+LIBOQS_CACHE_PARENT_ABS="$(realpath "$LIBOQS_CACHE_PARENT")"
+LIBOQS_CACHE_NAME="$(basename "$LIBOQS_CACHE_HOST")"
+LIBOQS_CACHE_HOST_ABS="${LIBOQS_CACHE_PARENT_ABS}/${LIBOQS_CACHE_NAME}"
+LIBOQS_CACHE_CONTAINER="/pqcdf-liboqs-cache/${LIBOQS_CACHE_NAME}"
 CAMPAIGN_NAME="cryptoTesting-${VERSION}-${MODE}"
 REPORTS_DIR="${RUN_DIR_ABS}/reports/${CAMPAIGN_NAME}"
 LOG_DIR="${RUN_DIR_ABS}/logs"
@@ -176,6 +261,10 @@ echo "[cryptoTesting] liboqs target: $LIBOQS_TARGET"
 echo "[cryptoTesting] mode: $MODE"
 echo "[cryptoTesting] requested workers: $WORKERS"
 echo "[cryptoTesting] GenInput setup timeout: ${GENINPUT_TIMEOUT}s"
+echo "[cryptoTesting] liboqs repo: $LIBOQS_REPO_VALUE"
+echo "[cryptoTesting] liboqs cache: $LIBOQS_CACHE_HOST_ABS"
+echo "[cryptoTesting] liboqs clone retries: $LIBOQS_CLONE_RETRIES_VALUE"
+echo "[cryptoTesting] liboqs clone sleep: ${LIBOQS_CLONE_SLEEP_VALUE}s"
 if [ -n "$MAX_TOTAL_TIME" ]; then
   echo "[cryptoTesting] fuzzing time limit: ${MAX_TOTAL_TIME}s"
 fi
@@ -246,9 +335,14 @@ docker run --rm \
   -v "${REPORTS_DIR}:/fuzzing/reports" \
   -v "${LOG_DIR}:/pqcdf-logs" \
   -v "${RAW_OUTPUT_DIR}:/pqcdf-results" \
+  -v "${LIBOQS_CACHE_PARENT_ABS}:/pqcdf-liboqs-cache" \
+  -e "LIBOQS_REPO=${LIBOQS_REPO_VALUE}" \
+  -e "LIBOQS_CACHE=${LIBOQS_CACHE_CONTAINER}" \
+  -e "LIBOQS_CLONE_RETRIES=${LIBOQS_CLONE_RETRIES_VALUE}" \
+  -e "LIBOQS_CLONE_SLEEP=${LIBOQS_CLONE_SLEEP_VALUE}" \
   -w /fuzzing \
   "$IMAGE_NAME" \
-  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results 2>/dev/null || true' EXIT; git config --global --add safe.directory /fuzzing/${LIBOQS_TARGET}; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION} ${REPRODUCE_TIME_ARGS[*]}" \
+  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results /pqcdf-liboqs-cache 2>/dev/null || true' EXIT; git config --global --add safe.directory /fuzzing/${LIBOQS_TARGET}; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION} ${REPRODUCE_TIME_ARGS[*]}" \
   2>&1 | tee "$LOG_FILE"
 DOCKER_STATUS="${PIPESTATUS[0]}"
 set -e

@@ -25,8 +25,18 @@ Options:
                                 Accepts seconds or s/m/h/d suffixes, e.g. 86400, 60m, 24h.
   --progress-interval SECONDS   Seconds between progress reports. Default: 3600.
   --session-prefix NAME         Prefix for tmux session names. Default: pqcdf.
+  --output-root RELPATH         Output root under the repository.
+                                Default: workspace/baselines_eval.
   --result-save-mode compact|all
                                 Result retention policy. Default: compact.
+  --baseline-jobs N             Jobs for libFuzzer/cryptofuzz/CLFuzz runs. Default: 1.
+  --baseline-workers N          Workers for libFuzzer/cryptofuzz/CLFuzz runs. Default: 1.
+  --baseline-cpu-allocation ARG CPU allocation label/range passed to those runs.
+                                Default: workers:<baseline-workers>.
+  --crypto-testing-workers N|auto
+                                Worker count for cryptoTesting. Default: auto.
+  --crypto-testing-geninput-timeout SECONDS
+                                Timeout for cryptoTesting GenInput setup. Default: 10.
   --campaign BASELINE-VERSION   Run only one campaign. May be repeated.
                                 Example: --campaign libFuzzer-0.14.0
   --summarize-only              Regenerate summaries from existing campaign status files.
@@ -38,7 +48,7 @@ This launches and waits for 12 tmux sessions:
   versions:  0.14.0, 0.8.0, 0.4.0
 
 Outputs are written under:
-  workspace/baselines_eval/
+  <output-root>/
 EOF
 }
 
@@ -86,6 +96,23 @@ validate_session_prefix() {
   fi
 }
 
+validate_relative_output_root() {
+  local path="$1"
+  case "$path" in
+    ""|/*|.|..|../*|*/..|*/../*)
+      die "--output-root must be a relative path under the repository without '..'"
+      ;;
+  esac
+}
+
+validate_positive_integer() {
+  local option="$1"
+  local value="$2"
+  if [[ ! "$value" =~ ^[0-9]+$ ]] || [ "$value" -le 0 ]; then
+    die "$option must be a positive integer"
+  fi
+}
+
 format_elapsed() {
   local seconds="$1"
   local hours minutes
@@ -102,20 +129,25 @@ print_campaign_commands() {
   local kem_seconds="$4"
   local sig_seconds="$5"
   local result_save_mode="$6"
+  local baseline_jobs="$7"
+  local baseline_workers="$8"
+  local baseline_cpu_allocation="$9"
+  local crypto_testing_workers="${10}"
+  local crypto_testing_geninput_timeout="${11}"
 
   echo "scripts/run_baseline.sh $baseline docker-build"
   case "$baseline" in
     libFuzzer)
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer build --version $version"
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target kem --mode full --max-total-time $kem_seconds"
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target sig --mode full --max-total-time $sig_seconds"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target kem --mode full --max-total-time $kem_seconds --jobs $baseline_jobs --workers $baseline_workers --cpu-allocation $baseline_cpu_allocation"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh libFuzzer run --profile semantic --version $version --target sig --mode full --max-total-time $sig_seconds --jobs $baseline_jobs --workers $baseline_workers --cpu-allocation $baseline_cpu_allocation"
       ;;
     cryptofuzz|CLFuzz)
       echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline build --version $version"
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline run --version $version --mode full --max-total-time $seconds"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> scripts/run_baseline.sh $baseline run --version $version --mode full --max-total-time $seconds --jobs $baseline_jobs --workers $baseline_workers --cpu-allocation $baseline_cpu_allocation"
       ;;
     cryptoTesting)
-      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=auto scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers auto --max-total-time $seconds --skip-core-pattern-check"
+      echo "PQCDF_WORKSPACE_ROOT=<campaign-workspace> CRYPTO_TESTING_WORKERS=$crypto_testing_workers CRYPTO_TESTING_GENINPUT_TIMEOUT=$crypto_testing_geninput_timeout scripts/run_baseline.sh cryptoTesting run --version $version --mode functional --workers $crypto_testing_workers --geninput-timeout $crypto_testing_geninput_timeout --max-total-time $seconds --skip-core-pattern-check"
       ;;
     *)
       die "unknown baseline '$baseline'"
@@ -313,6 +345,11 @@ write_launcher() {
     printf 'KEM_SECONDS=%q\n' "$kem_seconds"
     printf 'SIG_SECONDS=%q\n' "$sig_seconds"
     printf 'RESULT_SAVE_MODE=%q\n' "$result_save_mode"
+    printf 'BASELINE_JOBS=%q\n' "$BASELINE_JOBS"
+    printf 'BASELINE_WORKERS=%q\n' "$BASELINE_WORKERS"
+    printf 'BASELINE_CPU_ALLOCATION=%q\n' "$BASELINE_CPU_ALLOCATION"
+    printf 'CRYPTO_TESTING_WORKERS_VALUE=%q\n' "$CRYPTO_TESTING_WORKERS_VALUE"
+    printf 'CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE=%q\n' "$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE"
     printf 'RUN_BASELINE_SCRIPT=%q\n' "$run_baseline_script"
     printf 'COMPACTOR_SCRIPT=%q\n' "$compactor_script"
     printf 'BASELINE_WRAPPER_ROOT=%q\n' "$baseline_wrapper_root"
@@ -560,6 +597,57 @@ print(outcome(document) if isinstance(document, dict) else "unknown")
 PY
 }
 
+libfuzzer_campaign_outcome() {
+  local summary_file="${WORKSPACE_ROOT_REL}/libFuzzer/targets-run/liboqs-${VERSION}/summary.semantic.json"
+  local index_file="${WORKSPACE_ROOT_REL}/libFuzzer/targets-run/liboqs-${VERSION}/summary.json"
+
+  python3 - "$summary_file" "$index_file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+
+def read_json(path):
+    try:
+        with Path(path).open(encoding="utf-8") as f:
+            value = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
+
+
+def outcome(document):
+    for key in ("status", "outcome"):
+        value = document.get(key)
+        if value in {
+            "completed", "completed-with-findings", "target-crash", "timed-out",
+            "harness-error", "infrastructure-failed", "completed-with-coverage-gap",
+        }:
+            return value
+    normalized = document.get("normalized_outcome")
+    return {
+        "ok": "completed",
+        "invariant_violation": "completed-with-findings",
+        "coverage_incomplete": "completed-with-coverage-gap",
+        "process_crash": "target-crash",
+        "process_hang": "timed-out",
+        "operation_error": "harness-error",
+    }.get(normalized, "unknown")
+
+
+document = read_json(sys.argv[1])
+if not document:
+    index = read_json(sys.argv[2])
+    profiles = index.get("profiles")
+    if isinstance(profiles, dict):
+        semantic = profiles.get("semantic")
+        if isinstance(semantic, dict):
+            document = semantic
+
+print(outcome(document) if document else "unknown")
+PY
+}
+
 crypto_testing_campaign_outcome() {
   local summary_file="${WORKSPACE_ROOT_REL}/cryptoTesting/targets-run/raw/cryptoTesting-${VERSION}/functional/summary.json"
 
@@ -587,6 +675,11 @@ echo "[eval] baseline: $BASELINE"
 echo "[eval] liboqs version: $VERSION"
 echo "[eval] fuzzing time: ${FUZZING_SECONDS}s"
 echo "[eval] result save mode: $RESULT_SAVE_MODE"
+echo "[eval] baseline jobs: $BASELINE_JOBS"
+echo "[eval] baseline workers: $BASELINE_WORKERS"
+echo "[eval] baseline cpu allocation: $BASELINE_CPU_ALLOCATION"
+echo "[eval] cryptoTesting workers: $CRYPTO_TESTING_WORKERS_VALUE"
+echo "[eval] cryptoTesting GenInput timeout: ${CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE}s"
 echo "[eval] workspace root: $WORKSPACE_ROOT_REL"
 echo "[eval] started: $STARTED_AT"
 echo "[eval] log: $LOG_FILE"
@@ -624,13 +717,13 @@ case "$BASELINE" in
   libFuzzer)
     COMPACTION_ELIGIBLE=1
     write_status "run-kem" "running"
-    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target kem --mode full --max-total-time "$KEM_SECONDS" --jobs "$BASELINE_JOBS" --workers "$BASELINE_WORKERS" --cpu-allocation "$BASELINE_CPU_ALLOCATION"
     KEM_STATUS="$?"
     echo "[eval] libFuzzer kem exited with status $KEM_STATUS"
     echo
 
     write_status "run-sig" "running"
-    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" libFuzzer run --profile semantic --version "$VERSION" --target sig --mode full --max-total-time "$SIG_SECONDS" --jobs "$BASELINE_JOBS" --workers "$BASELINE_WORKERS" --cpu-allocation "$BASELINE_CPU_ALLOCATION"
     SIG_STATUS="$?"
     echo "[eval] libFuzzer sig exited with status $SIG_STATUS"
 
@@ -644,29 +737,32 @@ case "$BASELINE" in
   cryptofuzz)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    run_step "$RUN_BASELINE_SCRIPT" cryptofuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" cryptofuzz run --version "$VERSION" --mode full --max-total-time "$FUZZING_SECONDS" --jobs "$BASELINE_JOBS" --workers "$BASELINE_WORKERS" --cpu-allocation "$BASELINE_CPU_ALLOCATION"
     FUZZ_STATUS="$?"
     ;;
 
   CLFuzz)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    run_step "$RUN_BASELINE_SCRIPT" CLFuzz run --version "$VERSION" --mode full --profile full --max-total-time "$FUZZING_SECONDS"
+    run_step "$RUN_BASELINE_SCRIPT" CLFuzz run --version "$VERSION" --mode full --profile full --max-total-time "$FUZZING_SECONDS" --jobs "$BASELINE_JOBS" --workers "$BASELINE_WORKERS" --cpu-allocation "$BASELINE_CPU_ALLOCATION"
     FUZZ_STATUS="$?"
     ;;
 
   cryptoTesting)
     COMPACTION_ELIGIBLE=1
     write_status "run" "running"
-    echo "[eval] command: CRYPTO_TESTING_WORKERS=auto $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers auto --max-total-time $FUZZING_SECONDS --skip-core-pattern-check"
-    CRYPTO_TESTING_WORKERS=auto "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers auto --max-total-time "$FUZZING_SECONDS" --skip-core-pattern-check
+    echo "[eval] command: CRYPTO_TESTING_WORKERS=$CRYPTO_TESTING_WORKERS_VALUE CRYPTO_TESTING_GENINPUT_TIMEOUT=$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE $RUN_BASELINE_SCRIPT cryptoTesting run --version $VERSION --mode functional --workers $CRYPTO_TESTING_WORKERS_VALUE --geninput-timeout $CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE --max-total-time $FUZZING_SECONDS --skip-core-pattern-check"
+    CRYPTO_TESTING_WORKERS="$CRYPTO_TESTING_WORKERS_VALUE" CRYPTO_TESTING_GENINPUT_TIMEOUT="$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE" "$RUN_BASELINE_SCRIPT" cryptoTesting run --version "$VERSION" --mode functional --workers "$CRYPTO_TESTING_WORKERS_VALUE" --geninput-timeout "$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE" --max-total-time "$FUZZING_SECONDS" --skip-core-pattern-check
     FUZZ_STATUS="$?"
     ;;
 esac
 
 echo "[eval] fuzzing exited with status $FUZZ_STATUS"
 CAMPAIGN_OUTCOME=""
-if [ "$BASELINE" = "cryptofuzz" ] || [ "$BASELINE" = "CLFuzz" ]; then
+if [ "$BASELINE" = "libFuzzer" ]; then
+  CAMPAIGN_OUTCOME="$(libfuzzer_campaign_outcome)"
+  echo "[eval] libFuzzer outcome: $CAMPAIGN_OUTCOME"
+elif [ "$BASELINE" = "cryptofuzz" ] || [ "$BASELINE" = "CLFuzz" ]; then
   CAMPAIGN_OUTCOME="$(single_style_campaign_outcome "$BASELINE")"
   echo "[eval] ${BASELINE} outcome: $CAMPAIGN_OUTCOME"
 elif [ "$BASELINE" = "cryptoTesting" ]; then
@@ -890,6 +986,12 @@ def summary_metrics(document):
         "module_version": document.get("module_version"),
     }
 
+SUCCESSFUL_SPECIFIC_OUTCOMES = {
+    "completed-with-findings",
+    "completed-with-coverage-gap",
+    "completed-at-budget-incomplete",
+}
+
 campaigns = []
 with open(index_file, "r", encoding="utf-8", newline="") as f:
     reader = csv.DictReader(f, delimiter="\t")
@@ -964,6 +1066,13 @@ for campaign in campaigns:
     else:
         result = status.get("result") or "unknown"
         aggregate_status = int(final_status)
+
+    if (
+        aggregate_status == 0
+        and result == "completed"
+        and metrics["outcome"] in SUCCESSFUL_SPECIFIC_OUTCOMES
+    ):
+        result = metrics["outcome"]
 
     missing_expected_summary = False
     if aggregate_status == 0 and not baseline_summaries:
@@ -1161,14 +1270,24 @@ archive_existing_eval_root() {
     return
   fi
 
-  local archive_date archive_root archive_rel suffix
+  local archive_date archive_root archive_rel suffix eval_parent eval_name
   archive_date="$(date +%Y%m%d)"
-  archive_rel="workspace/baselines_eval_${archive_date}"
+  eval_parent="$(dirname "$EVAL_ROOT_REL")"
+  eval_name="$(basename "$EVAL_ROOT_REL")"
+  if [ "$eval_parent" = "." ]; then
+    archive_rel="${eval_name}_${archive_date}"
+  else
+    archive_rel="${eval_parent}/${eval_name}_${archive_date}"
+  fi
   archive_root="${ROOT_DIR}/${archive_rel}"
   suffix=1
 
   while [ -e "$archive_root" ]; do
-    archive_rel="workspace/baselines_eval_${archive_date}_${suffix}"
+    if [ "$eval_parent" = "." ]; then
+      archive_rel="${eval_name}_${archive_date}_${suffix}"
+    else
+      archive_rel="${eval_parent}/${eval_name}_${archive_date}_${suffix}"
+    fi
     archive_root="${ROOT_DIR}/${archive_rel}"
     suffix=$((suffix + 1))
   done
@@ -1179,10 +1298,16 @@ archive_existing_eval_root() {
 }
 
 ROOT_DIR="${PQCDF_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+EVAL_ROOT_REL="workspace/baselines_eval"
 FUZZING_TIME="24h"
 PROGRESS_INTERVAL="3600"
 SESSION_PREFIX="pqcdf"
 RESULT_SAVE_MODE="compact"
+BASELINE_JOBS="${PQCDF_BASELINE_JOBS:-1}"
+BASELINE_WORKERS="${PQCDF_BASELINE_WORKERS:-1}"
+BASELINE_CPU_ALLOCATION="${PQCDF_BASELINE_CPU_ALLOCATION:-}"
+CRYPTO_TESTING_WORKERS_VALUE="${CRYPTO_TESTING_WORKERS:-auto}"
+CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
 DRY_RUN=0
 SUMMARIZE_ONLY=0
 declare -a REQUESTED_CAMPAIGNS=()
@@ -1222,6 +1347,17 @@ while [ "$#" -gt 0 ]; do
       SESSION_PREFIX="${1#--session-prefix=}"
       shift
       ;;
+    --output-root)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --output-root"
+      fi
+      EVAL_ROOT_REL="$2"
+      shift 2
+      ;;
+    --output-root=*)
+      EVAL_ROOT_REL="${1#--output-root=}"
+      shift
+      ;;
     --result-save-mode)
       if [ "$#" -lt 2 ]; then
         die "missing value for --result-save-mode"
@@ -1231,6 +1367,61 @@ while [ "$#" -gt 0 ]; do
       ;;
     --result-save-mode=*)
       RESULT_SAVE_MODE="${1#--result-save-mode=}"
+      shift
+      ;;
+    --baseline-jobs)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --baseline-jobs"
+      fi
+      BASELINE_JOBS="$2"
+      shift 2
+      ;;
+    --baseline-jobs=*)
+      BASELINE_JOBS="${1#--baseline-jobs=}"
+      shift
+      ;;
+    --baseline-workers)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --baseline-workers"
+      fi
+      BASELINE_WORKERS="$2"
+      shift 2
+      ;;
+    --baseline-workers=*)
+      BASELINE_WORKERS="${1#--baseline-workers=}"
+      shift
+      ;;
+    --baseline-cpu-allocation)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --baseline-cpu-allocation"
+      fi
+      BASELINE_CPU_ALLOCATION="$2"
+      shift 2
+      ;;
+    --baseline-cpu-allocation=*)
+      BASELINE_CPU_ALLOCATION="${1#--baseline-cpu-allocation=}"
+      shift
+      ;;
+    --crypto-testing-workers)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --crypto-testing-workers"
+      fi
+      CRYPTO_TESTING_WORKERS_VALUE="$2"
+      shift 2
+      ;;
+    --crypto-testing-workers=*)
+      CRYPTO_TESTING_WORKERS_VALUE="${1#--crypto-testing-workers=}"
+      shift
+      ;;
+    --crypto-testing-geninput-timeout)
+      if [ "$#" -lt 2 ]; then
+        die "missing value for --crypto-testing-geninput-timeout"
+      fi
+      CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE="$2"
+      shift 2
+      ;;
+    --crypto-testing-geninput-timeout=*)
+      CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE="${1#--crypto-testing-geninput-timeout=}"
       shift
       ;;
     --campaign)
@@ -1263,6 +1454,17 @@ while [ "$#" -gt 0 ]; do
 done
 
 validate_session_prefix "$SESSION_PREFIX"
+validate_relative_output_root "$EVAL_ROOT_REL"
+validate_positive_integer "--baseline-jobs" "$BASELINE_JOBS"
+validate_positive_integer "--baseline-workers" "$BASELINE_WORKERS"
+if [ -z "$BASELINE_CPU_ALLOCATION" ]; then
+  BASELINE_CPU_ALLOCATION="workers:${BASELINE_WORKERS}"
+fi
+case "$CRYPTO_TESTING_WORKERS_VALUE" in
+  auto) ;;
+  *) validate_positive_integer "--crypto-testing-workers" "$CRYPTO_TESTING_WORKERS_VALUE" ;;
+esac
+validate_positive_integer "--crypto-testing-geninput-timeout" "$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE"
 case "$RESULT_SAVE_MODE" in
   compact|all) ;;
   *)
@@ -1270,9 +1472,7 @@ case "$RESULT_SAVE_MODE" in
     ;;
 esac
 FUZZING_SECONDS="$(parse_duration_seconds "$FUZZING_TIME")"
-if [[ ! "$PROGRESS_INTERVAL" =~ ^[0-9]+$ ]] || [ "$PROGRESS_INTERVAL" -le 0 ]; then
-  die "--progress-interval must be a positive integer number of seconds"
-fi
+validate_positive_integer "--progress-interval" "$PROGRESS_INTERVAL"
 
 KEM_SECONDS=$(((FUZZING_SECONDS + 1) / 2))
 SIG_SECONDS=$((FUZZING_SECONDS / 2))
@@ -1298,7 +1498,6 @@ for campaign in "${REQUESTED_CAMPAIGNS[@]}"; do
   REQUESTED_CAMPAIGN_BY_ID["$campaign"]=1
 done
 
-EVAL_ROOT_REL="workspace/baselines_eval"
 EVAL_ROOT="${ROOT_DIR}/${EVAL_ROOT_REL}"
 CAMPAIGN_ROOT="${EVAL_ROOT}/campaigns"
 LOG_DIR="${EVAL_ROOT}/logs"
@@ -1357,6 +1556,11 @@ echo "[eval] fuzzing time: ${FUZZING_SECONDS}s"
 echo "[eval] progress interval: ${PROGRESS_INTERVAL}s"
 echo "[eval] session prefix: $SESSION_PREFIX"
 echo "[eval] result save mode: $RESULT_SAVE_MODE"
+echo "[eval] baseline jobs: $BASELINE_JOBS"
+echo "[eval] baseline workers: $BASELINE_WORKERS"
+echo "[eval] baseline cpu allocation: $BASELINE_CPU_ALLOCATION"
+echo "[eval] cryptoTesting workers: $CRYPTO_TESTING_WORKERS_VALUE"
+echo "[eval] cryptoTesting GenInput timeout: ${CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE}s"
 if [ "${#REQUESTED_CAMPAIGNS[@]}" -gt 0 ]; then
   echo "[eval] selected campaigns: ${REQUESTED_CAMPAIGNS[*]}"
 else
@@ -1367,8 +1571,10 @@ echo
 
 if [ "$SUMMARIZE_ONLY" -eq 1 ]; then
   [ -f "$INDEX_FILE" ] || die "cannot summarize: missing campaign index $INDEX_FILE"
+  set +e
   SUMMARY_OUTPUT="$(write_final_summary)"
   SUMMARY_STATUS="$?"
+  set -e
   printf '%s\n' "$SUMMARY_OUTPUT"
   exit "$SUMMARY_STATUS"
 fi
@@ -1382,7 +1588,10 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "[dry-run] workspace: ${WORKSPACE_REL_BY_ID[$campaign]}"
     echo "[dry-run] log: ${LOG_FILE_BY_ID[$campaign]}"
     echo "[dry-run] status: ${STATUS_FILE_BY_ID[$campaign]}"
-    print_campaign_commands "$baseline" "$version" "$FUZZING_SECONDS" "$KEM_SECONDS" "$SIG_SECONDS" "$RESULT_SAVE_MODE" |
+    print_campaign_commands \
+      "$baseline" "$version" "$FUZZING_SECONDS" "$KEM_SECONDS" "$SIG_SECONDS" \
+      "$RESULT_SAVE_MODE" "$BASELINE_JOBS" "$BASELINE_WORKERS" "$BASELINE_CPU_ALLOCATION" \
+      "$CRYPTO_TESTING_WORKERS_VALUE" "$CRYPTO_TESTING_GENINPUT_TIMEOUT_VALUE" |
       sed "s#<campaign-workspace>#${WORKSPACE_REL_BY_ID[$campaign]}#g; s/^/[dry-run] command: /"
     echo
   done

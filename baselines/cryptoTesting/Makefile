@@ -1,4 +1,14 @@
 current_dir = $(shell pwd)
+LIBOQS_REPO ?= https://github.com/open-quantum-safe/liboqs.git
+LIBOQS_CACHE ?=
+LIBOQS_CLONE_RETRIES ?= 5
+LIBOQS_CLONE_SLEEP ?= 5
+CLONE_WITH_RETRY ?= ./clone_with_retry.sh
+LIBOQS_CLONE_ARGS = --repo "$(LIBOQS_REPO)" --retries "$(LIBOQS_CLONE_RETRIES)" --sleep "$(LIBOQS_CLONE_SLEEP)"
+ifneq ($(strip $(LIBOQS_CACHE)),)
+LIBOQS_CLONE_ARGS += --cache "$(LIBOQS_CACHE)"
+endif
+
 ifneq ("$(wildcard ./aflpp/afl-clang-fast)","")
     AFLCC=${current_dir}/aflpp/afl-clang-fast
 else ifneq ("$(wildcard ./aflpp/afl-clang)","")
@@ -33,15 +43,13 @@ ches_deps:
 	pip3 install cmake==3.22
 
 ches_liboqs: common ches_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git ches_liboqs
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.14.0 ches_liboqs
 	mkdir -p ches_liboqs/build
-	cd ches_liboqs && git checkout 0.14.0
 	cd ches_liboqs/build && cmake -GNinja -DCMAKE_C_COMPILER=gcc-8 -DCMAKE_ASM_COMPILER=gcc-8 .. && ninja
 
 ches_liboqs_afl: common ches_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git ches_liboqs_afl
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.14.0 ches_liboqs_afl
 	mkdir -p ches_liboqs_afl/build
-	cd ches_liboqs_afl && git checkout 0.14.0
 	cd ches_liboqs_afl/build && cmake -GNinja -DCMAKE_C_COMPILER=$(AFLCC) -DCMAKE_ASM_COMPILER=$(AFLCC) .. && ninja
 
 cur_deps:
@@ -51,15 +59,13 @@ cur_deps:
 	pip3 install cmake==3.22
 
 cur_liboqs: common cur_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git cur_liboqs
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.8.0 cur_liboqs
 	mkdir -p cur_liboqs/build
-	cd cur_liboqs && git checkout 0.8.0
 	cd cur_liboqs/build && cmake -GNinja .. && ninja
 
 cur_liboqs_afl: common cur_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git cur_liboqs_afl
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.8.0 cur_liboqs_afl
 	mkdir -p cur_liboqs_afl/build
-	cd cur_liboqs_afl && git checkout 0.8.0
 	cd cur_liboqs_afl/build && cmake -GNinja -DCMAKE_C_COMPILER=$(AFLCC) -DCMAKE_ASM_COMPILER=$(AFLCC) .. && ninja
 
 OLDCC=gcc-7
@@ -68,8 +74,7 @@ old_deps:
 	sudo apt-get install -y --no-install-recommends $(OLDCC) wget
 
 old_liboqs: common old_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git old_liboqs
-	cd old_liboqs; git checkout nist-branch-snapshot-2018-11
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref nist-branch-snapshot-2018-11 old_liboqs
 	mkdir -p old_liboqs/vendor
 	wget -O old_liboqs/vendor/XKCP-master.zip https://github.com/XKCP/XKCP/archive/c98cd37ccb95c20412f1d57b58c7619a72115075.zip
 	cd old_liboqs/vendor; unzip XKCP-master.zip; mv XKCP-c98cd37ccb95c20412f1d57b58c7619a72115075 XKCP-master
@@ -81,8 +86,7 @@ old_liboqs: common old_deps
 	cp -r old_liboqs/include old_liboqs/build/include
 
 old_liboqs_afl: common old_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git old_liboqs_afl
-	cd old_liboqs_afl; git checkout nist-branch-snapshot-2018-11
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref nist-branch-snapshot-2018-11 old_liboqs_afl
 	mkdir -p old_liboqs_afl/vendor
 	wget -O old_liboqs_afl/vendor/XKCP-master.zip https://github.com/XKCP/XKCP/archive/c98cd37ccb95c20412f1d57b58c7619a72115075.zip
 	cd old_liboqs_afl/vendor; unzip XKCP-master.zip; mv XKCP-c98cd37ccb95c20412f1d57b58c7619a72115075 XKCP-master
@@ -100,14 +104,12 @@ mid_deps:
 	pip3 install cmake==3.22
 
 mid_liboqs: common mid_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git mid_liboqs
-	cd mid_liboqs && git checkout 0.4.0
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.4.0 mid_liboqs
 	mkdir -p mid_liboqs/build
 	cd mid_liboqs/build && cmake -GNinja .. && ninja
 
 mid_liboqs_afl: common mid_deps
-	git clone https://github.com/open-quantum-safe/liboqs.git mid_liboqs_afl
-	cd mid_liboqs_afl && git checkout 0.4.0
+	$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.4.0 mid_liboqs_afl
 	mkdir -p mid_liboqs_afl/build
 	cd mid_liboqs_afl/build && cmake -GNinja -DCMAKE_C_COMPILER=$(AFLCC) -DCMAKE_ASM_COMPILER=$(AFLCC) .. && ninja
 

@@ -69,6 +69,8 @@ ADD docker/ubuntu/root/.scripts /root/.scripts
 # Add makefile with initial dependencies.
 RUN mkdir -p /fuzzing
 COPY Makefile /fuzzing/Makefile
+COPY clone_with_retry.sh /fuzzing/clone_with_retry.sh
+RUN chmod +x /fuzzing/clone_with_retry.sh
 
 # Define working directory.
 WORKDIR /fuzzing

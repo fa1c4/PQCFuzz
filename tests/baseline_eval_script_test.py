@@ -17,6 +17,8 @@ CRYPTOFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "cryptofuzz" / "run.sh"
 CLFUZZ_RUNNER = ROOT / "scripts" / "baselines" / "CLFuzz" / "run.sh"
 CRYPTOTESTING_RUNNER = ROOT / "scripts" / "baselines" / "cryptoTesting" / "run.sh"
 CRYPTOTESTING_DOCKERFILE = ROOT / "baselines" / "cryptoTesting" / "Dockerfile"
+CRYPTOTESTING_MAKEFILE = ROOT / "baselines" / "cryptoTesting" / "Makefile"
+CRYPTOTESTING_CLONE_HELPER = ROOT / "baselines" / "cryptoTesting" / "clone_with_retry.sh"
 CRYPTOTESTING_REPRODUCE = ROOT / "baselines" / "cryptoTesting" / "reproduce.sh"
 CRYPTOTESTING_RECOVERY = ROOT / "scripts" / "recover_cryptotesting_results.py"
 CLFUZZ_OV_REPLAY_FIXTURE = ROOT / "tests" / "seeds" / "clfuzz_ov_is_pkc_skc_0.14.0.input.b64"
@@ -198,6 +200,72 @@ def test_campaign_filter_dry_run_selects_one_campaign(tmp_path: Path) -> None:
     assert "libFuzzer run --profile semantic --version 0.14.0 --target kem" in result.stdout
 
 
+def test_eval_dry_run_exposes_baseline_resource_controls_and_output_root(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    result = run_eval(
+        tmp_path,
+        root,
+        "--dry-run",
+        "--fuzzing-time",
+        "1s",
+        "--campaign",
+        "cryptofuzz-0.14.0",
+        "--output-root",
+        "workspace/baselines_eval_scratch",
+        "--baseline-jobs",
+        "3",
+        "--baseline-workers",
+        "4",
+        "--baseline-cpu-allocation",
+        "workers:4",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"[eval] output root: {root / 'workspace' / 'baselines_eval_scratch'}" in result.stdout
+    assert "[eval] baseline jobs: 3" in result.stdout
+    assert "[eval] baseline workers: 4" in result.stdout
+    assert "[eval] baseline cpu allocation: workers:4" in result.stdout
+    assert "workspace/baselines_eval_scratch/campaigns/cryptofuzz-0.14.0/workspace" in result.stdout
+    assert (
+        "cryptofuzz run --version 0.14.0 --mode full --max-total-time 1 "
+        "--jobs 3 --workers 4 --cpu-allocation workers:4"
+    ) in result.stdout
+
+
+def test_eval_dry_run_exposes_cryptotesting_controls(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    result = run_eval(
+        tmp_path,
+        root,
+        "--dry-run",
+        "--fuzzing-time",
+        "1s",
+        "--campaign",
+        "cryptoTesting-0.4.0",
+        "--crypto-testing-workers",
+        "7",
+        "--crypto-testing-geninput-timeout",
+        "60",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "[eval] cryptoTesting workers: 7" in result.stdout
+    assert "[eval] cryptoTesting GenInput timeout: 60s" in result.stdout
+    assert (
+        "CRYPTO_TESTING_WORKERS=7 CRYPTO_TESTING_GENINPUT_TIMEOUT=60 "
+        "scripts/run_baseline.sh cryptoTesting run --version 0.4.0 --mode functional "
+        "--workers 7 --geninput-timeout 60 --max-total-time 1 --skip-core-pattern-check"
+    ) in result.stdout
+
+
+def test_eval_rejects_output_root_outside_repo(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    result = run_eval(tmp_path, root, "--dry-run", "--output-root", "../outside")
+
+    assert result.returncode == 2
+    assert "--output-root must be a relative path under the repository" in result.stderr
+
+
 def test_campaign_filter_rejects_unknown_campaign(tmp_path: Path) -> None:
     root = tmp_path / "repo"
     result = run_eval(tmp_path, root, "--dry-run", "--campaign", "unknown-0.14.0")
@@ -239,6 +307,62 @@ exit 0
     assert status["final_status"] == 0
 
 
+def test_eval_propagates_libfuzzer_aggregate_coverage_gap(tmp_path: Path) -> None:
+    root = make_root(
+        tmp_path,
+        """#!/usr/bin/env bash
+set -eu
+
+if [ "$1" = libFuzzer ] && [ "$2" = run ] && [ "$8" = sig ]; then
+  output_root="${PQCDF_WORKSPACE_ROOT}/libFuzzer/targets-run/liboqs-0.14.0"
+  mkdir -p "$output_root"
+  printf '%s\\n' '{"status":"completed-with-coverage-gap","normalized_outcome":"coverage_incomplete","stop_reason":"max-total-time","semantic_finding_count":1,"operation_diagnostic_count":2,"sanitizer_crash_count":0,"hang_count":0,"worker_count":1,"jobs":1,"cpu_allocation":"one-cpu","wall_time_seconds":1.5,"cpu_time_seconds":0.5,"operations":["OQS_KEM_SelfTest"],"algorithm_list":["fake-kem"],"property_list":["fake-property"],"module_version":"fake-module"}' > "$output_root/summary.semantic.json"
+  printf '%s\\n' '{"profiles":{"semantic":{"status":"completed-with-coverage-gap","normalized_outcome":"coverage_incomplete","stop_reason":"max-total-time","semantic_finding_count":1,"operation_diagnostic_count":2,"sanitizer_crash_count":0,"hang_count":0,"worker_count":1,"jobs":1,"cpu_allocation":"one-cpu","wall_time_seconds":1.5,"cpu_time_seconds":0.5,"operations":["OQS_KEM_SelfTest"],"algorithm_list":["fake-kem"],"property_list":["fake-property"],"module_version":"fake-module"}}}' > "$output_root/summary.json"
+fi
+exit 0
+""",
+    )
+    make_tmux(
+        tmp_path,
+        """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+""",
+    )
+
+    result = run_eval(
+        tmp_path, root, "--campaign", "libFuzzer-0.14.0", "--result-save-mode", "all",
+        "--fuzzing-time", "1s", "--progress-interval", "1",
+    )
+
+    assert result.returncode == 0, result.stderr
+    status = load_status(root, "libFuzzer-0.14.0")
+    assert status["result"] == "completed-with-coverage-gap"
+    assert status["final_status"] == 0
+
+    summary = load_summary(root)
+    campaign = summary["campaigns"][0]
+    assert campaign["result"] == "completed-with-coverage-gap"
+    assert campaign["summary_outcome"] == "completed-with-coverage-gap"
+    assert campaign["normalized_outcome"] == "coverage_incomplete"
+    assert campaign["semantic_finding_count"] == 1
+    assert campaign["operation_diagnostic_count"] == 2
+
+    status["result"] = "completed"
+    status_path = root / "workspace" / "baselines_eval" / "status" / "libFuzzer-0.14.0.json"
+    status_path.write_text(json.dumps(status, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    summarize = run_eval(tmp_path, root, "--summarize-only")
+
+    assert summarize.returncode == 0, summarize.stderr
+    summarized_campaign = load_summary(root)["campaigns"][0]
+    assert summarized_campaign["result"] == "completed-with-coverage-gap"
+    assert summarized_campaign["summary_outcome"] == "completed-with-coverage-gap"
+
+
 def test_cryptotesting_worker_validation_accepts_single_digits_and_auto(tmp_path: Path) -> None:
     for workers in ("1", "9", "10", "auto"):
         result = subprocess.run(
@@ -251,6 +375,64 @@ def test_cryptotesting_worker_validation_accepts_single_digits_and_auto(tmp_path
         assert result.returncode == 2
         assert "--geninput-timeout must be a positive integer" in result.stderr
         assert "--workers must" not in result.stderr
+
+
+def test_cryptotesting_wrapper_validates_liboqs_clone_retry_controls(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            "bash", str(CRYPTOTESTING_RUNNER), "baseline", str(tmp_path / "build"), str(tmp_path / "run"),
+            "--liboqs-clone-retries", "0",
+        ],
+        cwd=ROOT, text=True, capture_output=True,
+    )
+
+    assert result.returncode == 2
+    assert "--liboqs-clone-retries must be a positive integer" in result.stderr
+
+
+def test_cryptotesting_clone_helper_reuses_populated_cache_without_remote(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    cache = tmp_path / "cache" / "liboqs.git"
+    first_dest = tmp_path / "first"
+    second_dest = tmp_path / "second"
+
+    subprocess.run(["git", "init", str(source)], cwd=ROOT, check=True, text=True, capture_output=True)
+    (source / "marker.txt").write_text("cached liboqs\n", encoding="utf-8")
+    subprocess.run(["git", "add", "marker.txt"], cwd=source, check=True, text=True, capture_output=True)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.invalid", "-c", "user.name=Test", "commit", "-m", "init"],
+        cwd=source,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(["git", "tag", "0.4.0"], cwd=source, check=True, text=True, capture_output=True)
+
+    first = subprocess.run(
+        [
+            "bash", str(CRYPTOTESTING_CLONE_HELPER),
+            "--repo", str(source), "--cache", str(cache), "--ref", "0.4.0", "--sleep", "0",
+            str(first_dest),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    assert first.returncode == 0, first.stderr
+    assert (first_dest / "marker.txt").read_text(encoding="utf-8") == "cached liboqs\n"
+
+    second = subprocess.run(
+        [
+            "bash", str(CRYPTOTESTING_CLONE_HELPER),
+            "--repo", str(tmp_path / "missing-remote"), "--cache", str(cache), "--ref", "0.4.0",
+            "--sleep", "0", str(second_dest),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
+    assert second.returncode == 0, second.stderr
+    assert (second_dest / "marker.txt").read_text(encoding="utf-8") == "cached liboqs\n"
 
 
 def test_cryptotesting_manifest_records_a_controlled_budget_stop(tmp_path: Path) -> None:
@@ -320,6 +502,7 @@ def test_cryptotesting_uses_campaign_wall_clock_without_per_task_afl_limits() ->
     run_all = (
         ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs" / "run_all.py"
     ).read_text(encoding="utf-8")
+    runner = CRYPTOTESTING_RUNNER.read_text(encoding="utf-8")
     reproduce = CRYPTOTESTING_REPRODUCE.read_text(encoding="utf-8")
     recipes = sorted((ROOT / "baselines" / "cryptoTesting" / "tech" / "paper_fuzzing" / "liboqs").rglob("Makefile"))
     vanilla_driver = (ROOT / "baselines" / "cryptoTesting" / "fuzz_liboqs_baseline.py").read_text(encoding="utf-8")
@@ -331,6 +514,9 @@ def test_cryptotesting_uses_campaign_wall_clock_without_per_task_afl_limits() ->
     assert "--task-max-time" not in reproduce
     assert "BLACKLIST=()" in driver
     assert "BLACKLIST=()" in vanilla_driver
+    assert "LIBOQS_CACHE=${LIBOQS_CACHE_CONTAINER}" in runner
+    assert '/pqcdf-liboqs-cache' in runner
+    assert '--liboqs-clone-retries' in runner
     assert 'if "old" in liboqs' not in driver
     assert 'if "old" in liboqs' not in vanilla_driver
     assert len(recipes) == 13
@@ -433,12 +619,16 @@ def test_cryptotesting_marks_running_tasks_interrupted_on_termination(tmp_path: 
 
 def test_cryptotesting_dockerfile_packages_manifest_writer() -> None:
     dockerfile = CRYPTOTESTING_DOCKERFILE.read_text(encoding="utf-8")
+    makefile = CRYPTOTESTING_MAKEFILE.read_text(encoding="utf-8")
     manifest_writer = (ROOT / "baselines" / "cryptoTesting" / "crypto_testing_manifest.py").read_text(
         encoding="utf-8"
     )
 
     assert "COPY crypto_testing_manifest.py /fuzzing/crypto_testing_manifest.py" in dockerfile
     assert "COPY crypto_testing_replay.py /fuzzing/crypto_testing_replay.py" in dockerfile
+    assert "COPY clone_with_retry.sh /fuzzing/clone_with_retry.sh" in dockerfile
+    assert "CLONE_WITH_RETRY ?= ./clone_with_retry.sh" in makefile
+    assert "$(CLONE_WITH_RETRY) $(LIBOQS_CLONE_ARGS) --ref 0.4.0 mid_liboqs" in makefile
     assert "from __future__ import annotations" not in manifest_writer
 
 
@@ -532,6 +722,11 @@ exit 0
     summary = load_summary(root)
     assert summary["campaigns"][0]["result"] == "missing-summary"
     assert summary["campaigns"][0]["missing_expected_summary"] is True
+
+    summarize = run_eval(tmp_path, root, "--summarize-only")
+    assert summarize.returncode == 1
+    assert str(root / "workspace" / "baselines_eval" / "summary.json") in summarize.stdout
+    assert str(root / "workspace" / "baselines_eval" / "summary.tsv") in summarize.stdout
 
 
 def test_cryptotesting_manifest_failure_is_classified_as_harness_error(tmp_path: Path) -> None:
