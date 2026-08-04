@@ -181,6 +181,15 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_public_key, public_key, public_key_len, envelope)) {
 			break;
 		}
+		if (pqcdf_is_falcon_norm_bound_verify_pk(algorithm)) {
+			property_exercised = 1;
+			pqcdf_record_oracle_assumption_outcome(
+				"sig", algorithm, "sig_verify_pk",
+				"oracle_assumption_unsupported_falcon_norm_bound_pk",
+				"Falcon verification is a norm-bound relation; a single accepted public-key byte mutation is not by itself a generic verification-key binding failure",
+				envelope);
+			break;
+		}
 		property_exercised = 1;
 		rc = OQS_SIG_verify(sig, message, message_len, signature, signature_len, mutated_public_key);
 		if (rc == OQS_SUCCESS) {
@@ -239,6 +248,15 @@ static void pqcdf_run_sig(const pqcdf_envelope *envelope, const char *algorithm,
 		break;
 
 	case PQCDF_SIG_PROPERTY_SIGN_BADRNG:
+		if (pqcdf_is_deterministic_signature_no_external_sign_rng(algorithm)) {
+			property_exercised = 1;
+			pqcdf_record_oracle_assumption_outcome(
+				"sig", algorithm, "sig_sign_badrng",
+				"oracle_assumption_unsupported_deterministic_signature_rng",
+				"this signature family is deterministic or derives signing randomness internally, so changing the external liboqs RNG stream is not a valid EXPECT_DIFFERENT oracle",
+				envelope);
+			break;
+		}
 		property_exercised = 1;
 		alternate_signature_len = 0;
 		pqcdf_seed_envelope_rng(envelope, 1);

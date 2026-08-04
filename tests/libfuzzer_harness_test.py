@@ -95,6 +95,16 @@ static const char *mode(void) {
 
 static int is_mode(const char *value) { return strcmp(mode(), value) == 0; }
 
+static const char *kem_algorithm_name(void) {
+  const char *value = getenv("FAKE_OQS_KEM_ALGORITHM");
+  return (value == NULL || *value == '\0') ? "fake-kem" : value;
+}
+
+static const char *sig_algorithm_name(void) {
+  const char *value = getenv("FAKE_OQS_SIG_ALGORITHM");
+  return (value == NULL || *value == '\0') ? "fake-sig" : value;
+}
+
 static void randombytes(uint8_t *out, size_t size) {
   if (!system_rng && randombytes_callback != NULL) {
     randombytes_callback(out, size);
@@ -115,8 +125,8 @@ OQS_STATUS OQS_randombytes_switch_algorithm(const char *ignored) {
 }
 
 int OQS_KEM_alg_count(void) { return 1; }
-const char *OQS_KEM_alg_identifier(size_t index) { return index == 0 ? "fake-kem" : NULL; }
-int OQS_KEM_alg_is_enabled(const char *algorithm) { return algorithm != NULL && strcmp(algorithm, "fake-kem") == 0; }
+const char *OQS_KEM_alg_identifier(size_t index) { return index == 0 ? kem_algorithm_name() : NULL; }
+int OQS_KEM_alg_is_enabled(const char *algorithm) { return algorithm != NULL && strcmp(algorithm, kem_algorithm_name()) == 0; }
 OQS_KEM *OQS_KEM_new(const char *algorithm) {
   if (!OQS_KEM_alg_is_enabled(algorithm)) return NULL;
   OQS_KEM *kem = calloc(1, sizeof(*kem));
@@ -157,8 +167,8 @@ OQS_STATUS OQS_KEM_decaps(OQS_KEM *kem, uint8_t *ss, const uint8_t *ct, const ui
 }
 
 int OQS_SIG_alg_count(void) { return 1; }
-const char *OQS_SIG_alg_identifier(size_t index) { return index == 0 ? "fake-sig" : NULL; }
-int OQS_SIG_alg_is_enabled(const char *algorithm) { return algorithm != NULL && strcmp(algorithm, "fake-sig") == 0; }
+const char *OQS_SIG_alg_identifier(size_t index) { return index == 0 ? sig_algorithm_name() : NULL; }
+int OQS_SIG_alg_is_enabled(const char *algorithm) { return algorithm != NULL && strcmp(algorithm, sig_algorithm_name()) == 0; }
 OQS_SIG *OQS_SIG_new(const char *algorithm) {
   if (!OQS_SIG_alg_is_enabled(algorithm)) return NULL;
   OQS_SIG *sig = calloc(1, sizeof(*sig));
@@ -299,7 +309,13 @@ def envelope(
     return header + tape + message
 
 
-def run_case(binary: Path, tmp_path: Path, mode: str, *inputs: bytes) -> tuple[subprocess.CompletedProcess[str], Path, Path]:
+def run_case(
+    binary: Path,
+    tmp_path: Path,
+    mode: str,
+    *inputs: bytes,
+    extra_env: dict[str, str] | None = None,
+) -> tuple[subprocess.CompletedProcess[str], Path, Path, Path]:
     input_paths = []
     for index, value in enumerate(inputs):
         path = tmp_path / f"input-{index}.bin"
@@ -307,6 +323,7 @@ def run_case(binary: Path, tmp_path: Path, mode: str, *inputs: bytes) -> tuple[s
         input_paths.append(path)
     findings = tmp_path / "findings"
     diagnostics = tmp_path / "diagnostics"
+    outcomes = tmp_path / "outcomes"
     metadata = tmp_path / "metadata.json"
     env = os.environ.copy()
     env.update(
@@ -315,10 +332,13 @@ def run_case(binary: Path, tmp_path: Path, mode: str, *inputs: bytes) -> tuple[s
             "PQCDF_LIBFUZZER_PROFILE": "semantic",
             "PQCDF_LIBFUZZER_FINDINGS_DIR": str(findings),
             "PQCDF_LIBFUZZER_DIAGNOSTICS_DIR": str(diagnostics),
+            "PQCDF_LIBFUZZER_OUTCOMES_DIR": str(outcomes),
             "PQCDF_LIBFUZZER_METADATA_FILE": str(metadata),
             "PQCDF_LIBFUZZER_MAX_EXEMPLARS_PER_GROUP": "3",
         }
     )
+    if extra_env:
+        env.update(extra_env)
     result = subprocess.run(
         [str(binary), *(str(path) for path in input_paths)],
         cwd=ROOT,
@@ -326,7 +346,7 @@ def run_case(binary: Path, tmp_path: Path, mode: str, *inputs: bytes) -> tuple[s
         capture_output=True,
         env=env,
     )
-    return result, findings, diagnostics
+    return result, findings, diagnostics, outcomes
 
 
 def finding_records(directory: Path) -> list[dict]:
@@ -335,7 +355,7 @@ def finding_records(directory: Path) -> list[dict]:
 
 def test_mutated_ciphertext_same_secret_is_a_nonfatal_finding(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
-    result, findings, _ = run_case(binary, tmp_path, "kem_equal", envelope(1, 2))
+    result, findings, _, _ = run_case(binary, tmp_path, "kem_equal", envelope(1, 2))
 
     assert result.returncode == 0, result.stderr
     [finding] = finding_records(findings)
@@ -348,7 +368,7 @@ def test_mutated_ciphertext_same_secret_is_a_nonfatal_finding(tmp_path: Path) ->
 
 def test_rejected_mutated_ciphertext_is_not_a_finding(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
-    result, findings, _ = run_case(binary, tmp_path, "kem_reject", envelope(1, 2))
+    result, findings, _, _ = run_case(binary, tmp_path, "kem_reject", envelope(1, 2))
 
     assert result.returncode == 0, result.stderr
     assert finding_records(findings) == []
@@ -356,7 +376,7 @@ def test_rejected_mutated_ciphertext_is_not_a_finding(tmp_path: Path) -> None:
 
 def test_mutated_signature_acceptance_is_recorded(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "sig")
-    result, findings, _ = run_case(binary, tmp_path, "sig_accept", envelope(2, 2, message=b"M"))
+    result, findings, _, _ = run_case(binary, tmp_path, "sig_accept", envelope(2, 2, message=b"M"))
 
     assert result.returncode == 0, result.stderr
     [finding] = finding_records(findings)
@@ -366,7 +386,7 @@ def test_mutated_signature_acceptance_is_recorded(tmp_path: Path) -> None:
 
 def test_ineffective_mutation_is_skipped(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
-    result, findings, _ = run_case(binary, tmp_path, "kem_equal", envelope(1, 2, mutation_mask=0))
+    result, findings, _, _ = run_case(binary, tmp_path, "kem_equal", envelope(1, 2, mutation_mask=0))
 
     assert result.returncode == 0, result.stderr
     assert finding_records(findings) == []
@@ -374,7 +394,7 @@ def test_ineffective_mutation_is_skipped(tmp_path: Path) -> None:
 
 def test_oqs_error_is_a_diagnostic_not_a_sanitizer_crash(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
-    result, findings, diagnostics = run_case(binary, tmp_path, "keypair_error", envelope(1, 2))
+    result, findings, diagnostics, _ = run_case(binary, tmp_path, "keypair_error", envelope(1, 2))
 
     assert result.returncode == 0, result.stderr
     assert finding_records(findings) == []
@@ -386,7 +406,7 @@ def test_oqs_error_is_a_diagnostic_not_a_sanitizer_crash(tmp_path: Path) -> None
 
 def test_two_semantic_findings_do_not_stop_the_campaign(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
-    result, findings, _ = run_case(
+    result, findings, _, _ = run_case(
         binary,
         tmp_path,
         "kem_equal",
@@ -404,7 +424,7 @@ def test_two_semantic_findings_do_not_stop_the_campaign(tmp_path: Path) -> None:
 def test_duplicate_observation_is_deduplicated_by_its_replayable_input(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "kem")
     input_value = envelope(1, 2)
-    result, findings, _ = run_case(binary, tmp_path, "kem_equal", input_value, input_value)
+    result, findings, _, _ = run_case(binary, tmp_path, "kem_equal", input_value, input_value)
 
     assert result.returncode == 0, result.stderr
     assert len(finding_records(findings)) == 1
@@ -412,7 +432,7 @@ def test_duplicate_observation_is_deduplicated_by_its_replayable_input(tmp_path:
 
 def test_noncanonical_mutation_plan_uses_the_review_subclass(tmp_path: Path) -> None:
     binary = compile_harness(tmp_path, "sig")
-    result, findings, _ = run_case(
+    result, findings, _, _ = run_case(
         binary,
         tmp_path,
         "sig_accept",
@@ -422,3 +442,81 @@ def test_noncanonical_mutation_plan_uses_the_review_subclass(tmp_path: Path) -> 
     assert result.returncode == 0, result.stderr
     [finding] = finding_records(findings)
     assert finding["finding_subclass"] == "accepted_noncanonical_mutation"
+
+
+def test_classic_mceliece_kem_encaps_pk_is_a_non_finding_outcome(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "kem")
+    result, findings, _, outcomes = run_case(
+        binary,
+        tmp_path,
+        "normal",
+        envelope(1, 4),
+        extra_env={"FAKE_OQS_KEM_ALGORITHM": "Classic-McEliece-348864"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert finding_records(findings) == []
+    classifications = {record["classification"] for record in finding_records(outcomes)}
+    assert "oracle_assumption_unsupported_sparse_pk_single_challenge" in classifications
+
+
+def test_generic_kem_encaps_pk_still_reports_public_key_finding(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "kem")
+    result, findings, _, _ = run_case(binary, tmp_path, "normal", envelope(1, 4))
+
+    assert result.returncode == 0, result.stderr
+    [finding] = finding_records(findings)
+    assert finding["property_id"] == "kem_encaps_pk"
+    assert finding["finding_subclass"] == "public_key_ignored_or_malleable"
+
+
+def test_picnic_sig_sign_badrng_is_a_non_finding_outcome(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "sig")
+    result, findings, _, outcomes = run_case(
+        binary,
+        tmp_path,
+        "normal",
+        envelope(2, 7, message=b"M"),
+        extra_env={"FAKE_OQS_SIG_ALGORITHM": "Picnic3-L5"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert finding_records(findings) == []
+    classifications = {record["classification"] for record in finding_records(outcomes)}
+    assert "oracle_assumption_unsupported_deterministic_signature_rng" in classifications
+
+
+def test_generic_sig_sign_badrng_still_reports_rng_finding(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "sig")
+    result, findings, _, _ = run_case(binary, tmp_path, "normal", envelope(2, 7, message=b"M"))
+
+    assert result.returncode == 0, result.stderr
+    [finding] = finding_records(findings)
+    assert finding["property_id"] == "sig_sign_badrng"
+    assert finding["finding_subclass"] == "sign_rng_ignored"
+
+
+def test_falcon_sig_verify_pk_is_a_non_finding_outcome(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "sig")
+    result, findings, _, outcomes = run_case(
+        binary,
+        tmp_path,
+        "sig_accept",
+        envelope(2, 4, message=b"M"),
+        extra_env={"FAKE_OQS_SIG_ALGORITHM": "Falcon-512"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert finding_records(findings) == []
+    classifications = {record["classification"] for record in finding_records(outcomes)}
+    assert "oracle_assumption_unsupported_falcon_norm_bound_pk" in classifications
+
+
+def test_generic_sig_verify_pk_still_reports_public_key_finding(tmp_path: Path) -> None:
+    binary = compile_harness(tmp_path, "sig")
+    result, findings, _, _ = run_case(binary, tmp_path, "sig_accept", envelope(2, 4, message=b"M"))
+
+    assert result.returncode == 0, result.stderr
+    [finding] = finding_records(findings)
+    assert finding["property_id"] == "sig_verify_pk"
+    assert finding["finding_subclass"] == "public_key_binding_failure"

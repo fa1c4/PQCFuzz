@@ -223,6 +223,8 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
         bool system_rng = false;
         const char* mode() { const char* value = std::getenv("FAKE_OQS_MODE"); return value ? value : "normal"; }
         bool is_mode(const char* value) { return std::strcmp(mode(), value) == 0; }
+        const char* kem_alg_name() { const char* v = std::getenv("FAKE_OQS_KEM_ALG"); return v && *v ? v : "fake-kem"; }
+        const char* sig_alg_name() { const char* v = std::getenv("FAKE_OQS_SIG_ALG"); return v && *v ? v : "fake-sig"; }
         void randombytes(uint8_t* out, size_t size) {
           if (!system_rng && callback) { callback(out, size); return; }
           std::memset(out, 0x7a, size);
@@ -233,8 +235,8 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
         OQS_STATUS OQS_randombytes_switch_algorithm(const char*) { system_rng = true; return OQS_SUCCESS; }
 
         int OQS_KEM_alg_count() { return 1; }
-        const char* OQS_KEM_alg_identifier(size_t index) { return index == 0 ? "fake-kem" : nullptr; }
-        int OQS_KEM_alg_is_enabled(const char* algorithm) { return algorithm && std::strcmp(algorithm, "fake-kem") == 0; }
+        const char* OQS_KEM_alg_identifier(size_t index) { return index == 0 ? kem_alg_name() : nullptr; }
+        int OQS_KEM_alg_is_enabled(const char* algorithm) { return algorithm && std::strcmp(algorithm, kem_alg_name()) == 0; }
         OQS_KEM* OQS_KEM_new(const char* algorithm) {
           if (!OQS_KEM_alg_is_enabled(algorithm)) return nullptr;
           auto* kem = static_cast<OQS_KEM*>(std::calloc(1, sizeof(OQS_KEM)));
@@ -258,8 +260,8 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
         }
 
         int OQS_SIG_alg_count() { return 1; }
-        const char* OQS_SIG_alg_identifier(size_t index) { return index == 0 ? "fake-sig" : nullptr; }
-        int OQS_SIG_alg_is_enabled(const char* algorithm) { return algorithm && std::strcmp(algorithm, "fake-sig") == 0; }
+        const char* OQS_SIG_alg_identifier(size_t index) { return index == 0 ? sig_alg_name() : nullptr; }
+        int OQS_SIG_alg_is_enabled(const char* algorithm) { return algorithm && std::strcmp(algorithm, sig_alg_name()) == 0; }
         OQS_SIG* OQS_SIG_new(const char* algorithm) {
           if (!OQS_SIG_alg_is_enabled(algorithm)) return nullptr;
           auto* sig = static_cast<OQS_SIG*>(std::calloc(1, sizeof(OQS_SIG)));
@@ -312,17 +314,42 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
         }
 
         int main(int argc, char** argv) {
-          if (argc != 4) return 64;  // case, fake OQS mode, output root
+          if (argc != 4 && argc != 5) return 64;  // case, fake OQS mode, output root, [alg override]
           const std::string test_case(argv[1]);
           std::filesystem::path root(argv[3]);
           for (const char* name : {"findings", "diagnostics", "metadata", "outcomes"})
             std::filesystem::create_directories(root / name);
           setenv("FAKE_OQS_MODE", argv[2], 1);
+          if (argc == 5) {
+            const std::string alg(argv[4]);
+            if (alg.rfind("kem:", 0) == 0) {
+              setenv("FAKE_OQS_KEM_ALG", alg.c_str() + 4, 1);
+            } else if (alg.rfind("sig:", 0) == 0) {
+              setenv("FAKE_OQS_SIG_ALG", alg.c_str() + 4, 1);
+            } else {
+              setenv("FAKE_OQS_KEM_ALG", alg.c_str(), 1);
+              setenv("FAKE_OQS_SIG_ALG", alg.c_str(), 1);
+            }
+          }
           setenv("PQCDF_LIBOQS_FINDINGS_DIR", (root / "findings").c_str(), 1);
           setenv("PQCDF_LIBOQS_DIAGNOSTICS_DIR", (root / "diagnostics").c_str(), 1);
           setenv("PQCDF_LIBOQS_METADATA_DIR", (root / "metadata").c_str(), 1);
           setenv("PQCDF_LIBOQS_OUTCOMES_DIR", (root / "outcomes").c_str(), 1);
           setenv("PQCDF_LIBOQS_BASELINE", "CLFuzz", 1);
+          if (test_case == "legacy-cryptofuzz-env") {
+            // Verify the legacy cryptofuzz aliases still route diagnostics
+            // when the primary PQCDF_LIBOQS_* vars are absent.
+            unsetenv("PQCDF_LIBOQS_FINDINGS_DIR");
+            unsetenv("PQCDF_LIBOQS_DIAGNOSTICS_DIR");
+            unsetenv("PQCDF_LIBOQS_METADATA_DIR");
+            unsetenv("PQCDF_LIBOQS_OUTCOMES_DIR");
+            setenv("PQCDF_CRYPTOFUZZ_FINDINGS_DIR", (root / "findings").c_str(), 1);
+            setenv("PQCDF_CRYPTOFUZZ_DIAGNOSTICS_DIR", (root / "diagnostics").c_str(), 1);
+            setenv("PQCDF_CRYPTOFUZZ_METADATA_DIR", (root / "metadata").c_str(), 1);
+            setenv("PQCDF_CRYPTOFUZZ_OUTCOMES_DIR", (root / "outcomes").c_str(), 1);
+            setenv("PQCDF_LIBOQS_BASELINE", "cryptofuzz", 1);
+            setenv("FAKE_OQS_KEM_ALG", "Classic-McEliece-348864", 1);
+          }
           const std::vector<uint8_t> raw = {'s', 't', 'u', 'b'};
           cryptofuzz::liboqs_replay::ScopedInput scoped(raw.data(), raw.size());
           cryptofuzz::module::liboqs module;
@@ -331,6 +358,8 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
           // property slot; this stub exposes one algorithm, so selector 1 is
           // the second KEM property and selector 3 is the fourth SIG property.
           if (test_case == "kem") return run_kem(module, 1) ? 0 : 1;
+          if (test_case == "kem-encaps-public-key") return run_kem(module, 3) ? 0 : 1;
+          if (test_case == "legacy-cryptofuzz-env") return run_kem(module, 3) ? 0 : 1;
           if (test_case == "kem-replay-mismatch") {
             setenv("PQCDF_LIBOQS_REPLAY_MODE", "raw-input-v1", 1);
             setenv("PQCDF_LIBOQS_REPLAY_ALGORITHM", "fake-kem", 1);
@@ -344,6 +373,7 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
           }
           if (test_case == "sig-verify-signature") return run_sig(module, 1, 1) ? 0 : 1;
           if (test_case == "sig-verify-public-key") return run_sig(module, 3, 1) ? 0 : 1;
+          if (test_case == "sig-sign-badrng") return run_sig(module, 6, 1) ? 0 : 1;
           if (test_case == "sig-noop") return run_sig(module, 1, 0) ? 0 : 1;
           return 65;
         }
@@ -378,10 +408,22 @@ def build_stub_module_binary(tmp_path: Path) -> Path:
     return binary
 
 
-def run_case(binary: Path, root: Path, test_case: str, oqs_mode: str) -> Path:
-    output = root / f"{test_case}-{oqs_mode}"
+def run_case(
+    binary: Path,
+    root: Path,
+    test_case: str,
+    oqs_mode: str,
+    algorithm: str | None = None,
+) -> Path:
+    slug = f"{test_case}-{oqs_mode}"
+    if algorithm is not None:
+        slug += "-" + algorithm.replace(":", "_").replace("/", "_")
+    output = root / slug
+    cmd = [str(binary), test_case, oqs_mode, str(output)]
+    if algorithm is not None:
+        cmd.append(algorithm)
     result = subprocess.run(
-        [str(binary), test_case, oqs_mode, str(output)],
+        cmd,
         cwd=ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -458,3 +500,109 @@ def test_clfuzz_liboqs_module_classifies_stubbed_outcomes_and_keeps_running(tmp_
     findings = records(multiple, "findings")
     assert len(findings) == 2
     assert all(record["replay"]["result"] == "reproduced" for record in findings)
+
+
+def test_clfuzz_liboqs_module_gates_report_803_invalid_oracle_assumptions(tmp_path: Path) -> None:
+    binary = build_stub_module_binary(tmp_path)
+
+    # 1. Classic-McEliece kem_encaps_pk gate: the fake encaps ignores the
+    #    public key and would otherwise emit public_key_ignored_or_malleable.
+    mceliece = run_case(binary, tmp_path, "kem-encaps-public-key", "normal", "kem:Classic-McEliece-348864")
+    assert records(mceliece, "findings") == []
+    diagnostics = records(mceliece, "diagnostics")
+    assert len(diagnostics) == 1
+    diag = diagnostics[0]
+    assert diag["classification"] == "operation_diagnostic"
+    assert diag["diagnostic_class"] == "oracle_assumption_unsupported_sparse_pk_single_challenge"
+    assert diag["normalized_observation"] == "NOT_EVALUABLE_SPARSE_PK_SINGLE_CHALLENGE"
+    assert diag["mutation_effective"] is True
+    assert diag["mutated_status"] == "not_run"
+    assert diag["finding_class"] == "none"
+    assert diag["finding_subclass"] == "none"
+    assert diag["property_id"] == "kem_encaps_pk"
+
+    # 2. ThreeBears kem_encaps_pk gate.
+    papa_bear = run_case(binary, tmp_path, "kem-encaps-public-key", "normal", "kem:PapaBear")
+    assert records(papa_bear, "findings") == []
+    diagnostics = records(papa_bear, "diagnostics")
+    assert len(diagnostics) == 1
+    assert diagnostics[0]["diagnostic_class"] == "oracle_assumption_unsupported_sparse_pk_single_challenge"
+    assert diagnostics[0]["normalized_observation"] == "NOT_EVALUABLE_SPARSE_PK_SINGLE_CHALLENGE"
+
+    baby_bear = run_case(binary, tmp_path, "kem-encaps-public-key", "normal", "kem:BabyBearEphem")
+    assert records(baby_bear, "findings") == []
+    assert records(baby_bear, "diagnostics")[0]["diagnostic_class"] == (
+        "oracle_assumption_unsupported_sparse_pk_single_challenge"
+    )
+
+    # 3. Picnic/MQDSS/Rainbow sig_sign_badrng gate: the fake sign returns the
+    #    same signature regardless of the RNG stream.
+    for alg in ("sig:Picnic3-L5", "sig:MQDSS-31-64", "sig:Rainbow-Ia-Classic"):
+        gated = run_case(binary, tmp_path, "sig-sign-badrng", "normal", alg)
+        assert records(gated, "findings") == [], alg
+        diagnostics = records(gated, "diagnostics")
+        assert len(diagnostics) == 1, alg
+        diag = diagnostics[0]
+        assert diag["diagnostic_class"] == "oracle_assumption_unsupported_deterministic_signature_rng", alg
+        assert diag["normalized_observation"] == "NOT_EVALUABLE_DETERMINISTIC_SIGNATURE_RNG", alg
+        assert diag["mutation_effective"] is True, alg
+        assert diag["mutated_status"] == "not_run", alg
+        assert diag["property_id"] == "sig_sign_badrng", alg
+
+    # 4. Falcon sig_verify_pk gate: the fake verify accepts the mutated key.
+    falcon = run_case(binary, tmp_path, "sig-verify-public-key", "sig_ignore_pk", "sig:Falcon-512")
+    assert records(falcon, "findings") == []
+    diagnostics = records(falcon, "diagnostics")
+    assert len(diagnostics) == 1
+    diag = diagnostics[0]
+    assert diag["diagnostic_class"] == "oracle_assumption_unsupported_falcon_norm_bound_pk"
+    assert diag["normalized_observation"] == "NOT_EVALUABLE_FALCON_NORM_BOUND_PK"
+    assert diag["mutation_effective"] is True
+    assert diag["mutated_status"] == "not_run"
+    assert diag["property_id"] == "sig_verify_pk"
+
+    # 5. Negative control: a generic fake-kem whose encaps ignores the public
+    #    key must still emit public_key_ignored_or_malleable.
+    generic_kem = run_case(binary, tmp_path, "kem-encaps-public-key", "normal")
+    findings = records(generic_kem, "findings")
+    assert len(findings) == 1
+    assert findings[0]["finding_class"] == "malleability"
+    assert findings[0]["finding_subclass"] == "public_key_ignored_or_malleable"
+    assert findings[0]["property_id"] == "kem_encaps_pk"
+
+    # 6. Negative control: a generic fake-sig whose signature ignores the RNG
+    #    must still emit sign_rng_ignored.
+    generic_sig_rng = run_case(binary, tmp_path, "sig-sign-badrng", "normal")
+    findings = records(generic_sig_rng, "findings")
+    assert len(findings) == 1
+    assert findings[0]["finding_class"] == "malleability"
+    assert findings[0]["finding_subclass"] == "sign_rng_ignored"
+    assert findings[0]["property_id"] == "sig_sign_badrng"
+
+    # 7. Negative control: a generic fake-sig whose verify accepts a mutated
+    #    public key must still emit verification_key_malleability.
+    generic_sig_pk = run_case(binary, tmp_path, "sig-verify-public-key", "sig_ignore_pk")
+    findings = records(generic_sig_pk, "findings")
+    assert len(findings) == 1
+    assert findings[0]["finding_class"] == "malleability"
+    assert findings[0]["finding_subclass"] == "ignored_public_key_bytes"
+    assert findings[0]["property_id"] == "sig_verify_pk"
+
+
+def test_clfuzz_liboqs_module_legacy_cryptofuzz_env_vars_route_diagnostics(tmp_path: Path) -> None:
+    binary = build_stub_module_binary(tmp_path)
+
+    # The shared oracle accepts legacy PQCDF_CRYPTOFUZZ_* aliases so that
+    # already-built cryptofuzz integrations and replay tooling keep working.
+    # Verify a gated diagnostic still lands in the legacy-routed directory when
+    # the primary PQCDF_LIBOQS_* vars are absent.
+    legacy = run_case(binary, tmp_path, "legacy-cryptofuzz-env", "normal")
+    assert records(legacy, "findings") == []
+    diagnostics = records(legacy, "diagnostics")
+    assert len(diagnostics) == 1
+    diag = diagnostics[0]
+    assert diag["baseline"] == "cryptofuzz"
+    assert diag["classification"] == "operation_diagnostic"
+    assert diag["diagnostic_class"] == "oracle_assumption_unsupported_sparse_pk_single_challenge"
+    assert diag["algorithm"] == "Classic-McEliece-348864"
+    assert diag["property_id"] == "kem_encaps_pk"

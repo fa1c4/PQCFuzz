@@ -199,6 +199,15 @@ static void pqcdf_run_kem(const pqcdf_envelope *envelope, const char *algorithm,
 		if (!pqcdf_mutate_copy(mutated_public_key, public_key, public_key_len, envelope)) {
 			break;
 		}
+		if (pqcdf_is_sparse_pk_single_challenge_kem(algorithm)) {
+			property_exercised = 1;
+			pqcdf_record_oracle_assumption_outcome(
+				"kem", algorithm, "kem_encaps_pk",
+				"oracle_assumption_unsupported_sparse_pk_single_challenge",
+				"single public-key byte mutation under one encapsulation challenge is not a valid generic public-key binding oracle for this sparse/matrix KEM family",
+				envelope);
+			break;
+		}
 		property_exercised = 1;
 		pqcdf_seed_envelope_rng(envelope, 0);
 		rc = OQS_KEM_encaps(kem, alternate_ciphertext, alternate_shared_secret,

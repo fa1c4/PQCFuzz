@@ -31,6 +31,7 @@
  * mistakes into findings or crashes.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -265,6 +266,61 @@ static int pqcdf_is_semantic_profile(void) {
 
 static int pqcdf_is_noncanonical_mutation(const pqcdf_envelope *envelope) {
 	return envelope->mutation_mode == PQCDF_MUTATION_NONCANONICAL_XOR;
+}
+
+static int pqcdf_ascii_tolower(int c) {
+	return tolower((unsigned char)c);
+}
+
+static int pqcdf_contains_insensitive(const char *haystack, const char *needle) {
+	if (haystack == NULL || needle == NULL) {
+		return 0;
+	}
+	if (*needle == '\0') {
+		return 1;
+	}
+	for (const char *h = haystack; *h != '\0'; ++h) {
+		const char *hh = h;
+		const char *nn = needle;
+		while (*nn != '\0' && *hh != '\0' &&
+			pqcdf_ascii_tolower((unsigned char)*hh) == pqcdf_ascii_tolower((unsigned char)*nn)) {
+			++hh;
+			++nn;
+		}
+		if (*nn == '\0') {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+static int pqcdf_is_classic_mceliece_algorithm(const char *algorithm) {
+	return pqcdf_contains_insensitive(algorithm, "Classic-McEliece") ||
+		pqcdf_contains_insensitive(algorithm, "Classic McEliece") ||
+		pqcdf_contains_insensitive(algorithm, "McEliece") ||
+		pqcdf_contains_insensitive(algorithm, "mceliece");
+}
+
+static int pqcdf_is_threebears_algorithm(const char *algorithm) {
+	return pqcdf_contains_insensitive(algorithm, "ThreeBears") ||
+		pqcdf_contains_insensitive(algorithm, "BabyBear") ||
+		pqcdf_contains_insensitive(algorithm, "MamaBear") ||
+		pqcdf_contains_insensitive(algorithm, "PapaBear");
+}
+
+static int pqcdf_is_sparse_pk_single_challenge_kem(const char *algorithm) {
+	return pqcdf_is_classic_mceliece_algorithm(algorithm) ||
+		pqcdf_is_threebears_algorithm(algorithm);
+}
+
+static int pqcdf_is_deterministic_signature_no_external_sign_rng(const char *algorithm) {
+	return pqcdf_contains_insensitive(algorithm, "MQDSS") ||
+		pqcdf_contains_insensitive(algorithm, "Picnic") ||
+		pqcdf_contains_insensitive(algorithm, "Rainbow");
+}
+
+static int pqcdf_is_falcon_norm_bound_verify_pk(const char *algorithm) {
+	return pqcdf_contains_insensitive(algorithm, "Falcon");
 }
 
 static int pqcdf_mutate_copy(uint8_t *destination, const uint8_t *source, size_t size,
@@ -607,6 +663,52 @@ static void pqcdf_record_property_outcome(const char *primitive, const char *alg
 	}
 	fputs("{\n  \"format_version\": 1,\n  \"baseline\": \"libFuzzer\",\n  \"classification\": ", file);
 	pqcdf_json_string(file, classification);
+	fputs(",\n  \"primitive\": ", file);
+	pqcdf_json_string(file, primitive);
+	fputs(",\n  \"algorithm\": ", file);
+	pqcdf_json_string(file, algorithm);
+	fputs(",\n  \"property_id\": ", file);
+	pqcdf_json_string(file, property_id);
+	fputs(",\n  \"input_digest\": ", file);
+	pqcdf_json_string(file, input_digest);
+	fputs("\n}\n", file);
+	if (fclose(file) != 0) {
+		(void)unlink(path);
+	}
+}
+
+static void pqcdf_record_oracle_assumption_outcome(const char *primitive,
+	const char *algorithm, const char *property_id, const char *classification,
+	const char *reason, const pqcdf_envelope *envelope) {
+	if (!pqcdf_is_semantic_profile()) {
+		return;
+	}
+	const char *directory = getenv("PQCDF_LIBFUZZER_OUTCOMES_DIR");
+	if (directory == NULL || !pqcdf_make_directories(directory)) {
+		return;
+	}
+	char group_source[1024];
+	const int group_length = snprintf(group_source, sizeof(group_source), "%s|%s|%s|%s",
+		primitive, algorithm, property_id, classification);
+	if (group_length < 0 || group_length >= (int)sizeof(group_source)) {
+		return;
+	}
+	char group_digest[33];
+	char input_digest[33];
+	pqcdf_digest_hex((const uint8_t *)group_source, (size_t)group_length, group_digest);
+	pqcdf_digest_hex(envelope->raw, envelope->raw_size, input_digest);
+	char path[PATH_MAX];
+	if (snprintf(path, sizeof(path), "%s/%s.json", directory, group_digest) >= (int)sizeof(path)) {
+		return;
+	}
+	FILE *file = NULL;
+	if (!pqcdf_open_unique_json(path, &file)) {
+		return;
+	}
+	fputs("{\n  \"format_version\": 1,\n  \"baseline\": \"libFuzzer\",\n  \"classification\": ", file);
+	pqcdf_json_string(file, classification);
+	fputs(",\n  \"reason\": ", file);
+	pqcdf_json_string(file, reason);
 	fputs(",\n  \"primitive\": ", file);
 	pqcdf_json_string(file, primitive);
 	fputs(",\n  \"algorithm\": ", file);

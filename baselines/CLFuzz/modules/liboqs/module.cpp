@@ -6,6 +6,7 @@
 #include "../../liboqs_replay_input.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
@@ -215,6 +216,67 @@ MutationResult RNGMutation(const std::vector<uint8_t>& entropy, uint64_t selecto
     return result;
 }
 
+/* Case-insensitive substring match without relying on the non-portable
+ * `strcasestr` extension.  Used only by the conservative oracle-assumption
+ * classifiers below so that known report-803 invalid oracle assumptions are
+ * downgraded to diagnostics instead of semantic findings. */
+bool ContainsInsensitive(const std::string& haystack, const char *needle) {
+    if ( needle == nullptr || *needle == '\0' ) {
+        return true;
+    }
+    const std::string lowerHaystack = [&] {
+        std::string copy = haystack;
+        for (char& c : copy) {
+            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+        return copy;
+    }();
+    std::string lowerNeedle;
+    for (const char *p = needle; *p != '\0'; p++) {
+        lowerNeedle.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(*p))));
+    }
+    return lowerHaystack.find(lowerNeedle) != std::string::npos;
+}
+
+/* Classic-McEliece exposes a large, sparse matrix public key; a single
+ * encapsulation challenge activates only part of that structure, so one
+ * mutated public-key byte need not change `ct || ss`. */
+bool IsClassicMcElieceAlgorithm(const std::string& algorithm) {
+    return ContainsInsensitive(algorithm, "Classic-McEliece") ||
+           ContainsInsensitive(algorithm, "Classic McEliece") ||
+           ContainsInsensitive(algorithm, "McEliece") ||
+           ContainsInsensitive(algorithm, "mceliece");
+}
+
+/* ThreeBears (BabyBear/MamaBear/PapaBear) uses a structured matrix public
+ * key with the same single-challenge sparse-activation property. */
+bool IsThreeBearsAlgorithm(const std::string& algorithm) {
+    return ContainsInsensitive(algorithm, "ThreeBears") ||
+           ContainsInsensitive(algorithm, "BabyBear") ||
+           ContainsInsensitive(algorithm, "MamaBear") ||
+           ContainsInsensitive(algorithm, "PapaBear");
+}
+
+bool IsSparsePublicKeySingleChallengeKem(const std::string& algorithm) {
+    return IsClassicMcElieceAlgorithm(algorithm) || IsThreeBearsAlgorithm(algorithm);
+}
+
+/* MQDSS, Picnic, and Rainbow are deterministic or derive signing randomness
+ * internally, so changing the external liboqs RNG stream is not a valid
+ * EXPECT_DIFFERENT oracle for `sig_sign_badrng`. */
+bool IsDeterministicSignatureNoExternalSignRng(const std::string& algorithm) {
+    return ContainsInsensitive(algorithm, "MQDSS") ||
+           ContainsInsensitive(algorithm, "Picnic") ||
+           ContainsInsensitive(algorithm, "Rainbow");
+}
+
+/* Falcon verification is a norm-bound relation; a single accepted
+ * public-key byte mutation is not by itself a generic verification-key
+ * binding failure. */
+bool IsFalconNormBoundVerifyPublicKey(const std::string& algorithm) {
+    return ContainsInsensitive(algorithm, "Falcon");
+}
+
 bool VectorsEqual(const std::vector<uint8_t>& lhs, const std::vector<uint8_t>& rhs) {
     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
@@ -401,6 +463,29 @@ Outcome Diagnostic(const char *primitive, const std::string& algorithm, const ch
     outcome.diagnostic = diagnostic;
     outcome.semanticRelation = "not_evaluated";
     outcome.normalizedObservation = "not_evaluated";
+    return outcome;
+}
+
+/* Diagnostic for a property whose oracle precondition is invalid for the
+ * selected algorithm family (report 803).  The mutation metadata is preserved
+ * so the skipped assumption stays observable, but no finding is emitted and
+ * the mutated target call is deliberately not run. */
+Outcome OracleAssumptionDiagnostic(const char *primitive, const std::string& algorithm,
+                                   const char *propertyId, const char *operation,
+                                   const char *target, const MutationResult& mutation,
+                                   const char *diagnosticClass, const char *diagnostic,
+                                   const char *normalizedObservation) {
+    auto outcome = NewOutcome(OutcomeKind::Diagnostic, primitive, algorithm, propertyId,
+                              operation, target);
+    ApplyMutation(outcome, mutation);
+    outcome.baselineStatus = "ok";
+    outcome.mutatedStatus = "not_run";
+    outcome.operationStatus = "skipped";
+    outcome.expectedRelation = "not_applicable_invalid_oracle_assumption";
+    outcome.semanticRelation = normalizedObservation;
+    outcome.diagnosticClass = diagnosticClass;
+    outcome.diagnostic = diagnostic;
+    outcome.normalizedObservation = normalizedObservation;
     return outcome;
 }
 
@@ -1038,6 +1123,14 @@ std::vector<Outcome> EvaluateKEM(OQS_KEM *kem, const std::string& algorithm,
             outcomes.push_back(NoOpMutation("kem", algorithm, propertyId, "encaps", "public_key", mutation));
             return outcomes;
         }
+        if ( IsSparsePublicKeySingleChallengeKem(algorithm) ) {
+            outcomes.push_back(OracleAssumptionDiagnostic(
+                "kem", algorithm, propertyId, "encaps", "public_key", mutation,
+                "oracle_assumption_unsupported_sparse_pk_single_challenge",
+                "single public-key byte mutation under one encapsulation challenge is not a valid generic public-key binding oracle for this sparse/matrix KEM family",
+                "NOT_EVALUABLE_SPARSE_PK_SINGLE_CHALLENGE"));
+            return outcomes;
+        }
         std::vector<uint8_t> alternateCiphertext(kem->length_ciphertext);
         std::vector<uint8_t> alternateSharedSecret(kem->length_shared_secret);
         SetDeterministicRandom(entropy, op.selector, "kem-encaps");
@@ -1229,6 +1322,14 @@ std::vector<Outcome> EvaluateSIG(OQS_SIG *sig, const std::string& algorithm,
             outcomes.push_back(NoOpMutation("sig", algorithm, propertyId, "verify", "public_key", mutation));
             return outcomes;
         }
+        if ( IsFalconNormBoundVerifyPublicKey(algorithm) ) {
+            outcomes.push_back(OracleAssumptionDiagnostic(
+                "sig", algorithm, propertyId, "verify", "public_key", mutation,
+                "oracle_assumption_unsupported_falcon_norm_bound_pk",
+                "Falcon verification is a norm-bound relation; a single accepted public-key byte mutation is not by itself a generic verification-key binding failure",
+                "NOT_EVALUABLE_FALCON_NORM_BOUND_PK"));
+            return outcomes;
+        }
         const OQS_STATUS status = OQS_SIG_verify(sig, DataOrDummy(message), message.size(),
             DataOrDummy(signature), signatureLen, DataOrDummy(mutatedPublicKey));
         if ( status == OQS_SUCCESS ) {
@@ -1322,6 +1423,17 @@ std::vector<Outcome> EvaluateSIG(OQS_SIG *sig, const std::string& algorithm,
             outcomes.push_back(PropertyPassed("sig", algorithm, propertyId, "keypair", "rng_keypair", rngMutation,
                 "ok", "ok", "EXPECT_DIFFERENT", "OBSERVED_DIFFERENT"));
         }
+        return outcomes;
+    }
+
+    if ( IsDeterministicSignatureNoExternalSignRng(algorithm) ) {
+        SetDeterministicRandom(entropy, op.selector, "sig-sign-rng-variant");
+        const MutationResult rngMutation = RNGMutation(entropy, op.selector, "sig-sign-rng-variant");
+        outcomes.push_back(OracleAssumptionDiagnostic(
+            "sig", algorithm, propertyId, "sign", "rng_sign", rngMutation,
+            "oracle_assumption_unsupported_deterministic_signature_rng",
+            "this signature family is deterministic or derives signing randomness internally, so changing the external liboqs RNG stream is not a valid EXPECT_DIFFERENT oracle",
+            "NOT_EVALUABLE_DETERMINISTIC_SIGNATURE_RNG"));
         return outcomes;
     }
 

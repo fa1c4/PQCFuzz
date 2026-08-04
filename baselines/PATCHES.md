@@ -17,6 +17,24 @@
   artifact counts relative to the correct target.
 - Behavior preserved: sanitizer artifacts continue to use libFuzzer's normal
   crash-artifact mechanism.
+- Beta oracle-assumption update (report 803): `baselines/libFuzzer/{fuzz_common.h,fuzz_kem.c,fuzz_sig.c}`
+  now emit non-finding oracle-assumption outcomes instead of semantic findings for three
+  report-803-invalid oracle assumptions, so they are no longer counted as strict false positives.
+  `kem_encaps_pk` is skipped/diagnostic for the sparse/matrix KEM families identified in
+  report 803 (Classic-McEliece and ThreeBears), because a single public-key byte mutation under
+  one encapsulation challenge may not affect `ct || ss`; these produce an
+  `oracle_assumption_unsupported_sparse_pk_single_challenge` outcome in the outcomes directory.
+  `sig_sign_badrng` is skipped/diagnostic for the deterministic historical signature families
+  identified in report 803 (MQDSS, Picnic, and Rainbow), because changing the external liboqs RNG
+  stream is not a valid `EXPECT_DIFFERENT` oracle for them; these produce an
+  `oracle_assumption_unsupported_deterministic_signature_rng` outcome.
+  Falcon `sig_verify_pk` is skipped/diagnostic because the generic single-byte public-key mutation
+  oracle is not a valid Falcon verification-key binding proof (Falcon verification is a norm-bound
+  relation); these produce an `oracle_assumption_unsupported_falcon_norm_bound_pk` outcome.
+  These changes affect semantic findings only, not sanitizer or process evidence.  Generic
+  algorithms and non-denylisted families continue to use the existing oracle checks.
+  `tests/libfuzzer_harness_test.py` covers both the gated non-finding outcomes and the negative
+  controls that still emit findings.
 
 ## cryptofuzz
 
@@ -30,7 +48,20 @@
   `baselines/CLFuzz/modules/liboqs/{module.cpp,module.h,Makefile}` are intentionally independent
   physical copies, but must remain byte-for-byte identical.  They implement the shared liboqs
   oracle only; `executor.cpp`, mutator behavior, and runner scripts remain fuzzer-specific and may
-  diverge.  `tests/baseline_compaction_test.py` enforces this synchronization contract.
+  diverge.  `tests/baseline_compaction_test.py` enforces this synchronization contract.  The beta
+  oracle-assumption update (report 803) is applied identically to both copies; see the CLFuzz
+  section for the three diagnostic classifications that replace known invalid-oracle findings.
+  cryptofuzz inherited the same shared-oracle assumptions as CLFuzz, so report 803 attributes 123
+  strict cryptofuzz false positives to the same three categories: 89 `kem_encaps_pk`
+  Classic-McEliece observations (SP-0020/SP-0021/SP-0022), 34 `sig_sign_badrng`
+  MQDSS/Picnic/Rainbow observations (SP-0024/SP-0025/SP-0026), and 0 observed Falcon
+  `sig_verify_pk` strict false positives (the Falcon guard is preventive, for shared-oracle parity).
+  The beta update is not a sanitizer suppression and not a generic finding suppression: generic
+  algorithms and non-denylisted families still use the original semantic checks, and
+  `tests/clfuzz_liboqs_module_test.py` verifies both the gated diagnostics and the negative
+  controls that still emit findings.  The shared oracle continues to accept the legacy
+  `PQCDF_CRYPTOFUZZ_*` sidecar aliases so already-built cryptofuzz integrations route diagnostics
+  to the same directories.
 - Changed: `scripts/baselines/cryptofuzz/run.sh`,
   `scripts/compact_baseline_results.py`, and `scripts/eval_baselines_fuzzing.sh`.
 - Reason: isolate every campaign's libFuzzer working logs, record replayable semantic findings and
@@ -76,7 +107,10 @@
   dispatching a liboqs operation.  A semantic candidate is retained only if
   the module atomically captures that exact input under
   `findings/replay-inputs/<sha256>.bin`; a missing or mismatched fixture is a
-  non-counted diagnostic.
+  non-counted diagnostic.  The beta oracle-assumption update adds
+  `OracleAssumptionDiagnostic` outcomes (classification `operation_diagnostic`,
+  empty finding class) for the three report-803 invalid oracle assumptions;
+  see the beta oracle-assumption update paragraph above.
 - Public-key normalization: accepted signature public-key mutations are
   replayed with three fresh liboqs objects, prove raw-byte changes, and use an
   independent same-byte probe to distinguish `ignored_public_key_bytes` from
@@ -84,6 +118,35 @@
   parse/serialize interface, so canonicalization is explicitly recorded as
   `unsupported` rather than inferred.  Failed replay is retained as an
   `unreproduced` diagnostic and is excluded from semantic finding totals.
+- Beta oracle-assumption update: this beta update does not suppress sanitizer
+  crashes, process failures, or valid semantic findings whose oracle
+  preconditions remain valid.  It moves three report-803-invalid oracle
+  assumptions from semantic findings to diagnostic/skip outcomes so they are
+  no longer counted as strict false positives:
+  `kem_encaps_pk` is not evaluated as a single-challenge finding for the
+  sparse/matrix KEM families identified in report 803 (Classic-McEliece and
+  ThreeBears), because a single public-key byte mutation under one
+  encapsulation challenge may not affect `ct || ss`; these produce an
+  `oracle_assumption_unsupported_sparse_pk_single_challenge` diagnostic with
+  `NOT_EVALUABLE_SPARSE_PK_SINGLE_CHALLENGE`.
+  `sig_sign_badrng` is not evaluated as a finding for the deterministic
+  historical signature families identified in report 803 (MQDSS, Picnic, and
+  Rainbow), because changing the external liboqs RNG stream is not a valid
+  `EXPECT_DIFFERENT` oracle for them; these produce an
+  `oracle_assumption_unsupported_deterministic_signature_rng` diagnostic with
+  `NOT_EVALUABLE_DETERMINISTIC_SIGNATURE_RNG`.
+  Falcon `sig_verify_pk` is not evaluated as a generic single-byte public-key
+  mutation finding, because Falcon verification is a norm-bound relation and a
+  single accepted public-key byte mutation is not by itself a generic
+  verification-key binding failure; these produce an
+  `oracle_assumption_unsupported_falcon_norm_bound_pk` diagnostic with
+  `NOT_EVALUABLE_FALCON_NORM_BOUND_PK`.
+  The mutated target call is deliberately skipped (`mutated_status = not_run`)
+  so the invalid observation is not recreated, while the mutation metadata is
+  preserved.  Dilithium/ML-DSA `sig_sign_sk` and all other algorithm/property
+  pairs remain untouched.  CLFuzz and cryptofuzz module copies remain
+  byte-for-byte identical; `tests/clfuzz_liboqs_module_test.py` covers both the
+  gated diagnostics and negative controls that still emit findings.
 - Changed: `baselines/CLFuzz/executor.cpp`.
 - Reason: a false legacy self-test result is now non-terminal because the
   local liboqs module has already recorded its classified outcome.  ASan,
