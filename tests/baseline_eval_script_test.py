@@ -67,11 +67,19 @@ def load_clfuzz_ov_replay_fixture() -> tuple[dict, bytes]:
     return manifest, fixture
 
 
-def run_eval(tmp_path: Path, root: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def run_eval(
+    tmp_path: Path,
+    root: Path,
+    *args: str,
+    extra_env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    env = env_with_temp_root(tmp_path, root)
+    if extra_env:
+        env.update(extra_env)
     return subprocess.run(
         ["bash", str(EVAL_SCRIPT), *args],
         cwd=ROOT,
-        env=env_with_temp_root(tmp_path, root),
+        env=env,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -1756,3 +1764,172 @@ exit 0
     assert campaign["worker_count"] == 2
     assert campaign["cpu_allocation"] == "two-cpus"
     assert campaign["module_version"] == "fake-clfuzz-module"
+
+
+# --------------------------------------------------------------------------
+# Timestamped rollover tests (eval_results_rollover_alpha)
+# --------------------------------------------------------------------------
+
+CRYPTOTESTING_RUN_BASELINE = """#!/usr/bin/env bash
+if [ "$1" = cryptoTesting ] && [ "$2" = run ]; then
+  output_root="${PQCDF_WORKSPACE_ROOT}/cryptoTesting/targets-run/raw/cryptoTesting-0.14.0/functional"
+  mkdir -p "$output_root"
+  printf '%s\\n' '{"status":"completed-at-budget-incomplete","budget_exhausted":true,"semantic_finding_count":0,"operation_diagnostic_count":0,"sanitizer_crash_count":0,"hang_count":0}' > "$output_root/summary.json"
+fi
+exit 0
+"""
+
+FAKE_TMUX = """
+case "$1" in
+  has-session) exit 1 ;;
+  new-session) launcher="${@: -1}"; "$launcher" >/dev/null 2>&1 || true; exit 0 ;;
+esac
+exit 0
+"""
+
+
+def test_rollover_archives_existing_output_root_with_timestamp(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+    make_tmux(tmp_path, FAKE_TMUX)
+
+    old = root / "workspace" / "results"
+    old.mkdir(parents=True)
+    (old / "old.txt").write_text("previous run", encoding="utf-8")
+
+    result = run_eval(
+        tmp_path, root,
+        "--output-root", "workspace/results",
+        "--campaign", "cryptoTesting-0.14.0",
+        "--result-save-mode", "all",
+        "--fuzzing-time", "1s",
+        "--progress-interval", "1",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "20260811_131800"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert not (root / "workspace" / "results" / "old.txt").exists()
+    assert (root / "workspace" / "results_20260811_131800" / "old.txt").read_text() == "previous run"
+    assert (root / "workspace" / "results" / "summary.json").exists()
+    manifest = json.loads((root / "workspace" / "results" / "rollover_manifest.json").read_text())
+    assert manifest["archived"] is True
+    assert manifest["archived_output_root"] == "workspace/results_20260811_131800"
+
+
+def test_rollover_collision_suffix(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+    make_tmux(tmp_path, FAKE_TMUX)
+
+    old = root / "workspace" / "results"
+    old.mkdir(parents=True)
+    (old / "old.txt").write_text("previous run", encoding="utf-8")
+    (root / "workspace" / "results_20260811_131800").mkdir(parents=True)
+
+    result = run_eval(
+        tmp_path, root,
+        "--output-root", "workspace/results",
+        "--campaign", "cryptoTesting-0.14.0",
+        "--result-save-mode", "all",
+        "--fuzzing-time", "1s",
+        "--progress-interval", "1",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "20260811_131800"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (root / "workspace" / "results_20260811_131800_1" / "old.txt").read_text() == "previous run"
+
+
+def test_rollover_empty_output_root_not_archived(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+    make_tmux(tmp_path, FAKE_TMUX)
+
+    (root / "workspace" / "results").mkdir(parents=True)
+
+    result = run_eval(
+        tmp_path, root,
+        "--output-root", "workspace/results",
+        "--campaign", "cryptoTesting-0.14.0",
+        "--result-save-mode", "all",
+        "--fuzzing-time", "1s",
+        "--progress-interval", "1",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "20260811_131800"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert not (root / "workspace" / "results_20260811_131800").exists()
+    manifest = json.loads((root / "workspace" / "results" / "rollover_manifest.json").read_text())
+    assert manifest["archived"] is False
+
+
+def test_rollover_dry_run_never_archives(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+
+    old = root / "workspace" / "results"
+    old.mkdir(parents=True)
+    (old / "old.txt").write_text("previous run", encoding="utf-8")
+
+    result = run_eval(
+        tmp_path, root,
+        "--dry-run",
+        "--output-root", "workspace/results",
+        "--campaign", "cryptoTesting-0.14.0",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "20260811_131800"},
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (root / "workspace" / "results" / "old.txt").exists()
+    assert not (root / "workspace" / "results_20260811_131800").exists()
+
+
+def test_rollover_summarize_only_never_archives(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+
+    old = root / "workspace" / "results"
+    old.mkdir(parents=True)
+    (old / "old.txt").write_text("previous run", encoding="utf-8")
+    # Create minimal campaign index + status for summarize-only.
+    status_dir = old / "status"
+    status_dir.mkdir()
+    campaigns_tsv = old / "status" / "campaigns.tsv"
+    campaigns_tsv.write_text(
+        "campaign\tbaseline\tversion\tsession_name\tworkspace_root\tworkspace_root_abs\t"
+        "log_file\tlauncher_file\tstatus_file\tresult_save_mode\tscript_snapshot\tscript_snapshot_hash\n"
+        "cryptoTesting-0.14.0\tcryptoTesting\t0.14.0\tsess\tws\tws\tlog\tlauncher\t"
+        f"{status_dir}/cryptoTesting-0.14.0.json\tcompact\tsnap\thash\n",
+        encoding="utf-8",
+    )
+    status_file = status_dir / "cryptoTesting-0.14.0.json"
+    status_file.write_text(json.dumps({
+        "baseline": "cryptoTesting", "campaign": "cryptoTesting-0.14.0",
+        "version": "0.14.0", "phase": "finished", "state": "finished",
+        "final_status": 0, "result": "completed",
+    }), encoding="utf-8")
+
+    result = run_eval(
+        tmp_path, root,
+        "--summarize-only",
+        "--output-root", "workspace/results",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "20260811_131800"},
+    )
+
+    # summarize-only exits before archive_existing_eval_root, so no move happens
+    # regardless of summary writer success.
+    assert (root / "workspace" / "results" / "old.txt").exists()
+    assert not (root / "workspace" / "results_20260811_131800").exists()
+
+
+def test_rollover_invalid_timestamp_fails(tmp_path: Path) -> None:
+    root = make_root(tmp_path, CRYPTOTESTING_RUN_BASELINE)
+
+    (root / "workspace" / "results").mkdir(parents=True)
+    (root / "workspace" / "results" / "old.txt").write_text("x", encoding="utf-8")
+
+    result = run_eval(
+        tmp_path, root,
+        "--output-root", "workspace/results",
+        "--campaign", "cryptoTesting-0.14.0",
+        "--result-save-mode", "all",
+        extra_env={"PQCDF_EVAL_ARCHIVE_TIMESTAMP": "bad"},
+    )
+
+    assert result.returncode != 0
+    assert "PQCDF_EVAL_ARCHIVE_TIMESTAMP must match YYYYMMDD_HHMMSS" in result.stderr

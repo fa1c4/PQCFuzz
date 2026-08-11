@@ -27,6 +27,9 @@ Options:
   --session-prefix NAME         Prefix for tmux session names. Default: pqcdf.
   --output-root RELPATH         Output root under the repository.
                                 Default: workspace/baselines_eval.
+                                If the output root already exists and is non-empty,
+                                it is moved to <output-root>_YYYYMMDD_HHMMSS
+                                before a new run starts.
   --result-save-mode compact|all
                                 Result retention policy. Default: compact.
   --baseline-jobs N             Jobs for libFuzzer/cryptofuzz/CLFuzz runs. Default: 1.
@@ -1199,6 +1202,18 @@ summary = {
     "campaigns": rows,
 }
 
+rollover_archived = os.environ.get("ROLLOVER_ARCHIVED") == "1"
+rollover_timestamp = os.environ.get("ROLLOVER_TIMESTAMP") or None
+rollover_previous = os.environ.get("ROLLOVER_PREVIOUS_REL") or None
+rollover_archive = os.environ.get("ROLLOVER_ARCHIVE_REL") or None
+if rollover_previous is not None:
+    summary["rollover"] = {
+        "archived": rollover_archived,
+        "timestamp": rollover_timestamp,
+        "previous_output_root": rollover_previous,
+        "archived_output_root": rollover_archive,
+    }
+
 summary_json.parent.mkdir(parents=True, exist_ok=True)
 with open(summary_json, "w", encoding="utf-8") as f:
     json.dump(summary, f, indent=2, sort_keys=True)
@@ -1262,7 +1277,30 @@ raise SystemExit(overall_status)
 PY
 }
 
+archive_timestamp() {
+  local ts="${PQCDF_EVAL_ARCHIVE_TIMESTAMP:-}"
+  if [ -n "$ts" ]; then
+    if [[ ! "$ts" =~ ^[0-9]{8}_[0-9]{6}$ ]]; then
+      die "PQCDF_EVAL_ARCHIVE_TIMESTAMP must match YYYYMMDD_HHMMSS"
+    fi
+    printf '%s\n' "$ts"
+    return
+  fi
+  date +%Y%m%d_%H%M%S
+}
+
+export ROLLOVER_ARCHIVED=0
+export ROLLOVER_TIMESTAMP=""
+export ROLLOVER_PREVIOUS_REL=""
+export ROLLOVER_ARCHIVE_REL=""
+ROLLOVER_PREVIOUS_ABS=""
+ROLLOVER_ARCHIVE_ABS=""
+
 archive_existing_eval_root() {
+  ROLLOVER_PREVIOUS_REL="$EVAL_ROOT_REL"
+  ROLLOVER_PREVIOUS_ABS="$EVAL_ROOT"
+  export ROLLOVER_PREVIOUS_REL
+
   if [ ! -e "$EVAL_ROOT" ]; then
     return
   fi
@@ -1271,23 +1309,23 @@ archive_existing_eval_root() {
     return
   fi
 
-  local archive_date archive_root archive_rel suffix eval_parent eval_name
-  archive_date="$(date +%Y%m%d)"
+  local archive_stamp archive_root archive_rel suffix eval_parent eval_name
+  archive_stamp="$(archive_timestamp)"
   eval_parent="$(dirname "$EVAL_ROOT_REL")"
   eval_name="$(basename "$EVAL_ROOT_REL")"
   if [ "$eval_parent" = "." ]; then
-    archive_rel="${eval_name}_${archive_date}"
+    archive_rel="${eval_name}_${archive_stamp}"
   else
-    archive_rel="${eval_parent}/${eval_name}_${archive_date}"
+    archive_rel="${eval_parent}/${eval_name}_${archive_stamp}"
   fi
   archive_root="${ROOT_DIR}/${archive_rel}"
   suffix=1
 
   while [ -e "$archive_root" ]; do
     if [ "$eval_parent" = "." ]; then
-      archive_rel="${eval_name}_${archive_date}_${suffix}"
+      archive_rel="${eval_name}_${archive_stamp}_${suffix}"
     else
-      archive_rel="${eval_parent}/${eval_name}_${archive_date}_${suffix}"
+      archive_rel="${eval_parent}/${eval_name}_${archive_stamp}_${suffix}"
     fi
     archive_root="${ROOT_DIR}/${archive_rel}"
     suffix=$((suffix + 1))
@@ -1295,7 +1333,34 @@ archive_existing_eval_root() {
 
   mkdir -p "$(dirname "$archive_root")"
   mv "$EVAL_ROOT" "$archive_root"
-  echo "[eval] archived previous results: $EVAL_ROOT -> $archive_root"
+  ROLLOVER_ARCHIVED=1
+  ROLLOVER_TIMESTAMP="$archive_stamp"
+  ROLLOVER_ARCHIVE_REL="$archive_rel"
+  ROLLOVER_ARCHIVE_ABS="$archive_root"
+  export ROLLOVER_ARCHIVED ROLLOVER_TIMESTAMP ROLLOVER_ARCHIVE_REL
+  echo "[eval] archived previous output root: $EVAL_ROOT -> $archive_root"
+}
+
+write_rollover_manifest() {
+  mkdir -p "$EVAL_ROOT"
+  ROLLOVER_MANIFEST="${EVAL_ROOT}/rollover_manifest.json" \
+  ROLLOVER_ARCHIVED="$ROLLOVER_ARCHIVED" \
+  ROLLOVER_TIMESTAMP="$ROLLOVER_TIMESTAMP" \
+  ROLLOVER_PREVIOUS_REL="$ROLLOVER_PREVIOUS_REL" \
+  ROLLOVER_ARCHIVE_REL="$ROLLOVER_ARCHIVE_REL" \
+  python3 - <<'PY'
+import json, os
+path = os.environ["ROLLOVER_MANIFEST"]
+doc = {
+    "archived": os.environ["ROLLOVER_ARCHIVED"] == "1",
+    "timestamp": os.environ["ROLLOVER_TIMESTAMP"] or None,
+    "previous_output_root": os.environ["ROLLOVER_PREVIOUS_REL"] or None,
+    "archived_output_root": os.environ["ROLLOVER_ARCHIVE_REL"] or None,
+}
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(doc, f, indent=2, sort_keys=True)
+    f.write("\n")
+PY
 }
 
 ROOT_DIR="${PQCDF_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
@@ -1636,6 +1701,7 @@ fi
 
 archive_existing_eval_root
 mkdir -p "$CAMPAIGN_ROOT" "$LOG_DIR" "$LAUNCHER_DIR" "$STATUS_DIR"
+write_rollover_manifest
 REPO_COMMIT="$(git -C "$ROOT_DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
 create_runner_snapshot
 
