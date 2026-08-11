@@ -34,7 +34,7 @@ import sqlite3
 import sys
 from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, NamedTuple, Optional
 
 
 # --------------------------------------------------------------------------
@@ -64,6 +64,11 @@ REPORT_TO_PAPER = {}
 for _num, (_desc, _names) in PAPER_TEST_MAP.items():
     for _name in _names:
         REPORT_TO_PAPER[_name] = _num
+
+# Canonical property map for raw AFL path parsing (Issue 2 beta fix).
+# Uses the alpha's REPORT_TO_PAPER mapping: both KEM/Keygen/badrng and
+# SIGN/Keygen/badrng map to Test 2, per the paper README.
+PAPER_PROPERTY_MAP = dict(REPORT_TO_PAPER)
 
 # liboqs version -> upstream target name (README version-target mapping).
 VERSION_TARGET_MAP = OrderedDict([
@@ -433,50 +438,191 @@ def _synth(test, subtype, count, ver, target, path, library):
     }
 
 
-def read_raw_manifest(result_root: Path, strict: bool = False) -> list[dict]:
+class RawAflPathInfo(NamedTuple):
+    """Recovered metadata from a raw AFL artifact path."""
+    property: str
+    paper_test_number: int
+    algorithm: str
+    artifact_kind: str  # crash, hang, setup_timeout, queue, unknown
+
+
+def parse_afl_artifact_path(path: Path, afl_root: Path) -> Optional[RawAflPathInfo]:
+    """Recover property, paper_test_number, algorithm, artifact_kind from any
+    artifact under an afl/ tree.
+
+    cryptoTesting raw paths are nested by primitive/operation/variant::
+
+        afl/KEM/Decaps/c/<alg>/fuzzoutputs/default/crashes/...
+        afl/SIGN/Verify/sig/<alg>/fuzzoutputs/default/hangs/...
+        afl/KEM/Encaps/badrng/<alg>/fuzzoutputs/default/setup-timeout/...
+        afl/KEM/Decaps/sk/<alg>/fuzzinputs/default/queue/...
+
+    Returns ``None`` for paths not under a recognized paper property.
+    """
+    try:
+        rel = path.relative_to(afl_root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) < 2:
+        return None
+
+    # Find the earliest index i such that "/".join(parts[:i]) is a recognized
+    # paper property.  Properties have 3 components (e.g. KEM/Decaps/c) but
+    # some may have 2 if a future layout flattens them.
+    property_str = None
+    alg_index = -1
+    for i in range(min(len(parts), 4), 1, -1):
+        candidate = "/".join(parts[:i])
+        if candidate in PAPER_PROPERTY_MAP:
+            property_str = candidate
+            alg_index = i
+            break
+
+    if property_str is None:
+        return None
+
+    paper_test_number = PAPER_PROPERTY_MAP[property_str]
+    if paper_test_number is None:
+        return None
+
+    if alg_index >= len(parts):
+        return None
+    algorithm = parts[alg_index]
+
+    # Classify artifact kind from the remaining path components.
+    remaining = "/".join(parts[alg_index + 1:])
+    if "fuzzoutputs/default/crashes" in remaining:
+        artifact_kind = "crash"
+    elif "fuzzoutputs/default/hangs" in remaining:
+        artifact_kind = "hang"
+    elif "fuzzoutputs/default/setup-timeout" in remaining:
+        artifact_kind = "setup_timeout"
+    elif "fuzzinputs/default/queue" in remaining:
+        artifact_kind = "queue"
+    else:
+        artifact_kind = "unknown"
+
+    return RawAflPathInfo(
+        property=property_str,
+        paper_test_number=paper_test_number,
+        algorithm=algorithm,
+        artifact_kind=artifact_kind,
+    )
+
+
+class _RawRowsWithDiagnostics(list):
+    """List subclass that also carries raw AFL diagnostic rows."""
+    raw_afl_diagnostics: list[dict] = []
+
+
+def read_raw_manifest(result_root: Path, strict: bool = False,
+                      diagnostics: bool = False) -> list[dict]:
     """Fallback reader: infer counts from raw AFL tree + task metadata.
 
-    This walks the ``afl/<property>/<alg>/fuzzoutputs/default/{crashes,hangs}``
-    tree and the durable task metadata, producing one row per discovered
-    artifact.  This is the lowest-priority reader and is only used when no
-    SQLite/XLSX/LaTeX report exists.
+    This walks the nested ``afl/<primitive>/<op>/<variant>/<alg>/fuzzoutputs/...``
+    tree and the durable task metadata, producing one row per discovered crash
+    or hang artifact.  Setup-timeout artifacts are **not** counted as target
+    hangs.  This is the lowest-priority reader, used when no SQLite/XLSX/LaTeX
+    report exists.
+
+    If ``diagnostics`` is True, the returned list also carries
+    ``raw_afl_diagnostics`` (a list of per-path diagnostic dicts).
     """
-    rows: list[dict] = []
-    afl_root = result_root / "afl"
-    if not afl_root.is_dir():
-        return rows
+    result = _RawRowsWithDiagnostics()
+    result.raw_afl_diagnostics = []
+    diag_rows = result.raw_afl_diagnostics
+
+    # The raw_root may point to .../raw/ which contains .../raw/<campaign>/functional/afl/.
+    # Find all directories named "afl" under result_root (limited depth).
+    afl_dirs = []
+    if (result_root / "afl").is_dir():
+        afl_dirs = [result_root / "afl"]
+    else:
+        for afl_dir in sorted(result_root.rglob("afl")):
+            if afl_dir.is_dir():
+                afl_dirs.append(afl_dir)
+
+    if not afl_dirs:
+        return result
+
+    # Load version from metadata near any afl dir.
     meta = _load_campaign_meta(result_root)
+    if not meta.get("version"):
+        for afl_dir in afl_dirs:
+            meta = _load_campaign_meta(afl_dir.parent)
+            if meta.get("version"):
+                break
     ver = meta.get("version", "unknown")
     target = VERSION_TARGET_MAP.get(ver, ver)
-    for prop_dir in sorted(afl_root.iterdir()):
-        if not prop_dir.is_dir():
-            continue
-        test = prop_dir.name  # e.g. KEM/Decaps/c stored as directory name
-        if test not in REPORT_TO_PAPER:
-            if strict:
-                raise StrictPaperError(f"unmapped report test name in raw tree: {test!r}")
-            continue
-        for alg_dir in sorted(prop_dir.iterdir()):
-            if not alg_dir.is_dir():
+
+    # Track which (property, algorithm) pairs have been emitted to avoid
+    # duplicate rows from multiple crash/hang files.
+    seen: set[tuple[str, str, str]] = set()
+
+    for afl_root in afl_dirs:
+        for path in sorted(afl_root.rglob("*")):
+            if not path.is_file():
                 continue
-            alg_name_path = alg_dir / "alg.txt"
-            alg_name = alg_name_path.read_text().strip() if alg_name_path.is_file() else alg_dir.name
+            if path.name == "README.txt":
+                continue
+
+            info = parse_afl_artifact_path(path, afl_root)
+            if info is None:
+                if diagnostics:
+                    diag_rows.append({
+                        "path": str(path.relative_to(afl_root.parent)),
+                        "recognized": "no", "property": "",
+                        "paper_test_number": "", "algorithm": "",
+                        "artifact_kind": "", "counted": "no",
+                        "reason": "path not under recognized paper property",
+                    })
+                continue
+
+            # Resolve the algorithm name from alg.txt if present.
+            alg_dir = afl_root
+            for part in info.property.split("/"):
+                alg_dir = alg_dir / part
+            alg_dir = alg_dir / info.algorithm
+            alg_txt = alg_dir / "alg.txt"
+            alg_name = info.algorithm
+            if alg_txt.is_file():
+                alg_name = alg_txt.read_text(encoding="utf-8", errors="replace").strip()
             if alg_name == "DEFAULT":
                 continue
-            base = alg_dir / "fuzzoutputs" / "default"
-            for kind, subtype in (("crashes", "other"), ("hangs", "hang")):
-                d = base / kind
-                if d.is_dir():
-                    files = [f for f in d.iterdir() if f.is_file() and f.name != "README.txt"]
-                    if files:
-                        rows.append({
-                            "name": alg_name, "test": test,
-                            "error": "hang" if subtype == "hang" else "other",
-                            "expected": None, "gotten": None,
-                            "source_report_path": str(result_root), "library": "liboqs",
-                            "liboqs_version": ver, "liboqs_target_name": target,
-                        })
-    return rows
+
+            counted = info.artifact_kind in ("crash", "hang")
+            if diagnostics:
+                diag_rows.append({
+                    "path": str(path.relative_to(afl_root.parent)),
+                    "recognized": "yes", "property": info.property,
+                    "paper_test_number": str(info.paper_test_number),
+                    "algorithm": alg_name, "artifact_kind": info.artifact_kind,
+                    "counted": "yes" if counted else "no",
+                    "reason": "" if counted else f"{info.artifact_kind} not a finding",
+                })
+
+            if not counted:
+                continue
+
+            dedup_key = (info.property, alg_name, info.artifact_kind)
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
+
+            result.append({
+                "name": alg_name,
+                "test": info.property,
+                "error": "hang" if info.artifact_kind == "hang" else "other",
+                "expected": None,
+                "gotten": None,
+                "source_report_path": str(result_root),
+                "library": "liboqs",
+                "liboqs_version": ver,
+                "liboqs_target_name": target,
+            })
+
+    return result
 
 
 def _load_campaign_meta(result_root: Path) -> dict:
@@ -788,6 +934,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Treat unmapped report test names as errors.")
     p.add_argument("--version", default=None,
                    help="Override liboqs version for a single result root.")
+    p.add_argument("--raw-afl-diagnostics", action="store_true",
+                   help="Emit raw_afl_fallback_diagnostics.tsv for raw AFL fallback parsing.")
+    p.add_argument("--raw-afl-only", action="store_true",
+                   help="Force raw AFL fallback reader even when DB/XLSX/LaTeX reports exist.")
     return p
 
 
@@ -799,9 +949,20 @@ def main(argv: list[str] | None = None) -> int:
     for root in args.result_root:
         discovered.extend(discover_result_roots(Path(root)))
 
+    all_diag_rows: list[dict] = []
     rows: list[dict] = []
-    for entry in discovered:
-        rows.extend(read_report_entry(entry, strict=args.strict_paper))
+    if args.raw_afl_only:
+        for entry in discovered:
+            if entry.get("raw_root"):
+                raw_rows = read_raw_manifest(Path(entry["raw_root"]),
+                                             strict=args.strict_paper,
+                                             diagnostics=args.raw_afl_diagnostics)
+                rows.extend(raw_rows)
+                if args.raw_afl_diagnostics:
+                    all_diag_rows.extend(getattr(raw_rows, "raw_afl_diagnostics", []))
+    else:
+        for entry in discovered:
+            rows.extend(read_report_entry(entry, strict=args.strict_paper))
 
     # Optional paper-reports reference read.
     paper_rows: list[dict] = []
@@ -833,6 +994,10 @@ def main(argv: list[str] | None = None) -> int:
     if out_dir:
         write_outputs(out_dir, normalized, raw_to_paper, table3, discovered,
                       strict=args.strict_paper)
+        if args.raw_afl_diagnostics and all_diag_rows:
+            _write_tsv(out_dir / "raw_afl_fallback_diagnostics.tsv", all_diag_rows,
+                       ["path", "recognized", "property", "paper_test_number",
+                        "algorithm", "artifact_kind", "counted", "reason"])
 
     # Stdout summary.
     print(f"discovered_reports: {len(discovered)}")
