@@ -371,6 +371,7 @@ if [ "${PQCDF_CLFUZZ_IN_DOCKER:-0}" != "1" ]; then
   FORWARDED_ARGS+=("${EXTRA_ARGS[@]}")
 
   docker run --rm \
+    --network=host \
     -e PQCDF_CLFUZZ_IN_DOCKER=1 \
     -e HOST_UID="$HOST_UID" \
     -e HOST_GID="$HOST_GID" \

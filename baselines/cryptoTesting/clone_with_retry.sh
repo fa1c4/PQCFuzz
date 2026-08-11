@@ -141,8 +141,12 @@ if [ -n "$cache" ]; then
   esac
 fi
 if [ -e "$dest" ]; then
-  echo "Destination already exists: $dest" >&2
-  exit 2
+  if [ -d "$dest" ] && [ -z "$(ls -A "$dest" 2>/dev/null)" ]; then
+    rmdir "$dest" 2>/dev/null || true
+  else
+    echo "Destination already exists and is non-empty: $dest" >&2
+    exit 2
+  fi
 fi
 
 remove_dest() {

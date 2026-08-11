@@ -22,6 +22,9 @@
 FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND="noninteractive"
 
+# Retry transient apt fetch failures (e.g. dropped connections to archive.ubuntu.com).
+RUN echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80-retries
+
 # Install essentials
 RUN \
     apt-get update && \
@@ -77,7 +80,8 @@ WORKDIR /fuzzing
 ENV HOME="/root"
 
 # Install dependences
-RUN make all_deps
+RUN --mount=type=bind,from=third_party,source=libkeccak,target=/tmp/libkeccak-src \
+    LIBKECCAK_REPO=/tmp/libkeccak-src make all_deps
 
 # cop over testing files
 COPY fuzz_liboqs.py /fuzzing/fuzz_liboqs.py
@@ -98,7 +102,8 @@ COPY supercop_report.py /fuzzing/supercop_report.py
 COPY supercop_report_baseline.py /fuzzing/supercop_report_baseline.py
 COPY reproduce.sh /fuzzing/reproduce.sh
 
-RUN make aflpp
+RUN --mount=type=bind,from=third_party,source=AFLplusplus,target=/tmp/aflpp-src \
+    AFLPP_REPO=/tmp/aflpp-src make aflpp
 # RUN make cur_liboqs
 # RUN make old_liboqs
 # RUN make mid_liboqs

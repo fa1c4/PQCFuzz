@@ -3,6 +3,8 @@ LIBOQS_REPO ?= https://github.com/open-quantum-safe/liboqs.git
 LIBOQS_CACHE ?=
 LIBOQS_CLONE_RETRIES ?= 5
 LIBOQS_CLONE_SLEEP ?= 5
+LIBKECCAK_REPO ?= https://github.com/maandree/libkeccak
+AFLPP_REPO ?= https://github.com/AFLplusplus/AFLplusplus
 CLONE_WITH_RETRY ?= ./clone_with_retry.sh
 LIBOQS_CLONE_ARGS = --repo "$(LIBOQS_REPO)" --retries "$(LIBOQS_CLONE_RETRIES)" --sleep "$(LIBOQS_CLONE_SLEEP)"
 ifneq ($(strip $(LIBOQS_CACHE)),)
@@ -33,7 +35,7 @@ common:
 	sudo apt-get install -y --no-install-recommends python3-tqdm libssl-dev xsltproc unzip
 
 libkeccak:
-	git clone https://github.com/maandree/libkeccak
+	$(CLONE_WITH_RETRY) --repo $(LIBKECCAK_REPO) --retries 10 libkeccak
 	cd libkeccak; make -j; make install
 
 ches_deps:
@@ -115,11 +117,18 @@ mid_liboqs_afl: common mid_deps
 
 aflpp_deps:
 	sudo apt-get install -y --no-install-recommends curl python3-sympy python3-bitarray python3-cffi python3-dev gcc-7-plugin-dev g++-8
-	if [ ! -d "/root/.cargo" ]; then curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; fi
+	if [ ! -d "/root/.cargo" ]; then \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && break; \
+			echo "rustup install attempt $$i failed, retrying in 5s..."; \
+			sleep 5; \
+		done; \
+		test -d /root/.cargo; \
+	fi
 	# info: latest update on 2023-12-28, rust version 1.75.0 (82e1608df 2023-12-21) works
 
 aflpp: aflpp_deps
-	git clone https://github.com/AFLplusplus/AFLplusplus aflpp
+	$(CLONE_WITH_RETRY) --repo $(AFLPP_REPO) --retries 10 --ref 4.02c aflpp
 	cd aflpp; git checkout 4.02c;
 	# sed -i 's/if (likely(!new_bits)) {/if (0) {/' aflpp/src/afl-fuzz-bitmap.c
 	sed -i 's/#define KEEP_UNIQUE_CRASH 10000U/#define KEEP_UNIQUE_CRASH 10U/' aflpp/include/config.h

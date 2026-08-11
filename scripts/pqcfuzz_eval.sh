@@ -1972,7 +1972,7 @@ if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" != "1" ]; then
   echo
 
   write_status "docker-build" "running"
-  run_step docker build --build-arg "BASE_IMAGE=${BASE_IMAGE}" -t "$IMAGE_NAME" -f "$DOCKERFILE_REL" "$DOCKER_DIR_REL"
+  run_step docker build --network=host --build-arg "BASE_IMAGE=${BASE_IMAGE}" -t "$IMAGE_NAME" -f "$DOCKERFILE_REL" "$DOCKER_DIR_REL"
   DOCKER_BUILD_STATUS="$?"
   echo "[pqcfuzz-eval] docker-build exited with status $DOCKER_BUILD_STATUS"
   if [ "$DOCKER_BUILD_STATUS" -ne 0 ]; then
@@ -1983,6 +1983,7 @@ if [ "${PQCFUZZ_EVAL_IN_DOCKER:-0}" != "1" ]; then
   HOST_GID="$(id -g)"
   write_status "docker-run" "running"
   run_step docker run --rm \
+    --network=host \
     -e PQCFUZZ_EVAL_IN_DOCKER=1 \
     -e EVAL_START_EPOCH="$START_EPOCH" \
     -e EVAL_STARTED_AT="$STARTED_AT" \

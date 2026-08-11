@@ -332,7 +332,8 @@ write_launcher() {
   {
     printf '#!/usr/bin/env bash\n'
     printf 'set +e +u +o pipefail\n\n'
-    printf 'cd %q || exit 1\n\n' "$ROOT_DIR"
+    printf 'cd %q || exit 1\n' "$ROOT_DIR"
+    printf 'export PQCDF_ROOT_DIR=%q\n\n' "$ROOT_DIR"
     printf 'BASELINE=%q\n' "$baseline"
     printf 'VERSION=%q\n' "$version"
     printf 'CAMPAIGN=%q\n' "$campaign"
@@ -1601,6 +1602,18 @@ fi
 command -v tmux >/dev/null 2>&1 || die "tmux is required"
 command -v timeout >/dev/null 2>&1 || die "timeout is required"
 command -v python3 >/dev/null 2>&1 || die "python3 is required"
+
+on_interrupt() {
+  echo "[eval] interrupted: killing campaign tmux sessions..." >&2
+  for campaign in "${CAMPAIGN_IDS[@]:-}"; do
+    session="${SESSION_BY_ID[$campaign]:-}"
+    [ -n "$session" ] || continue
+    tmux kill-session -t "=${session}" 2>/dev/null || true
+  done
+  echo "[eval] exiting" >&2
+  exit 130
+}
+trap on_interrupt INT TERM
 
 if [ ! -x "${ROOT_DIR}/scripts/run_baseline.sh" ]; then
   die "missing executable dispatcher: scripts/run_baseline.sh"

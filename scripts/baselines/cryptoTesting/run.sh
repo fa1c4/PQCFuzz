@@ -47,7 +47,7 @@ GENINPUT_TIMEOUT="${CRYPTO_TESTING_GENINPUT_TIMEOUT:-10}"
 MAX_TOTAL_TIME="${CRYPTO_TESTING_MAX_TOTAL_TIME:-}"
 LIBOQS_CACHE_HOST="${CRYPTO_TESTING_LIBOQS_CACHE:-}"
 LIBOQS_REPO_VALUE="${CRYPTO_TESTING_LIBOQS_REPO:-${LIBOQS_REPO:-https://github.com/open-quantum-safe/liboqs.git}}"
-LIBOQS_CLONE_RETRIES_VALUE="${CRYPTO_TESTING_LIBOQS_CLONE_RETRIES:-${LIBOQS_CLONE_RETRIES:-5}}"
+LIBOQS_CLONE_RETRIES_VALUE="${CRYPTO_TESTING_LIBOQS_CLONE_RETRIES:-${LIBOQS_CLONE_RETRIES:-10}}"
 LIBOQS_CLONE_SLEEP_VALUE="${CRYPTO_TESTING_LIBOQS_CLONE_SLEEP:-${LIBOQS_CLONE_SLEEP:-5}}"
 
 while [ "$#" -gt 0 ]; do
@@ -226,6 +226,15 @@ case "$VERSION" in
     ;;
 esac
 
+LIBOQS_LOCAL_REPO_HOST=""
+if [ -z "${CRYPTO_TESTING_LIBOQS_REPO:-${LIBOQS_REPO:-}}" ]; then
+  LIBOQS_LOCAL_REPO_CANDIDATE="${PQCDF_LIBOQS_LOCAL_REPO:-third_party/liboqs-${VERSION}}"
+  if [ -d "${LIBOQS_LOCAL_REPO_CANDIDATE}/.git" ]; then
+    LIBOQS_LOCAL_REPO_HOST="$(realpath "$LIBOQS_LOCAL_REPO_CANDIDATE")"
+    echo "[cryptoTesting] using local liboqs mirror: $LIBOQS_LOCAL_REPO_HOST"
+  fi
+fi
+
 mkdir -p "$BUILD_DIR" "$RUN_DIR"
 
 BUILD_DIR_ABS="$(realpath "$BUILD_DIR")"
@@ -309,6 +318,7 @@ else
   echo "[cryptoTesting] host cleanup could not remove $BUILD_TARGET_DIR"
   echo "[cryptoTesting] retrying cleanup inside Docker"
   docker run --rm \
+    --network=host \
     -v "${BUILD_DIR_ABS}:/pqcdf-build" \
     "$IMAGE_NAME" \
     bash -lc "rm -rf /pqcdf-build/${LIBOQS_TARGET} && mkdir -p /pqcdf-build/${LIBOQS_TARGET}"
@@ -330,19 +340,27 @@ if [ -n "$MAX_TOTAL_TIME" ]; then
 fi
 
 set +e
-docker run --rm \
+  DOCKER_LIBOQS_EXTRA_VOLUMES=()
+  if [ -n "$LIBOQS_LOCAL_REPO_HOST" ]; then
+    DOCKER_LIBOQS_EXTRA_VOLUMES+=(-v "${LIBOQS_LOCAL_REPO_HOST}:/pqcdf-liboqs-local:ro")
+    LIBOQS_REPO_VALUE="/pqcdf-liboqs-local"
+    LIBOQS_CACHE_CONTAINER=""
+  fi
+  docker run --rm \
+  --network=host \
   -v "${BUILD_TARGET_DIR}:/fuzzing/${LIBOQS_TARGET}" \
   -v "${REPORTS_DIR}:/fuzzing/reports" \
   -v "${LOG_DIR}:/pqcdf-logs" \
   -v "${RAW_OUTPUT_DIR}:/pqcdf-results" \
   -v "${LIBOQS_CACHE_PARENT_ABS}:/pqcdf-liboqs-cache" \
+  "${DOCKER_LIBOQS_EXTRA_VOLUMES[@]}" \
   -e "LIBOQS_REPO=${LIBOQS_REPO_VALUE}" \
   -e "LIBOQS_CACHE=${LIBOQS_CACHE_CONTAINER}" \
   -e "LIBOQS_CLONE_RETRIES=${LIBOQS_CLONE_RETRIES_VALUE}" \
   -e "LIBOQS_CLONE_SLEEP=${LIBOQS_CLONE_SLEEP_VALUE}" \
   -w /fuzzing \
   "$IMAGE_NAME" \
-  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results /pqcdf-liboqs-cache 2>/dev/null || true' EXIT; git config --global --add safe.directory /fuzzing/${LIBOQS_TARGET}; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION} ${REPRODUCE_TIME_ARGS[*]}" \
+  bash -lc "trap 'chown -R ${HOST_UID}:${HOST_GID} /fuzzing/${LIBOQS_TARGET} /fuzzing/reports /pqcdf-logs /pqcdf-results /pqcdf-liboqs-cache 2>/dev/null || true' EXIT; git config --global --add safe.directory '*'; cd /fuzzing && bash -e reproduce.sh ${LIBOQS_TARGET} ${REPRODUCE_MODE_ARGS[*]} --output-root /pqcdf-results --reports-dir /fuzzing/reports --workers ${WORKERS} --geninput-timeout ${GENINPUT_TIMEOUT} --version ${VERSION} ${REPRODUCE_TIME_ARGS[*]}" \
   2>&1 | tee "$LOG_FILE"
 DOCKER_STATUS="${PIPESTATUS[0]}"
 set -e

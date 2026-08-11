@@ -82,6 +82,7 @@ if [ "${PQCDF_LIBFUZZER_IN_DOCKER:-0}" != "1" ]; then
   HOST_UID="$(id -u)"
   HOST_GID="$(id -g)"
   docker run --rm \
+    --network=host \
     -e PQCDF_LIBFUZZER_IN_DOCKER=1 \
     -e HOST_UID="$HOST_UID" \
     -e HOST_GID="$HOST_GID" \
@@ -111,7 +112,31 @@ echo "[libFuzzer] version build directory: $VERSION_BUILD_DIR"
 
 if [ ! -d "${LIBOQS_SRC_DIR}/.git" ]; then
   rm -rf "$LIBOQS_SRC_DIR"
-  git clone --branch "$VERSION" --depth 1 https://github.com/open-quantum-safe/liboqs.git "$LIBOQS_SRC_DIR"
+  LIBOQS_LOCAL_REPO="${PQCDF_LIBOQS_LOCAL_REPO:-third_party/liboqs-${VERSION}}"
+  if [ -d "${LIBOQS_LOCAL_REPO}/.git" ]; then
+    echo "[libFuzzer] cloning liboqs from local mirror: $LIBOQS_LOCAL_REPO"
+    git config --global --add safe.directory '*'
+    git clone --branch "$VERSION" "$LIBOQS_LOCAL_REPO" "$LIBOQS_SRC_DIR"
+  else
+    LIBOQS_CLONE_RETRIES="${PQCDF_LIBOQS_CLONE_RETRIES:-10}"
+    LIBOQS_CLONE_SLEEP="${PQCDF_LIBOQS_CLONE_SLEEP:-5}"
+    attempt=1
+    while [ "$attempt" -le "$LIBOQS_CLONE_RETRIES" ]; do
+      echo "[libFuzzer] git clone attempt ${attempt}/${LIBOQS_CLONE_RETRIES}"
+      if git clone --branch "$VERSION" --depth 1 https://github.com/open-quantum-safe/liboqs.git "$LIBOQS_SRC_DIR"; then
+        break
+      fi
+      rm -rf "$LIBOQS_SRC_DIR"
+      attempt=$((attempt + 1))
+      if [ "$attempt" -le "$LIBOQS_CLONE_RETRIES" ] && [ "$LIBOQS_CLONE_SLEEP" -gt 0 ]; then
+        sleep "$LIBOQS_CLONE_SLEEP"
+      fi
+    done
+    if [ ! -d "${LIBOQS_SRC_DIR}/.git" ]; then
+      echo "[libFuzzer] git clone failed after ${LIBOQS_CLONE_RETRIES} attempts" >&2
+      exit 1
+    fi
+  fi
 else
   git config --global --add safe.directory "$LIBOQS_SRC_DIR"
   if ! git -C "$LIBOQS_SRC_DIR" rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null; then

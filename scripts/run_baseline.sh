@@ -74,6 +74,7 @@ if [ -z "$WORKSPACE_ROOT" ]; then
   WORKSPACE_ROOT="."
 fi
 BASELINE_WRAPPER_ROOT="${PQCDF_BASELINE_WRAPPER_ROOT:-scripts/baselines}"
+ROOT_DIR="${PQCDF_ROOT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 
 BUILD_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-build"
 RUN_DIR="${WORKSPACE_ROOT}/${BASELINE}/targets-run"
@@ -108,6 +109,7 @@ case "$COMMAND" in
         BUILD_DIR_ABS="$(realpath "$BUILD_DIR")"
         RUN_DIR_ABS="$(realpath "$RUN_DIR")"
         docker run --rm \
+          --network=host \
           -v "${BUILD_DIR_ABS}:/pqcdf-build" \
           -v "${RUN_DIR_ABS}:/pqcdf-run" \
           "$IMAGE_NAME" \
@@ -149,7 +151,12 @@ case "$COMMAND" in
       esac
     done
 
+    if [ -d "${ROOT_DIR}/third_party" ]; then
+      DOCKER_BUILD_ARGS+=(--build-context "third_party=${ROOT_DIR}/third_party")
+    fi
+
     docker build \
+      --network=host \
       "${DOCKER_BUILD_ARGS[@]}" \
       -t "$IMAGE_NAME" \
       -f "${BASELINE_DIR}/Dockerfile" \
@@ -158,6 +165,7 @@ case "$COMMAND" in
 
   docker-run)
     docker run --rm -it \
+      --network=host \
       -v "$(pwd)":/workspace/PQC-DF \
       -w /workspace/PQC-DF \
       "$IMAGE_NAME" \
