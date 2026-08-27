@@ -801,12 +801,13 @@ EOF
 
 read_status_fields() {
   local status_file="$1"
+  local now="${2:-0}"
   if [ ! -f "$status_file" ]; then
     printf 'pending\tpending\t0\t-\n'
     return
   fi
 
-  python3 - "$status_file" <<'PY'
+  python3 - "$status_file" "$now" <<'PY'
 import json
 import sys
 
@@ -817,10 +818,26 @@ except Exception:
     print("unknown\tunknown\t0\t-")
     raise SystemExit
 
+now = int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2].isdigit() else 0
+state = data.get("state") or "-"
+elapsed = data.get("elapsed_seconds") or 0
+
+# When the campaign is still running, compute live elapsed from start_epoch
+# instead of using the stale value written at the last phase transition.
+if state not in ("finished",) and now > 0:
+    start_epoch = data.get("start_epoch")
+    if start_epoch is not None:
+        try:
+            live_elapsed = now - int(start_epoch)
+            if live_elapsed > elapsed:
+                elapsed = live_elapsed
+        except (ValueError, TypeError):
+            pass
+
 print(
     f"{data.get('phase') or '-'}\t"
-    f"{data.get('state') or '-'}\t"
-    f"{data.get('elapsed_seconds') or 0}\t"
+    f"{state}\t"
+    f"{elapsed}\t"
     f"{data.get('result') or '-'}"
 )
 PY
@@ -838,7 +855,7 @@ print_progress() {
   for id in "${CAMPAIGN_IDS[@]}"; do
     status_file="${STATUS_FILE_BY_ID[$id]}"
     session="${SESSION_BY_ID[$id]}"
-    fields="$(read_status_fields "$status_file")"
+    fields="$(read_status_fields "$status_file" "$now")"
     IFS=$'\t' read -r phase state elapsed result <<<"$fields"
 
     if tmux has-session -t "=${session}" 2>/dev/null; then
@@ -1824,7 +1841,7 @@ while :; do
   for campaign in "${CAMPAIGN_IDS[@]}"; do
     session="${SESSION_BY_ID[$campaign]}"
     status_file="${STATUS_FILE_BY_ID[$campaign]}"
-    fields="$(read_status_fields "$status_file")"
+    fields="$(read_status_fields "$status_file" "$now")"
     IFS=$'\t' read -r phase state elapsed result <<<"$fields"
 
     if [ "$state" = "finished" ]; then
