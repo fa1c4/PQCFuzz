@@ -28,6 +28,13 @@ enum class AlgorithmId : uint8_t {
   kSlhDsaShake_256s = 16,
   kSlhDsaSha2_256f = 17,
   kSlhDsaShake_256f = 18,
+  kAigisEnc1 = 19,
+  kAigisEnc2 = 20,
+  kAigisEnc3 = 21,
+  kAigisEnc4 = 22,
+  kAigisSig1 = 23,
+  kAigisSig2 = 24,
+  kAigisSig3 = 25,
 };
 
 enum class OracleId : uint8_t {
@@ -62,6 +69,21 @@ enum class OracleId : uint8_t {
   kSigVerifyMessage = 28,
   kSigVerifySignature = 29,
   kSigVerifyPublicKey = 30,
+  kAigisEncLocalRoundtrip = 31,
+  kAigisEncCrossExchangeRoundtrip = 32,
+  kAigisEncTamperedCiphertextImplicitRejection = 33,
+  kAigisEncBadRandomnessSanity = 34,
+  kAigisEncSkNoncanonicalCoefficient = 35,
+  kAigisSigLocalSignVerify = 36,
+  kAigisSigCrossVerify = 37,
+  kAigisSigMutatedSignatureNegative = 38,
+  kAigisSigMutatedMessageNegative = 39,
+  kAigisSigMutatedContextNegative = 40,
+  kAigisSigBadRandomnessSanity = 41,
+  kAigisSigExactLength = 42,
+  kAigisSigUnusedSignBits = 43,
+  kAigisSigCtx256FailureState = 44,
+  kAigisSigDeterminismProfile = 45,
 };
 
 struct Envelope {

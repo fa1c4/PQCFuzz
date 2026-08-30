@@ -25,6 +25,11 @@ COMMON_SOURCES = [
     "src/mutators/slh_dsa_mutator.cc",
     "src/oracles/metamorphic_observation.cc",
     "src/oracles/oracle_result.cc",
+            "src/adapters/pqmagic/sig_adapter.cc",
+            "src/mutators/aigis_enc_layout.cc",
+            "src/mutators/aigis_enc_mutator.cc",
+            "src/mutators/aigis_sig_layout.cc",
+            "src/mutators/aigis_sig_mutator.cc",
     "src/oracles/oracle_executor.cc",
     "src/triage/finding_writer.cc",
 ]

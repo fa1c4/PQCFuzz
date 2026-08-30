@@ -23,6 +23,8 @@ struct OracleSpec {
 std::vector<OracleSpec> DefaultMlKemOracleSpecs();
 std::vector<OracleSpec> DefaultMlDsaOracleSpecs();
 std::vector<OracleSpec> DefaultSlhDsaOracleSpecs();
+std::vector<OracleSpec> DefaultAigisEncOracleSpecs();
+std::vector<OracleSpec> DefaultAigisSigOracleSpecs();
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id);
 
 }  // namespace pqcfuzz

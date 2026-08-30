@@ -39,7 +39,14 @@
         "SLH-DSA-SHA2-256s",
         "SLH-DSA-SHAKE-256s",
         "SLH-DSA-SHA2-256f",
-        "SLH-DSA-SHAKE-256f"
+        "SLH-DSA-SHAKE-256f",
+        "AIGIS-ENC-1",
+        "AIGIS-ENC-2",
+        "AIGIS-ENC-3",
+        "AIGIS-ENC-4",
+        "AIGIS-SIG-1",
+        "AIGIS-SIG-2",
+        "AIGIS-SIG-3"
       ]
     },
     "oracle_id": {

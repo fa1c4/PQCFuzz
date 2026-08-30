@@ -6,6 +6,8 @@
 #include <vector>
 
 #include "adapters/adapter_interface.h"
+#include "mutators/aigis_enc_layout.h"
+#include "mutators/aigis_sig_layout.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/ml_kem_layout.h"
 #include "mutators/ml_kem_mutator.h"
@@ -168,6 +170,8 @@ struct OracleExecutorConfig {
   std::string algorithm;
   std::string oracle_id;
   MlKemParams params;
+  AigisEncParams aigis_params;
+  bool is_aigis_enc = false;
   const pqcfuzz_kem_adapter *left = nullptr;
   const pqcfuzz_kem_adapter *right = nullptr;
   PairExchangeContract exchange_contract;
@@ -182,7 +186,9 @@ struct SigOracleExecutorConfig {
   std::string oracle_id;
   MlDsaParams params;
   SlhDsaParams slh_params;
+  AigisSigParams aigis_sig_params;
   bool is_slh_dsa = false;
+  bool is_aigis_sig = false;
   const pqcfuzz_sig_adapter *left = nullptr;
   const pqcfuzz_sig_adapter *right = nullptr;
   PairExchangeContract exchange_contract;

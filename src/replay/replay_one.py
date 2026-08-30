@@ -43,6 +43,13 @@ ALGORITHM_BY_ENUM = {
     16: "SLH-DSA-SHAKE-256s",
     17: "SLH-DSA-SHA2-256f",
     18: "SLH-DSA-SHAKE-256f",
+    19: "AIGIS-ENC-1",
+    20: "AIGIS-ENC-2",
+    21: "AIGIS-ENC-3",
+    22: "AIGIS-ENC-4",
+    23: "AIGIS-SIG-1",
+    24: "AIGIS-SIG-2",
+    25: "AIGIS-SIG-3",
 }
 
 ORACLE_BY_ENUM = {
@@ -76,6 +83,21 @@ ORACLE_BY_ENUM = {
     28: "sig_verify_m",
     29: "sig_verify_sig",
     30: "sig_verify_pk",
+    31: "aigisenc_local_roundtrip",
+    32: "aigisenc_cross_exchange_roundtrip",
+    33: "aigisenc_tampered_ciphertext_implicit_rejection",
+    34: "aigisenc_bad_randomness_sanity",
+    35: "aigisenc_sk_noncanonical_coefficient",
+    36: "aigissig_local_sign_verify",
+    37: "aigissig_cross_verify",
+    38: "aigissig_mutated_signature_negative",
+    39: "aigissig_mutated_message_negative",
+    40: "aigissig_mutated_context_negative",
+    41: "aigissig_bad_randomness_sanity",
+    42: "aigissig_exact_length",
+    43: "aigissig_unused_sign_bits",
+    44: "aigissig_ctx256_failure_state",
+    45: "aigissig_determinism_profile",
 }
 ALGORITHM_ENUM_BY_NAME = {value: key for key, value in ALGORITHM_BY_ENUM.items()}
 ORACLE_ENUM_BY_NAME = {value: key for key, value in ORACLE_BY_ENUM.items()}

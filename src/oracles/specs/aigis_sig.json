@@ -1,0 +1,125 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "aigissig_local_sign_verify",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"same_algorithm": true, "valid_lengths": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review"
+    },
+    {
+      "oracle_id": "aigissig_cross_verify",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {
+        "pair_alg_exchange_contract_required": [
+          "public_key_exchange",
+          "signature_exchange"
+        ]
+      },
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review"
+    },
+    {
+      "oracle_id": "aigissig_mutated_signature_negative",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {
+        "type": "field_aware",
+        "targets": ["signature.z", "signature.h", "signature.c"]
+      },
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "potential_crypto_vuln_if_mutated_signature_verifies"
+    },
+    {
+      "oracle_id": "aigissig_mutated_message_negative",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_message_before_mutation": true},
+      "mutation": {"type": "message_mutation", "targets": ["message"]},
+      "expected_relation": "VERIFY_FALSE",
+      "comparator": "verify_rejects",
+      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies"
+    },
+    {
+      "oracle_id": "aigissig_mutated_context_negative",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_context_before_mutation": true},
+      "mutation": {"type": "context_mutation", "targets": ["ctx"]},
+      "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
+      "comparator": "verify_rejects_or_api_unsupported",
+      "triage_policy": "potential_crypto_vuln_if_mutated_context_verifies"
+    },
+    {
+      "oracle_id": "aigissig_bad_randomness_sanity",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "precondition": {"rng_injection_available": true},
+      "mutation": {
+        "type": "bad_randomness",
+        "patterns": ["all_zero", "reused_seed"]
+      },
+      "expected_relation": "NO_CRASH",
+      "comparator": "status_only",
+      "triage_policy": "api_unsupported_is_not_failure"
+    },
+    {
+      "oracle_id": "aigissig_exact_length",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "appended_signature_bytes_accepted"
+    },
+    {
+      "oracle_id": "aigissig_unused_sign_bits",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.c"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "unused_sign_bit_malleable"
+    },
+    {
+      "oracle_id": "aigissig_ctx256_failure_state",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "precondition": {"valid_keypair_before_mutation": true},
+      "mutation": {"type": "context_mutation", "targets": ["ctx"]},
+      "expected_relation": "REJECT_OR_INVALID_INPUT",
+      "comparator": "failure_state_consistent",
+      "triage_policy": "failure_output_length_state_inconsistent"
+    },
+    {
+      "oracle_id": "aigissig_determinism_profile",
+      "algorithm_family": "AIGIS-SIG",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "precondition": {"same_algorithm": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "determinism_violation"
+    }
+  ]
+}

@@ -6,6 +6,8 @@
 #include "adapters/liboqs/sig_adapter.h"
 #include "adapters/pqclean/kem_adapter.h"
 #include "adapters/pqclean/sig_adapter.h"
+#include "adapters/pqmagic/kem_adapter.h"
+#include "adapters/pqmagic/sig_adapter.h"
 
 namespace pqcfuzz {
 
@@ -18,6 +20,9 @@ const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
   if (project_id == "pqclean") {
     return pqcfuzz_get_pqclean_adapter(implementation_id.c_str());
   }
+  if (project_id == "pqmagic") {
+    return pqcfuzz_get_pqmagic_adapter(implementation_id.c_str());
+  }
   return nullptr;
 }
 
@@ -29,6 +34,9 @@ const pqcfuzz_sig_adapter *GetSigAdapterByProjectAndId(
   }
   if (project_id == "pqclean") {
     return pqcfuzz_get_pqclean_sig_adapter(implementation_id.c_str());
+  }
+  if (project_id == "pqmagic") {
+    return pqcfuzz_get_pqmagic_sig_adapter(implementation_id.c_str());
   }
   return nullptr;
 }

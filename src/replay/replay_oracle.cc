@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "mutators/aigis_enc_layout.h"
+#include "mutators/aigis_sig_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/ml_kem_layout.h"
@@ -81,8 +83,13 @@ int main(int argc, char **argv) {
   pqcfuzz::KEMOracleTrace trace;
   if (args.primitive_type == "sig") {
     pqcfuzz::MlDsaParams dsa_params{};
+    pqcfuzz::AigisSigParams aigis_sig_params{};
     const bool is_mldsa = pqcfuzz::GetMlDsaParams(args.algorithm, &dsa_params);
-    if (!is_mldsa) {
+    const bool is_aigis = pqcfuzz::GetAigisSigParams(args.algorithm, &aigis_sig_params);
+    if (is_aigis) {
+      dsa_params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
+                    aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
+    } else if (!is_mldsa) {
       std::cerr << "unsupported signature algorithm (SLH-DSA is not dispatched): " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
@@ -116,6 +123,8 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = dsa_params;
+      config.aigis_sig_params = aigis_sig_params;
+      config.is_aigis_sig = is_aigis;
       config.left = target;
       config.right = pqcfuzz::GetSigAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;
@@ -128,7 +137,13 @@ int main(int argc, char **argv) {
     }
   } else {
     pqcfuzz::MlKemParams params{};
-    if (!pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
+    pqcfuzz::AigisEncParams aigis_params{};
+    const bool is_aigis = pqcfuzz::GetAigisEncParams(args.algorithm, &aigis_params);
+    if (is_aigis) {
+      params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
+                aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
+                aigis_params.c1_bits, aigis_params.c2_bits};
+    } else if (!pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
       std::cerr << "unsupported ML-KEM algorithm: " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
@@ -160,6 +175,8 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = params;
+      config.aigis_params = aigis_params;
+      config.is_aigis_enc = is_aigis;
       config.left = target;
       config.right = pqcfuzz::GetKemAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;

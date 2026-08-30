@@ -4,8 +4,11 @@
 #include <iomanip>
 #include <sstream>
 
+#include "adapters/pqmagic/sig_adapter.h"
 #include "adapters/rng_control.h"
 #include "adapters/status.h"
+#include "mutators/aigis_enc_mutator.h"
+#include "mutators/aigis_sig_mutator.h"
 #include "mutators/ml_dsa_mutator.h"
 #include "mutators/slh_dsa_mutator.h"
 #include "oracles/metamorphic_observation.h"
@@ -203,7 +206,7 @@ OracleSubtestTrace KemRandomnessSanity(
     RngInterventionTrace *rng_trace) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = "randomness_sanity";
-  subtest.oracle_id = "mlkem_bad_randomness_sanity";
+  subtest.oracle_id = config.oracle_id;
   subtest.expected_relation = "DISTINCT_CIPHERTEXT_OR_SHARED_SECRET";
   KEMKeyPair keypair = Keygen(config.left, "left", &subtest);
   if (keypair.status == PQCFUZZ_API_UNSUPPORTED) {
@@ -216,10 +219,12 @@ OracleSubtestTrace KemRandomnessSanity(
     subtest.note = "could not construct keypair before randomness control";
     return subtest;
   }
-  const auto baseline_tape = MakeRandomnessTape(config.seed, "mlkem-encaps-baseline");
-  const auto mutated_tape = MakeRandomnessTape(config.seed, "mlkem-encaps-mutated");
-  rng_trace->baseline_tape_id = "mlkem-encaps-baseline";
-  rng_trace->mutated_tape_id = "mlkem-encaps-mutated";
+  const std::string baseline_label = config.oracle_id + "-encaps-baseline";
+  const std::string mutated_label = config.oracle_id + "-encaps-mutated";
+  const auto baseline_tape = MakeRandomnessTape(config.seed, baseline_label);
+  const auto mutated_tape = MakeRandomnessTape(config.seed, mutated_label);
+  rng_trace->baseline_tape_id = baseline_label;
+  rng_trace->mutated_tape_id = mutated_label;
   rng_trace->baseline_tape_sha256 = Sha256Hex(baseline_tape);
   rng_trace->mutated_tape_sha256 = Sha256Hex(mutated_tape);
   rng_trace->tapes_distinct = baseline_tape != mutated_tape;
@@ -272,11 +277,12 @@ void FinalizeRoundtrip(OracleSubtestTrace *subtest, const KEMSharedSecret &encap
 
 OracleSubtestTrace LocalRoundtrip(
     const std::string &subtest_id,
+    const std::string &oracle_id,
     const std::string &adapter_label,
     const pqcfuzz_kem_adapter *adapter) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = subtest_id;
-  subtest.oracle_id = "mlkem_local_roundtrip";
+  subtest.oracle_id = oracle_id;
   subtest.expected_relation = "SAME_SHARED_SECRET";
   KEMKeyPair keypair = Keygen(adapter, adapter_label, &subtest);
   KEMSharedSecret encaps_ss;
@@ -294,13 +300,14 @@ OracleSubtestTrace LocalRoundtrip(
 
 OracleSubtestTrace CrossEncapsRoundtrip(
     const std::string &subtest_id,
+    const std::string &oracle_id,
     const std::string &keygen_label,
     const pqcfuzz_kem_adapter *keygen_adapter,
     const std::string &encaps_label,
     const pqcfuzz_kem_adapter *encaps_adapter) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = subtest_id;
-  subtest.oracle_id = "mlkem_cross_exchange_roundtrip";
+  subtest.oracle_id = oracle_id;
   subtest.expected_relation = "SAME_SHARED_SECRET";
   KEMKeyPair keypair = Keygen(keygen_adapter, keygen_label, &subtest);
   KEMSharedSecret encaps_ss;
@@ -318,13 +325,14 @@ OracleSubtestTrace CrossEncapsRoundtrip(
 
 OracleSubtestTrace CrossDecapsRoundtrip(
     const std::string &subtest_id,
+    const std::string &oracle_id,
     const std::string &source_label,
     const pqcfuzz_kem_adapter *source_adapter,
     const std::string &decaps_label,
     const pqcfuzz_kem_adapter *decaps_adapter) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = subtest_id;
-  subtest.oracle_id = "mlkem_cross_exchange_roundtrip";
+  subtest.oracle_id = oracle_id;
   subtest.expected_relation = "SAME_SHARED_SECRET";
   KEMKeyPair keypair = Keygen(source_adapter, source_label, &subtest);
   KEMSharedSecret encaps_ss;
@@ -387,6 +395,106 @@ OracleSubtestTrace TamperedCiphertext(
   return subtest;
 }
 
+OracleSubtestTrace AigisTamperedCiphertext(
+    const OracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "tampered_ciphertext_negative";
+  subtest.oracle_id = "aigisenc_tampered_ciphertext_implicit_rejection";
+  subtest.expected_relation = "REJECT_OR_DIFFERENT_SHARED_SECRET";
+  KEMKeyPair keypair = Keygen(config.left, "left", &subtest);
+  KEMSharedSecret encaps_ss;
+  KEMCiphertext ciphertext;
+  if (keypair.status == PQCFUZZ_OK) {
+    ciphertext = Encaps(config.left, "left", keypair.pk, &subtest, &encaps_ss);
+  }
+  if (ciphertext.status != PQCFUZZ_OK) {
+    FinalizeRoundtrip(&subtest, encaps_ss, {});
+    return subtest;
+  }
+
+  std::vector<uint8_t> mutated = ciphertext.ct;
+  auto records = MutateAigisEncCiphertext(config.aigis_params, config.mutation, &mutated);
+  mutations->insert(mutations->end(), records.begin(), records.end());
+  const bool ineffective = !records.empty() &&
+      std::any_of(records.begin(), records.end(), [](const MutationRecord &record) { return !record.effective; });
+  if (ineffective) {
+    subtest.passed = true;
+    subtest.skipped = true;
+    subtest.note = "no_effect";
+    return subtest;
+  }
+  KEMSharedSecret decaps_ss = Decaps(config.left, "left", mutated, keypair.sk, &subtest);
+  if (decaps_ss.status == PQCFUZZ_REJECT || decaps_ss.status == PQCFUZZ_INVALID_INPUT) {
+    subtest.passed = true;
+    return subtest;
+  }
+  if (decaps_ss.status == PQCFUZZ_API_UNSUPPORTED) {
+    subtest.skipped = true;
+    subtest.passed = true;
+    subtest.note = "adapter API unsupported";
+    return subtest;
+  }
+  subtest.passed = decaps_ss.status == PQCFUZZ_OK && decaps_ss.ss != encaps_ss.ss;
+  if (!subtest.passed) {
+    subtest.note = "tampered ciphertext returned original shared secret";
+  }
+  return subtest;
+}
+
+OracleSubtestTrace AigisEncSkNoncanonicalCoefficient(
+    const OracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "sk_noncanonical_coefficient";
+  subtest.oracle_id = "aigisenc_sk_noncanonical_coefficient";
+  // Hardened parser profile expectation: a secret key whose first s-vector
+  // coefficient encodes q = 7681 (non-canonical) must be rejected before
+  // decapsulation.  The supplied PQMagic snapshot has no such check.
+  subtest.expected_relation = "REJECT_OR_INVALID_INPUT";
+  KEMKeyPair keypair = Keygen(config.left, "left", &subtest);
+  KEMSharedSecret encaps_ss;
+  KEMCiphertext ciphertext;
+  if (keypair.status == PQCFUZZ_OK) {
+    ciphertext = Encaps(config.left, "left", keypair.pk, &subtest, &encaps_ss);
+  }
+  if (ciphertext.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct baseline encapsulation";
+    return subtest;
+  }
+
+  std::vector<uint8_t> mutated_sk = keypair.sk;
+  auto records = MutateAigisEncSkNoncanonicalCoefficient(config.aigis_params, &mutated_sk);
+  mutations->insert(mutations->end(), records.begin(), records.end());
+  const bool ineffective = !records.empty() &&
+      std::any_of(records.begin(), records.end(), [](const MutationRecord &record) { return !record.effective; });
+  if (ineffective) {
+    subtest.passed = true;
+    subtest.skipped = true;
+    subtest.note = "no_effect";
+    return subtest;
+  }
+  KEMSharedSecret decaps_ss = Decaps(config.left, "left", ciphertext.ct, mutated_sk, &subtest);
+  if (decaps_ss.status == PQCFUZZ_REJECT || decaps_ss.status == PQCFUZZ_INVALID_INPUT) {
+    subtest.passed = true;
+    return subtest;
+  }
+  if (decaps_ss.status == PQCFUZZ_API_UNSUPPORTED) {
+    subtest.skipped = true;
+    subtest.passed = true;
+    subtest.note = "adapter API unsupported";
+    return subtest;
+  }
+  // IMPLEMENTATION_OBSERVED (DeepSeek oracle doc 33.4): the implementation
+  // accepts the non-canonical secret-key encoding and decapsulates normally.
+  // HARDENING_GAP: a hardened parser profile should decode-error or enforce
+  // exact re-encoding.  INCONCLUSIVE as a standards verdict.
+  subtest.passed = false;
+  subtest.note = "non-canonical secret-key coefficient accepted and decapsulation proceeded";
+  return subtest;
+}
+
 void AddFindingsForFailures(KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
@@ -396,11 +504,20 @@ void AddFindingsForFailures(KEMOracleTrace *trace) {
         trace->findings.push_back({"timeout", "", "adapter call timed out", EvidenceKind::kProcess});
       }
     }
-    if (!subtest.passed && subtest.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
-      trace->findings.push_back({"potential_crypto_vuln", "", subtest.note});
-    } else if (!subtest.passed) {
-      trace->findings.push_back({"confirmed_semantic_bug", "", subtest.note});
+    if (subtest.passed) {
+      continue;
     }
+    std::string finding_class = "confirmed_semantic_bug";
+    std::string finding_subclass;
+    if (subtest.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection" ||
+        subtest.oracle_id == "aigisenc_tampered_ciphertext_implicit_rejection" ||
+        subtest.oracle_id == "aigisenc_sk_noncanonical_coefficient") {
+      finding_class = "potential_crypto_vuln";
+    }
+    if (subtest.oracle_id == "aigisenc_sk_noncanonical_coefficient") {
+      finding_subclass = "noncanonical_secret_key_accepted";
+    }
+    trace->findings.push_back({finding_class, finding_subclass, subtest.note});
   }
 }
 
@@ -544,7 +661,7 @@ OracleSubtestTrace SigRandomnessSanity(
     RngInterventionTrace *rng_trace) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = "randomness_sanity";
-  subtest.oracle_id = "mldsa_bad_randomness_sanity";
+  subtest.oracle_id = config.oracle_id;
   subtest.expected_relation = "DISTINCT_SIGNATURE";
   if (config.left != nullptr && config.left->supports_deterministic_sign && !config.left->supports_seeded_sign) {
     subtest.skipped = true;
@@ -562,10 +679,12 @@ OracleSubtestTrace SigRandomnessSanity(
     subtest.note = "could not construct keypair before randomness control";
     return subtest;
   }
-  const auto baseline_tape = MakeRandomnessTape(config.seed, "mldsa-sign-baseline");
-  const auto mutated_tape = MakeRandomnessTape(config.seed, "mldsa-sign-mutated");
-  rng_trace->baseline_tape_id = "mldsa-sign-baseline";
-  rng_trace->mutated_tape_id = "mldsa-sign-mutated";
+  const std::string baseline_label = config.oracle_id + "-sign-baseline";
+  const std::string mutated_label = config.oracle_id + "-sign-mutated";
+  const auto baseline_tape = MakeRandomnessTape(config.seed, baseline_label);
+  const auto mutated_tape = MakeRandomnessTape(config.seed, mutated_label);
+  rng_trace->baseline_tape_id = baseline_label;
+  rng_trace->mutated_tape_id = mutated_label;
   rng_trace->baseline_tape_sha256 = Sha256Hex(baseline_tape);
   rng_trace->mutated_tape_sha256 = Sha256Hex(mutated_tape);
   rng_trace->tapes_distinct = baseline_tape != mutated_tape;
@@ -644,6 +763,7 @@ OracleSubtestTrace SigNegative(
     bool mutate_context,
     bool mutate_oid) {
   OracleSubtestTrace subtest;
+  const size_t mutations_before = mutations == nullptr ? 0 : mutations->size();
   subtest.subtest_id = subtest_id;
   subtest.oracle_id = oracle_id;
   subtest.expected_relation = mutate_signature ? "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT" :
@@ -659,18 +779,27 @@ OracleSubtestTrace SigNegative(
   }
   if (signature.status != PQCFUZZ_OK) {
     if (mutate_signature) {
-      std::vector<uint8_t> planned_signature(config.is_slh_dsa ? config.slh_params.sig_max_len : config.params.sig_max_len);
-      auto records = config.is_slh_dsa
+      std::vector<uint8_t> planned_signature(
+          config.is_slh_dsa ? config.slh_params.sig_max_len
+          : config.is_aigis_sig ? config.aigis_sig_params.sig_max_len
+          : config.params.sig_max_len);
+      auto records = config.is_aigis_sig
+          ? MutateAigisSigSignature(config.aigis_sig_params, config.mutation, &planned_signature)
+          : config.is_slh_dsa
           ? MutateSlhDsaSignature(config.slh_params, config.mutation, &planned_signature)
           : MutateMlDsaSignature(config.params, config.mutation, &planned_signature);
       mutations->insert(mutations->end(), records.begin(), records.end());
     } else if (mutate_message) {
-      auto records = config.is_slh_dsa ? MutateSlhDsaMessage(config.mutation, &message)
-                                       : MutateMlDsaMessage(config.mutation, &message);
+      auto records = config.is_aigis_sig
+          ? MutateAigisSigMessage(config.mutation, &message)
+          : config.is_slh_dsa ? MutateSlhDsaMessage(config.mutation, &message)
+                              : MutateMlDsaMessage(config.mutation, &message);
       mutations->insert(mutations->end(), records.begin(), records.end());
     } else if (mutate_context) {
-      auto records = config.is_slh_dsa ? MutateSlhDsaContext(config.mutation, &context)
-                                       : MutateMlDsaContext(config.mutation, &context);
+      auto records = config.is_aigis_sig
+          ? MutateAigisSigContext(config.mutation, &context)
+          : config.is_slh_dsa ? MutateSlhDsaContext(config.mutation, &context)
+                              : MutateMlDsaContext(config.mutation, &context);
       mutations->insert(mutations->end(), records.begin(), records.end());
     }
     if (IsUnsupportedOnly(subtest)) {
@@ -685,19 +814,25 @@ OracleSubtestTrace SigNegative(
   }
 
   if (mutate_signature) {
-    auto records = config.is_slh_dsa
+    auto records = config.is_aigis_sig
+        ? MutateAigisSigSignature(config.aigis_sig_params, config.mutation, &signature.sig)
+        : config.is_slh_dsa
         ? MutateSlhDsaSignature(config.slh_params, config.mutation, &signature.sig)
         : MutateMlDsaSignature(config.params, config.mutation, &signature.sig);
     mutations->insert(mutations->end(), records.begin(), records.end());
   }
   if (mutate_message) {
-    auto records = config.is_slh_dsa ? MutateSlhDsaMessage(config.mutation, &message)
-                                     : MutateMlDsaMessage(config.mutation, &message);
+    auto records = config.is_aigis_sig
+        ? MutateAigisSigMessage(config.mutation, &message)
+        : config.is_slh_dsa ? MutateSlhDsaMessage(config.mutation, &message)
+                            : MutateMlDsaMessage(config.mutation, &message);
     mutations->insert(mutations->end(), records.begin(), records.end());
   }
   if (mutate_context) {
-    auto records = config.is_slh_dsa ? MutateSlhDsaContext(config.mutation, &context)
-                                     : MutateMlDsaContext(config.mutation, &context);
+    auto records = config.is_aigis_sig
+        ? MutateAigisSigContext(config.mutation, &context)
+        : config.is_slh_dsa ? MutateSlhDsaContext(config.mutation, &context)
+                            : MutateMlDsaContext(config.mutation, &context);
     mutations->insert(mutations->end(), records.begin(), records.end());
   }
   if (mutate_oid) {
@@ -707,13 +842,256 @@ OracleSubtestTrace SigNegative(
   }
 
   SIGVerifyResult verify_result = SigVerify(config.left, "left", signature.sig, message, context, keypair.pk, &subtest);
+  if (mutations != nullptr) {
+    bool any_ineffective = false;
+    for (size_t i = mutations_before; i < mutations->size(); ++i) {
+      if (!(*mutations)[i].effective) {
+        any_ineffective = true;
+        break;
+      }
+    }
+    if (any_ineffective) {
+      subtest.passed = true;
+      subtest.skipped = true;
+      subtest.note = "no_effect";
+      return subtest;
+    }
+  }
   const bool allow_api_unsupported = (mutate_context || mutate_oid) && config.left != nullptr && config.left->supports_context == 0;
   subtest.passed = LegalNegativeStatus(verify_result.status, allow_api_unsupported);
   if (!subtest.passed) {
-    subtest.note = config.is_slh_dsa ? "mutated SLH-DSA input verified or produced an illegal status"
-                                     : "mutated ML-DSA input verified or produced an illegal status";
+    subtest.note = config.is_aigis_sig ? "mutated AIGIS-SIG input verified or produced an illegal status"
+        : config.is_slh_dsa ? "mutated SLH-DSA input verified or produced an illegal status"
+                            : "mutated ML-DSA input verified or produced an illegal status";
   }
   return subtest;
+}
+
+OracleSubtestTrace AigisSigExactLength(
+    const SigOracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "exact_length_negative";
+  subtest.oracle_id = "aigissig_exact_length";
+  // Hardened canonical profile expectation (DeepSeek doc 34.2, AS-SIG-EXACT-LEN):
+  // the verifier shall require siglen == CRYPTO_BYTES and reject appended bytes.
+  subtest.expected_relation = "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT";
+  SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  SIGSignature signature;
+  if (keypair.status == PQCFUZZ_OK) {
+    signature = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+  }
+  if (signature.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct valid signature before mutation";
+    return subtest;
+  }
+
+  std::vector<uint8_t> extended = signature.sig;
+  const std::vector<uint8_t> original = extended;
+  extended.push_back(0xA5);
+  MutationRecord record;
+  record.operation = "append_byte";
+  record.target = "signature";
+  record.offset = original.size();
+  record.length = 1;
+  RecordMutationEffect(&record, original, extended);
+  mutations->push_back(record);
+  if (!record.effective) {
+    subtest.passed = true;
+    subtest.skipped = true;
+    subtest.note = "no_effect";
+    return subtest;
+  }
+
+  // Bypass the executor-level sig_max_len guard so the adapter receives the
+  // oversized signature exactly as an external caller would.
+  pqcfuzz_status status = PQCFUZZ_API_UNSUPPORTED;
+  if (config.left != nullptr && config.left->verify != nullptr) {
+    const uint8_t *ctx = config.context.empty() ? nullptr : config.context.data();
+    status = config.left->verify(extended.data(), extended.size(), config.message.data(),
+                                 config.message.size(), keypair.pk.data(), ctx, config.context.size());
+  }
+  AddBoolCall(&subtest, "left", "verify", status, status == PQCFUZZ_OK);
+  subtest.passed = status == PQCFUZZ_REJECT || status == PQCFUZZ_INVALID_INPUT;
+  if (!subtest.passed) {
+    // IMPLEMENTATION_OBSERVED + HARDENING_GAP (doc 34.2): the snapshot's
+    // verifier checks only siglen < CRYPTO_BYTES and accepts appended bytes.
+    subtest.note = "appended signature byte accepted by verifier";
+  }
+  return subtest;
+}
+
+OracleSubtestTrace AigisSigUnusedSignBits(
+    const SigOracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "unused_sign_bits_negative";
+  subtest.oracle_id = "aigissig_unused_sign_bits";
+  // Hardened canonical profile expectation (doc 34.3, AS-SIG-UNUSED-SIGNBITS):
+  // unused challenge sign bits must be zero or rejected.
+  subtest.expected_relation = "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT";
+  SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  SIGSignature signature;
+  if (keypair.status == PQCFUZZ_OK) {
+    signature = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+  }
+  if (signature.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct valid signature before mutation";
+    return subtest;
+  }
+  if (signature.sig.size() != config.aigis_sig_params.sig_max_len) {
+    subtest.passed = false;
+    subtest.note = "signature length does not match AIGIS-SIG profile";
+    return subtest;
+  }
+
+  std::vector<uint8_t> mutated = signature.sig;
+  const std::vector<uint8_t> original = mutated;
+  // The eighth sign byte is the last byte of the challenge region; the top
+  // four bits are unconsumed by unpack_sig (60 nonzero challenge coefficients).
+  const size_t offset = config.aigis_sig_params.z_bytes + config.aigis_sig_params.hint_bytes +
+      config.aigis_sig_params.c_bytes - 1;
+  mutated[offset] |= 0x80;
+  MutationRecord record;
+  record.operation = "mutate_unused_sign_bits";
+  record.target = "signature.c";
+  record.offset = offset;
+  record.length = 1;
+  RecordMutationEffect(&record, original, mutated);
+  mutations->push_back(record);
+  if (!record.effective) {
+    subtest.passed = true;
+    subtest.skipped = true;
+    subtest.note = "no_effect";
+    return subtest;
+  }
+
+  SIGVerifyResult verify_result = SigVerify(config.left, "left", mutated, config.message, config.context, keypair.pk, &subtest);
+  subtest.passed = verify_result.status == PQCFUZZ_REJECT || verify_result.status == PQCFUZZ_INVALID_INPUT;
+  if (!subtest.passed) {
+    // IMPLEMENTATION_OBSERVED + HARDENING_GAP (doc 34.3).
+    subtest.note = "unused challenge sign bit accepted by verifier";
+  }
+  return subtest;
+}
+
+OracleSubtestTrace AigisSigCtx256FailureState(
+    const SigOracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "ctx256_failure_state";
+  subtest.oracle_id = "aigissig_ctx256_failure_state";
+  subtest.expected_relation = "REJECT_WITH_CONSISTENT_OUTPUT_LENGTH_STATE";
+  SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  if (keypair.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not construct keypair";
+    return subtest;
+  }
+  std::vector<uint8_t> ctx256(256, 0xCC);
+
+  // Detached signer: must reject ctx_len > 255 and leave the caller-provided
+  // siglen sentinel unchanged.
+  std::vector<uint8_t> detached_sig(config.aigis_sig_params.sig_max_len, 0xA5);
+  const std::vector<uint8_t> detached_original = detached_sig;
+  size_t detached_sig_len = 0x12345678;
+  pqcfuzz_status detached_status = PQCFUZZ_API_UNSUPPORTED;
+  if (config.left != nullptr && config.left->sign != nullptr) {
+    detached_status = config.left->sign(detached_sig.data(), &detached_sig_len, config.message.data(),
+                                        config.message.size(), keypair.sk.data(), ctx256.data(), ctx256.size());
+  }
+  AddCall(&subtest, "left", "sign", detached_status);
+  MutationRecord record;
+  record.operation = "ctx_len_256_detached";
+  record.target = "ctx";
+  record.offset = 0;
+  record.length = ctx256.size();
+  RecordMutationEffect(&record, config.context, ctx256);
+  mutations->push_back(record);
+  const bool detached_conformant = detached_status == PQCFUZZ_REJECT &&
+      detached_sig_len == 0x12345678 && detached_sig == detached_original;
+
+  // Combined wrapper: pqmagic crypto_sign unconditionally executes
+  // *smlen += mlen even when the detached signer failed (doc 34.5).
+  const size_t sm_cap = config.aigis_sig_params.sig_max_len + config.message.size();
+  std::vector<uint8_t> sm(sm_cap, 0xA5);
+  size_t smlen = 0x12345678;
+  int combined_rc = -1;
+  if (config.left != nullptr) {
+    combined_rc = pqcfuzz_pqmagic_sig_combined_sign(
+        config.left->implementation_id, sm.data(), &smlen, config.message.data(),
+        config.message.size(), ctx256.data(), ctx256.size(), keypair.sk.data());
+  }
+  pqcfuzz_status combined_status = pqcfuzz_normalize_return_code(combined_rc);
+  AddCall(&subtest, "left", "combined_sign", combined_status);
+  const bool combined_length_corrupted = combined_status == PQCFUZZ_REJECT &&
+      smlen == 0x12345678 + config.message.size();
+
+  subtest.passed = detached_conformant && !combined_length_corrupted;
+  if (!subtest.passed) {
+    if (!detached_conformant) {
+      subtest.note = "detached sign failure state inconsistent (ctx_len 256)";
+    } else {
+      // IMPLEMENTATION_OBSERVED + HARDENING_GAP (doc 34.5, AS-SIG-CTX256-*):
+      // failed combined signing still reports smlen including the message.
+      subtest.note = "combined sign failure updates output length despite failure";
+    }
+  }
+  return subtest;
+}
+
+OracleSubtestTrace AigisSigDeterminismProfile(
+    const SigOracleExecutorConfig &config,
+    std::vector<MutationRecord> *mutations) {
+  OracleSubtestTrace subtest;
+  subtest.subtest_id = "determinism_profile";
+  subtest.oracle_id = "aigissig_determinism_profile";
+  subtest.expected_relation = "IDENTICAL_SIGNATURES";
+  SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  SIGSignature first;
+  SIGSignature second;
+  if (keypair.status == PQCFUZZ_OK) {
+    first = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+  }
+  if (first.status == PQCFUZZ_OK) {
+    second = SigSign(config.left, "left", config.message, config.context, keypair.sk, &subtest);
+  }
+  if (first.status != PQCFUZZ_OK || second.status != PQCFUZZ_OK) {
+    subtest.passed = false;
+    subtest.note = "could not produce signatures";
+    return subtest;
+  }
+  subtest.passed = first.sig == second.sig;
+  if (!subtest.passed) {
+    MutationRecord record;
+    record.operation = "repeated_signing";
+    record.target = "signature";
+    record.offset = 0;
+    record.length = first.sig.size();
+    RecordMutationEffect(&record, first.sig, second.sig);
+    mutations->push_back(record);
+    subtest.note = "same key, message, and context produced different signatures";
+  }
+  return subtest;
+}
+
+void SetFipsTraceReachability(KEMOracleTrace *trace) {
+  if (trace == nullptr || trace->subtests.empty()) {
+    return;
+  }
+  const OracleSubtestTrace &first = trace->subtests.front();
+  const OracleSubtestTrace &last = trace->subtests.back();
+  if (!first.calls.empty()) {
+    trace->baseline_adapter_entered = first.calls.front().adapter_entered;
+    trace->baseline_target_entered = first.calls.front().target_entered;
+  }
+  if (!last.calls.empty()) {
+    trace->mutated_adapter_entered = last.calls.back().adapter_entered;
+    trace->mutated_target_entered = last.calls.back().target_entered;
+  }
+  trace->relation_evaluable = trace->baseline_target_entered && trace->mutated_target_entered;
 }
 
 void AddSigFindingsForFailures(KEMOracleTrace *trace) {
@@ -730,8 +1108,19 @@ void AddSigFindingsForFailures(KEMOracleTrace *trace) {
     }
     if (subtest.oracle_id.find("_mutated_signature_negative") != std::string::npos ||
         subtest.oracle_id.find("_mutated_message_negative") != std::string::npos ||
-        subtest.oracle_id.find("_mutated_context_negative") != std::string::npos) {
-      trace->findings.push_back({"potential_crypto_vuln", "", subtest.note});
+        subtest.oracle_id.find("_mutated_context_negative") != std::string::npos ||
+        subtest.oracle_id == "aigissig_exact_length" ||
+        subtest.oracle_id == "aigissig_unused_sign_bits" ||
+        subtest.oracle_id == "aigissig_ctx256_failure_state") {
+      std::string finding_subclass;
+      if (subtest.oracle_id == "aigissig_exact_length") {
+        finding_subclass = "appended_signature_bytes_accepted";
+      } else if (subtest.oracle_id == "aigissig_unused_sign_bits") {
+        finding_subclass = "unused_sign_bit_malleable";
+      } else if (subtest.oracle_id == "aigissig_ctx256_failure_state") {
+        finding_subclass = "failure_output_length_state_inconsistent";
+      }
+      trace->findings.push_back({"potential_crypto_vuln", finding_subclass, subtest.note});
     } else {
       trace->findings.push_back({"confirmed_semantic_bug", "", subtest.note});
     }
@@ -747,33 +1136,41 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
   trace.algorithm = config.algorithm;
   trace.oracle_id = config.oracle_id;
 
-  if (config.oracle_id == "mlkem_bad_randomness_sanity") {
+  if (config.oracle_id == "mlkem_bad_randomness_sanity" || config.oracle_id == "aigisenc_bad_randomness_sanity") {
     RngInterventionTrace rng_trace;
     trace.subtests.push_back(KemRandomnessSanity(config, &rng_trace));
     trace.rng_interventions.push_back(std::move(rng_trace));
     SetRandomnessTraceReachability(&trace);
   } else if (config.oracle_id == "mlkem_tampered_ciphertext_implicit_rejection") {
     trace.subtests.push_back(TamperedCiphertext(config, &trace.mutations));
-  } else if (config.oracle_id == "mlkem_cross_exchange_roundtrip") {
+  } else if (config.oracle_id == "aigisenc_tampered_ciphertext_implicit_rejection") {
+    trace.subtests.push_back(AigisTamperedCiphertext(config, &trace.mutations));
+  } else if (config.oracle_id == "aigisenc_sk_noncanonical_coefficient") {
+    trace.subtests.push_back(AigisEncSkNoncanonicalCoefficient(config, &trace.mutations));
+  } else if (config.oracle_id == "mlkem_cross_exchange_roundtrip" ||
+             config.oracle_id == "aigisenc_cross_exchange_roundtrip") {
+    const std::string cross_oracle = config.oracle_id;
     if (config.exchange_contract.public_key_exchange && config.exchange_contract.ciphertext_exchange) {
       trace.subtests.push_back(CrossEncapsRoundtrip(
-          "left_keygen_right_encaps_left_decaps", "left", config.left, "right", config.right));
+          "left_keygen_right_encaps_left_decaps", cross_oracle, "left", config.left, "right", config.right));
       trace.subtests.push_back(CrossEncapsRoundtrip(
-          "right_keygen_left_encaps_right_decaps", "right", config.right, "left", config.left));
+          "right_keygen_left_encaps_right_decaps", cross_oracle, "right", config.right, "left", config.left));
     }
     if (config.exchange_contract.ciphertext_exchange && config.exchange_contract.secret_key_exchange &&
         config.exchange_contract.secret_key_format_compatible) {
       trace.subtests.push_back(CrossDecapsRoundtrip(
-          "left_keygen_left_encaps_right_decaps", "left", config.left, "right", config.right));
+          "left_keygen_left_encaps_right_decaps", cross_oracle, "left", config.left, "right", config.right));
       trace.subtests.push_back(CrossDecapsRoundtrip(
-          "right_keygen_right_encaps_left_decaps", "right", config.right, "left", config.left));
+          "right_keygen_right_encaps_left_decaps", cross_oracle, "right", config.right, "left", config.left));
     }
   } else {
-    trace.subtests.push_back(LocalRoundtrip("left_keygen_left_encaps_left_decaps", "left", config.left));
-    trace.subtests.push_back(LocalRoundtrip("right_keygen_right_encaps_right_decaps", "right", config.right));
+    const std::string local_oracle = config.is_aigis_enc ? "aigisenc_local_roundtrip" : "mlkem_local_roundtrip";
+    trace.subtests.push_back(LocalRoundtrip("left_keygen_left_encaps_left_decaps", local_oracle, "left", config.left));
+    trace.subtests.push_back(LocalRoundtrip("right_keygen_right_encaps_right_decaps", local_oracle, "right", config.right));
   }
 
   AddFindingsForFailures(&trace);
+  SetFipsTraceReachability(&trace);
   return trace;
 }
 
@@ -785,23 +1182,34 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
   trace.oracle_id = config.oracle_id;
 
   const bool is_slh = config.is_slh_dsa || config.oracle_id.rfind("slhdsa_", 0) == 0;
-  const std::string local_oracle = is_slh ? "slhdsa_local_sign_verify" : "mldsa_local_sign_verify";
-  const std::string cross_oracle = is_slh ? "slhdsa_cross_verify" : "mldsa_cross_verify";
+  const bool is_aigis = config.is_aigis_sig || config.oracle_id.rfind("aigissig_", 0) == 0;
+  const std::string local_oracle =
+      is_aigis ? "aigissig_local_sign_verify" : (is_slh ? "slhdsa_local_sign_verify" : "mldsa_local_sign_verify");
+  const std::string cross_oracle =
+      is_aigis ? "aigissig_cross_verify" : (is_slh ? "slhdsa_cross_verify" : "mldsa_cross_verify");
   const std::string mutated_signature_oracle =
-      is_slh ? "slhdsa_mutated_signature_negative" : "mldsa_mutated_signature_negative";
+      is_aigis ? "aigissig_mutated_signature_negative" : (is_slh ? "slhdsa_mutated_signature_negative" : "mldsa_mutated_signature_negative");
   const std::string mutated_message_oracle =
-      is_slh ? "slhdsa_mutated_message_negative" : "mldsa_mutated_message_negative";
+      is_aigis ? "aigissig_mutated_message_negative" : (is_slh ? "slhdsa_mutated_message_negative" : "mldsa_mutated_message_negative");
   const std::string mutated_context_oracle =
-      is_slh ? "slhdsa_mutated_context_negative" : "mldsa_mutated_context_negative";
+      is_aigis ? "aigissig_mutated_context_negative" : (is_slh ? "slhdsa_mutated_context_negative" : "mldsa_mutated_context_negative");
   const std::string oid_oracle = "mldsa_oid_field_mutation_sanity";
   const std::string local_trace_oracle =
       (config.oracle_id.find("_bad_randomness_sanity") != std::string::npos) ? config.oracle_id : local_oracle;
 
-  if (!is_slh && config.oracle_id == "mldsa_bad_randomness_sanity") {
+  if ((config.oracle_id == "mldsa_bad_randomness_sanity" || config.oracle_id == "aigissig_bad_randomness_sanity")) {
     RngInterventionTrace rng_trace;
     trace.subtests.push_back(SigRandomnessSanity(config, &rng_trace));
     trace.rng_interventions.push_back(std::move(rng_trace));
     SetRandomnessTraceReachability(&trace);
+  } else if (is_aigis && config.oracle_id == "aigissig_exact_length") {
+    trace.subtests.push_back(AigisSigExactLength(config, &trace.mutations));
+  } else if (is_aigis && config.oracle_id == "aigissig_unused_sign_bits") {
+    trace.subtests.push_back(AigisSigUnusedSignBits(config, &trace.mutations));
+  } else if (is_aigis && config.oracle_id == "aigissig_ctx256_failure_state") {
+    trace.subtests.push_back(AigisSigCtx256FailureState(config, &trace.mutations));
+  } else if (is_aigis && config.oracle_id == "aigissig_determinism_profile") {
+    trace.subtests.push_back(AigisSigDeterminismProfile(config, &trace.mutations));
   } else if (config.oracle_id == cross_oracle) {
     if (config.exchange_contract.public_key_exchange && config.exchange_contract.signature_exchange) {
       trace.subtests.push_back(SigCrossVerify(
@@ -841,6 +1249,7 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
     }
   }
   AddSigFindingsForFailures(&trace);
+  SetFipsTraceReachability(&trace);
   return trace;
 }
 

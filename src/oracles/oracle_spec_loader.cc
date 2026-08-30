@@ -23,6 +23,10 @@ std::vector<OracleSpec> LoadOracleSpecs(const std::string &path, std::string *er
   defaults.insert(defaults.end(), mldsa_defaults.begin(), mldsa_defaults.end());
   const auto slhdsa_defaults = DefaultSlhDsaOracleSpecs();
   defaults.insert(defaults.end(), slhdsa_defaults.begin(), slhdsa_defaults.end());
+  const auto aigisenc_defaults = DefaultAigisEncOracleSpecs();
+  defaults.insert(defaults.end(), aigisenc_defaults.begin(), aigisenc_defaults.end());
+  const auto aigissig_defaults = DefaultAigisSigOracleSpecs();
+  defaults.insert(defaults.end(), aigissig_defaults.begin(), aigissig_defaults.end());
   std::vector<OracleSpec> loaded;
 
   std::regex id_re("\"oracle_id\"\\s*:\\s*\"([^\"]+)\"");

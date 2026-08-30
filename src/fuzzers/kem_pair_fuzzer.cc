@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "mutators/aigis_enc_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_kem_layout.h"
 #include "oracles/metamorphic_executor.h"
@@ -110,7 +111,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     return 0;  // Invalid input: a fixed binary cannot be relabelled by its envelope.
   }
   pqcfuzz::MlKemParams params{};
-  if (!pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
+  pqcfuzz::AigisEncParams aigis_params{};
+  const bool is_aigis = pqcfuzz::GetAigisEncParams(expected_algorithm, &aigis_params);
+  if (is_aigis) {
+    params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
+              aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
+              aigis_params.c1_bits, aigis_params.c2_bits};
+  } else if (!pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
     return 0;
   }
   static const pqcfuzz_kem_adapter *const target =
@@ -143,6 +150,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
+    config.aigis_params = aigis_params;
+    config.is_aigis_enc = is_aigis;
     config.left = target;
     config.right = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
     config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "mutators/aigis_sig_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/slh_dsa_layout.h"
@@ -103,7 +104,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     return 0;
   }
   pqcfuzz::MlDsaParams params{};
-  if (!pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
+  pqcfuzz::AigisSigParams aigis_sig_params{};
+  const bool is_aigis = pqcfuzz::GetAigisSigParams(expected_algorithm, &aigis_sig_params);
+  if (is_aigis) {
+    params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
+              aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
+  } else if (!pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
     return 0;
   }
   static const pqcfuzz_sig_adapter *const target =
@@ -138,6 +144,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
+    config.aigis_sig_params = aigis_sig_params;
+    config.is_aigis_sig = is_aigis;
     config.left = target;
     config.right = pqcfuzz::GetSigAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
     config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;

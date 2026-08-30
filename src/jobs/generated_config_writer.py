@@ -56,7 +56,41 @@ def oracle_ids_for_slh_dsa() -> list[str]:
     ]
 
 
+def oracle_ids_for_aigis_enc() -> list[str]:
+    # Cross-exchange roundtrip oracles require byte-identical shared-secret
+    # derivation; SM3 and SHAKE profiles derive different secrets, so the
+    # cross oracle is defined but intentionally not scheduled for the
+    # same-source different-hash AIGIS pair.
+    return [
+        "aigisenc_local_roundtrip",
+        "aigisenc_tampered_ciphertext_implicit_rejection",
+        "aigisenc_bad_randomness_sanity",
+        "aigisenc_sk_noncanonical_coefficient",
+    ]
+
+
+def oracle_ids_for_aigis_sig() -> list[str]:
+    # aigissig_cross_verify is excluded for the same reason: signatures bind
+    # a hash-specific challenge, so cross-hash verification is expected to
+    # fail and would be a false positive.
+    return [
+        "aigissig_local_sign_verify",
+        "aigissig_mutated_signature_negative",
+        "aigissig_mutated_message_negative",
+        "aigissig_mutated_context_negative",
+        "aigissig_bad_randomness_sanity",
+        "aigissig_exact_length",
+        "aigissig_unused_sign_bits",
+        "aigissig_ctx256_failure_state",
+        "aigissig_determinism_profile",
+    ]
+
+
 def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
+    if pair["algorithm_family"] == "AIGIS-ENC":
+        return oracle_ids_for_aigis_enc()
+    if pair["algorithm_family"] == "AIGIS-SIG":
+        return oracle_ids_for_aigis_sig()
     if pair["primitive_type"] == "kem":
         return oracle_ids_for_ml_kem()
     if pair["algorithm_family"] == "ML-DSA":
@@ -67,6 +101,10 @@ def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
 
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
+    if pair["algorithm_family"] == "AIGIS-ENC":
+        return "src/oracles/specs/aigis_enc.json"
+    if pair["algorithm_family"] == "AIGIS-SIG":
+        return "src/oracles/specs/aigis_sig.json"
     if pair["primitive_type"] == "kem":
         return "src/oracles/specs/ml_kem.json"
     if pair["algorithm_family"] == "ML-DSA":
@@ -112,6 +150,21 @@ ORACLE_ENUM_BY_NAME = {
     "sig_verify_m": 28,
     "sig_verify_sig": 29,
     "sig_verify_pk": 30,
+    "aigisenc_local_roundtrip": 31,
+    "aigisenc_cross_exchange_roundtrip": 32,
+    "aigisenc_tampered_ciphertext_implicit_rejection": 33,
+    "aigisenc_bad_randomness_sanity": 34,
+    "aigisenc_sk_noncanonical_coefficient": 35,
+    "aigissig_local_sign_verify": 36,
+    "aigissig_cross_verify": 37,
+    "aigissig_mutated_signature_negative": 38,
+    "aigissig_mutated_message_negative": 39,
+    "aigissig_mutated_context_negative": 40,
+    "aigissig_bad_randomness_sanity": 41,
+    "aigissig_exact_length": 42,
+    "aigissig_unused_sign_bits": 43,
+    "aigissig_ctx256_failure_state": 44,
+    "aigissig_determinism_profile": 45,
 }
 
 SECURITY_TIER_ORACLES = {"kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"}
@@ -131,52 +184,55 @@ def fuzzer_source_for_pair(pair: dict[str, Any]) -> str:
     raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
 
 
-def kem_enabled_subtests(exchange_contract: dict[str, bool]) -> list[dict[str, Any]]:
+def kem_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str = "mlkem") -> list[dict[str, Any]]:
     foreign_secret_key_decaps_enabled = (
         exchange_contract.get("ciphertext_exchange", False)
         and exchange_contract.get("secret_key_exchange", False)
         and exchange_contract.get("secret_key_format_compatible", False)
     )
+    local_oracle = f"{oracle_prefix}_local_roundtrip"
+    cross_oracle = f"{oracle_prefix}_cross_exchange_roundtrip"
+    tampered_oracle = f"{oracle_prefix}_tampered_ciphertext_implicit_rejection"
     subtests: list[dict[str, Any]] = [
         {
             "subtest_id": "left_keygen_left_encaps_left_decaps",
-            "oracle_id": "mlkem_local_roundtrip",
+            "oracle_id": local_oracle,
             "required_exchange": [],
             "enabled": True,
         },
         {
             "subtest_id": "right_keygen_right_encaps_right_decaps",
-            "oracle_id": "mlkem_local_roundtrip",
+            "oracle_id": local_oracle,
             "required_exchange": [],
             "enabled": True,
         },
         {
             "subtest_id": "left_keygen_right_encaps_left_decaps",
-            "oracle_id": "mlkem_cross_exchange_roundtrip",
+            "oracle_id": cross_oracle,
             "required_exchange": ["public_key_exchange", "ciphertext_exchange"],
             "enabled": exchange_contract["public_key_exchange"] and exchange_contract["ciphertext_exchange"],
         },
         {
             "subtest_id": "right_keygen_left_encaps_right_decaps",
-            "oracle_id": "mlkem_cross_exchange_roundtrip",
+            "oracle_id": cross_oracle,
             "required_exchange": ["public_key_exchange", "ciphertext_exchange"],
             "enabled": exchange_contract["public_key_exchange"] and exchange_contract["ciphertext_exchange"],
         },
         {
             "subtest_id": "left_keygen_left_encaps_right_decaps",
-            "oracle_id": "mlkem_cross_exchange_roundtrip",
+            "oracle_id": cross_oracle,
             "required_exchange": ["ciphertext_exchange", "secret_key_exchange", "secret_key_format_compatible"],
             "enabled": foreign_secret_key_decaps_enabled,
         },
         {
             "subtest_id": "right_keygen_right_encaps_left_decaps",
-            "oracle_id": "mlkem_cross_exchange_roundtrip",
+            "oracle_id": cross_oracle,
             "required_exchange": ["ciphertext_exchange", "secret_key_exchange", "secret_key_format_compatible"],
             "enabled": foreign_secret_key_decaps_enabled,
         },
         {
             "subtest_id": "tampered_ciphertext_negative",
-            "oracle_id": "mlkem_tampered_ciphertext_implicit_rejection",
+            "oracle_id": tampered_oracle,
             "required_exchange": [],
             "enabled": True,
         },
@@ -238,12 +294,16 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
 
 
 def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    if pair["algorithm_family"] == "AIGIS-ENC":
+        return kem_enabled_subtests(pair["exchange_contract"], "aigisenc")
     if pair["primitive_type"] == "kem":
-        return kem_enabled_subtests(pair["exchange_contract"])
+        return kem_enabled_subtests(pair["exchange_contract"], "mlkem")
     if pair["algorithm_family"] == "ML-DSA":
         return sig_enabled_subtests(pair["exchange_contract"], "mldsa")
     if pair["algorithm_family"] == "SLH-DSA":
         return sig_enabled_subtests(pair["exchange_contract"], "slhdsa")
+    if pair["algorithm_family"] == "AIGIS-SIG":
+        return sig_enabled_subtests(pair["exchange_contract"], "aigissig")
     raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
 
 

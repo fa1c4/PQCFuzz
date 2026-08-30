@@ -43,6 +43,13 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kSlhDsaShake_256s:
     case AlgorithmId::kSlhDsaSha2_256f:
     case AlgorithmId::kSlhDsaShake_256f:
+    case AlgorithmId::kAigisEnc1:
+    case AlgorithmId::kAigisEnc2:
+    case AlgorithmId::kAigisEnc3:
+    case AlgorithmId::kAigisEnc4:
+    case AlgorithmId::kAigisSig1:
+    case AlgorithmId::kAigisSig2:
+    case AlgorithmId::kAigisSig3:
       return true;
     case AlgorithmId::kUnknown:
       return false;
@@ -82,6 +89,21 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kSigVerifyMessage:
     case OracleId::kSigVerifySignature:
     case OracleId::kSigVerifyPublicKey:
+    case OracleId::kAigisEncLocalRoundtrip:
+    case OracleId::kAigisEncCrossExchangeRoundtrip:
+    case OracleId::kAigisEncTamperedCiphertextImplicitRejection:
+    case OracleId::kAigisEncBadRandomnessSanity:
+    case OracleId::kAigisEncSkNoncanonicalCoefficient:
+    case OracleId::kAigisSigLocalSignVerify:
+    case OracleId::kAigisSigCrossVerify:
+    case OracleId::kAigisSigMutatedSignatureNegative:
+    case OracleId::kAigisSigMutatedMessageNegative:
+    case OracleId::kAigisSigMutatedContextNegative:
+    case OracleId::kAigisSigBadRandomnessSanity:
+    case OracleId::kAigisSigExactLength:
+    case OracleId::kAigisSigUnusedSignBits:
+    case OracleId::kAigisSigCtx256FailureState:
+    case OracleId::kAigisSigDeterminismProfile:
       return true;
     case OracleId::kUnknown:
       return false;
@@ -129,6 +151,20 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "SLH-DSA-SHA2-256f";
     case AlgorithmId::kSlhDsaShake_256f:
       return "SLH-DSA-SHAKE-256f";
+    case AlgorithmId::kAigisEnc1:
+      return "AIGIS-ENC-1";
+    case AlgorithmId::kAigisEnc2:
+      return "AIGIS-ENC-2";
+    case AlgorithmId::kAigisEnc3:
+      return "AIGIS-ENC-3";
+    case AlgorithmId::kAigisEnc4:
+      return "AIGIS-ENC-4";
+    case AlgorithmId::kAigisSig1:
+      return "AIGIS-SIG-1";
+    case AlgorithmId::kAigisSig2:
+      return "AIGIS-SIG-2";
+    case AlgorithmId::kAigisSig3:
+      return "AIGIS-SIG-3";
     case AlgorithmId::kUnknown:
       return "UNKNOWN";
   }
@@ -197,6 +233,36 @@ const char *OracleName(OracleId oracle_id) {
       return "sig_verify_sig";
     case OracleId::kSigVerifyPublicKey:
       return "sig_verify_pk";
+    case OracleId::kAigisEncLocalRoundtrip:
+      return "aigisenc_local_roundtrip";
+    case OracleId::kAigisEncCrossExchangeRoundtrip:
+      return "aigisenc_cross_exchange_roundtrip";
+    case OracleId::kAigisEncTamperedCiphertextImplicitRejection:
+      return "aigisenc_tampered_ciphertext_implicit_rejection";
+    case OracleId::kAigisEncBadRandomnessSanity:
+      return "aigisenc_bad_randomness_sanity";
+    case OracleId::kAigisEncSkNoncanonicalCoefficient:
+      return "aigisenc_sk_noncanonical_coefficient";
+    case OracleId::kAigisSigLocalSignVerify:
+      return "aigissig_local_sign_verify";
+    case OracleId::kAigisSigCrossVerify:
+      return "aigissig_cross_verify";
+    case OracleId::kAigisSigMutatedSignatureNegative:
+      return "aigissig_mutated_signature_negative";
+    case OracleId::kAigisSigMutatedMessageNegative:
+      return "aigissig_mutated_message_negative";
+    case OracleId::kAigisSigMutatedContextNegative:
+      return "aigissig_mutated_context_negative";
+    case OracleId::kAigisSigBadRandomnessSanity:
+      return "aigissig_bad_randomness_sanity";
+    case OracleId::kAigisSigExactLength:
+      return "aigissig_exact_length";
+    case OracleId::kAigisSigUnusedSignBits:
+      return "aigissig_unused_sign_bits";
+    case OracleId::kAigisSigCtx256FailureState:
+      return "aigissig_ctx256_failure_state";
+    case OracleId::kAigisSigDeterminismProfile:
+      return "aigissig_determinism_profile";
     case OracleId::kUnknown:
       return "unknown";
   }
@@ -257,6 +323,27 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "SLH-DSA-SHAKE-256f") {
     return AlgorithmId::kSlhDsaShake_256f;
+  }
+  if (name == "AIGIS-ENC-1") {
+    return AlgorithmId::kAigisEnc1;
+  }
+  if (name == "AIGIS-ENC-2") {
+    return AlgorithmId::kAigisEnc2;
+  }
+  if (name == "AIGIS-ENC-3") {
+    return AlgorithmId::kAigisEnc3;
+  }
+  if (name == "AIGIS-ENC-4") {
+    return AlgorithmId::kAigisEnc4;
+  }
+  if (name == "AIGIS-SIG-1") {
+    return AlgorithmId::kAigisSig1;
+  }
+  if (name == "AIGIS-SIG-2") {
+    return AlgorithmId::kAigisSig2;
+  }
+  if (name == "AIGIS-SIG-3") {
+    return AlgorithmId::kAigisSig3;
   }
   return AlgorithmId::kUnknown;
 }
@@ -351,6 +438,51 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "sig_verify_pk") {
     return OracleId::kSigVerifyPublicKey;
+  }
+  if (name == "aigisenc_local_roundtrip") {
+    return OracleId::kAigisEncLocalRoundtrip;
+  }
+  if (name == "aigisenc_cross_exchange_roundtrip") {
+    return OracleId::kAigisEncCrossExchangeRoundtrip;
+  }
+  if (name == "aigisenc_tampered_ciphertext_implicit_rejection") {
+    return OracleId::kAigisEncTamperedCiphertextImplicitRejection;
+  }
+  if (name == "aigisenc_bad_randomness_sanity") {
+    return OracleId::kAigisEncBadRandomnessSanity;
+  }
+  if (name == "aigisenc_sk_noncanonical_coefficient") {
+    return OracleId::kAigisEncSkNoncanonicalCoefficient;
+  }
+  if (name == "aigissig_local_sign_verify") {
+    return OracleId::kAigisSigLocalSignVerify;
+  }
+  if (name == "aigissig_cross_verify") {
+    return OracleId::kAigisSigCrossVerify;
+  }
+  if (name == "aigissig_mutated_signature_negative") {
+    return OracleId::kAigisSigMutatedSignatureNegative;
+  }
+  if (name == "aigissig_mutated_message_negative") {
+    return OracleId::kAigisSigMutatedMessageNegative;
+  }
+  if (name == "aigissig_mutated_context_negative") {
+    return OracleId::kAigisSigMutatedContextNegative;
+  }
+  if (name == "aigissig_bad_randomness_sanity") {
+    return OracleId::kAigisSigBadRandomnessSanity;
+  }
+  if (name == "aigissig_exact_length") {
+    return OracleId::kAigisSigExactLength;
+  }
+  if (name == "aigissig_unused_sign_bits") {
+    return OracleId::kAigisSigUnusedSignBits;
+  }
+  if (name == "aigissig_ctx256_failure_state") {
+    return OracleId::kAigisSigCtx256FailureState;
+  }
+  if (name == "aigissig_determinism_profile") {
+    return OracleId::kAigisSigDeterminismProfile;
   }
   return OracleId::kUnknown;
 }
