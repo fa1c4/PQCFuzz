@@ -1,24 +1,11 @@
 from __future__ import annotations
 
-import os
-import subprocess
-import textwrap
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-
-def compile_and_run(tmp_path: Path, source: str, sources: list[str]) -> None:
-    main = tmp_path / "main.cc"
-    binary = tmp_path / "case"
-    main.write_text(textwrap.dedent(source), encoding="utf-8")
-    subprocess.run(
-        [os.environ.get("CXX", "clang++"), "-std=c++17", "-O0", "-g", "-Isrc", str(main), *sources, "-o", str(binary)],
-        cwd=REPO_ROOT,
-        check=True,
-    )
-    subprocess.run([str(binary), str(tmp_path / "run")], cwd=REPO_ROOT, check=True)
+from _test_sources import compile_and_run
 
 
 def test_writer_rejects_stale_finding_in_not_evaluable_trace(tmp_path: Path) -> None:
@@ -54,27 +41,7 @@ def test_writer_rejects_stale_finding_in_not_evaluable_trace(tmp_path: Path) -> 
           return std::filesystem::exists(std::filesystem::path(argv[1]) / "malleability_stale") ? 3 : 0;
         }
         """,
-        [
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/mutators/maul.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/ml_dsa_layout.cc",
-            "src/mutators/ml_dsa_mutator.cc",
-            "src/mutators/slh_dsa_layout.cc",
-            "src/mutators/slh_dsa_mutator.cc",
-            "src/oracles/metamorphic_observation.cc",
-            "src/oracles/oracle_result.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-            "src/oracles/oracle_executor.cc",
-            "src/triage/finding_writer.cc",
-        ],
+        args=[str(tmp_path / "run")],
     )
 
 
@@ -96,7 +63,7 @@ def test_always_reject_verifier_is_not_evaluable_not_malleability(tmp_path: Path
             cfg.oracle_id = oracle_id;
             cfg.target = pqcfuzz_fake_sig_always_rejects_adapter();
             cfg.message = {'m'};
-            cfg.mutation = {0, 0, 1};
+            cfg.mutation = {0, 0, 0, 1};
             auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
             if (!trace.findings.empty() || trace.relation_evaluable) return 1;
             if (trace.diagnostic_event.find("baseline_precondition_failed") == std::string::npos) return 2;
@@ -149,31 +116,10 @@ def test_fips_noop_ciphertext_mutation_produces_no_finding(tmp_path: Path) -> No
           pqcfuzz::GetMlKemParams(cfg.algorithm, &cfg.params);
           cfg.left = &kAdapter;
           cfg.seed = {1, 2, 3};
-          cfg.mutation = {1, 0, 0, 0}; // xor_byte with zero delta
+          cfg.mutation = {1, 0, 0, 0, 0}; // xor_byte with zero delta
           auto trace = pqcfuzz::ExecuteKemOracle(cfg);
           return trace.findings.empty() && !trace.subtests.empty() && trace.subtests[0].skipped &&
                          trace.subtests[0].note == "no_effect" ? 0 : 1;
         }
         """,
-        [
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/mutators/maul.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/ml_dsa_layout.cc",
-            "src/mutators/ml_dsa_mutator.cc",
-            "src/mutators/slh_dsa_layout.cc",
-            "src/mutators/slh_dsa_mutator.cc",
-            "src/oracles/expected_relation.cc",
-            "src/oracles/oracle_result.cc",
-            "src/oracles/metamorphic_observation.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-            "src/oracles/oracle_executor.cc",
-        ],
     )

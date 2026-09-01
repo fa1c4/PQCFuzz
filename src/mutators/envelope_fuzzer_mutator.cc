@@ -120,9 +120,9 @@ void EnsureMinimumFields(Envelope *envelope, uint32_t *state) {
   if (envelope->msg.empty()) {
     envelope->msg.assign({'P', 'Q', 'C', 'F', 'u', 'z', 'z'});
   }
-  if (envelope->mutation.size() < 3) {
+  if (envelope->mutation.size() < 4) {
     envelope->mutation.resize(8, 0);
-    envelope->mutation[2] = 1;
+    envelope->mutation[3] = 1;
   }
 }
 
@@ -165,7 +165,9 @@ void Mutate(Envelope *envelope, uint32_t *state) {
       envelope->mutation.resize(8, 0);
       envelope->mutation[0] = static_cast<uint8_t>(Next(state) % 8u);
       envelope->mutation[1] = static_cast<uint8_t>(Next(state));
-      envelope->mutation[2] = static_cast<uint8_t>(Next(state) | 1u);
+      envelope->mutation[2] = static_cast<uint8_t>(Next(state));
+      envelope->mutation[3] = static_cast<uint8_t>(Next(state) | 1u);
+      envelope->mutation[4] = static_cast<uint8_t>(Next(state));
       break;
   }
 }

@@ -203,7 +203,7 @@ src/adapters/pqclean/kem_adapter.cc
 src/adapters/pqclean/sig_adapter.cc
 src/adapters/pqmagic/kem_adapter.cc
 src/adapters/pqmagic/sig_adapter.cc
-src/adapters/pqmagic/randombytes_override.cc
+src/adapters/randombytes_override.cc
 src/mutators/envelope.cc
 src/mutators/envelope_fuzzer_mutator.cc
 src/mutators/maul.cc
@@ -310,6 +310,36 @@ make_seed_corpus() {
   done < <(oracle_specs_for_job "$job_file")
 }
 
+verify_oracle_coverage() {
+  local job_file="$1"
+  local result_dir="$2"
+  local missing
+  missing=$(python3 - "$job_file" "$result_dir" <<'PY'
+import json
+import sys
+
+job_path, result_dir = sys.argv[1], sys.argv[2]
+with open(job_path, encoding="utf-8") as fh:
+    job = json.load(fh)
+expected = job.get("oracles", [])
+coverage_path = f"{result_dir}/oracle_coverage.json"
+try:
+    with open(coverage_path, encoding="utf-8") as fh:
+        coverage = json.load(fh)
+except Exception as exc:
+    print(f"coverage_file_unreadable:{exc}")
+    raise SystemExit(0)
+oracles = coverage.get("oracles", {})
+missing = [name for name in expected if oracles.get(name, {}).get("oracle_invocations", 0) == 0]
+print("\n".join(missing))
+PY
+)
+  if [ -n "$missing" ]; then
+    echo "[preflight] FAIL: oracles without executions: $(echo "$missing" | tr '\n' ' ')" >&2
+    return 1
+  fi
+}
+
 preflight_job() {
   local job_file="$1"
   local job_id=$(basename "$job_file" .json)
@@ -327,7 +357,11 @@ preflight_job() {
   ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1 \
     timeout $((INPUT_TIMEOUT_SECONDS + 60)) "$binary" "$corpus_dir" -runs=1 \
     >"${WORKSPACE_ROOT_ABS}/runs/${job_id}/preflight.log" 2>&1 || true
-  echo "[preflight] ${job_id} done"
+  if ! verify_oracle_coverage "$job_file" "$result_dir"; then
+    echo "[preflight] ${job_id} FAILED coverage gate" >&2
+    return 1
+  fi
+  echo "[preflight] ${job_id} done (all scheduled oracles executed)"
 }
 
 run_job() {
@@ -339,13 +373,26 @@ run_job() {
   local crash_dir="${WORKSPACE_ROOT_ABS}/crashes/${job_id}"
   local result_dir="${WORKSPACE_ROOT_ABS}/results/${job_id}"
   local log_file="${WORKSPACE_ROOT_ABS}/runs/${job_id}/fuzz-${job_id}.log"
+  local status_file="${WORKSPACE_ROOT_ABS}/runs/${job_id}/status.txt"
+  local status rc
   mkdir -p "$corpus_dir" "$crash_dir" "$result_dir"
   ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1 \
-    timeout $((MAX_TOTAL_TIME + INPUT_TIMEOUT_SECONDS + 60)) \
+    timeout --preserve-status $((MAX_TOTAL_TIME + INPUT_TIMEOUT_SECONDS + 60)) \
     "$binary" "$corpus_dir" "-artifact_prefix=${crash_dir}/" \
     "-max_total_time=${MAX_TOTAL_TIME}" "-timeout=${INPUT_TIMEOUT_SECONDS}" \
-    "-rss_limit_mb=${RSS_LIMIT_MB}" >"$log_file" 2>&1 || true
-  echo "[run] ${job_id} finished; see ${log_file}"
+    "-rss_limit_mb=${RSS_LIMIT_MB}" >"$log_file" 2>&1
+  rc=$?
+  if grep -q "DONE" "$log_file"; then
+    status="ok"
+  elif [ "$rc" -eq 0 ]; then
+    status="no_done"
+  elif [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ] || [ "$rc" -eq 143 ]; then
+    status="timeout_or_killed"
+  else
+    status="crash_or_error(rc=$rc)"
+  fi
+  echo "$status" > "$status_file"
+  echo "[run] ${job_id} finished status=${status}; see ${log_file}"
 }
 
 build_replay() {

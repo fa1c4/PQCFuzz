@@ -624,9 +624,16 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
     }
     observations_ready = true;
   } else {
-    KEMKeyPair keypair = Keygen(config.target, &subtest);
+    KEMKeyPair keypair;
     KEMSharedSecret encaps_ss;
     KEMCiphertext ciphertext;
+    {
+      // Deterministic baseline: key generation draws from a seed-derived
+      // tape so every recorded finding replays identically.
+      const auto setup_tape = MakeTape(config.seed, "kem-keygen-setup", false);
+      ScopedRngOverride rng({setup_tape.data(), setup_tape.size(), false});
+      keypair = Keygen(config.target, &subtest);
+    }
     if (keypair.status == PQCFUZZ_OK) {
       if (config.oracle_id == "kem_encaps_badrng") {
         const auto baseline_tape = MakeTape(config.seed, "kem-encaps-baseline", false);
@@ -671,7 +678,11 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
         }
         observations_ready = true;
       } else {
-        ciphertext = Encaps(config.target, keypair.pk, &subtest, &encaps_ss);
+        {
+          const auto setup_tape = MakeTape(config.seed, "kem-encaps-setup", false);
+          ScopedRngOverride rng({setup_tape.data(), setup_tape.size(), false});
+          ciphertext = Encaps(config.target, keypair.pk, &subtest, &encaps_ss);
+        }
         if (ciphertext.status == PQCFUZZ_API_UNSUPPORTED) {
           baseline = BytesObservation(ciphertext.status, {});
           mutated = baseline;
@@ -843,8 +854,15 @@ KEMOracleTrace ExecuteMetamorphicSigOracle(const MetamorphicSigConfig &config) {
     }
     observations_ready = true;
   } else {
-    SIGKeyPair keypair = SigKeygen(config.target, &subtest);
+    SIGKeyPair keypair;
     SIGSignature signature;
+    {
+      // Deterministic baseline: key generation draws from a seed-derived
+      // tape so every recorded finding replays identically.
+      const auto setup_tape = MakeTape(config.seed, "sig-keygen-setup", false);
+      ScopedRngOverride rng({setup_tape.data(), setup_tape.size(), false});
+      keypair = SigKeygen(config.target, &subtest);
+    }
     if (keypair.status == PQCFUZZ_OK) {
       if (config.oracle_id == "sig_sign_badrng") {
         if (config.target != nullptr && config.target->supports_deterministic_sign && !config.target->supports_seeded_sign) {

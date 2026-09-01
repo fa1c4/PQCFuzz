@@ -150,8 +150,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
-    config.aigis_params = aigis_params;
-    config.is_aigis_enc = is_aigis;
     config.left = target;
     config.right = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
     config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;

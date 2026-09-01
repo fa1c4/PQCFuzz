@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
-import subprocess
 import sys
-import textwrap
 from pathlib import Path
 
 
@@ -12,23 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 sys.path.insert(0, str(SRC_ROOT))
 
-
-def compile_and_run(tmp_path: Path, main_text: str, sources: list[str], defines: list[str] | None = None) -> None:
-    main = tmp_path / "main.cc"
-    binary = tmp_path / "case"
-    main.write_text(textwrap.dedent(main_text), encoding="utf-8")
-    command = [
-        os.environ.get("CXX", "clang++"),
-        "-std=c++17",
-        "-Isrc",
-        *([f"-D{flag}" for flag in defines] if defines else []),
-        str(main),
-        *sources,
-        "-o",
-        str(binary),
-    ]
-    subprocess.run(command, cwd=REPO_ROOT, check=True)
-    subprocess.run([str(binary)], cwd=REPO_ROOT, check=True)
+from _test_sources import CORE_EXECUTOR_SOURCES, compile_and_run
 
 
 def test_aigis_envelope_enum_roundtrip(tmp_path: Path) -> None:
@@ -139,13 +120,7 @@ def test_pqmagic_adapter_registry_routing(tmp_path: Path) -> None:
           return 0;
         }
         """,
-        [
-            "src/runtime/adapter_registry.cc",
-            "src/adapters/liboqs/kem_adapter.cc", "src/adapters/liboqs/sig_adapter.cc",
-            "src/adapters/pqclean/kem_adapter.cc", "src/adapters/pqclean/sig_adapter.cc",
-            "src/adapters/pqmagic/kem_adapter.cc", "src/adapters/pqmagic/sig_adapter.cc",
-            "src/adapters/status.cc",
-        ],
+        CORE_EXECUTOR_SOURCES,
     )
 
 
@@ -169,7 +144,7 @@ def test_aigis_sk_noncanonical_mutation_and_unused_sign_bits(tmp_path: Path) -> 
           pqcfuzz::AigisSigParams sig{};
           pqcfuzz::GetAigisSigParams("AIGIS-SIG-2", &sig);
           std::vector<uint8_t> signature(sig.sig_max_len, 0);
-          std::vector<uint8_t> plan = {10, 2, 0, 0};  // mutate_unused_sign_bits -> signature.c
+          std::vector<uint8_t> plan = {10, 2, 0, 0, 0};  // mutate_unused_sign_bits -> signature.c
           records = pqcfuzz::MutateAigisSigSignature(sig, plan, &signature);
           if (records.size() != 1 || !records[0].effective) return 3;
           const size_t last_sign_byte = sig.z_bytes + sig.hint_bytes + sig.c_bytes - 1;
@@ -224,11 +199,9 @@ def test_aigis_fips_exact_length_oracle_reports_appended_acceptance(tmp_path: Pa
           pqcfuzz::SigOracleExecutorConfig cfg;
           cfg.algorithm = "AIGIS-SIG-2";
           cfg.oracle_id = "aigissig_exact_length";
-          cfg.is_aigis_sig = true;
           cfg.left = &kAdapter;
           cfg.message = {'m'};
           cfg.seed = {1, 2, 3};
-          pqcfuzz::GetAigisSigParams(cfg.algorithm, &cfg.aigis_sig_params);
           auto trace = pqcfuzz::ExecuteSigOracle(cfg);
           if (trace.findings.size() != 1) return 1;
           if (trace.findings[0].finding_class != "potential_crypto_vuln") return 2;
@@ -238,28 +211,7 @@ def test_aigis_fips_exact_length_oracle_reports_appended_acceptance(tmp_path: Pa
           return 0;
         }
         """,
-        [
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/maul.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/ml_dsa_layout.cc",
-            "src/mutators/ml_dsa_mutator.cc",
-            "src/mutators/slh_dsa_layout.cc",
-            "src/mutators/slh_dsa_mutator.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-            "src/mutators/envelope.cc",
-            "src/oracles/expected_relation.cc",
-            "src/oracles/oracle_result.cc",
-            "src/oracles/metamorphic_observation.cc",
-            "src/oracles/oracle_executor.cc",
-        ],
+        CORE_EXECUTOR_SOURCES,
     )
 
 
@@ -295,11 +247,9 @@ def test_aigis_fips_determinism_profile_conformant_when_identical(tmp_path: Path
           pqcfuzz::SigOracleExecutorConfig cfg;
           cfg.algorithm = "AIGIS-SIG-1";
           cfg.oracle_id = "aigissig_determinism_profile";
-          cfg.is_aigis_sig = true;
           cfg.left = &kAdapter;
           cfg.message = {'m'};
           cfg.seed = {1, 2, 3};
-          pqcfuzz::GetAigisSigParams(cfg.algorithm, &cfg.aigis_sig_params);
           auto trace = pqcfuzz::ExecuteSigOracle(cfg);
           if (!trace.findings.empty()) return 1;
           if (trace.subtests.empty() || !trace.subtests[0].passed) return 2;
@@ -307,28 +257,7 @@ def test_aigis_fips_determinism_profile_conformant_when_identical(tmp_path: Path
           return 0;
         }
         """,
-        [
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/maul.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/ml_dsa_layout.cc",
-            "src/mutators/ml_dsa_mutator.cc",
-            "src/mutators/slh_dsa_layout.cc",
-            "src/mutators/slh_dsa_mutator.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-            "src/mutators/envelope.cc",
-            "src/oracles/expected_relation.cc",
-            "src/oracles/oracle_result.cc",
-            "src/oracles/metamorphic_observation.cc",
-            "src/oracles/oracle_executor.cc",
-        ],
+        CORE_EXECUTOR_SOURCES,
     )
 
 
@@ -364,12 +293,10 @@ def test_aigis_fips_ineffective_sig_mutation_is_skipped(tmp_path: Path) -> None:
           pqcfuzz::SigOracleExecutorConfig cfg;
           cfg.algorithm = "AIGIS-SIG-1";
           cfg.oracle_id = "aigissig_mutated_signature_negative";
-          cfg.is_aigis_sig = true;
           cfg.left = &kAdapter;
           cfg.message = {'m'};
           cfg.seed = {1, 2, 3};
           cfg.mutation = {2, 0, 0, 0};  // set_zero on an already-zero byte
-          pqcfuzz::GetAigisSigParams(cfg.algorithm, &cfg.aigis_sig_params);
           auto trace = pqcfuzz::ExecuteSigOracle(cfg);
           if (!trace.findings.empty()) return 1;  // no_effect must not become a finding
           if (trace.subtests.empty() || !trace.subtests[0].skipped) return 2;
@@ -377,28 +304,7 @@ def test_aigis_fips_ineffective_sig_mutation_is_skipped(tmp_path: Path) -> None:
           return 0;
         }
         """,
-        [
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/maul.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/ml_dsa_layout.cc",
-            "src/mutators/ml_dsa_mutator.cc",
-            "src/mutators/slh_dsa_layout.cc",
-            "src/mutators/slh_dsa_mutator.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-            "src/mutators/envelope.cc",
-            "src/oracles/expected_relation.cc",
-            "src/oracles/oracle_result.cc",
-            "src/oracles/metamorphic_observation.cc",
-            "src/oracles/oracle_executor.cc",
-        ],
+        CORE_EXECUTOR_SOURCES,
     )
 
 
@@ -436,6 +342,44 @@ def test_aigis_job_generation_pickers() -> None:
     assert any(sub["oracle_id"] == "aigisenc_tampered_ciphertext_implicit_rejection" for sub in kem_subtests)
     sig_subtests = enabled_subtests_for_pair(sig_pair)
     assert any(sub["oracle_id"] == "aigissig_mutated_signature_negative" for sub in sig_subtests)
+
+
+def test_mutation_offsets_cover_beyond_255_bytes(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include <vector>
+        #include "mutators/aigis_enc_layout.h"
+        #include "mutators/aigis_enc_mutator.h"
+        #include "mutators/maul.h"
+
+        int main() {
+          // Generic maul: 16-bit little-endian offset 0x03E8 == 1000.
+          std::vector<uint8_t> sk(2208, 0x42);
+          auto maul = pqcfuzz::MaulBytesFixedSize(sk, {0, 0xE8, 0x03, 0}, "secret_key");
+          if (!maul.record.effective) return 1;
+          if (maul.record.offset != 1000) return 2;
+          if (maul.mutated[1000] == 0x42) return 3;
+
+          // Field-aware mutator: region-relative offset 257 inside ciphertext.u.
+          pqcfuzz::AigisEncParams enc{};
+          if (!pqcfuzz::GetAigisEncParams("AIGIS-ENC-2", &enc)) return 4;
+          std::vector<uint8_t> ct(enc.ct_len, 0x33);
+          auto recs = pqcfuzz::MutateAigisEncCiphertext(enc, {0, 0, 0x01, 0x01, 0}, &ct);
+          if (recs.size() != 1 || !recs[0].effective) return 5;
+          if (recs[0].target != "ciphertext.u" || recs[0].offset != 257) return 6;
+          if (ct[257] == 0x33) return 7;
+          return 0;
+        }
+        """,
+        [
+            "src/mutators/maul.cc",
+            "src/mutators/ml_kem_layout.cc",
+            "src/mutators/ml_kem_mutator.cc",
+            "src/mutators/aigis_enc_layout.cc",
+            "src/mutators/aigis_enc_mutator.cc",
+        ],
+    )
 
 
 def test_aigis_replay_enum_mirrors() -> None:

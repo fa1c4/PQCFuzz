@@ -56,7 +56,7 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "  src/adapters/liboqs/rng_control.cc \\",
                 "  src/adapters/liboqs/kem_adapter.cc \\",
                 "  src/adapters/liboqs/sig_adapter.cc \\",
-                "  src/adapters/pqclean/randombytes_override.cc \\",
+                "  src/adapters/randombytes_override.cc \\",
                 "  src/adapters/pqclean/kem_adapter.cc \\",
                 "  src/adapters/pqclean/sig_adapter.cc \\",
                 "  src/mutators/envelope.cc \\",

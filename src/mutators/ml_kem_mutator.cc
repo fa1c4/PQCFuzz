@@ -67,9 +67,9 @@ MutationRecord ApplyMutationToRegions(
   }
 
   const size_t region_len = std::min(region.length, buffer->size() - region.offset);
-  const size_t relative = ByteFromPlan(plan, 2, 0) % region_len;
+  const size_t relative = PlanU16(plan, 2, 0) % region_len;
   const size_t offset = region.offset + relative;
-  const uint8_t value = static_cast<uint8_t>(ByteFromPlan(plan, 3, 0xa5));
+  const uint8_t value = static_cast<uint8_t>(ByteFromPlan(plan, 4, 0xa5));
   record.offset = offset;
   record.length = 1;
 
@@ -87,7 +87,7 @@ MutationRecord ApplyMutationToRegions(
       (*buffer)[offset] = 0xff;
       break;
     case 4: {
-      const size_t new_size = region.offset + (ByteFromPlan(plan, 2, 0) % (region_len + 1));
+      const size_t new_size = region.offset + (PlanU16(plan, 2, 0) % (region_len + 1));
       const size_t bounded_new_size = std::min(new_size, buffer->size());
       record.length = buffer->size() - bounded_new_size;
       buffer->resize(bounded_new_size);

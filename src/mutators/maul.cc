@@ -116,8 +116,8 @@ MaulResult MaulBytes(
     return result;
   }
 
-  const uint8_t value = static_cast<uint8_t>(PlanByte(mutation, 2, 0xa5));
-  const size_t offset = input.empty() ? 0 : PlanByte(mutation, 1, 0) % input.size();
+  const uint8_t value = static_cast<uint8_t>(PlanByte(mutation, 3, 0xa5));
+  const size_t offset = input.empty() ? 0 : PlanU16(mutation, 1, 0) % input.size();
   result.record.offset = offset;
 
   switch (op % 8) {
@@ -136,7 +136,7 @@ MaulResult MaulBytes(
     case 4: {
       // Include the original size in the planned domain so the common
       // equality check can explicitly quarantine a no-op truncation.
-      const size_t new_size = input.empty() ? 0 : PlanByte(mutation, 1, 0) % (input.size() + 1);
+      const size_t new_size = input.empty() ? 0 : PlanU16(mutation, 1, 0) % (input.size() + 1);
       result.mutated.resize(new_size);
       result.record.length = input.size() - new_size;
       break;
@@ -187,8 +187,8 @@ MaulResult MaulBytesFixedSize(
     return result;
   }
 
-  const uint8_t value = static_cast<uint8_t>(PlanByte(mutation, 2, 0xa5));
-  const size_t offset = PlanByte(mutation, 1, 0) % input.size();
+  const uint8_t value = static_cast<uint8_t>(PlanByte(mutation, 3, 0xa5));
+  const size_t offset = PlanU16(mutation, 1, 0) % input.size();
   ApplyFixedSizeOperation(op, offset, value, mutation, &result.mutated, &result.record);
   RecordMutationEffect(&result.record, input, result.mutated);
   if (result.record.effective) {

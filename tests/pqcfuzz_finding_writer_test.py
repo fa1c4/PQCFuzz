@@ -11,28 +11,10 @@ from jsonschema import Draft202012Validator
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+from _test_sources import CORE_EXECUTOR_SOURCES
 
-COMMON_SOURCES = [
-    "src/adapters/status.cc",
-    "src/adapters/rng_control.cc",
-    "src/adapters/liboqs/rng_control.cc",
-    "src/mutators/maul.cc",
-    "src/mutators/ml_kem_layout.cc",
-    "src/mutators/ml_kem_mutator.cc",
-    "src/mutators/ml_dsa_layout.cc",
-    "src/mutators/ml_dsa_mutator.cc",
-    "src/mutators/slh_dsa_layout.cc",
-    "src/mutators/slh_dsa_mutator.cc",
-    "src/oracles/metamorphic_observation.cc",
-    "src/oracles/oracle_result.cc",
-            "src/adapters/pqmagic/sig_adapter.cc",
-            "src/mutators/aigis_enc_layout.cc",
-            "src/mutators/aigis_enc_mutator.cc",
-            "src/mutators/aigis_sig_layout.cc",
-            "src/mutators/aigis_sig_mutator.cc",
-    "src/oracles/oracle_executor.cc",
-    "src/triage/finding_writer.cc",
-]
+
+COMMON_SOURCES = CORE_EXECUTOR_SOURCES
 
 
 SOURCE = """

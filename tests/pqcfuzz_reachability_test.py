@@ -46,7 +46,7 @@ def test_context_precheck_records_executor_rejection_without_target_entry(tmp_pa
           cfg.target = pqcfuzz_fake_sig_verify_accepts_mutation_adapter();
           cfg.message = {'m'};
           cfg.context.assign(256, 'c');
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
           if (!trace.findings.empty() || trace.relation_evaluable) return 1;
           if (trace.subtests.empty() || trace.subtests[0].calls.size() < 2) return 2;
@@ -83,7 +83,7 @@ def test_legal_context_boundaries_reach_the_target(tmp_path: Path) -> None:
             cfg.target = pqcfuzz_fake_sig_verify_accepts_mutation_adapter();
             cfg.message = {'m'};
             cfg.context.assign(context_len, 'c');
-            cfg.mutation = {0, 0, 1};
+            cfg.mutation = {0, 0, 0, 1};
             auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
             if (!trace.relation_evaluable) return 1;
             bool saw_target_verify = false;

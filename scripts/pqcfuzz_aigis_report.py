@@ -98,21 +98,25 @@ def replay_finding(job_dir: Path, finding_dir: Path, timeout: int = 120) -> dict
     return result
 
 
-def collect(job_dirs: list[Path], skip_replay: bool) -> list[dict]:
+def collect(job_dirs: list[Path], skip_replay: bool, max_replay_per_subclass: int) -> list[dict]:
     rows: list[dict] = []
     for job_dir in job_dirs:
         coverage = read_coverage(job_dir)
         totals = coverage.get("totals", {})
+        per_subclass: dict[str, int] = {}
         for finding_dir in finding_dirs(job_dir):
             finding = json.loads((finding_dir / "finding.json").read_text(encoding="utf-8"))
+            subclass = finding.get("finding_subclass", "")
+            key = (job_dir.name, subclass)
+            per_subclass[key] = per_subclass.get(key, 0) + 1
             row = {
                 "job": job_dir.name,
                 "finding_id": finding_dir.name,
                 "oracle_id": finding.get("oracle_id", ""),
                 "class": finding.get("finding_class", ""),
-                "subclass": finding.get("finding_subclass", ""),
+                "subclass": subclass,
                 "algorithm": finding.get("algorithm", ""),
-                "doc_case": DOC_CASES.get(finding.get("finding_subclass", ""), ""),
+                "doc_case": DOC_CASES.get(subclass, ""),
                 "replay": {},
                 "totals": {
                     k: totals.get(k) for k in (
@@ -124,10 +128,18 @@ def collect(job_dirs: list[Path], skip_replay: bool) -> list[dict]:
             rows.append(row)
     if not skip_replay and rows:
         jobs_by_name = {job_dir.name: job_dir for job_dir in job_dirs}
+        sampled = []
+        seen: dict[tuple[str, str], int] = {}
+        for row in rows:
+            key = (row["job"], row["subclass"])
+            if seen.get(key, 0) >= max_replay_per_subclass:
+                continue
+            seen[key] = seen.get(key, 0) + 1
+            sampled.append(row)
         with ThreadPoolExecutor(max_workers=8) as pool:
             futures = {
                 pool.submit(replay_finding, jobs_by_name[row["job"]], RESULTS / row["job"] / row["finding_id"]): row
-                for row in rows
+                for row in sampled
             }
             for fut in futures:
                 futures[fut]["replay"] = fut.result()
@@ -160,7 +172,9 @@ def render(rows: list[dict], crashes: list[Path], job_dirs: list[Path], out: Pat
     lines.append("")
     if not rows:
         lines.append("no findings recorded")
-    for row in rows:
+    replay_rows = [r for r in rows if r["replay"]]
+    counted_rows = [r for r in rows if not r["replay"]]
+    for row in replay_rows:
         replay = row["replay"]
         replay_note = ""
         if "reproduced" in replay:
@@ -171,6 +185,8 @@ def render(rows: list[dict], crashes: list[Path], job_dirs: list[Path], out: Pat
         lines.append(f"- **{row['algorithm']}** / `{row['oracle_id']}`: "
                      f"`{row['class']}` + `{row['subclass']}`")
         lines.append(f"  - {row['doc_case'] or 'unmapped subclass'}{replay_note}")
+    if counted_rows:
+        lines.append(f"- ... plus {len(counted_rows)} additional artifacts (counted, not replayed)")
     lines.append("")
     lines.append("## Crashes")
     lines.append("")
@@ -189,6 +205,7 @@ def render(rows: list[dict], crashes: list[Path], job_dirs: list[Path], out: Pat
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--skip-replay", action="store_true")
+    parser.add_argument("--max-replay-per-subclass", type=int, default=10)
     parser.add_argument("--out", default=str(REPO_ROOT / "workspace" / "aigis_eval_report.md"))
     args = parser.parse_args()
 
@@ -196,7 +213,7 @@ def main() -> int:
     if not jobs:
         print("no job_aigis* result directories found", file=sys.stderr)
         return 1
-    rows = collect(jobs, args.skip_replay)
+    rows = collect(jobs, args.skip_replay, args.max_replay_per_subclass)
     crashes = crash_files()
     out = Path(args.out)
     print(render(rows, crashes, jobs, out))

@@ -144,8 +144,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.algorithm = expected_algorithm;
     config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
     config.params = params;
-    config.aigis_sig_params = aigis_sig_params;
-    config.is_aigis_sig = is_aigis;
     config.left = target;
     config.right = pqcfuzz::GetSigAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
     config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;

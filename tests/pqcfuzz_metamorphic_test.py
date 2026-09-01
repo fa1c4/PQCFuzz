@@ -57,7 +57,7 @@ def test_expect_different_equal_kem_reports_malleability(tmp_path: Path) -> None
           cfg.oracle_id = "kem_decaps_c";
           cfg.target = pqcfuzz_fake_kem_equal_adapter();
           cfg.seed = {1, 2, 3};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
           return trace.finding_class == "malleability" && trace.finding_subclass == "ciphertext_malleability" ? 0 : 1;
         }
@@ -80,7 +80,7 @@ def test_expect_different_different_kem_has_no_finding(tmp_path: Path) -> None:
           cfg.oracle_id = "kem_decaps_c";
           cfg.target = pqcfuzz_fake_kem_different_adapter();
           cfg.seed = {1, 2, 3};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
           return trace.findings.empty() ? 0 : 1;
         }
@@ -103,12 +103,63 @@ def test_sig_verify_accepts_mutated_signature_reports_malleability(tmp_path: Pat
           cfg.oracle_id = "sig_verify_sig";
           cfg.target = pqcfuzz_fake_sig_verify_accepts_mutation_adapter();
           cfg.message = {'m'};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
           return trace.finding_class == "malleability" && trace.finding_subclass == "signature_malleability" ? 0 : 1;
         }
         """,
         ["tests/fake_adapters/fake_sig_verify_accepts_mutation.cc"],
+    )
+
+
+def test_metamorphic_baseline_is_deterministic_across_runs(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include <cstring>
+        #include "adapters/rng_control.h"
+        #include "oracles/metamorphic_executor.h"
+
+        namespace {
+        pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
+          if (!pqcfuzz_rng_fill_bytes(pk, 32) || !pqcfuzz_rng_fill_bytes(sk, 32)) return PQCFUZZ_INVALID_INPUT;
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Encaps(uint8_t *ct, uint8_t *ss, const uint8_t *) {
+          if (!pqcfuzz_rng_fill_bytes(ct, 32)) return PQCFUZZ_INVALID_INPUT;
+          std::memcpy(ss, ct, 32);
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Decaps(uint8_t *ss, const uint8_t *ct, const uint8_t *) {
+          std::memcpy(ss, ct, 32);
+          return PQCFUZZ_OK;
+        }
+        const pqcfuzz_kem_adapter kAdapter = {
+            "fake", "fake_echo_rng", "ML-KEM-768", 32, 32, 32, 32, Keygen, Encaps, Decaps};
+        }
+
+        int main() {
+          auto run = [](int salt) {
+            pqcfuzz::MetamorphicKemConfig cfg;
+            cfg.job_id = "t";
+            cfg.pair_id = "t";
+            cfg.algorithm = "ML-KEM-768";
+            cfg.oracle_id = "kem_decaps_c";
+            cfg.target = &kAdapter;
+            cfg.seed = {static_cast<uint8_t>(salt), 2, 3, 4, 5, 6, 7, 8};
+            cfg.mutation = {0, 0, 0, 1};  // flip bit 1 at offset 0
+            return pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
+          };
+          const auto first = run(1);
+          const auto second = run(1);
+          if (first.baseline.output_sha256 != second.baseline.output_sha256) return 1;
+          if (first.mutated.output_sha256 != second.mutated.output_sha256) return 2;
+          const auto different_seed = run(2);
+          if (first.baseline.output_sha256 == different_seed.baseline.output_sha256) return 3;
+          return 0;
+        }
+        """,
+        [],
     )
 
 
@@ -211,7 +262,7 @@ def test_every_metamorphic_oracle_executes_with_effective_controls(tmp_path: Pat
             pqcfuzz::MetamorphicKemConfig cfg;
             cfg.job_id = "test"; cfg.pair_id = "test"; cfg.algorithm = "ML-KEM-768";
             cfg.oracle_id = id; cfg.target = pqcfuzz_fake_kem_oracle_contract_adapter();
-            cfg.seed = {1, 2, 3}; cfg.mutation = {0, 0, 1};
+            cfg.seed = {1, 2, 3}; cfg.mutation = {0, 0, 0, 1};
             if (!Check(pqcfuzz::ExecuteMetamorphicKemOracle(cfg), id, id.find("badrng") != std::string::npos)) return 1;
           }
           const std::vector<std::string> sig = {
@@ -222,7 +273,7 @@ def test_every_metamorphic_oracle_executes_with_effective_controls(tmp_path: Pat
             pqcfuzz::MetamorphicSigConfig cfg;
             cfg.job_id = "test"; cfg.pair_id = "test"; cfg.algorithm = "ML-DSA-44";
             cfg.oracle_id = id; cfg.target = pqcfuzz_fake_sig_oracle_contract_adapter();
-            cfg.seed = {1, 2, 3}; cfg.message = {'m', 's', 'g'}; cfg.context = {'c'}; cfg.mutation = {0, 0, 1};
+            cfg.seed = {1, 2, 3}; cfg.message = {'m', 's', 'g'}; cfg.context = {'c'}; cfg.mutation = {0, 0, 0, 1};
             if (!Check(pqcfuzz::ExecuteMetamorphicSigOracle(cfg), id, id.find("badrng") != std::string::npos)) return 2;
           }
           return 0;
@@ -246,7 +297,7 @@ def test_kem_setup_keygen_failure_is_skipped_not_malleability(tmp_path: Path) ->
           cfg.oracle_id = "kem_decaps_c";
           cfg.target = pqcfuzz_fake_kem_keygen_fails_adapter();
           cfg.seed = {1, 2, 3};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
           return trace.findings.empty() &&
                          trace.observed_relation == "OBSERVED_SETUP_FAILED" &&
@@ -275,7 +326,7 @@ def test_kem_setup_encaps_failure_is_skipped_not_malleability(tmp_path: Path) ->
           cfg.oracle_id = "kem_decaps_c";
           cfg.target = pqcfuzz_fake_kem_encaps_fails_adapter();
           cfg.seed = {1, 2, 3};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
           return trace.findings.empty() &&
                          trace.observed_relation == "OBSERVED_SETUP_FAILED" &&
@@ -304,7 +355,7 @@ def test_sig_setup_sign_failure_is_skipped_not_malleability(tmp_path: Path) -> N
           cfg.oracle_id = "sig_verify_sig";
           cfg.target = pqcfuzz_fake_sig_sign_fails_adapter();
           cfg.message = {'m'};
-          cfg.mutation = {0, 0, 1};
+          cfg.mutation = {0, 0, 0, 1};
           auto trace = pqcfuzz::ExecuteMetamorphicSigOracle(cfg);
           return trace.findings.empty() &&
                          trace.observed_relation == "OBSERVED_SETUP_FAILED" &&

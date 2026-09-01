@@ -424,7 +424,7 @@ bool WriteArtifactDirectory(
                  "  src/adapters/liboqs/rng_control.cc \\\n"
                  "  src/adapters/liboqs/kem_adapter.cc \\\n"
                  "  src/adapters/liboqs/sig_adapter.cc \\\n"
-                 "  src/adapters/pqclean/randombytes_override.cc \\\n"
+                 "  src/adapters/randombytes_override.cc \\\n"
                  "  src/adapters/pqclean/kem_adapter.cc \\\n"
                  "  src/adapters/pqclean/sig_adapter.cc \\\n"
                  "  src/mutators/envelope.cc \\\n"

@@ -19,7 +19,7 @@ def test_generic_mutations_record_effectiveness(tmp_path: Path) -> None:
             #include <vector>
             int main() {
               using pqcfuzz::MaulBytes;
-              if (!MaulBytes({0}, {1, 0, 0}, "x").record.skipped) return 1;
+              if (!MaulBytes({0}, {1, 0, 0, 0}, "x").record.skipped) return 1;
               if (!MaulBytes({0}, {2, 0, 1}, "x").record.skipped) return 2;
               if (!MaulBytes({0xff}, {3, 0, 1}, "x").record.skipped) return 3;
               if (!MaulBytes({0, 0}, {6, 0, 0}, "x").record.skipped) return 4;

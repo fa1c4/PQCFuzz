@@ -123,8 +123,6 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = dsa_params;
-      config.aigis_sig_params = aigis_sig_params;
-      config.is_aigis_sig = is_aigis;
       config.left = target;
       config.right = pqcfuzz::GetSigAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;
@@ -175,8 +173,6 @@ int main(int argc, char **argv) {
       config.algorithm = args.algorithm;
       config.oracle_id = args.oracle_id;
       config.params = params;
-      config.aigis_params = aigis_params;
-      config.is_aigis_enc = is_aigis;
       config.left = target;
       config.right = pqcfuzz::GetKemAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
       config.exchange_contract.public_key_exchange = args.public_key_exchange;

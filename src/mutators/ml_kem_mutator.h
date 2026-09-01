@@ -46,6 +46,14 @@ inline void RecordMutationEffect(
   }
 }
 
+// Little-endian 16-bit value from a mutation plan starting at `index`, so
+// offsets/positions can cover objects larger than 255 bytes.
+inline size_t PlanU16(const std::vector<uint8_t> &plan, size_t index, size_t fallback) {
+  const size_t lo = index < plan.size() ? plan[index] : static_cast<uint8_t>(fallback);
+  const size_t hi = index + 1 < plan.size() ? plan[index + 1] : static_cast<uint8_t>(fallback >> 8);
+  return lo | (hi << 8);
+}
+
 std::vector<MutationRecord> MutateMlKemCiphertext(
     const MlKemParams &params,
     const std::vector<uint8_t> &mutation_plan,

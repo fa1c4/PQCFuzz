@@ -1702,7 +1702,7 @@ build_pqcfuzz() {
     src/adapters/status.cc
     src/adapters/rng_control.cc
     src/adapters/liboqs/rng_control.cc
-    src/adapters/pqclean/randombytes_override.cc
+    src/adapters/randombytes_override.cc
     src/mutators/envelope.cc
     src/mutators/envelope_fuzzer_mutator.cc
     src/mutators/maul.cc

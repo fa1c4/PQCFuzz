@@ -57,7 +57,7 @@ MutationRecord ApplyRegionMutation(
     return record;
   }
   if (buffer->empty()) {
-    buffer->push_back(static_cast<uint8_t>(ByteFromPlan(plan, 3, 0xa5)));
+    buffer->push_back(static_cast<uint8_t>(ByteFromPlan(plan, 4, 0xa5)));
   }
 
   const uint8_t op_byte = static_cast<uint8_t>(ByteFromPlan(plan, 0, 0));
@@ -81,13 +81,13 @@ MutationRecord ApplyRegionMutation(
   record.operation = OperationName(op_byte);
   record.target = region.name;
   const size_t region_len = std::min(region.length, buffer->size() - region.offset);
-  size_t relative = ByteFromPlan(plan, 2, 0) % std::max<size_t>(region_len, 1);
+  size_t relative = PlanU16(plan, 2, 0) % std::max<size_t>(region_len, 1);
   if (op_byte % 12 == 10) {
     // The eighth sign byte is the last byte of the challenge region.
     relative = region_len - 1;
   }
   const size_t offset = std::min(region.offset + relative, buffer->size() - 1);
-  const uint8_t value = static_cast<uint8_t>(ByteFromPlan(plan, 3, 0xa5));
+  const uint8_t value = static_cast<uint8_t>(ByteFromPlan(plan, 4, 0xa5));
   record.offset = offset;
   record.length = 1;
 
@@ -115,7 +115,7 @@ MutationRecord ApplyRegionMutation(
       (*buffer)[offset] = 0xff;
       break;
     case 4: {
-      const size_t new_size = ByteFromPlan(plan, 2, 0) % (buffer->size() + 1);
+      const size_t new_size = PlanU16(plan, 2, 0) % (buffer->size() + 1);
       record.length = buffer->size() - new_size;
       buffer->resize(new_size);
       break;
