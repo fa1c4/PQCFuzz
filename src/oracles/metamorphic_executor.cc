@@ -409,6 +409,10 @@ bool IsKemDecapsCiphertextOracle(const std::string &oracle_id) {
   return oracle_id == "kem_decaps_c";
 }
 
+bool IsKemDecapsSecretKeyOracle(const std::string &oracle_id) {
+  return oracle_id == "kem_decaps_sk";
+}
+
 void SetTraceReachabilityFromSubtest(KEMOracleTrace *trace, const OracleSubtestTrace &subtest) {
   if (trace == nullptr || subtest.calls.empty()) {
     return;
@@ -481,7 +485,7 @@ void FinalizeTrace(
     trace->mutated_setup_valid =
         (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
         trace->mutated_target_entered;
-  } else if (IsKemDecapsCiphertextOracle(spec.oracle_id)) {
+  } else if (IsKemDecapsCiphertextOracle(spec.oracle_id) || IsKemDecapsSecretKeyOracle(spec.oracle_id)) {
     trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK && trace->baseline_target_entered;
     trace->mutated_setup_valid =
         (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
@@ -504,7 +508,7 @@ void FinalizeTrace(
     finding_class = FindingClassFor(spec.expected_relation, observed);
     if (IsVerifyOracle(spec.oracle_id)) {
       finding_class = (mutated.status == PQCFUZZ_OK && mutated.has_bool && mutated.bool_value) ? "malleability" : "";
-    } else if (IsKemDecapsCiphertextOracle(spec.oracle_id)) {
+    } else if (IsKemDecapsCiphertextOracle(spec.oracle_id) || IsKemDecapsSecretKeyOracle(spec.oracle_id)) {
       finding_class = (mutated.status == PQCFUZZ_OK && observed == ObservedRelation::kObservedEqual) ? "malleability" : "";
     } else if (spec.uses_rng && finding_class == "malleability") {
       trace->diagnostics.push_back({"diagnostic", "rng_policy", "randomness contract evidence is not promotable"});

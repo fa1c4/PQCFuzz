@@ -1702,6 +1702,8 @@ build_pqcfuzz() {
     src/adapters/status.cc
     src/adapters/rng_control.cc
     src/adapters/liboqs/rng_control.cc
+    src/adapters/pqmagic/kem_adapter.cc
+    src/adapters/pqmagic/sig_adapter.cc
     src/adapters/randombytes_override.cc
     src/mutators/envelope.cc
     src/mutators/envelope_fuzzer_mutator.cc
@@ -1712,6 +1714,10 @@ build_pqcfuzz() {
     src/mutators/ml_dsa_mutator.cc
     src/mutators/slh_dsa_layout.cc
     src/mutators/slh_dsa_mutator.cc
+    src/mutators/aigis_enc_layout.cc
+    src/mutators/aigis_enc_mutator.cc
+    src/mutators/aigis_sig_layout.cc
+    src/mutators/aigis_sig_mutator.cc
     src/oracles/expected_relation.cc
     src/oracles/oracle_spec.cc
     src/oracles/oracle_spec_loader.cc

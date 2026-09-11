@@ -370,6 +370,34 @@ def test_sig_setup_sign_failure_is_skipped_not_malleability(tmp_path: Path) -> N
     )
 
 
+def test_kem_decaps_sk_reject_on_corrupted_secret_key_is_evaluable(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include "oracles/metamorphic_executor.h"
+        extern "C" const pqcfuzz_kem_adapter *pqcfuzz_fake_kem_decaps_rejects_bad_sk_adapter();
+        int main() {
+          pqcfuzz::MetamorphicKemConfig cfg;
+          cfg.job_id = "test";
+          cfg.pair_id = "test";
+          cfg.algorithm = "ML-KEM-768";
+          cfg.oracle_id = "kem_decaps_sk";
+          cfg.target = pqcfuzz_fake_kem_decaps_rejects_bad_sk_adapter();
+          cfg.seed = {1, 2, 3};
+          cfg.mutation = {0, 0, 0, 1};
+          auto trace = pqcfuzz::ExecuteMetamorphicKemOracle(cfg);
+          return trace.valid_setup &&
+                         trace.relation_evaluable &&
+                         trace.findings.empty() &&
+                         trace.observed_relation == "OBSERVED_DIFFERENT"
+                     ? 0
+                     : 1;
+        }
+        """,
+        ["tests/fake_adapters/fake_kem_decaps_rejects_bad_sk.cc"],
+    )
+
+
 def test_classification_relation_cases() -> None:
     assert classify_trace({"expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) == "malleability"
     assert classify_trace({"expected_relation": "EXPECT_EQUAL", "observed_relation": "OBSERVED_DIFFERENT", "findings": []}) == "non_malleability"
