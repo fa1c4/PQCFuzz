@@ -287,7 +287,8 @@ void FinalizeNoEffect(
     OracleSubtestTrace *subtest,
     const MetamorphicSpec &spec,
     const Observation &baseline,
-    MutationRecord *mutation) {
+    MutationRecord *mutation,
+    const std::string &reason = "no_effect") {
   trace->observed_relation = "OBSERVED_INTERVENTION_NOT_EFFECTIVE";
   trace->baseline = ToObservationTrace(baseline);
   trace->mutated = ToObservationTrace(baseline);
@@ -296,11 +297,11 @@ void FinalizeNoEffect(
   trace->mutated_setup_valid = baseline.status == PQCFUZZ_OK;
   trace->relation_evaluable = false;
   trace->intervention_effective = false;
-  trace->diagnostic_event = NonEvaluableDiagnostic(baseline, baseline, mutation, "no_effect");
+  trace->diagnostic_event = NonEvaluableDiagnostic(baseline, baseline, mutation, reason);
   trace->diagnostics.push_back({"non_evaluable", "metamorphic_relation", trace->diagnostic_event});
   subtest->skipped = true;
   subtest->passed = true;
-  subtest->note = "no_effect";
+  subtest->note = reason;
   trace->mutations.push_back(*mutation);
   trace->subtests.push_back(*subtest);
 }
@@ -413,6 +414,26 @@ bool IsKemDecapsSecretKeyOracle(const std::string &oracle_id) {
   return oracle_id == "kem_decaps_sk";
 }
 
+bool IsKemEncapsPublicKeyOracle(const std::string &oracle_id) {
+  return oracle_id == "kem_encaps_pk" || oracle_id == "kem_encaps_pk_0";
+}
+
+bool IsMlKemLikeAlgorithm(const std::string &algorithm) {
+  return algorithm.rfind("ML-KEM-", 0) == 0 || algorithm.rfind("AIGIS-ENC-", 0) == 0;
+}
+
+bool MutationTargetsSecretKeyZRegion(const MutationRecord &record, const std::string &algorithm) {
+  if (!IsMlKemLikeAlgorithm(algorithm)) {
+    return false;
+  }
+  constexpr size_t kZBytes = 32;
+  if (record.original_length < kZBytes || record.length != 1) {
+    return false;
+  }
+  const size_t z_start = record.original_length - kZBytes;
+  return record.offset >= z_start && record.offset < record.original_length;
+}
+
 void SetTraceReachabilityFromSubtest(KEMOracleTrace *trace, const OracleSubtestTrace &subtest) {
   if (trace == nullptr || subtest.calls.empty()) {
     return;
@@ -485,7 +506,8 @@ void FinalizeTrace(
     trace->mutated_setup_valid =
         (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
         trace->mutated_target_entered;
-  } else if (IsKemDecapsCiphertextOracle(spec.oracle_id) || IsKemDecapsSecretKeyOracle(spec.oracle_id)) {
+  } else if (IsKemDecapsCiphertextOracle(spec.oracle_id) || IsKemDecapsSecretKeyOracle(spec.oracle_id) ||
+             IsKemEncapsPublicKeyOracle(spec.oracle_id)) {
     trace->baseline_setup_valid = baseline.status == PQCFUZZ_OK && trace->baseline_target_entered;
     trace->mutated_setup_valid =
         (mutated.status == PQCFUZZ_OK || mutated.status == PQCFUZZ_REJECT || mutated.status == PQCFUZZ_INVALID_INPUT) &&
@@ -775,6 +797,11 @@ KEMOracleTrace ExecuteMetamorphicKemOracle(const MetamorphicKemConfig &config) {
       baseline = BytesObservation(baseline_decaps.status, baseline_decaps.ss);
       if (!mutation_record.effective) {
         FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record);
+        return trace;
+      }
+      if (MutationTargetsSecretKeyZRegion(mutation_record, config.algorithm)) {
+        FinalizeNoEffect(&trace, &subtest, *spec, baseline, &mutation_record,
+                         "mutation_targets_z_region_not_consumed_by_decapsulation");
         return trace;
       }
       KEMSharedSecret mutated_decaps = Decaps(config.target, ciphertext.ct, maul.mutated, &subtest);

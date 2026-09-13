@@ -375,9 +375,11 @@ configure_sanitizer_flags() {
   if [ "$SANITIZERS" = "none" ]; then
     LIBOQS_SANITIZER_FLAGS=""
     FUZZER_SANITIZER_FLAGS="-fsanitize=fuzzer"
+    REPLAY_SANITIZER_FLAGS=""
   else
     LIBOQS_SANITIZER_FLAGS="-fsanitize=fuzzer-no-link,${SANITIZERS}"
     FUZZER_SANITIZER_FLAGS="-fsanitize=fuzzer,${SANITIZERS}"
+    REPLAY_SANITIZER_FLAGS="-fsanitize=${SANITIZERS}"
   fi
 }
 
@@ -1736,12 +1738,13 @@ build_pqcfuzz() {
   # A binary is bound to one algorithm.  The envelope is only test data and
   # can no longer select (or relabel) an adapter at runtime.
   build_target() {
-    local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" algorithm_enum="$6" oracle_specs config_file right_implementation
+    local job="$1" primitive="$2" algorithm="$3" implementation="$4" source="$5" algorithm_enum="$6" oracle_specs config_file replay_job_file oracle_names_json right_implementation
     if [ "$(target_capability_state "$job")" != "comparable" ]; then
       echo "[pqcfuzz-eval] not building non-comparable target ${job}: $(target_skip_reason "$job")"
       return 0
     fi
     oracle_specs="$(oracle_specs_for_primitive "$primitive" | cut -d: -f1 | paste -sd, -)"
+    oracle_names_json="$(oracle_specs_for_primitive "$primitive" | cut -d: -f2 | sed 's/^/"/; s/$/"/' | paste -sd, -)"
     case "$job" in
       mlkem512) right_implementation="selfref_mlkem512_via_liboqs" ;;
       mlkem768) right_implementation="selfref_mlkem768_via_liboqs" ;;
@@ -1754,6 +1757,11 @@ build_pqcfuzz() {
     config_file="${tmp_root}/generated_config_${job}.json"
     cat > "$config_file" <<JSON
 {"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":3,"skipped_families":["SLH-DSA"]}
+JSON
+    replay_job_file="${tmp_root}/replay_job_${job}.json"
+    replay_config_rel="${WORKSPACE_ROOT_REL}/tmp/liboqs-${VERSION}/generated_config_${job}.json"
+    cat > "$replay_job_file" <<JSON
+{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","pair_id":"liboqs_${VERSION}_${job}_single_target","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":4,"oracle_suite":"${ORACLE_SUITE}","relation_mode":"${RELATION_MODE}","oracles":[${oracle_names_json}],"paths":{"result_dir":"${WORKSPACE_ROOT_REL}/results/${job}","generated_config":"${replay_config_rel}"},"target":{"project_id":"liboqs","implementation_id":"${implementation}"}}
 JSON
     "$cxx_bin" -std=c++17 -O1 -g -fno-omit-frame-pointer -Isrc -I"${liboqs_build_dir}/include" \
       "$FUZZER_SANITIZER_FLAGS" \
@@ -1778,6 +1786,29 @@ JSON
       -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
       "$source" "${common_sources[@]}" "$liboqs_archive" \
       -lcrypto -ldl -lpthread -lm -o "${pqcfuzz_build_dir}/pqcfuzz_${job}"
+    "$cxx_bin" -std=c++17 -O1 -g -fno-omit-frame-pointer -Isrc -I"${liboqs_build_dir}/include" \
+      "$REPLAY_SANITIZER_FLAGS" \
+      -DPQCFUZZ_JOB_ID="\"pqcfuzz_eval_${job}_liboqs_${VERSION}\"" \
+      -DPQCFUZZ_PAIR_ID="\"liboqs_${VERSION}_${job}_single_target\"" \
+      -DPQCFUZZ_RESULT_DIR="\"${WORKSPACE_ROOT_REL}/results/${job}\"" \
+      -DPQCFUZZ_GENERATED_CONFIG_PATH="\"${config_file}\"" \
+      -DPQCFUZZ_ORACLE_SUITE="\"${ORACLE_SUITE}\"" \
+      -DPQCFUZZ_RELATION_MODE="\"${RELATION_MODE}\"" \
+      -DPQCFUZZ_FINDING_SAVE_MODE="\"${FINDING_SAVE_MODE}\"" \
+      -DPQCFUZZ_MAX_FINDING_EXEMPLARS_PER_GROUP="${MAX_FINDING_EXEMPLARS_PER_GROUP}" \
+      -DPQCFUZZ_LEFT_PROJECT_ID="\"liboqs\"" \
+      -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"${implementation}\"" \
+      -DPQCFUZZ_EXPECTED_ALGORITHM="\"${algorithm}\"" \
+      -DPQCFUZZ_FIXED_ALGORITHM_ID="${algorithm_enum}" \
+      -DPQCFUZZ_ALLOWED_ORACLE_IDS="\"${oracle_specs}\"" \
+      -DPQCFUZZ_RIGHT_PROJECT_ID="\"liboqs_self_reference\"" \
+      -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"${right_implementation}\"" \
+      -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 -DPQCFUZZ_CIPHERTEXT_EXCHANGE=1 \
+      -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
+      -DPQCFUZZ_SIGNATURE_EXCHANGE=1 \
+      src/replay/replay_oracle.cc "${common_sources[@]}" "$liboqs_archive" \
+      -lcrypto -ldl -lpthread -lm -o "${pqcfuzz_build_dir}/replay_oracle_${job}"
   }
 
   build_target "mlkem512" kem "ML-KEM-512" "liboqs_mlkem512_wrapper_generic" src/fuzzers/kem_pair_fuzzer.cc 1 || return $?
@@ -2079,6 +2110,57 @@ target_budget_seconds() {
   fi
 }
 
+validate_campaign_findings() {
+  local job job_spec replay_bin job_file finding_file dir input trace
+  local total=0 validated=0 invalidated=0 skipped_bin=0
+  local result_root="${WORKSPACE_ROOT_ABS}/results"
+  local per_target_cap=200
+  echo "[pqcfuzz-eval] validating deterministic replays for findings"
+  for job_spec in "mlkem512" "mlkem768" "mlkem1024" "mldsa44" "mldsa65" "mldsa87"; do
+    job="$job_spec"
+    if [ "$(target_capability_state "$job")" != "comparable" ]; then
+      continue
+    fi
+    replay_bin="${PQCFUZZ_BUILD_DIR}/replay_oracle_${job}"
+    job_file="${WORKSPACE_ROOT_ABS}/tmp/liboqs-${VERSION}/replay_job_${job}.json"
+    if [ ! -x "$replay_bin" ] || [ ! -f "$job_file" ]; then
+      echo "[pqcfuzz-eval] replay validation unavailable for ${job}; findings remain unvalidated" >&2
+      skipped_bin=$((skipped_bin + 1))
+      continue
+    fi
+    local counted=0
+    while IFS= read -r finding_file; do
+      [ -n "$finding_file" ] || continue
+      if ! grep -q '"validation_state": "raw"' "$finding_file" 2>/dev/null; then
+        continue
+      fi
+      dir="$(dirname "$finding_file")"
+      input="${dir}/structured_input.bin"
+      trace="${dir}/oracle_trace.json"
+      if [ ! -f "$input" ] || [ ! -f "$trace" ]; then
+        continue
+      fi
+      counted=$((counted + 1))
+      if [ "$counted" -gt "$per_target_cap" ]; then
+        break
+      fi
+      total=$((total + 1))
+      if timeout "$((INPUT_TIMEOUT_SECONDS + 60))" python3 src/replay/replay_one.py \
+          --job "$job_file" \
+          --input "$input" \
+          --replay-bin "$replay_bin" \
+          --expected-trace "$trace" \
+          --timeout-seconds "$INPUT_TIMEOUT_SECONDS" >/dev/null 2>&1; then
+        validated=$((validated + 1))
+      else
+        invalidated=$((invalidated + 1))
+      fi
+    done < <(find "${result_root}/${job}" -name finding.json -type f 2>/dev/null | sort)
+  done
+  echo "[pqcfuzz-eval] finding validation complete: ${total} attempted, ${validated} validated, ${invalidated} not validated"
+  return 0
+}
+
 write_status "regression-mldsa-empty-context" "running"
 run_mldsa_empty_context_regression || finish_campaign "harness-error" "$?" "ML-DSA empty-context UBSan regression failed"
 
@@ -2119,6 +2201,12 @@ for job_spec in "mldsa44:4" "mldsa65:5" "mldsa87:6"; do
 done
 
 if [ "$KEM_STATUS" -ne 0 ]; then FUZZ_STATUS="$KEM_STATUS"; else FUZZ_STATUS="$SIG_STATUS"; fi
+
+if [ "$PREFLIGHT_ONLY" -eq 0 ] && [ "$FUZZ_STATUS" -eq 0 ]; then
+  write_status "findings-validation" "running"
+  validate_campaign_findings || echo "[pqcfuzz-eval] finding validation phase reported an error" >&2
+  write_status "findings-validation" "finished"
+fi
 
 if [ "$FUZZ_STATUS" -ne 0 ]; then
   if [ "$FUZZ_STATUS" -eq 124 ]; then
