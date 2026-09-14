@@ -24,6 +24,7 @@ from summarize_findings import (
     load_json,
     primitive_from_path,
     semantics_status,
+    is_current_semantics_version,
     unique_paths,
     version_from_path,
 )
@@ -298,7 +299,9 @@ def counter_rows(counter_file: Path, trace_mode: str) -> list[dict[str, object]]
                 validation_row = augment_row_with_trace(row, finding_path, load_json(finding_path))
                 if validation_row.get("validated") != "true" or validation_row.get("invalidated") == "true":
                     continue
-            elif row.get("validated") != "true" or row.get("oracle_semantics_version") != "4":
+            elif row.get("validated") != "true" or not is_current_semantics_version(
+                str(row.get("oracle_semantics_version", ""))
+            ):
                 continue
             if item.get("exemplar_replay_command"):
                 row["replay_command"] = item["exemplar_replay_command"]
@@ -342,7 +345,7 @@ def write_fast_summary_reports(roots: list[Path], output_root: Path, formats: se
         if result_dir_key(artifact_dir.parent) in counter_result_dirs:
             continue
         row = fast_row_from_artifact_dir(artifact_dir, trace_mode)
-        if row.get("oracle_semantics_version") != "4":
+        if not is_current_semantics_version(str(row.get("oracle_semantics_version", ""))):
             continue
         if row.get("validated") != "true" or row.get("invalidated") == "true":
             continue

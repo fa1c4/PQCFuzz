@@ -26,7 +26,7 @@ FINDING_CLASSES = {
 
 def classify_trace(trace: dict[str, Any]) -> str | None:
     semantics_version = trace.get("oracle_semantics_version")
-    if semantics_version == 4:
+    if semantics_version in (4, 5):
         for item in trace.get("findings", []):
             finding_class = item.get("class")
             if finding_class in FINDING_CLASSES:

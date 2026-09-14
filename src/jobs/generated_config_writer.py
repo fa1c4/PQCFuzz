@@ -33,6 +33,10 @@ def oracle_ids_for_ml_kem() -> list[str]:
         "mlkem_local_roundtrip",
         "mlkem_cross_exchange_roundtrip",
         "mlkem_tampered_ciphertext_implicit_rejection",
+        "mlkem_implicit_rejection_relations",
+        "mlkem_raw_length_boundary",
+        "mlkem_ek_canonicality",
+        "mlkem_rng_failure",
     ]
 
 
@@ -43,6 +47,14 @@ def oracle_ids_for_ml_dsa() -> list[str]:
         "mldsa_mutated_signature_negative",
         "mldsa_mutated_message_negative",
         "mldsa_mutated_context_negative",
+        "mldsa_verify_exact_lengths",
+        "mldsa_ctx_boundaries",
+        "mldsa_hint_canonicality",
+        "mldsa_z_norm_boundary",
+        "mldsa_rnd_determinism",
+        "mldsa_pure_prehash_separation",
+        "mldsa_ph_oid_separation",
+        "mldsa_rng_failure",
     ]
 
 
@@ -53,6 +65,11 @@ def oracle_ids_for_slh_dsa() -> list[str]:
         "slhdsa_mutated_signature_negative",
         "slhdsa_mutated_message_negative",
         "slhdsa_mutated_context_negative",
+        "slhdsa_verify_exact_lengths",
+        "slhdsa_ctx_boundaries",
+        "slhdsa_pure_prehash_separation",
+        "slhdsa_ph_oid_separation",
+        "slhdsa_rng_failure",
     ]
 
 
@@ -64,6 +81,7 @@ def oracle_ids_for_aigis_enc() -> list[str]:
     return [
         "aigisenc_local_roundtrip",
         "aigisenc_tampered_ciphertext_implicit_rejection",
+        "aigisenc_implicit_rejection_relations",
         "aigisenc_bad_randomness_sanity",
         "aigisenc_sk_noncanonical_coefficient",
     ]
@@ -165,6 +183,24 @@ ORACLE_ENUM_BY_NAME = {
     "aigissig_unused_sign_bits": 43,
     "aigissig_ctx256_failure_state": 44,
     "aigissig_determinism_profile": 45,
+    "mlkem_implicit_rejection_relations": 46,
+    "aigisenc_implicit_rejection_relations": 47,
+    "mldsa_verify_exact_lengths": 48,
+    "mldsa_ctx_boundaries": 49,
+    "slhdsa_verify_exact_lengths": 50,
+    "slhdsa_ctx_boundaries": 51,
+    "mlkem_raw_length_boundary": 52,
+    "mlkem_ek_canonicality": 53,
+    "mldsa_hint_canonicality": 54,
+    "mldsa_z_norm_boundary": 55,
+    "mldsa_rnd_determinism": 56,
+    "mldsa_pure_prehash_separation": 57,
+    "mldsa_ph_oid_separation": 58,
+    "slhdsa_pure_prehash_separation": 59,
+    "slhdsa_ph_oid_separation": 60,
+    "mlkem_rng_failure": 61,
+    "mldsa_rng_failure": 62,
+    "slhdsa_rng_failure": 63,
 }
 
 SECURITY_TIER_ORACLES = {"kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"}

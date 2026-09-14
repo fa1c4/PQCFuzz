@@ -75,6 +75,7 @@ struct OracleSubtestTrace {
   std::string expected_relation;
   bool passed = true;
   bool skipped = false;
+  bool not_applicable = false;
   std::string note;
   std::vector<OracleCallTrace> calls;
 };
@@ -86,6 +87,14 @@ struct OracleFindingTrace {
   EvidenceKind evidence_kind = EvidenceKind::kSemantic;
   std::string source_phase = "fuzz";
   std::string fingerprint;
+  // Design-document record fields.  The verdict vocabulary is distinct from
+  // the internal finding_class used for grouping and gating.
+  Verdict verdict = Verdict::kInconclusive;
+  EvidenceClass evidence_class = EvidenceClass::kInference;
+  std::string conditional_verdict;
+  std::string claim;
+  std::string source_reference;
+  std::vector<std::string> limitations;
 };
 
 struct OracleDiagnosticTrace {
@@ -114,8 +123,17 @@ struct RngInterventionTrace {
   size_t mutated_bytes_consumed = 0;
 };
 
+// Controls recorded with every oracle result (design doc Section 7).
+struct OracleControlTrace {
+  bool baseline_repeat_equal = false;
+  std::string positive_control;
+  std::string negative_control;
+  std::vector<std::string> false_positive_controls;
+  std::vector<std::string> false_negative_controls;
+};
+
 struct KEMOracleTrace {
-  int oracle_semantics_version = 4;
+  int oracle_semantics_version = 5;
   std::string oracle_suite = "fips";
   std::string relation_mode = "cross-implementation";
   std::string job_id;
@@ -162,6 +180,7 @@ struct KEMOracleTrace {
   std::vector<RngInterventionTrace> rng_interventions;
   std::vector<OracleDiagnosticTrace> diagnostics;
   std::vector<OracleFindingTrace> findings;
+  OracleControlTrace controls;
 };
 
 struct OracleExecutorConfig {

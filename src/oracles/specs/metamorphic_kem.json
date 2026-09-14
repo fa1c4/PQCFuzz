@@ -6,7 +6,19 @@
       "primitive_type": "kem",
       "field": "ciphertext",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "ciphertext_malleability"
+      "finding_subclass": "ciphertext_malleability",
+      "claim": "A ciphertext mutation that changes the decapsulation input shall not be ignored by Decaps; the derived shared secret shall change.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 203 Section 7.3 (ciphertext binding)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "A single mutation may be a no-op at the algebraic level; the oracle records effectiveness",
+        "Does not prove IND-CCA security"
+      ],
+      "controls": {
+        "positive_control": "the unmodified ciphertext decapsulates successfully",
+        "negative_control": "the mutation record shows the ciphertext changed"
+      }
     },
     {
       "oracle_id": "kem_decaps_sk",
@@ -14,7 +26,19 @@
       "primitive_type": "kem",
       "field": "secret_key",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "secret_key_malleability"
+      "finding_subclass": "secret_key_malleability",
+      "claim": "A secret-key mutation that changes a used decapsulation input should change the derived shared secret.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 38.4 (relational key mutations)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "The generic oracle has a ~1/q per-position false-positive floor: when the ciphertext coefficient at the mutated secret position is 0 mod q, the shared secret provably cannot change",
+        "kem_decaps_sk is not part of the security-tier oracle set"
+      ],
+      "controls": {
+        "positive_control": "the unmutated secret key decapsulates correctly",
+        "negative_control": "the mutation record shows the secret key changed"
+      }
     },
     {
       "oracle_id": "kem_encaps_badrng",
@@ -23,7 +47,19 @@
       "field": "rng",
       "expected_relation": "EXPECT_DIFFERENT",
       "finding_subclass": "encaps_rng_ignored",
-      "requires_rng_injection": true
+      "requires_rng_injection": true,
+      "claim": "Encapsulation shall consume its random coins so that distinct randomness streams produce distinct ciphertexts or shared secrets.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 3.3 (encapsulation randomness)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Tests distinct-stream consumption only, not reported RNG failure",
+        "A deterministic PKE component is not the external ML-KEM contract"
+      ],
+      "controls": {
+        "positive_control": "the deterministic tape is observed to be consumed",
+        "negative_control": "the baseline encapsulation succeeds"
+      }
     },
     {
       "oracle_id": "kem_encaps_pk_0",
@@ -31,7 +67,19 @@
       "primitive_type": "kem",
       "field": "public_key",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "zero_public_key_equivalence"
+      "finding_subclass": "zero_public_key_equivalence",
+      "claim": "An encapsulation key with all-zero bytes should not produce the same encapsulation output as a valid key.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 38.4 (key-mutation robustness)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "The all-zero key is not a valid encapsulation key under FIPS 203; canonicality checks require the dedicated EK oracle",
+        "Diagnostic robustness check only"
+      ],
+      "controls": {
+        "positive_control": "the untouched public key encapsulates",
+        "negative_control": "the mutation record shows all key bytes zeroed"
+      }
     },
     {
       "oracle_id": "kem_encaps_pk",
@@ -39,7 +87,19 @@
       "primitive_type": "kem",
       "field": "public_key",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "public_key_ignored_or_malleable"
+      "finding_subclass": "public_key_ignored_or_malleable",
+      "claim": "A mutated encapsulation key that changes the polynomial or seed fields should change the encapsulation output.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "FIPS 203 Section 7.2 (encapsulation key input)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Does not check canonical 12-bit encoding; that requires the dedicated EK canonicality oracle",
+        "A mutation in an unused bit position may legitimately not change the output"
+      ],
+      "controls": {
+        "positive_control": "the untouched public key encapsulates",
+        "negative_control": "the mutation record shows the public key changed"
+      }
     },
     {
       "oracle_id": "kem_keygen_badrng",
@@ -48,7 +108,19 @@
       "field": "rng",
       "expected_relation": "EXPECT_DIFFERENT",
       "finding_subclass": "keygen_rng_ignored",
-      "requires_rng_injection": true
+      "requires_rng_injection": true,
+      "claim": "Key generation shall consume its random seeds so that distinct randomness streams produce distinct keys.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 3.3 and Section 7.1 (key generation randomness)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Tests distinct-stream consumption only, not reported RNG failure",
+        "Low-entropy but successful RNG output is an RBG-health concern"
+      ],
+      "controls": {
+        "positive_control": "the deterministic tape is observed to be consumed",
+        "negative_control": "the produced key pair is usable for a local round trip"
+      }
     }
   ]
 }

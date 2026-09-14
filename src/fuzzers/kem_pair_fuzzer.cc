@@ -116,7 +116,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (is_aigis) {
     params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
               aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
-              aigis_params.c1_bits, aigis_params.c2_bits};
+              aigis_params.c1_bits, aigis_params.c2_bits,
+              aigis_params.z_offset, aigis_params.z_len};
   } else if (!pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
     return 0;
   }

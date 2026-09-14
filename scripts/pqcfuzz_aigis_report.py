@@ -4,7 +4,7 @@
 Scans workspace/results/job_aigis*/ for oracle coverage, finding artifacts,
 and crash files; replays every finding with replay_one.py; and writes a
 markdown report mapping each finding to the DeepSeek test-oracle design
-document (third_party/aigis_nist_doc/deepseek_pqc_test_oracle_design.md).
+document (plans/deepseek_pqc_test_oracle_design.md).
 
 Usage:
     python3 scripts/pqcfuzz_aigis_report.py [--skip-replay] [--out REPORT.md]
@@ -115,6 +115,9 @@ def collect(job_dirs: list[Path], skip_replay: bool, max_replay_per_subclass: in
                 "oracle_id": finding.get("oracle_id", ""),
                 "class": finding.get("finding_class", ""),
                 "subclass": subclass,
+                "verdict": finding.get("verdict", ""),
+                "evidence_class": finding.get("evidence_class", ""),
+                "conditional_verdict": finding.get("conditional_verdict", ""),
                 "algorithm": finding.get("algorithm", ""),
                 "doc_case": DOC_CASES.get(subclass, ""),
                 "replay": {},
@@ -183,7 +186,10 @@ def render(rows: list[dict], crashes: list[Path], job_dirs: list[Path], out: Pat
         elif replay.get("status"):
             replay_note = f" -> replay: {replay['status']}"
         lines.append(f"- **{row['algorithm']}** / `{row['oracle_id']}`: "
-                     f"`{row['class']}` + `{row['subclass']}`")
+                     f"`{row['class']}` + `{row['subclass']}` -> verdict `{row['verdict'] or 'UNKNOWN'}` "
+                     f"(evidence `{row['evidence_class'] or 'UNKNOWN'}`)")
+        if row.get("conditional_verdict"):
+            lines.append(f"  - conditional: {row['conditional_verdict']}")
         lines.append(f"  - {row['doc_case'] or 'unmapped subclass'}{replay_note}")
     if counted_rows:
         lines.append(f"- ... plus {len(counted_rows)} additional artifacts (counted, not replayed)")

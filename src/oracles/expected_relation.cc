@@ -12,6 +12,8 @@ const char *ExpectedRelationName(ExpectedRelation relation) {
       return "NO_CRASH";
     case ExpectedRelation::kNoTimeout:
       return "NO_TIMEOUT";
+    case ExpectedRelation::kNoOutputOnAllocationFailure:
+      return "NO_OUTPUT_ON_ALLOCATION_FAILURE";
     case ExpectedRelation::kRejectOrDifferentSharedSecret:
       return "REJECT_OR_DIFFERENT_SHARED_SECRET";
     case ExpectedRelation::kVerifyTrue:
@@ -24,6 +26,10 @@ const char *ExpectedRelationName(ExpectedRelation relation) {
       return "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT";
     case ExpectedRelation::kVerifyFalseOrApiUnsupported:
       return "VERIFY_FALSE_OR_API_UNSUPPORTED";
+    case ExpectedRelation::kRejectOrInvalidInput:
+      return "REJECT_OR_INVALID_INPUT";
+    case ExpectedRelation::kRejectWithConsistentOutputLengthState:
+      return "REJECT_WITH_CONSISTENT_OUTPUT_LENGTH_STATE";
     case ExpectedRelation::kExpectEqual:
       return "EXPECT_EQUAL";
     case ExpectedRelation::kExpectDifferent:
@@ -47,6 +53,9 @@ ExpectedRelation ExpectedRelationFromName(const std::string &name) {
   if (name == "NO_TIMEOUT") {
     return ExpectedRelation::kNoTimeout;
   }
+  if (name == "NO_OUTPUT_ON_ALLOCATION_FAILURE") {
+    return ExpectedRelation::kNoOutputOnAllocationFailure;
+  }
   if (name == "REJECT_OR_DIFFERENT_SHARED_SECRET") {
     return ExpectedRelation::kRejectOrDifferentSharedSecret;
   }
@@ -64,6 +73,12 @@ ExpectedRelation ExpectedRelationFromName(const std::string &name) {
   }
   if (name == "VERIFY_FALSE_OR_API_UNSUPPORTED") {
     return ExpectedRelation::kVerifyFalseOrApiUnsupported;
+  }
+  if (name == "REJECT_OR_INVALID_INPUT") {
+    return ExpectedRelation::kRejectOrInvalidInput;
+  }
+  if (name == "REJECT_WITH_CONSISTENT_OUTPUT_LENGTH_STATE") {
+    return ExpectedRelation::kRejectWithConsistentOutputLengthState;
   }
   if (name == "EXPECT_EQUAL") {
     return ExpectedRelation::kExpectEqual;

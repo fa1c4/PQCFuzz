@@ -19,6 +19,10 @@ def compile_and_run(tmp_path: Path, source: str, extra_sources: list[str]) -> No
         "src/mutators/maul.cc",
         "src/oracles/metamorphic_observation.cc",
         "src/oracles/metamorphic_spec.cc",
+        "src/oracles/expected_relation.cc",
+        "src/oracles/oracle_record.cc",
+        "src/oracles/oracle_result.cc",
+        "src/oracles/oracle_spec.cc",
         "src/oracles/metamorphic_executor.cc",
         *extra_sources,
     ]

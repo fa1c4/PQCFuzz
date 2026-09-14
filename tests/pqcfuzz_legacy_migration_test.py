@@ -34,9 +34,9 @@ def test_legacy_migration_writes_manifest_without_rewriting_artifacts(tmp_path: 
 
     assert finding_path.read_bytes() == before
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    assert manifest["oracle_semantics_version"] == 4
+    assert manifest["oracle_semantics_version"] == 5
     assert len(manifest["entries"]) == 1
     entry = manifest["entries"][0]
     assert entry["oracle_semantics_version"] == 3
     assert entry["validated"] is False
-    assert entry["invalidation_reason"] == "legacy_semantics_requires_v4_replay"
+    assert entry["invalidation_reason"] == "legacy_semantics_requires_v5_replay"

@@ -9,7 +9,19 @@
       "mutation": {"type": "none"},
       "expected_relation": "VERIFY_TRUE",
       "comparator": "verify_accepts",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "A signature produced by Aigis-Sig with a valid key and context shall verify under the matching public key.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "PQMagic sig/aigis-sig/std/sign.c; DeepSeek design doc Section 34",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "Verification success is not a sUF-CMA result"
+      ],
+      "controls": {
+        "positive_control": "the signature is produced from a freshly generated key pair",
+        "negative_control": "a one-byte signature mutation is rejected by the negative oracle"
+      }
     },
     {
       "oracle_id": "aigissig_cross_verify",
@@ -25,7 +37,19 @@
       "mutation": {"type": "none"},
       "expected_relation": "VERIFY_TRUE",
       "comparator": "verify_accepts",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two Aigis-Sig builds with compatible object formats exchanging keys and signatures shall cross-verify.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Sections 32 and 34",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Not scheduled for the SM3-vs-SHAKE pair because the challenge binds the hash function",
+        "No independent Aigis specification was supplied"
+      ],
+      "controls": {
+        "positive_control": "both local sign/verify paths succeed",
+        "negative_control": "the pair file declares the exchange contract before the oracle is enabled"
+      }
     },
     {
       "oracle_id": "aigissig_mutated_signature_negative",
@@ -39,7 +63,19 @@
       },
       "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
       "comparator": "verify_rejects_or_decode_rejects",
-      "triage_policy": "potential_crypto_vuln_if_mutated_signature_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_signature_verifies",
+      "claim": "A mutated Aigis-Sig signature component shall not verify under the signing public key.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Section 34; PQMagic sig/aigis-sig/std/packing.c",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "Exact-length and unused sign-bit canonicality have dedicated oracles"
+      ],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows the signature bytes changed"
+      }
     },
     {
       "oracle_id": "aigissig_mutated_message_negative",
@@ -50,7 +86,16 @@
       "mutation": {"type": "message_mutation", "targets": ["message"]},
       "expected_relation": "VERIFY_FALSE",
       "comparator": "verify_rejects",
-      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies",
+      "claim": "An Aigis-Sig signature shall not verify for a message that differs from the signed message.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Section 34",
+      "scope": {"api_layer": "external"},
+      "limitations": ["No independent Aigis specification was supplied"],
+      "controls": {
+        "positive_control": "the original message verifies",
+        "negative_control": "the mutation record shows the message bytes changed"
+      }
     },
     {
       "oracle_id": "aigissig_mutated_context_negative",
@@ -61,7 +106,19 @@
       "mutation": {"type": "context_mutation", "targets": ["ctx"]},
       "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
       "comparator": "verify_rejects_or_api_unsupported",
-      "triage_policy": "potential_crypto_vuln_if_mutated_context_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_context_verifies",
+      "claim": "An Aigis-Sig signature shall not verify when the verification context differs from the signing context.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Section 34",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "ctx_len=256 failure-state consistency has a dedicated oracle"
+      ],
+      "controls": {
+        "positive_control": "the original context verifies",
+        "negative_control": "the mutation record shows the context bytes changed"
+      }
     },
     {
       "oracle_id": "aigissig_bad_randomness_sanity",
@@ -75,7 +132,19 @@
       },
       "expected_relation": "NO_CRASH",
       "comparator": "status_only",
-      "triage_policy": "api_unsupported_is_not_failure"
+      "triage_policy": "api_unsupported_is_not_failure",
+      "claim": "Aigis-Sig key generation and hedged signing should consume the supplied randomness so that distinct streams produce different outputs.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Sections 22, 34.4, and 35",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "The supplied snapshot signs deterministically; deterministic profiles are not RNG failures",
+        "No applicable Aigis API requirement for RNG failure recovery was supplied"
+      ],
+      "controls": {
+        "positive_control": "key generation consumes a deterministic tape",
+        "negative_control": "the baseline key pair is usable"
+      }
     },
     {
       "oracle_id": "aigissig_exact_length",
@@ -86,7 +155,20 @@
       "mutation": {"type": "field_aware", "targets": ["signature"]},
       "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
       "comparator": "verify_rejects_or_decode_rejects",
-      "triage_policy": "appended_signature_bytes_accepted"
+      "triage_policy": "appended_signature_bytes_accepted",
+      "claim": "A hardened public verifier should require siglen == CRYPTO_BYTES and reject a valid signature with appended bytes.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 34.2 and case AS-SIG-EXACT-LEN; PQMagic sig/aigis-sig/std/sign.c",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied; the observation is implementation behavior",
+        "Not a FIPS 204 conformance result"
+      ],
+      "conditional_verdict": "NONCONFORMANT if an applicable Aigis specification claims exact-length canonical signatures or sUF-CMA",
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows one byte appended"
+      }
     },
     {
       "oracle_id": "aigissig_unused_sign_bits",
@@ -97,7 +179,20 @@
       "mutation": {"type": "field_aware", "targets": ["signature.c"]},
       "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
       "comparator": "verify_rejects_or_decode_rejects",
-      "triage_policy": "unused_sign_bit_malleable"
+      "triage_policy": "unused_sign_bit_malleable",
+      "claim": "A hardened verifier should reject or canonicalize nonzero unused challenge sign bits rather than accepting a malleable signature encoding.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 34.3 and case AS-SIG-UNUSED-SIGNBITS; PQMagic sig/aigis-sig/std/packing.c",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied; the observation is implementation behavior",
+        "Not a FIPS 204 conformance result"
+      ],
+      "conditional_verdict": "NONCONFORMANT under a byte-string signature model if an applicable Aigis specification claims sUF-CMA",
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows an unused sign bit flipped"
+      }
     },
     {
       "oracle_id": "aigissig_ctx256_failure_state",
@@ -106,9 +201,22 @@
       "api_surface": ["keygen", "sign"],
       "precondition": {"valid_keypair_before_mutation": true},
       "mutation": {"type": "context_mutation", "targets": ["ctx"]},
-      "expected_relation": "REJECT_OR_INVALID_INPUT",
+      "expected_relation": "REJECT_WITH_CONSISTENT_OUTPUT_LENGTH_STATE",
       "comparator": "failure_state_consistent",
-      "triage_policy": "failure_output_length_state_inconsistent"
+      "triage_policy": "failure_output_length_state_inconsistent",
+      "claim": "A failed detached or combined signing call with ctx_len=256 should report one consistent failure state, leaving caller output length and buffers unchanged or zeroed.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 34.5 and cases AS-SIG-CTX256-DETACHED-STATE / AS-SIG-CTX256-COMBINED-STATE",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "No independent Aigis specification was supplied; the observation is implementation behavior",
+        "A process abort on invalid context is treated as an observation, not automatically a defect"
+      ],
+      "conditional_verdict": "NONCONFORMANT if an applicable Aigis API contract specifies output-length state on failure",
+      "controls": {
+        "positive_control": "the same key pair signs successfully with ctx_len=0",
+        "negative_control": "the 256-byte context is rejected"
+      }
     },
     {
       "oracle_id": "aigissig_determinism_profile",
@@ -119,7 +227,19 @@
       "mutation": {"type": "none"},
       "expected_relation": "EXPECT_EQUAL",
       "comparator": "bytes_equal",
-      "triage_policy": "determinism_violation"
+      "triage_policy": "determinism_violation",
+      "claim": "For a deterministic Aigis-Sig profile, identical key, message, and context shall produce byte-identical signatures.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Section 34.4 and case AS-SIG-DETERMINISM-PROFILE",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Randomized Aigis-Sig configurations legitimately produce different signatures",
+        "The exact source revision and compile-time options must be recorded"
+      ],
+      "controls": {
+        "positive_control": "both signing calls succeed",
+        "negative_control": "signing with a different message changes the signature"
+      }
     }
   ]
 }

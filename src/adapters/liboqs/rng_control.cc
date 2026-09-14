@@ -15,6 +15,14 @@ void PqcfuzzLiboqsRandombytes(uint8_t *out, size_t out_len) {
   if (pqcfuzz_rng_fill_bytes(out, out_len)) {
     return;
   }
+  if (pqcfuzz::pqcfuzz_rng_failure_requested()) {
+    // Void liboqs RNG callback cannot report a failure; suppress fallback
+    // entropy so the injected failure stays observable.
+    for (size_t i = 0; i < out_len; ++i) {
+      out[i] = 0;
+    }
+    return;
+  }
   if (OQS_randombytes_system != nullptr) {
     OQS_randombytes_system(out, out_len);
     return;

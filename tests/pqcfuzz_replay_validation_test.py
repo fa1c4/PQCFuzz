@@ -14,8 +14,8 @@ from replay.replay_one import ReplayError, replay_equivalence_error, selected_or
 
 def test_replay_validation_requires_effective_intervention() -> None:
     trace = {
-        "version": 4,
-        "oracle_semantics_version": 4,
+        "version": 5,
+        "oracle_semantics_version": 5,
         "disposition": "not_evaluable",
         "algorithm": "ML-KEM-768",
         "configured_algorithm": "ML-KEM-768",

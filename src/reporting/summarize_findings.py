@@ -26,10 +26,18 @@ REPORT_COLUMNS = [
     "observed_relation",
     "finding_class",
     "finding_subclass",
+    "verdict",
+    "conditional_verdict",
+    "evidence_class",
+    "claim",
+    "source_reference",
     "baseline_status",
     "mutated_status",
     "baseline_accepted",
     "mutated_accepted",
+    "baseline_repeat_equal",
+    "positive_control",
+    "negative_control",
     "crash_signal",
     "timeout_seconds",
     "validated",
@@ -58,6 +66,9 @@ SUMMARY_COLUMNS = [
     "observed_relation",
     "finding_class",
     "finding_subclass",
+    "verdict",
+    "conditional_verdict",
+    "evidence_class",
     "baseline_status",
     "mutated_status",
     "baseline_accepted",
@@ -167,10 +178,17 @@ def first_finding(trace: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+CURRENT_ORACLE_SEMANTICS_VERSIONS = {"4", "5"}
+
+
 def semantics_status(oracle_semantics_version: str) -> str:
-    if oracle_semantics_version == "4":
+    if oracle_semantics_version in CURRENT_ORACLE_SEMANTICS_VERSIONS:
         return "v4"
     return "legacy_semantics"
+
+
+def is_current_semantics_version(oracle_semantics_version: str) -> bool:
+    return oracle_semantics_version in CURRENT_ORACLE_SEMANTICS_VERSIONS
 
 
 def candidate_result_roots(root: Path) -> list[Path]:
@@ -335,6 +353,11 @@ def base_row_from_finding(path: Path, finding: dict[str, Any]) -> dict[str, str]
         "observed_relation": "",
         "finding_class": str(finding.get("finding_class") or ""),
         "finding_subclass": str(finding.get("finding_subclass") or ""),
+        "verdict": str(finding.get("verdict") or ""),
+        "conditional_verdict": str(finding.get("conditional_verdict") or ""),
+        "evidence_class": str(finding.get("evidence_class") or ""),
+        "claim": str(finding.get("claim") or ""),
+        "source_reference": str(finding.get("source_reference") or ""),
         "baseline_status": "",
         "mutated_status": "",
         "baseline_accepted": "",
@@ -376,10 +399,23 @@ def augment_row_with_trace(row: dict[str, str], path: Path, finding: dict[str, A
     row["finding_subclass"] = row.get("finding_subclass") or str(
         trace.get("finding_subclass") or trace_finding.get("subclass") or ""
     )
+    row["verdict"] = row.get("verdict") or str(trace_finding.get("verdict") or "")
+    row["conditional_verdict"] = row.get("conditional_verdict") or str(
+        trace_finding.get("conditional_verdict") or ""
+    )
+    row["evidence_class"] = row.get("evidence_class") or str(trace_finding.get("evidence_class") or "")
+    row["claim"] = row.get("claim") or str(trace_finding.get("claim") or "")
+    row["source_reference"] = row.get("source_reference") or str(trace_finding.get("source_reference") or "")
     row["baseline_status"] = str(baseline.get("status") or "")
     row["mutated_status"] = str(mutated.get("status") or "")
     row["baseline_accepted"] = "" if "accepted" not in baseline else str(bool(baseline.get("accepted"))).lower()
     row["mutated_accepted"] = "" if "accepted" not in mutated else str(bool(mutated.get("accepted"))).lower()
+    controls = trace.get("controls") if isinstance(trace.get("controls"), dict) else {}
+    row["baseline_repeat_equal"] = (
+        "" if "baseline_repeat_equal" not in controls else str(bool(controls.get("baseline_repeat_equal"))).lower()
+    )
+    row["positive_control"] = str(controls.get("positive_control") or "")
+    row["negative_control"] = str(controls.get("negative_control") or "")
     row["crash_signal"] = str(trace.get("crash_signal") or "")
     row["timeout_seconds"] = str(trace.get("timeout_seconds") or "")
     if row["semantics_status"] != "v4":

@@ -103,17 +103,17 @@ pqcfuzz_status MlDsa87Verify(const uint8_t *sig, size_t sig_len, const uint8_t *
 
 const pqcfuzz_sig_adapter kMlDsa44 = {
     "liboqs", "liboqs_mldsa44_wrapper_generic", "ML-DSA-44", 1312, 2560, 2420, 0, 0, 0,
-    MlDsa44Keygen, MlDsa44Sign, MlDsa44Verify, UnsupportedSignSeeded};
+    MlDsa44Keygen, MlDsa44Sign, MlDsa44Verify, UnsupportedSignSeeded, 1, 1, 1};
 const pqcfuzz_sig_adapter kMlDsa65 = {
     "liboqs", "liboqs_mldsa65_wrapper_generic", "ML-DSA-65", 1952, 4032, 3309, 0, 0, 0,
-    MlDsa65Keygen, MlDsa65Sign, MlDsa65Verify, UnsupportedSignSeeded};
+    MlDsa65Keygen, MlDsa65Sign, MlDsa65Verify, UnsupportedSignSeeded, 1, 1, 1};
 const pqcfuzz_sig_adapter kMlDsa87 = {
     "liboqs", "liboqs_mldsa87_wrapper_generic", "ML-DSA-87", 2592, 4896, 4627, 0, 0, 0,
-    MlDsa87Keygen, MlDsa87Sign, MlDsa87Verify, UnsupportedSignSeeded};
+    MlDsa87Keygen, MlDsa87Sign, MlDsa87Verify, UnsupportedSignSeeded, 1, 1, 1};
 
 #define PQCFUZZ_SLH_LIBOQS_ADAPTER(symbol, impl, algorithm, pk, sk, sig) \
   const pqcfuzz_sig_adapter symbol = { \
-      "liboqs", impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded}
+      "liboqs", impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded, 0, 0, 0}
 
 PQCFUZZ_SLH_LIBOQS_ADAPTER(kSlhDsaSha2_128s, "liboqs_slhdsa_sha2_128s_wrapper_generic", "SLH-DSA-SHA2-128s", 32, 64, 7856);
 PQCFUZZ_SLH_LIBOQS_ADAPTER(kSlhDsaShake_128s, "liboqs_slhdsa_shake_128s_wrapper_generic", "SLH-DSA-SHAKE-128s", 32, 64, 7856);

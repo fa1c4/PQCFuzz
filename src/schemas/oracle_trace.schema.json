@@ -32,7 +32,7 @@
   ],
   "properties": {
     "version": {
-      "const": 4
+      "const": 5
     },
     "subtests": {
       "type": "array",
@@ -63,19 +63,72 @@
       "type": "array"
     },
     "oracle_semantics_version": {
-      "const": 4
+      "const": 5
     },
     "rng_interventions": {
       "type": "array"
+    },
+    "controls": {
+      "type": "object",
+      "properties": {
+        "baseline_repeat_equal": {"type": "boolean"},
+        "positive_control": {"type": "string"},
+        "negative_control": {"type": "string"},
+        "false_positive_controls": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "false_negative_controls": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
     },
     "findings": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["evidence_kind", "class", "subclass", "summary", "source_phase", "fingerprint"],
+        "required": [
+          "evidence_kind",
+          "class",
+          "subclass",
+          "summary",
+          "source_phase",
+          "fingerprint",
+          "verdict",
+          "evidence_class",
+          "conditional_verdict",
+          "claim",
+          "source_reference",
+          "limitations"
+        ],
         "properties": {
           "evidence_kind": {"enum": ["semantic", "sanitizer", "process"]},
-          "source_phase": {"enum": ["fuzz", "replay"]}
+          "source_phase": {"enum": ["fuzz", "replay"]},
+          "verdict": {
+            "enum": [
+              "CONFORMANT",
+              "NONCONFORMANT",
+              "HARDENING_GAP",
+              "NO_COUNTEREXAMPLE",
+              "INCONCLUSIVE",
+              "NOT_APPLICABLE",
+              "HARNESS_ERROR"
+            ]
+          },
+          "evidence_class": {
+            "enum": [
+              "NORMATIVE",
+              "REFERENCE_DERIVED",
+              "IMPLEMENTATION_OBSERVED",
+              "ENGINEERING_RECOMMENDATION",
+              "INFERENCE"
+            ]
+          },
+          "limitations": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
         }
       }
     },
@@ -86,7 +139,7 @@
       "type": "boolean"
     },
     "disposition": {
-      "enum": ["pass", "diagnostic", "not_evaluable", "raw_candidate", "sanitizer_evidence", "process_evidence", "harness_error"]
+      "enum": ["pass", "diagnostic", "not_evaluable", "not_applicable", "raw_candidate", "sanitizer_evidence", "process_evidence", "harness_error"]
     },
     "baseline_setup_valid": {
       "type": "boolean"

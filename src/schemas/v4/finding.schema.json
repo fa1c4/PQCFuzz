@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pqcfuzz.local/schemas/v4/finding.schema.json",
+  "type": "object",
+  "required": [
+    "version",
+    "oracle_semantics_version",
+    "evidence_kind",
+    "finding_id",
+    "job_id",
+    "pair_id",
+    "algorithm",
+    "oracle_id",
+    "finding_class",
+    "finding_subclass",
+    "summary",
+    "fingerprint",
+    "trace_path",
+    "artifact_dir",
+    "validation_state",
+    "validated",
+    "validation_attempts",
+    "validation_failure_reason"
+  ],
+  "properties": {
+    "version": {
+      "const": 4
+    },
+    "oracle_semantics_version": {
+      "const": 4
+    },
+    "evidence_kind": {
+      "enum": ["semantic", "sanitizer", "process"]
+    },
+    "finding_class": {
+      "enum": [
+        "malleability",
+        "non_malleability",
+        "crash",
+        "hang",
+        "confirmed_semantic_bug",
+        "potential_crypto_vuln",
+        "memory_safety",
+        "ub",
+        "timeout",
+        "api_policy_difference"
+      ]
+    },
+    "validated": {
+      "type": "boolean"
+    },
+    "validation_state": {
+      "enum": ["raw", "validated", "invalidated"]
+    },
+    "validation_attempts": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -103,17 +103,17 @@ pqcfuzz_status MlDsa87Verify(const uint8_t *sig, size_t sig_len, const uint8_t *
 
 const pqcfuzz_sig_adapter kMlDsa44 = {
     "pqclean", "pqclean_mldsa44_clean", "ML-DSA-44", 1312, 2560, 2420, 0, 0, 0,
-    MlDsa44Keygen, MlDsa44Sign, MlDsa44Verify, UnsupportedSignSeeded};
+    MlDsa44Keygen, MlDsa44Sign, MlDsa44Verify, UnsupportedSignSeeded, 1, 0, 0};
 const pqcfuzz_sig_adapter kMlDsa65 = {
     "pqclean", "pqclean_mldsa65_clean", "ML-DSA-65", 1952, 4032, 3309, 0, 0, 0,
-    MlDsa65Keygen, MlDsa65Sign, MlDsa65Verify, UnsupportedSignSeeded};
+    MlDsa65Keygen, MlDsa65Sign, MlDsa65Verify, UnsupportedSignSeeded, 1, 0, 0};
 const pqcfuzz_sig_adapter kMlDsa87 = {
     "pqclean", "pqclean_mldsa87_clean", "ML-DSA-87", 2592, 4896, 4627, 0, 0, 0,
-    MlDsa87Keygen, MlDsa87Sign, MlDsa87Verify, UnsupportedSignSeeded};
+    MlDsa87Keygen, MlDsa87Sign, MlDsa87Verify, UnsupportedSignSeeded, 1, 0, 0};
 
 #define PQCFUZZ_SLH_PQCLEAN_ADAPTER(symbol, impl, algorithm, pk, sk, sig) \
   const pqcfuzz_sig_adapter symbol = { \
-      "pqclean", impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded}
+      "pqclean", impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded, 0, 0, 0}
 
 PQCFUZZ_SLH_PQCLEAN_ADAPTER(kSlhDsaSha2_128s, "pqclean_slhdsa_sha2_128s_clean", "SLH-DSA-SHA2-128s", 32, 64, 7856);
 PQCFUZZ_SLH_PQCLEAN_ADAPTER(kSlhDsaShake_128s, "pqclean_slhdsa_shake_128s_clean", "SLH-DSA-SHAKE-128s", 32, 64, 7856);

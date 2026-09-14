@@ -104,6 +104,24 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kAigisSigUnusedSignBits:
     case OracleId::kAigisSigCtx256FailureState:
     case OracleId::kAigisSigDeterminismProfile:
+    case OracleId::kMlKemImplicitRejectionRelations:
+    case OracleId::kAigisEncImplicitRejectionRelations:
+    case OracleId::kMlDsaVerifyExactLengths:
+    case OracleId::kMlDsaCtxBoundaries:
+    case OracleId::kSlhDsaVerifyExactLengths:
+    case OracleId::kSlhDsaCtxBoundaries:
+    case OracleId::kMlKemRawLengthBoundary:
+    case OracleId::kMlKemEkCanonicality:
+    case OracleId::kMlDsaHintCanonicality:
+    case OracleId::kMlDsaZNormBoundary:
+    case OracleId::kMlDsaRndDeterminism:
+    case OracleId::kMlDsaPurePrehashSeparation:
+    case OracleId::kMlDsaPhOidSeparation:
+    case OracleId::kSlhDsaPurePrehashSeparation:
+    case OracleId::kSlhDsaPhOidSeparation:
+    case OracleId::kMlKemRngFailure:
+    case OracleId::kMlDsaRngFailure:
+    case OracleId::kSlhDsaRngFailure:
       return true;
     case OracleId::kUnknown:
       return false;
@@ -263,6 +281,42 @@ const char *OracleName(OracleId oracle_id) {
       return "aigissig_ctx256_failure_state";
     case OracleId::kAigisSigDeterminismProfile:
       return "aigissig_determinism_profile";
+    case OracleId::kMlKemImplicitRejectionRelations:
+      return "mlkem_implicit_rejection_relations";
+    case OracleId::kAigisEncImplicitRejectionRelations:
+      return "aigisenc_implicit_rejection_relations";
+    case OracleId::kMlDsaVerifyExactLengths:
+      return "mldsa_verify_exact_lengths";
+    case OracleId::kMlDsaCtxBoundaries:
+      return "mldsa_ctx_boundaries";
+    case OracleId::kSlhDsaVerifyExactLengths:
+      return "slhdsa_verify_exact_lengths";
+    case OracleId::kSlhDsaCtxBoundaries:
+      return "slhdsa_ctx_boundaries";
+    case OracleId::kMlKemRawLengthBoundary:
+      return "mlkem_raw_length_boundary";
+    case OracleId::kMlKemEkCanonicality:
+      return "mlkem_ek_canonicality";
+    case OracleId::kMlDsaHintCanonicality:
+      return "mldsa_hint_canonicality";
+    case OracleId::kMlDsaZNormBoundary:
+      return "mldsa_z_norm_boundary";
+    case OracleId::kMlDsaRndDeterminism:
+      return "mldsa_rnd_determinism";
+    case OracleId::kMlDsaPurePrehashSeparation:
+      return "mldsa_pure_prehash_separation";
+    case OracleId::kMlDsaPhOidSeparation:
+      return "mldsa_ph_oid_separation";
+    case OracleId::kSlhDsaPurePrehashSeparation:
+      return "slhdsa_pure_prehash_separation";
+    case OracleId::kSlhDsaPhOidSeparation:
+      return "slhdsa_ph_oid_separation";
+    case OracleId::kMlKemRngFailure:
+      return "mlkem_rng_failure";
+    case OracleId::kMlDsaRngFailure:
+      return "mldsa_rng_failure";
+    case OracleId::kSlhDsaRngFailure:
+      return "slhdsa_rng_failure";
     case OracleId::kUnknown:
       return "unknown";
   }
@@ -483,6 +537,60 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "aigissig_determinism_profile") {
     return OracleId::kAigisSigDeterminismProfile;
+  }
+  if (name == "mlkem_implicit_rejection_relations") {
+    return OracleId::kMlKemImplicitRejectionRelations;
+  }
+  if (name == "aigisenc_implicit_rejection_relations") {
+    return OracleId::kAigisEncImplicitRejectionRelations;
+  }
+  if (name == "mldsa_verify_exact_lengths") {
+    return OracleId::kMlDsaVerifyExactLengths;
+  }
+  if (name == "mldsa_ctx_boundaries") {
+    return OracleId::kMlDsaCtxBoundaries;
+  }
+  if (name == "slhdsa_verify_exact_lengths") {
+    return OracleId::kSlhDsaVerifyExactLengths;
+  }
+  if (name == "slhdsa_ctx_boundaries") {
+    return OracleId::kSlhDsaCtxBoundaries;
+  }
+  if (name == "mlkem_raw_length_boundary") {
+    return OracleId::kMlKemRawLengthBoundary;
+  }
+  if (name == "mlkem_ek_canonicality") {
+    return OracleId::kMlKemEkCanonicality;
+  }
+  if (name == "mldsa_hint_canonicality") {
+    return OracleId::kMlDsaHintCanonicality;
+  }
+  if (name == "mldsa_z_norm_boundary") {
+    return OracleId::kMlDsaZNormBoundary;
+  }
+  if (name == "mldsa_rnd_determinism") {
+    return OracleId::kMlDsaRndDeterminism;
+  }
+  if (name == "mldsa_pure_prehash_separation") {
+    return OracleId::kMlDsaPurePrehashSeparation;
+  }
+  if (name == "mldsa_ph_oid_separation") {
+    return OracleId::kMlDsaPhOidSeparation;
+  }
+  if (name == "slhdsa_pure_prehash_separation") {
+    return OracleId::kSlhDsaPurePrehashSeparation;
+  }
+  if (name == "slhdsa_ph_oid_separation") {
+    return OracleId::kSlhDsaPhOidSeparation;
+  }
+  if (name == "mlkem_rng_failure") {
+    return OracleId::kMlKemRngFailure;
+  }
+  if (name == "mldsa_rng_failure") {
+    return OracleId::kMlDsaRngFailure;
+  }
+  if (name == "slhdsa_rng_failure") {
+    return OracleId::kSlhDsaRngFailure;
   }
   return OracleId::kUnknown;
 }

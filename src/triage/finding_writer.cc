@@ -35,6 +35,9 @@ struct CounterRecord {
   std::string observed_relation;
   std::string finding_class;
   std::string finding_subclass;
+  std::string verdict;
+  std::string evidence_class;
+  std::string conditional_verdict;
   std::string baseline_status;
   std::string mutated_status;
   std::string artifact_dir;
@@ -188,6 +191,36 @@ const OracleFindingTrace *FirstSecurityFinding(const KEMOracleTrace &trace) {
 std::string FindingEvidenceKind(const KEMOracleTrace &trace) {
   const OracleFindingTrace *finding = FirstSecurityFinding(trace);
   return finding == nullptr ? "" : EvidenceKindName(finding->evidence_kind);
+}
+
+std::string FindingVerdict(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : VerdictName(finding->verdict);
+}
+
+std::string FindingEvidenceClass(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : EvidenceClassName(finding->evidence_class);
+}
+
+std::string FindingConditionalVerdict(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : finding->conditional_verdict;
+}
+
+std::string FindingClaim(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : finding->claim;
+}
+
+std::string FindingSourceReference(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? "" : finding->source_reference;
+}
+
+std::vector<std::string> FindingLimitations(const KEMOracleTrace &trace) {
+  const OracleFindingTrace *finding = FirstSecurityFinding(trace);
+  return finding == nullptr ? std::vector<std::string>{} : finding->limitations;
 }
 
 std::string FindingSourcePhase(const KEMOracleTrace &trace) {
@@ -351,9 +384,23 @@ std::string FindingJson(const FindingArtifactInput &input, const std::string &fi
   const std::string finding_subclass = FindingSubclass(input.trace);
   std::ostringstream out;
   out << "{\n";
-  out << "  \"version\": 4,\n";
-  out << "  \"oracle_semantics_version\": 4,\n";
+  out << "  \"version\": 5,\n";
+  out << "  \"oracle_semantics_version\": 5,\n";
   out << "  \"evidence_kind\": \"" << JsonEscape(FindingEvidenceKind(input.trace)) << "\",\n";
+  out << "  \"evidence_class\": \"" << JsonEscape(FindingEvidenceClass(input.trace)) << "\",\n";
+  out << "  \"verdict\": \"" << JsonEscape(FindingVerdict(input.trace)) << "\",\n";
+  out << "  \"conditional_verdict\": \"" << JsonEscape(FindingConditionalVerdict(input.trace)) << "\",\n";
+  out << "  \"claim\": \"" << JsonEscape(FindingClaim(input.trace)) << "\",\n";
+  out << "  \"source_reference\": \"" << JsonEscape(FindingSourceReference(input.trace)) << "\",\n";
+  out << "  \"limitations\": [";
+  const std::vector<std::string> limitations = FindingLimitations(input.trace);
+  for (size_t i = 0; i < limitations.size(); ++i) {
+    if (i != 0) {
+      out << ", ";
+    }
+    out << "\"" << JsonEscape(limitations[i]) << "\"";
+  }
+  out << "],\n";
   out << "  \"finding_id\": \"" << JsonEscape(finding_id) << "\",\n";
   out << "  \"job_id\": \"" << JsonEscape(input.job_id) << "\",\n";
   out << "  \"pair_id\": \"" << JsonEscape(input.pair_id) << "\",\n";
@@ -427,6 +474,7 @@ bool WriteArtifactDirectory(
                  "  src/adapters/randombytes_override.cc \\\n"
                  "  src/adapters/pqclean/kem_adapter.cc \\\n"
                  "  src/adapters/pqclean/sig_adapter.cc \\\n"
+                 "  src/adapters/reference/reference_adapter.cc \\\n"
                  "  src/mutators/envelope.cc \\\n"
                  "  src/mutators/maul.cc \\\n"
                  "  src/mutators/ml_kem_layout.cc \\\n"
@@ -438,6 +486,7 @@ bool WriteArtifactDirectory(
                  "  src/oracles/expected_relation.cc \\\n"
                  "  src/oracles/oracle_spec.cc \\\n"
                  "  src/oracles/oracle_spec_loader.cc \\\n"
+                 "  src/oracles/oracle_record.cc \\\n"
                  "  src/oracles/oracle_result.cc \\\n"
                  "  src/oracles/oracle_executor.cc \\\n"
                  "  src/oracles/metamorphic_observation.cc \\\n"
@@ -471,7 +520,8 @@ bool WriteArtifactDirectory(
 bool FlushFindingCountsForResultDir(const std::string &result_dir, std::string *error) {
   std::ostringstream out;
   out << "count\tgroup_key\tfinding_id\talgorithm\tprimitive\toracle_suite\trelation_mode\toracle_id\tfield\t"
-         "expected_relation\tobserved_relation\tfinding_class\tfinding_subclass\tbaseline_status\tmutated_status\t"
+         "expected_relation\tobserved_relation\tfinding_class\tfinding_subclass\tverdict\tevidence_class\t"
+         "conditional_verdict\tbaseline_status\tmutated_status\t"
          "exemplar_artifact_path\texemplar_replay_command\n";
   for (const auto &item : CounterRecords()) {
     const CounterRecord &record = item.second;
@@ -484,6 +534,8 @@ bool FlushFindingCountsForResultDir(const std::string &result_dir, std::string *
         << TsvEscape(record.oracle_id) << '\t' << TsvEscape(record.field) << '\t'
         << TsvEscape(record.expected_relation) << '\t' << TsvEscape(record.observed_relation) << '\t'
         << TsvEscape(record.finding_class) << '\t' << TsvEscape(record.finding_subclass) << '\t'
+        << TsvEscape(record.verdict) << '\t' << TsvEscape(record.evidence_class) << '\t'
+        << TsvEscape(record.conditional_verdict) << '\t'
         << TsvEscape(record.baseline_status) << '\t' << TsvEscape(record.mutated_status) << '\t'
         << TsvEscape(record.artifact_dir) << '\t' << TsvEscape(record.replay_command) << '\n';
   }
@@ -549,6 +601,9 @@ bool WriteFindingArtifacts(const FindingArtifactInput &input, std::string *artif
     record.observed_relation = input.trace.observed_relation;
     record.finding_class = finding_class;
     record.finding_subclass = FindingSubclass(input.trace);
+    record.verdict = FindingVerdict(input.trace);
+    record.evidence_class = FindingEvidenceClass(input.trace);
+    record.conditional_verdict = FindingConditionalVerdict(input.trace);
     record.baseline_status = pqcfuzz_status_to_string(input.trace.baseline.status);
     record.mutated_status = pqcfuzz_status_to_string(input.trace.mutated.status);
     record.finding_id = finding_class + "_" + Hex64(Fnv1aString(group_key));

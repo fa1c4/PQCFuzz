@@ -208,6 +208,9 @@ def test_aigis_fips_exact_length_oracle_reports_appended_acceptance(tmp_path: Pa
           if (trace.findings[0].finding_subclass != "appended_signature_bytes_accepted") return 3;
           if (trace.subtests.empty() || trace.subtests[0].passed) return 4;
           if (!trace.mutations.empty() && !trace.mutations[0].effective) return 5;
+          if (trace.findings[0].verdict != pqcfuzz::Verdict::kHardeningGap) return 6;
+          if (trace.findings[0].evidence_class != pqcfuzz::EvidenceClass::kEngineeringRecommendation) return 7;
+          if (trace.findings[0].conditional_verdict.empty()) return 8;
           return 0;
         }
         """,
@@ -261,6 +264,55 @@ def test_aigis_fips_determinism_profile_conformant_when_identical(tmp_path: Path
     )
 
 
+def test_aigis_determinism_profile_skips_non_deterministic_capability(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include <cstring>
+        #include "oracles/oracle_executor.h"
+
+        namespace {
+        pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
+          std::memset(pk, 0x41, 1056);
+          std::memset(sk, 0x42, 2448);
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Sign(uint8_t *sig, size_t *sig_len, const uint8_t *, size_t,
+                            const uint8_t *, const uint8_t *, size_t) {
+          static int call = 0;
+          std::memset(sig, call++ == 0 ? 0x43 : 0x44, 1852);
+          *sig_len = 1852;
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Verify(const uint8_t *, size_t, const uint8_t *, size_t,
+                              const uint8_t *, const uint8_t *, size_t) {
+          return PQCFUZZ_OK;
+        }
+        // Randomized profile: supports_deterministic_sign is false, so repeated
+        // signatures legitimately differ and the oracle must skip, not report.
+        const pqcfuzz_sig_adapter kAdapter = {
+            "pqmagic", "pqmagic_aigis_sig1_std_shake", "AIGIS-SIG-1",
+            1056, 2448, 1852, 1, 0, 0, Keygen, Sign, Verify, nullptr};
+        }
+
+        int main() {
+          pqcfuzz::SigOracleExecutorConfig cfg;
+          cfg.algorithm = "AIGIS-SIG-1";
+          cfg.oracle_id = "aigissig_determinism_profile";
+          cfg.left = &kAdapter;
+          cfg.message = {'m'};
+          cfg.seed = {1, 2, 3};
+          auto trace = pqcfuzz::ExecuteSigOracle(cfg);
+          if (!trace.findings.empty()) return 1;
+          if (trace.subtests.empty() || !trace.subtests[0].skipped) return 2;
+          if (!trace.subtests[0].passed) return 3;
+          return 0;
+        }
+        """,
+        CORE_EXECUTOR_SOURCES,
+    )
+
+
 def test_aigis_fips_ineffective_sig_mutation_is_skipped(tmp_path: Path) -> None:
     compile_and_run(
         tmp_path,
@@ -306,7 +358,6 @@ def test_aigis_fips_ineffective_sig_mutation_is_skipped(tmp_path: Path) -> None:
         """,
         CORE_EXECUTOR_SOURCES,
     )
-
 
 def test_aigis_pair_alg_loader() -> None:
     from pairing.pair_alg_loader import enabled_pairs_for_family, load_pair_alg
@@ -399,4 +450,4 @@ def test_aigis_spec_json_shape() -> None:
         (SRC_ROOT / "oracles" / "specs" / "aigis_sig.json").read_text(encoding="utf-8"))["oracles"]]
     assert "aigisenc_sk_noncanonical_coefficient" in enc_ids
     assert "aigissig_ctx256_failure_state" in sig_ids
-    assert len(enc_ids) == 5 and len(sig_ids) == 10
+    assert len(enc_ids) == 6 and len(sig_ids) == 10

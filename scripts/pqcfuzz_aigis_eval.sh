@@ -203,6 +203,7 @@ src/adapters/pqclean/kem_adapter.cc
 src/adapters/pqclean/sig_adapter.cc
 src/adapters/pqmagic/kem_adapter.cc
 src/adapters/pqmagic/sig_adapter.cc
+src/adapters/reference/reference_adapter.cc
 src/adapters/randombytes_override.cc
 src/mutators/envelope.cc
 src/mutators/envelope_fuzzer_mutator.cc
@@ -220,6 +221,7 @@ src/mutators/aigis_sig_mutator.cc
 src/oracles/expected_relation.cc
 src/oracles/oracle_spec.cc
 src/oracles/oracle_spec_loader.cc
+src/oracles/oracle_record.cc
 src/oracles/oracle_result.cc
 src/oracles/oracle_executor.cc
 src/oracles/metamorphic_observation.cc

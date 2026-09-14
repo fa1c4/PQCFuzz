@@ -11,11 +11,13 @@ struct TapeState {
   std::vector<uint8_t> data;
   size_t offset = 0;
   bool repeat = true;
+  RngTape::Mode mode = RngTape::Mode::kOk;
 };
 
 thread_local std::vector<TapeState> g_tapes;
 std::mutex g_hook_mutex;
 size_t g_process_scope_depth = 0;
+bool g_failure_observed = false;
 
 uint8_t DerivedByte(const TapeState &tape, size_t offset) {
   uint64_t hash = 1469598103934665603ull ^ static_cast<uint64_t>(offset);
@@ -34,6 +36,39 @@ bool FillFromActiveTape(uint8_t *out, size_t out_len) {
     return false;
   }
   TapeState &tape = g_tapes.back();
+  switch (tape.mode) {
+    case RngTape::Mode::kAllZero:
+      std::fill(out, out + out_len, 0);
+      return true;
+    case RngTape::Mode::kReportedFailure:
+      std::fill(out, out + out_len, 0);
+      g_failure_observed = true;
+      return false;
+    case RngTape::Mode::kInterrupted:
+      g_failure_observed = true;
+      return false;
+    case RngTape::Mode::kShortRead: {
+      const size_t delivered = out_len / 2;
+      for (size_t i = 0; i < delivered; ++i) {
+        out[i] = tape.data.empty() ? 0 : tape.data[i % tape.data.size()];
+      }
+      std::fill(out + delivered, out + out_len, 0);
+      g_failure_observed = true;
+      return true;
+    }
+    case RngTape::Mode::kRepeatedBlock: {
+      if (tape.data.empty()) {
+        std::fill(out, out + out_len, 0);
+        return true;
+      }
+      for (size_t i = 0; i < out_len; ++i) {
+        out[i] = tape.data[i % tape.data.size()];
+      }
+      return true;
+    }
+    case RngTape::Mode::kOk:
+      break;
+  }
   if (tape.data.empty()) {
     std::fill(out, out + out_len, 0);
     return true;
@@ -55,12 +90,13 @@ bool FillFromActiveTape(uint8_t *out, size_t out_len) {
 }  // namespace
 
 pqcfuzz_status pqcfuzz_rng_push_tape(const RngTape &tape) {
-  if (tape.data == nullptr || tape.size == 0) {
+  if (tape.data == nullptr || (tape.size == 0 && tape.mode == RngTape::Mode::kOk)) {
     return PQCFUZZ_INVALID_INPUT;
   }
   TapeState state;
   state.data.assign(tape.data, tape.data + tape.size);
   state.repeat = tape.repeat;
+  state.mode = tape.mode;
   {
     std::lock_guard<std::mutex> lock(g_hook_mutex);
     if (g_process_scope_depth == 0) {
@@ -92,6 +128,23 @@ bool pqcfuzz_rng_is_active() {
 
 size_t pqcfuzz_rng_bytes_consumed() {
   return g_tapes.empty() ? 0 : g_tapes.back().offset;
+}
+
+bool pqcfuzz_rng_failure_requested() {
+  if (g_tapes.empty()) {
+    return false;
+  }
+  const RngTape::Mode mode = g_tapes.back().mode;
+  return mode == RngTape::Mode::kReportedFailure || mode == RngTape::Mode::kInterrupted ||
+         mode == RngTape::Mode::kShortRead;
+}
+
+bool pqcfuzz_rng_failure_observed() {
+  return g_failure_observed;
+}
+
+void pqcfuzz_rng_reset_failure_observed() {
+  g_failure_observed = false;
 }
 
 ScopedRngOverride::ScopedRngOverride(const RngTape &tape) {

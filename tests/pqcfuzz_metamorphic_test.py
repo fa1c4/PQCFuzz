@@ -18,6 +18,10 @@ COMMON_SOURCES = [
     "src/mutators/maul.cc",
     "src/oracles/metamorphic_observation.cc",
     "src/oracles/metamorphic_spec.cc",
+    "src/oracles/expected_relation.cc",
+    "src/oracles/oracle_record.cc",
+    "src/oracles/oracle_result.cc",
+    "src/oracles/oracle_spec.cc",
     "src/oracles/metamorphic_executor.cc",
 ]
 
@@ -458,6 +462,6 @@ def test_kem_decaps_sk_z_region_mutation_is_no_effect_not_finding(tmp_path: Path
 def test_classification_relation_cases() -> None:
     assert classify_trace({"expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) == "malleability"
     assert classify_trace({"expected_relation": "EXPECT_EQUAL", "observed_relation": "OBSERVED_DIFFERENT", "findings": []}) == "non_malleability"
-    assert classify_trace({"oracle_semantics_version": 4, "expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) is None
+    assert classify_trace({"oracle_semantics_version": 5, "expected_relation": "EXPECT_DIFFERENT", "observed_relation": "OBSERVED_EQUAL", "findings": []}) is None
     assert classify_trace({"findings": [{"class": "crash", "summary": "boom"}]}) == "crash"
     assert classify_trace({"findings": [{"class": "hang", "summary": "slow"}]}) == "hang"

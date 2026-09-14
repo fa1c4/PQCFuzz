@@ -6,6 +6,12 @@
     "version",
     "oracle_semantics_version",
     "evidence_kind",
+    "evidence_class",
+    "verdict",
+    "conditional_verdict",
+    "claim",
+    "source_reference",
+    "limitations",
     "finding_id",
     "job_id",
     "pair_id",
@@ -24,13 +30,37 @@
   ],
   "properties": {
     "version": {
-      "const": 4
+      "const": 5
     },
     "oracle_semantics_version": {
-      "const": 4
+      "const": 5
     },
     "evidence_kind": {
       "enum": ["semantic", "sanitizer", "process"]
+    },
+    "evidence_class": {
+      "enum": [
+        "NORMATIVE",
+        "REFERENCE_DERIVED",
+        "IMPLEMENTATION_OBSERVED",
+        "ENGINEERING_RECOMMENDATION",
+        "INFERENCE"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "CONFORMANT",
+        "NONCONFORMANT",
+        "HARDENING_GAP",
+        "NO_COUNTEREXAMPLE",
+        "INCONCLUSIVE",
+        "NOT_APPLICABLE",
+        "HARNESS_ERROR"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
     },
     "finding_class": {
       "enum": [

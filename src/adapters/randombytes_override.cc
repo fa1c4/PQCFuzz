@@ -14,6 +14,14 @@ extern "C" void randombytes(uint8_t *out, size_t out_len) {
   if (pqcfuzz_rng_fill_bytes(out, out_len)) {
     return;
   }
+  if (pqcfuzz::pqcfuzz_rng_failure_requested()) {
+    // Void RNG API cannot report a failure; suppress fallback entropy and let
+    // the oracle observe the failure mode.
+    for (size_t i = 0; i < out_len; ++i) {
+      out[i] = 0;
+    }
+    return;
+  }
   static uint64_t counter = 0x9e3779b97f4a7c15ull;
   for (size_t i = 0; i < out_len; ++i) {
     counter ^= counter << 7;

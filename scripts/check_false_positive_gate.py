@@ -79,8 +79,8 @@ def check_gate(raw: dict[str, Any]) -> list[str]:
         failures.append("full_test_suite.compile_failures must be 0")
 
     versions = _semantics_versions(summary)
-    if versions != {4}:
-        failures.append("all artifact semantics versions must be exactly 4")
+    if versions != {5}:
+        failures.append("all artifact semantics versions must be exactly 5")
 
     for key in (
         "unsupported",

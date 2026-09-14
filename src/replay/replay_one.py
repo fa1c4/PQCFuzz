@@ -98,14 +98,87 @@ ORACLE_BY_ENUM = {
     43: "aigissig_unused_sign_bits",
     44: "aigissig_ctx256_failure_state",
     45: "aigissig_determinism_profile",
+    46: "mlkem_implicit_rejection_relations",
+    47: "aigisenc_implicit_rejection_relations",
+    48: "mldsa_verify_exact_lengths",
+    49: "mldsa_ctx_boundaries",
+    50: "slhdsa_verify_exact_lengths",
+    51: "slhdsa_ctx_boundaries",
+    52: "mlkem_raw_length_boundary",
+    53: "mlkem_ek_canonicality",
+    54: "mldsa_hint_canonicality",
+    55: "mldsa_z_norm_boundary",
+    56: "mldsa_rnd_determinism",
+    57: "mldsa_pure_prehash_separation",
+    58: "mldsa_ph_oid_separation",
+    59: "slhdsa_pure_prehash_separation",
+    60: "slhdsa_ph_oid_separation",
+    61: "mlkem_rng_failure",
+    62: "mldsa_rng_failure",
+    63: "slhdsa_rng_failure",
 }
 ALGORITHM_ENUM_BY_NAME = {value: key for key, value in ALGORITHM_BY_ENUM.items()}
 ORACLE_ENUM_BY_NAME = {value: key for key, value in ORACLE_BY_ENUM.items()}
 
 EXIT_HANG = 71
 EXIT_NATIVE_CRASH = 72
-CURRENT_ORACLE_SEMANTICS_VERSION = 4
-LEGACY_ORACLE_SEMANTICS_VERSIONS = {2, 3}
+CURRENT_ORACLE_SEMANTICS_VERSION = 5
+LEGACY_ORACLE_SEMANTICS_VERSIONS = {2, 3, 4}
+
+VERDICT_FOR_EVIDENCE_CLASS = {
+    "NORMATIVE": "NONCONFORMANT",
+    "REFERENCE_DERIVED": "NONCONFORMANT",
+    "ENGINEERING_RECOMMENDATION": "HARDENING_GAP",
+    "IMPLEMENTATION_OBSERVED": "INCONCLUSIVE",
+    "INFERENCE": "INCONCLUSIVE",
+}
+
+_SPEC_METADATA: dict[str, dict[str, Any]] = {}
+
+
+def _load_spec_metadata() -> None:
+    if _SPEC_METADATA:
+        return
+    specs_dir = REPO_ROOT / "src" / "oracles" / "specs"
+    for path in sorted(specs_dir.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for entry in payload.get("oracles", []):
+            oracle_id = entry.get("oracle_id") if isinstance(entry, dict) else None
+            if isinstance(oracle_id, str) and oracle_id:
+                _SPEC_METADATA[oracle_id] = entry
+
+
+def oracle_metadata(oracle_id: str) -> dict[str, Any]:
+    _load_spec_metadata()
+    return _SPEC_METADATA.get(oracle_id, {})
+
+
+def classify_violation(oracle_id: str, evidence_kind: str) -> dict[str, Any]:
+    """Map a violated oracle claim to the design-document verdict vocabulary."""
+    metadata = oracle_metadata(oracle_id)
+    evidence_class = str(metadata.get("evidence_class") or "INFERENCE")
+    verdict = VERDICT_FOR_EVIDENCE_CLASS.get(evidence_class, "INCONCLUSIVE")
+    if evidence_kind == "sanitizer":
+        verdict = "NONCONFORMANT"
+    elif evidence_kind == "process" and verdict == "INCONCLUSIVE":
+        verdict = "NONCONFORMANT"
+    scope = metadata.get("scope")
+    api_layer = ""
+    if isinstance(scope, dict):
+        api_layer = str(scope.get("api_layer", ""))
+    limitations = metadata.get("limitations")
+    return {
+        "verdict": verdict,
+        "evidence_class": evidence_class,
+        "conditional_verdict": str(metadata.get("conditional_verdict", "")),
+        "claim": str(metadata.get("claim", "")),
+        "source_reference": str(metadata.get("source_reference", "")),
+        "scope_api_layer": api_layer,
+        "limitations": [str(item) for item in limitations] if isinstance(limitations, list) else [],
+    }
 
 
 class ReplayError(RuntimeError):
@@ -336,7 +409,7 @@ def sanitizer_class(stderr: str) -> str | None:
 def trace_semantics_status(trace: dict[str, Any]) -> str:
     """Classify a trace without upgrading historical evidence in-place."""
     if trace.get("version") == CURRENT_ORACLE_SEMANTICS_VERSION and trace.get("oracle_semantics_version") == CURRENT_ORACLE_SEMANTICS_VERSION:
-        return "v4"
+        return "current"
     if trace.get("version") in LEGACY_ORACLE_SEMANTICS_VERSIONS or trace.get("oracle_semantics_version") in LEGACY_ORACLE_SEMANTICS_VERSIONS:
         return "legacy_semantics"
     return "unknown_semantics"
@@ -396,6 +469,7 @@ def synthesize_trace(
         finding_class = sanitizer
         evidence_kind = "sanitizer"
     disposition = "sanitizer_evidence" if evidence_kind == "sanitizer" else "process_evidence"
+    classification = classify_violation(oracle_id, evidence_kind)
     finding: dict[str, Any] = {
         "evidence_kind": evidence_kind,
         "class": finding_class,
@@ -403,6 +477,7 @@ def synthesize_trace(
         "summary": summary,
         "source_phase": "replay",
         "fingerprint": evidence_fingerprint(evidence_kind, finding_class, summary),
+        **classification,
     }
     trace = current_trace(job, oracle_id, disposition)
     trace["findings"] = [finding]
@@ -469,7 +544,7 @@ def validate_replay_trace(trace: dict[str, Any], job: dict[str, Any]) -> tuple[b
     semantics = trace_semantics_status(trace)
     if semantics == "legacy_semantics":
         return False, "legacy_semantics"
-    if semantics != "v4":
+    if semantics != "current":
         return False, "oracle_semantics_version_mismatch"
     findings = trace.get("findings")
     if not isinstance(findings, list) or not findings:
@@ -549,9 +624,9 @@ def maybe_write_finding(
     command: list[str],
     replay_validation_failure: str = "",
 ) -> None:
-    # A v2/v3 trace remains readable for diagnostics, but it must never be
-    # wrapped in a new v4 finding or be treated as equivalent v4 evidence.
-    if trace_semantics_status(trace) != "v4":
+    # A v2/v3/v4 trace remains readable for diagnostics, but it must never be
+    # wrapped in a new v5 finding or be treated as equivalent v5 evidence.
+    if trace_semantics_status(trace) != "current":
         return
     finding_class = classify_trace(trace)
     if finding_class is None or finding_class == "unsupported":
@@ -561,10 +636,26 @@ def maybe_write_finding(
     if replay_validation_failure:
         validated = False
         validation_failure_reason = replay_validation_failure
+    primary = first_finding(trace)
+    evidence_kind = str(primary.get("evidence_kind") or "semantic")
+    classification = classify_violation(str(trace["oracle_id"]), evidence_kind)
+    if primary.get("verdict"):
+        classification = {
+            "verdict": str(primary["verdict"]),
+            "evidence_class": str(primary.get("evidence_class") or classification["evidence_class"]),
+            "conditional_verdict": str(primary.get("conditional_verdict") or ""),
+            "claim": str(primary.get("claim") or ""),
+            "source_reference": str(primary.get("source_reference") or ""),
+            "scope_api_layer": classification["scope_api_layer"],
+            "limitations": [str(item) for item in primary.get("limitations", [])]
+            if isinstance(primary.get("limitations"), list)
+            else classification["limitations"],
+        }
     finding = {
         "version": CURRENT_ORACLE_SEMANTICS_VERSION,
         "oracle_semantics_version": CURRENT_ORACLE_SEMANTICS_VERSION,
-        "evidence_kind": str(first_finding(trace).get("evidence_kind") or "semantic"),
+        "evidence_kind": evidence_kind,
+        **classification,
         "finding_id": finding_id,
         "job_id": job["job_id"],
         "pair_id": job.get("pair_id", job["job_id"]),

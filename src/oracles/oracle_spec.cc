@@ -1,318 +1,49 @@
 #include "oracles/oracle_spec.h"
 
+#include <algorithm>
+
+#include "oracles/metamorphic_spec.h"
+
 namespace pqcfuzz {
+namespace {
+
+#include "oracles/generated_fips_specs.inc"
+
+std::vector<OracleSpec> SpecsForFamily(const std::string &family) {
+  std::vector<OracleSpec> specs;
+  for (const auto &spec : AllFipsOracleSpecs()) {
+    if (spec.algorithm_family == family) {
+      specs.push_back(spec);
+    }
+  }
+  return specs;
+}
+
+}  // namespace
+
+const std::vector<OracleSpec> &AllFipsOracleSpecs() {
+  static const std::vector<OracleSpec> specs = GeneratedFipsOracleSpecs();
+  return specs;
+}
 
 std::vector<OracleSpec> DefaultMlKemOracleSpecs() {
-  return {
-      {"mlkem_local_roundtrip",
-       "ML-KEM",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "none",
-       {},
-       ExpectedRelation::kSameSharedSecret,
-       "bytes_equal",
-       "semantic_mismatch_requires_manual_review"},
-      {"mlkem_cross_exchange_roundtrip",
-       "ML-KEM",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "none",
-       {},
-       ExpectedRelation::kSameSharedSecret,
-       "bytes_equal",
-       "semantic_mismatch_requires_manual_review"},
-      {"mlkem_tampered_ciphertext_implicit_rejection",
-       "ML-KEM",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "field_aware",
-       {"ciphertext.u", "ciphertext.v"},
-       ExpectedRelation::kRejectOrDifferentSharedSecret,
-       "not_equal_to_original_shared_secret_or_reject",
-       "potential_crypto_vuln_if_original_secret_returned"},
-      {"mlkem_bad_randomness_sanity",
-       "ML-KEM",
-       "kem",
-       {"keygen", "encaps"},
-       "bad_randomness",
-       {},
-       ExpectedRelation::kNoCrash,
-       "status_only",
-       "api_unsupported_is_not_failure"},
-  };
+  return SpecsForFamily("ML-KEM");
 }
 
 std::vector<OracleSpec> DefaultMlDsaOracleSpecs() {
-  return {
-      {"mldsa_local_sign_verify",
-       "ML-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"mldsa_cross_verify",
-       "ML-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"mldsa_mutated_signature_negative",
-       "ML-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "field_aware",
-       {"signature.c", "signature.z", "signature.h"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "verify_rejects_or_decode_rejects",
-       "potential_crypto_vuln_if_mutated_signature_verifies"},
-      {"mldsa_mutated_message_negative",
-       "ML-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "message_mutation",
-       {"message"},
-       ExpectedRelation::kVerifyFalse,
-       "verify_rejects",
-       "potential_crypto_vuln_if_mutated_message_verifies"},
-      {"mldsa_mutated_context_negative",
-       "ML-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "context_mutation",
-       {"ctx"},
-       ExpectedRelation::kVerifyFalseOrApiUnsupported,
-       "verify_rejects_or_api_unsupported",
-       "potential_crypto_vuln_if_mutated_context_verifies"},
-      {"mldsa_oid_field_mutation_sanity",
-       "ML-DSA",
-       "sig",
-       {"sign", "verify"},
-       "field_aware",
-       {"oid"},
-       ExpectedRelation::kVerifyFalseOrApiUnsupported,
-       "verify_rejects_or_api_unsupported",
-       "api_unsupported_is_not_failure"},
-      {"mldsa_bad_randomness_sanity",
-       "ML-DSA",
-       "sig",
-       {"sign"},
-       "bad_randomness",
-       {},
-       ExpectedRelation::kNoCrash,
-       "status_only",
-       "api_unsupported_is_not_failure"},
-  };
+  return SpecsForFamily("ML-DSA");
 }
 
 std::vector<OracleSpec> DefaultSlhDsaOracleSpecs() {
-  return {
-      {"slhdsa_local_sign_verify",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"slhdsa_cross_verify",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"slhdsa_mutated_signature_negative",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "field_aware",
-       {"signature.R", "signature.SIGFORS", "signature.SIGHT", "signature.WOTS", "signature.XMSS_AUTH_PATH"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "verify_rejects_or_decode_rejects",
-       "potential_crypto_vuln_if_mutated_signature_verifies"},
-      {"slhdsa_mutated_message_negative",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "message_mutation",
-       {"message"},
-       ExpectedRelation::kVerifyFalse,
-       "verify_rejects",
-       "potential_crypto_vuln_if_mutated_message_verifies"},
-      {"slhdsa_mutated_context_negative",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "context_mutation",
-       {"ctx"},
-       ExpectedRelation::kVerifyFalseOrApiUnsupported,
-       "verify_rejects_or_api_unsupported",
-       "potential_crypto_vuln_if_mutated_context_verifies"},
-      {"slhdsa_bad_randomness_sanity",
-       "SLH-DSA",
-       "sig",
-       {"keygen", "sign"},
-       "bad_randomness",
-       {},
-       ExpectedRelation::kNoCrash,
-       "status_only",
-       "api_unsupported_is_not_failure"},
-  };
+  return SpecsForFamily("SLH-DSA");
 }
 
 std::vector<OracleSpec> DefaultAigisEncOracleSpecs() {
-  return {
-      {"aigisenc_local_roundtrip",
-       "AIGIS-ENC",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "none",
-       {},
-       ExpectedRelation::kSameSharedSecret,
-       "bytes_equal",
-       "semantic_mismatch_requires_manual_review"},
-      {"aigisenc_cross_exchange_roundtrip",
-       "AIGIS-ENC",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "none",
-       {},
-       ExpectedRelation::kSameSharedSecret,
-       "bytes_equal",
-       "semantic_mismatch_requires_manual_review"},
-      {"aigisenc_tampered_ciphertext_implicit_rejection",
-       "AIGIS-ENC",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "field_aware",
-       {"ciphertext.u", "ciphertext.v"},
-       ExpectedRelation::kRejectOrDifferentSharedSecret,
-       "not_equal_to_original_shared_secret_or_reject",
-       "potential_crypto_vuln_if_original_secret_returned"},
-      {"aigisenc_bad_randomness_sanity",
-       "AIGIS-ENC",
-       "kem",
-       {"keygen", "encaps"},
-       "bad_randomness",
-       {},
-       ExpectedRelation::kNoCrash,
-       "status_only",
-       "api_unsupported_is_not_failure"},
-      {"aigisenc_sk_noncanonical_coefficient",
-       "AIGIS-ENC",
-       "kem",
-       {"keygen", "encaps", "decaps"},
-       "field_aware",
-       {"secret_key.s_vec"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "decode_rejects",
-       "implementation_observed_noncanonical_secret_key_acceptance"},
-  };
+  return SpecsForFamily("AIGIS-ENC");
 }
 
 std::vector<OracleSpec> DefaultAigisSigOracleSpecs() {
-  return {
-      {"aigissig_local_sign_verify",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"aigissig_cross_verify",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "none",
-       {},
-       ExpectedRelation::kVerifyTrue,
-       "verify_accepts",
-       "semantic_mismatch_requires_manual_review"},
-      {"aigissig_mutated_signature_negative",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "field_aware",
-       {"signature.z", "signature.h", "signature.c"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "verify_rejects_or_decode_rejects",
-       "potential_crypto_vuln_if_mutated_signature_verifies"},
-      {"aigissig_mutated_message_negative",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "message_mutation",
-       {"message"},
-       ExpectedRelation::kVerifyFalse,
-       "verify_rejects",
-       "potential_crypto_vuln_if_mutated_message_verifies"},
-      {"aigissig_mutated_context_negative",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "context_mutation",
-       {"ctx"},
-       ExpectedRelation::kVerifyFalseOrApiUnsupported,
-       "verify_rejects_or_api_unsupported",
-       "potential_crypto_vuln_if_mutated_context_verifies"},
-      {"aigissig_bad_randomness_sanity",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign"},
-       "bad_randomness",
-       {},
-       ExpectedRelation::kNoCrash,
-       "status_only",
-       "api_unsupported_is_not_failure"},
-      {"aigissig_exact_length",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "field_aware",
-       {"signature"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "verify_rejects_or_decode_rejects",
-       "appended_signature_bytes_accepted"},
-      {"aigissig_unused_sign_bits",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign", "verify"},
-       "field_aware",
-       {"signature.c"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "verify_rejects_or_decode_rejects",
-       "unused_sign_bit_malleable"},
-      {"aigissig_ctx256_failure_state",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign"},
-       "context_mutation",
-       {"ctx"},
-       ExpectedRelation::kVerifyFalseOrDecodeRejectOrApiInvalidInput,
-       "failure_state_consistent",
-       "failure_output_length_state_inconsistent"},
-      {"aigissig_determinism_profile",
-       "AIGIS-SIG",
-       "sig",
-       {"keygen", "sign"},
-       "none",
-       {},
-       ExpectedRelation::kExpectEqual,
-       "bytes_equal",
-       "determinism_violation"},
-  };
+  return SpecsForFamily("AIGIS-SIG");
 }
 
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id) {
@@ -320,6 +51,20 @@ const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std
     if (spec.oracle_id == oracle_id) {
       return &spec;
     }
+  }
+  return nullptr;
+}
+
+const OracleSpec *FindAnyOracleSpec(const std::string &oracle_id) {
+  return FindOracleSpec(AllFipsOracleSpecs(), oracle_id);
+}
+
+const OracleMetadata *FindOracleMetadata(const std::string &oracle_id) {
+  if (const OracleSpec *spec = FindAnyOracleSpec(oracle_id)) {
+    return &spec->metadata;
+  }
+  if (const MetamorphicSpec *spec = FindMetamorphicSpec(oracle_id)) {
+    return &spec->metadata;
   }
   return nullptr;
 }

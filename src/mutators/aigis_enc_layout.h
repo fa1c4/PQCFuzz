@@ -22,6 +22,10 @@ struct AigisEncParams {
   size_t c2_bits;      // compressed ciphertext noise polynomial coefficient bits
   size_t pk_bits;      // compressed public key polynomial coefficient bits
   size_t poly_bytes;   // unpacked secret polynomial encoding (n * 13 / 8 = 416)
+  // Implicit-rejection secret z, per PQMagic kem/aigis-enc/std/kem.c:
+  // sk = s_vec || pk || H(pk) || z, with z in the final SEED_BYTES.
+  size_t z_offset = 0;
+  size_t z_len = 0;
 };
 
 bool GetAigisEncParams(const std::string &algorithm, AigisEncParams *params);

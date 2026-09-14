@@ -73,6 +73,26 @@ python3 src/replay/replay_one.py \
   --input tests/seeds/mlkem_roundtrip_seed.bin
 ```
 
+## Evaluation Runs
+
+One tmux campaign per supported liboqs version (`0.14.0`, `0.8.0`, `0.4.0`):
+
+```bash
+# default metamorphic (mutation/relational) fuzzing
+scripts/pqcfuzz_eval.sh --versions 0.14.0,0.8.0,0.4.0 --fuzzing-time 24h
+
+# FIPS case-ID oracle suite (canonicality, exact length, z-norm, implicit rejection, RNG failure)
+scripts/pqcfuzz_eval.sh --versions 0.14.0,0.8.0,0.4.0 --fuzzing-time 24h --oracle-suite fips
+
+# both suites concurrently: two campaigns per version, same 24h budget each
+scripts/pqcfuzz_eval.sh --versions 0.14.0,0.8.0,0.4.0 --fuzzing-time 24h --full-test
+```
+
+`--full-test` takes precedence over `--oracle-suite`. Full-test session names
+are `<prefix>-liboqs-<version>-metamorphic` and `<prefix>-liboqs-<version>-fips`;
+results land under `workspace/pqcfuzz_eval/campaigns/liboqs-<version>-<suite>/`
+with the merged `workspace/pqcfuzz_eval/summary.json`.
+
 ## Layout
 
 ```text
@@ -126,7 +146,7 @@ profile defaults to the selected mode.
 
 PQCFuzz also fuzzes the PQMagic `Aigis-Enc` (modes 1-4) and `Aigis-Sig`
 (modes 1-3) implementations in `third_party/PQMagic`, following the oracle
-design in `third_party/aigis_nist_doc/deepseek_pqc_test_oracle_design.md`.
+design in `plans/deepseek_pqc_test_oracle_design.md`.
 Differential pairs are same-source SM3-vs-SHAKE hash profiles (object formats
 are hash-independent, so the SHAKE archive is symbol-renamed by
 `scripts/rename_pqmagic_symbols.py` before both variants are linked into one

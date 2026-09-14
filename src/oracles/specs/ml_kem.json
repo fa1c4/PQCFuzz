@@ -18,7 +18,21 @@
       },
       "expected_relation": "SAME_SHARED_SECRET",
       "comparator": "bytes_equal",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "For a valid ML-KEM key pair, Decaps(dk, Encaps(ek).ciphertext) shall equal Encaps(ek).shared_secret.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Sections 7.1-7.3 (external ML-KEM functions)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Round-trip agreement is a functional relation, not an IND-CCA security result",
+        "Finite testing cannot establish computational security"
+      ],
+      "controls": {
+        "positive_control": "distinct randomness produces a distinct ciphertext",
+        "negative_control": "a valid encapsulation always decapsulates on the same implementation"
+      }
     },
     {
       "oracle_id": "mlkem_cross_exchange_roundtrip",
@@ -41,7 +55,21 @@
       },
       "expected_relation": "SAME_SHARED_SECRET",
       "comparator": "bytes_equal",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two conforming ML-KEM implementations exchanging encapsulation keys and ciphertexts shall derive the same shared secret.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Sections 7.2-7.3",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Requires the pair file to declare a compatible exchange contract",
+        "A self-reference pair does not establish independent correctness"
+      ],
+      "controls": {
+        "positive_control": "left-to-right and right-to-left exchange both reconstruct the encapsulated secret",
+        "negative_control": "local round trips succeed on both implementations"
+      }
     },
     {
       "oracle_id": "mlkem_tampered_ciphertext_implicit_rejection",
@@ -64,7 +92,21 @@
       },
       "expected_relation": "REJECT_OR_DIFFERENT_SHARED_SECRET",
       "comparator": "not_equal_to_original_shared_secret_or_reject",
-      "triage_policy": "potential_crypto_vuln_if_original_secret_returned"
+      "triage_policy": "potential_crypto_vuln_if_original_secret_returned",
+      "claim": "A correctly sized ciphertext whose re-encryption does not match shall not yield the original encapsulated shared secret.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 203 Sections 7.3 and 3.3 (implicit rejection)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Does not prove IND-CCA security",
+        "Fallback stability, z-separation, and no-reject-flag behavior require the dedicated implicit-rejection relations"
+      ],
+      "controls": {
+        "positive_control": "the unmodified ciphertext decapsulates to the encapsulated secret",
+        "negative_control": "the mutation record shows the ciphertext bytes changed"
+      }
     },
     {
       "oracle_id": "mlkem_bad_randomness_sanity",
@@ -86,7 +128,285 @@
       },
       "expected_relation": "NO_CRASH",
       "comparator": "status_only",
-      "triage_policy": "api_unsupported_is_not_failure"
+      "triage_policy": "api_unsupported_is_not_failure",
+      "claim": "ML-KEM key generation and encapsulation shall consume the supplied randomness so that distinct randomness streams produce distinct outputs.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 3.3 (randomness requirements)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Does not test reported RNG failure handling (no output on failure)",
+        "Does not measure RBG health or entropy quality"
+      ],
+      "controls": {
+        "positive_control": "two distinct deterministic tapes are observed to be consumed",
+        "negative_control": "the baseline encapsulation succeeds"
+      }
+    },
+    {
+      "oracle_id": "mlkem_implicit_rejection_relations",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "valid_ciphertext_before_mutation": true,
+        "rejection_secret_in_sk": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.u",
+          "ciphertext.v",
+          "secret_key.z"
+        ]
+      },
+      "expected_relation": "REJECT_OR_DIFFERENT_SHARED_SECRET",
+      "comparator": "relational_implicit_rejection",
+      "triage_policy": "potential_crypto_vuln_if_fallback_not_bound_to_z",
+      "claim": "For a correctly sized invalid ML-KEM ciphertext, decapsulation shall return a stable implicit-rejection secret that depends on the stored rejection secret z, while valid decapsulation shall not depend on z, and no public reject flag shall be exposed.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 203 Sections 7.3 and 3.3; DeepSeek design doc Section 24 (implicit-rejection relations)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Does not prove IND-CCA security",
+        "A semantically neutral ciphertext mutation is recorded as no_effect rather than a finding"
+      ],
+      "controls": {
+        "positive_control": "the untouched valid ciphertext decapsulates to the encapsulated secret",
+        "negative_control": "the mutation records show both the ciphertext and the z region changed"
+      }
+    },
+    {
+      "oracle_id": "mlkem_raw_length_boundary",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "valid_lengths": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "NO_CRASH",
+      "comparator": "not_applicable_at_raw_boundary",
+      "triage_policy": "record_not_applicable_with_limitation",
+      "claim": "Exact ciphertext length enforcement for ML-KEM decapsulation is required by FIPS 203, but the raw fixed-pointer API used here has no ciphertext length parameter; enforcement must be provided by a length-aware wrapper.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 203 Section 7.3; DeepSeek design doc Section 19 (length oracle boundary)",
+      "scope": {
+        "api_layer": "wrapper"
+      },
+      "limitations": [
+        "The fixed-pointer raw boundary cannot perform runtime length validation; this record is NOT_APPLICABLE, not a pass",
+        "A wrapper-level exact-length oracle requires a length-aware adapter"
+      ],
+      "controls": {
+        "positive_control": "a baseline encaps/decaps roundtrip succeeds",
+        "negative_control": "the record is not persisted as a security finding"
+      }
+    },
+    {
+      "oracle_id": "mlkem_ek_canonicality",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps"
+      ],
+      "precondition": {
+        "valid_public_key_before_mutation": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "public_key.t"
+        ]
+      },
+      "expected_relation": "REJECT_OR_DIFFERENT_SHARED_SECRET",
+      "comparator": "encaps_rejects_noncanonical_12bit_coefficient",
+      "triage_policy": "potential_crypto_vuln_if_noncanonical_public_key_accepted",
+      "claim": "ML-KEM encapsulation shall not proceed on an encapsulation key whose 12-bit polynomial coefficients are not canonical: q-1 is accepted, and q, q+1, and 4095 are rejected before encapsulation.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 203 Sections 7.2 and 4.2 (encapsulation-key checks); DeepSeek design doc Sections 28.4 and 44",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Boundary positions sample the first, middle, and last coefficient of every polynomial plus a byte-straddling pair",
+        "A wrapper that normalizes or reduces coefficients before encapsulation records accepted behavior as a finding"
+      ],
+      "controls": {
+        "positive_control": "the unmodified encapsulation key encapsulates",
+        "negative_control": "each mutation record shows the encoded coefficient changed to the boundary value"
+      }
+    },
+    {
+      "oracle_id": "fips203_kat_keygen",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen"
+      ],
+      "precondition": {
+        "kat_vectors_available": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "exact_bytes",
+      "triage_policy": "reference_vector_mismatch_is_nonconformance",
+      "claim": "ML-KEM.KeyGen_internal(d, z) shall produce byte-identical ek and dk values for the NIST ACVP ML-KEM keyGen vectors.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 6.1 and Algorithm 16; NIST ACVP ML-KEM-keyGen-FIPS203 expectedResults",
+      "scope": {
+        "api_layer": "internal"
+      },
+      "limitations": [
+        "The checked-in table is a capped subset of the ACVP corpus",
+        "Requires a pinned ACVP-Server commit and the reference adapter derand hook"
+      ],
+      "controls": {
+        "positive_control": "a second run with the same d and z is byte-identical",
+        "negative_control": "distinct d/z inputs produce distinct keys"
+      }
+    },
+    {
+      "oracle_id": "fips203_kat_encaps",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "encaps"
+      ],
+      "precondition": {
+        "kat_vectors_available": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "exact_bytes",
+      "triage_policy": "reference_vector_mismatch_is_nonconformance",
+      "claim": "ML-KEM.Encaps_internal(ek, m) shall produce the ACVP expected ciphertext c and shared secret k.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 6.2 and Algorithm 17; NIST ACVP ML-KEM-encapDecap-FIPS203 expectedResults",
+      "scope": {
+        "api_layer": "internal"
+      },
+      "limitations": [
+        "Capped ACVP subset; requires the reference adapter encaps_derand hook"
+      ],
+      "controls": {
+        "positive_control": "the same deterministic coins reproduce the same ciphertext",
+        "negative_control": "the baseline public key is a fixed ACVP vector"
+      }
+    },
+    {
+      "oracle_id": "fips203_kat_decaps",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps"
+      ],
+      "precondition": {
+        "kat_vectors_available": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "exact_bytes",
+      "triage_policy": "reference_vector_mismatch_is_nonconformance",
+      "claim": "ML-KEM.Decaps(dk, c) shall produce the ACVP expected shared secret k.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 203 Section 6.3 and Algorithm 18; NIST ACVP ML-KEM-encapDecap-FIPS203 expectedResults",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Capped ACVP subset"
+      ],
+      "controls": {
+        "positive_control": "the expected shared secret equals the encaps vector k",
+        "negative_control": "a different ciphertext changes the derived secret"
+      }
+    },
+    {
+      "oracle_id": "mlkem_rng_failure",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps"
+      ],
+      "precondition": {
+        "rng_failure_injection_available": true
+      },
+      "mutation": {
+        "type": "bad_randomness",
+        "patterns": [
+          "reported_failure"
+        ]
+      },
+      "expected_relation": "NO_CRASH",
+      "comparator": "no_output_on_reported_rng_failure",
+      "triage_policy": "hardening_gap_when_void_rng_cannot_report",
+      "claim": "A reported RNG failure during ML-KEM key generation or encapsulation should produce a failure indication and no cryptographic output rather than proceeding with zeroed randomness.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "FIPS 203 Section 3.3 and DeepSeek design doc Sections 22 and 28.9",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Void randombytes APIs cannot report failure; continuing with zeroed coins is a hardening gap, not a normative nonconformance",
+        "The fault injector signals failure through the PQCFuzz RNG layer, not through the operating-system RNG"
+      ],
+      "controls": {
+        "positive_control": "the same call succeeds without the injected failure",
+        "negative_control": "the failure tape is observed to be consumed"
+      }
+    },
+    {
+      "oracle_id": "alloc_failure_contract",
+      "algorithm_family": "ML-KEM",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen"
+      ],
+      "precondition": {
+        "allocator_fault_injection_built": true
+      },
+      "mutation": {
+        "type": "allocator_failure"
+      },
+      "expected_relation": "NO_OUTPUT_ON_ALLOCATION_FAILURE",
+      "comparator": "no_output_or_partial_output_check",
+      "triage_policy": "hardening_gap_for_undocumented_allocation_failure_contract",
+      "claim": "When an allocation fails during ML-KEM key generation, the call should report a failure and leave caller output buffers untouched, with no partial key material exposed.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Sections 25 and 36.7 (allocator fault injector and failure-state contract)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Requires a binary built with -Wl,--wrap=malloc/calloc/realloc",
+        "Libraries that do not document allocation-failure behavior are reported as HARDENING_GAP, not as normative nonconformance"
+      ],
+      "controls": {
+        "positive_control": "key generation succeeds without injected allocation failure",
+        "negative_control": "each subtest records the number of triggered allocation failures"
+      }
     }
   ]
 }

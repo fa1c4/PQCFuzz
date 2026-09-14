@@ -13,8 +13,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def passing_summary() -> dict[str, Any]:
     security_oracles = ["kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"]
     return {
-        "oracle_semantics_version": 4,
-        "artifact_semantics_versions": [4],
+        "oracle_semantics_version": 5,
+        "artifact_semantics_versions": [5],
         "full_test_suite": {
             "status": "passed",
             "failed": 0,

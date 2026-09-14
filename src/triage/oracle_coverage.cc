@@ -23,6 +23,7 @@ struct Counters {
   uint64_t intervention_effective = 0;
   uint64_t rng_intervention_observed = 0;
   uint64_t skipped = 0;
+  uint64_t not_applicable = 0;
   uint64_t unsupported = 0;
   uint64_t finding_records = 0;
   std::map<std::string, uint64_t> skipped_subtest_reasons;
@@ -91,6 +92,7 @@ void WriteCounters(std::ostringstream *out, const Counters &c) {
        << ",\"relation_evaluable\":" << c.relation_evaluable << ",\"not_evaluable\":" << c.not_evaluable
        << ",\"intervention_effective\":" << c.intervention_effective
        << ",\"rng_intervention_observed\":" << c.rng_intervention_observed << ",\"skipped\":" << c.skipped
+       << ",\"not_applicable\":" << c.not_applicable
        << ",\"unsupported\":" << c.unsupported << ",\"finding_records\":" << c.finding_records
        << ",\"skipped_subtest_reasons\":";
   WriteReasonCounts(out, c.skipped_subtest_reasons);
@@ -244,6 +246,16 @@ void RecordTraceCounters(Counters *c, const KEMOracleTrace &trace) {
         ++c->skipped_subtest_reasons[subtest.note.empty() ? "unspecified" : subtest.note];
       }
     }
+  }
+  bool all_not_applicable = !trace.subtests.empty();
+  for (const auto &subtest : trace.subtests) {
+    if (!subtest.not_applicable) {
+      all_not_applicable = false;
+      break;
+    }
+  }
+  if (all_not_applicable) {
+    ++c->not_applicable;
   }
   if (trace.finding_class == "unsupported") {
     ++c->unsupported;

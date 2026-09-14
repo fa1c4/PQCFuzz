@@ -119,6 +119,10 @@ def test_ignored_rng_keygen_is_diagnostic_not_malleability(tmp_path: Path) -> No
             "src/mutators/maul.cc",
             "src/oracles/metamorphic_observation.cc",
             "src/oracles/metamorphic_spec.cc",
+            "src/oracles/expected_relation.cc",
+            "src/oracles/oracle_record.cc",
+            "src/oracles/oracle_result.cc",
+            "src/oracles/oracle_spec.cc",
             "src/oracles/metamorphic_executor.cc",
         ],
     )
@@ -204,6 +208,10 @@ def test_liboqs_rng_hook_uses_system_rng_when_no_tape_is_active(tmp_path: Path) 
             "src/mutators/maul.cc",
             "src/oracles/metamorphic_observation.cc",
             "src/oracles/metamorphic_spec.cc",
+            "src/oracles/expected_relation.cc",
+            "src/oracles/oracle_record.cc",
+            "src/oracles/oracle_result.cc",
+            "src/oracles/oracle_spec.cc",
             "src/oracles/metamorphic_executor.cc",
         ],
     )

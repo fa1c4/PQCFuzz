@@ -18,7 +18,20 @@
       },
       "expected_relation": "VERIFY_TRUE",
       "comparator": "verify_accepts",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "A signature produced by SLH-DSA Sign with a valid key and context shall verify under the matching public key.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 205 Sections 10-11 (external SLH-DSA functions)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Verification success is a functional relation, not a EUF-CMA security result"
+      ],
+      "controls": {
+        "positive_control": "the signature is produced from a freshly generated key pair",
+        "negative_control": "a one-byte signature mutation is rejected by the negative oracle"
+      }
     },
     {
       "oracle_id": "slhdsa_cross_verify",
@@ -41,7 +54,21 @@
       },
       "expected_relation": "VERIFY_TRUE",
       "comparator": "verify_accepts",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two conforming SLH-DSA implementations exchanging public keys and signatures shall cross-verify for the same parameter set and context.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 205 Sections 10-11",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Cross-verification requires an identical hash family, pure/prehash mode, and context",
+        "A self-reference pair does not establish independent correctness"
+      ],
+      "controls": {
+        "positive_control": "both local sign/verify paths succeed",
+        "negative_control": "a signature from a different key does not verify"
+      }
     },
     {
       "oracle_id": "slhdsa_mutated_signature_negative",
@@ -67,7 +94,21 @@
       },
       "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
       "comparator": "verify_rejects_or_decode_rejects",
-      "triage_policy": "potential_crypto_vuln_if_mutated_signature_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_signature_verifies",
+      "claim": "A mutated SLH-DSA signature component (R, FORS, hypertree root, WOTS, or authentication path) shall not verify.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Sections 10.2 and 30.9-style component mutation requirements",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Component-internal address-format and root-regeneration checks require component oracles",
+        "This oracle does not prove EUF-CMA"
+      ],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows the signature bytes changed"
+      }
     },
     {
       "oracle_id": "slhdsa_mutated_message_negative",
@@ -86,7 +127,20 @@
       },
       "expected_relation": "VERIFY_FALSE",
       "comparator": "verify_rejects",
-      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies",
+      "claim": "A signature shall not verify for a message that differs from the signed message.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Section 10.2 (message binding)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Message equality in the verifier domain is not tested across all message encodings"
+      ],
+      "controls": {
+        "positive_control": "the original message verifies",
+        "negative_control": "the mutation record shows the message bytes changed"
+      }
     },
     {
       "oracle_id": "slhdsa_mutated_context_negative",
@@ -108,7 +162,21 @@
       },
       "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
       "comparator": "verify_rejects_or_api_unsupported",
-      "triage_policy": "potential_crypto_vuln_if_mutated_context_verifies"
+      "triage_policy": "potential_crypto_vuln_if_mutated_context_verifies",
+      "claim": "A signature shall not verify when the verification context differs from the signing context.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Sections 10.2 and 11 (context domain separation)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Adapters without context support return API_UNSUPPORTED and are not failures",
+        "Context boundary lengths 0/1/254/255/256 are not covered by this oracle"
+      ],
+      "controls": {
+        "positive_control": "the original context verifies",
+        "negative_control": "the mutation record shows the context bytes changed"
+      }
     },
     {
       "oracle_id": "slhdsa_bad_randomness_sanity",
@@ -130,7 +198,219 @@
       },
       "expected_relation": "NO_CRASH",
       "comparator": "status_only",
-      "triage_policy": "api_unsupported_is_not_failure"
+      "triage_policy": "api_unsupported_is_not_failure",
+      "claim": "Hedged SLH-DSA signing shall consume the supplied opt_rand so that distinct randomness streams produce distinct signatures.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 205 Sections 9.2 and 11 (hedged signing)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Deterministic profiles legitimately ignore ambient randomness",
+        "Reported RNG failure handling is a separate oracle"
+      ],
+      "controls": {
+        "positive_control": "distinct deterministic tapes are observed to be consumed",
+        "negative_control": "the baseline signature verifies"
+      }
+    },
+    {
+      "oracle_id": "slhdsa_verify_exact_lengths",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "keygen",
+        "sign",
+        "verify"
+      ],
+      "precondition": {
+        "valid_signature_before_mutation": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "signature"
+        ]
+      },
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_non_exact_length",
+      "triage_policy": "potential_crypto_vuln_if_non_exact_length_accepted",
+      "claim": "SLH-DSA verification shall return false for every signature length that differs from the parameter-set signature length.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Section 10.2; DeepSeek design doc Section 30.3",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Truncations at R, FORS, and hypertree boundaries are sampled by separate component oracles",
+        "A wrapper that clamps the length records NOT_APPLICABLE"
+      ],
+      "controls": {
+        "positive_control": "the exact-length signature verifies",
+        "negative_control": "each boundary mutation record shows a changed signature length"
+      }
+    },
+    {
+      "oracle_id": "slhdsa_ctx_boundaries",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "keygen",
+        "sign",
+        "verify"
+      ],
+      "precondition": {
+        "context_api_available": true
+      },
+      "mutation": {
+        "type": "context_mutation",
+        "targets": [
+          "ctx"
+        ]
+      },
+      "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
+      "comparator": "ctx_boundary_contract",
+      "triage_policy": "potential_crypto_vuln_if_context_limit_not_enforced",
+      "claim": "SLH-DSA context lengths 0, 1, 254, and 255 shall sign and verify, context length 256 shall be rejected, and a different verification context shall not verify.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Sections 10.2 and 11; DeepSeek design doc Section 30.7",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Adapters without an extended-context boundary record NOT_APPLICABLE"
+      ],
+      "controls": {
+        "positive_control": "the empty-context signature verifies",
+        "negative_control": "a mismatched context does not verify"
+      }
+    },
+    {
+      "oracle_id": "fips205_kat_keygen",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "keygen"
+      ],
+      "precondition": {
+        "kat_vectors_available": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "exact_bytes",
+      "triage_policy": "reference_vector_mismatch_is_nonconformance",
+      "claim": "SLH-DSA seed-based key generation shall produce the ACVP expected public and private keys from the declared seed components.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 205 Sections 9.1 and 11; NIST ACVP SLH-DSA-keyGen-FIPS205 expectedResults",
+      "scope": {
+        "api_layer": "internal"
+      },
+      "limitations": [
+        "Requires a seed-keypair hook on the reference adapter",
+        "Capped ACVP subset"
+      ],
+      "controls": {
+        "positive_control": "the same seed reproduces the same key pair",
+        "negative_control": "a different seed changes the key pair"
+      }
+    },
+    {
+      "oracle_id": "slhdsa_pure_prehash_separation",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "sign",
+        "verify"
+      ],
+      "precondition": {
+        "prehash_api_available": false
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
+      "comparator": "not_applicable_with_limitation",
+      "triage_policy": "record_not_applicable",
+      "claim": "A pure SLH-DSA signature and a prehash SLH-DSA signature for the same message shall not verify in each other's domain.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Sections 10.2 and 11 and DeepSeek design doc Section 30.7",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No prehash interface is exposed by the selected adapters; recorded NOT_APPLICABLE"
+      ],
+      "controls": {
+        "positive_control": "a pure signature verifies in the pure domain",
+        "negative_control": "the record is not persisted as a finding"
+      }
+    },
+    {
+      "oracle_id": "slhdsa_ph_oid_separation",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "sign",
+        "verify"
+      ],
+      "precondition": {
+        "prehash_api_available": false
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "VERIFY_FALSE_OR_API_UNSUPPORTED",
+      "comparator": "not_applicable_with_limitation",
+      "triage_policy": "record_not_applicable",
+      "claim": "Prehash SLH-DSA verification shall reject a digest whose OID or XOF output length differs from the signing parameters.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 205 Sections 10.2 and 11 and DeepSeek design doc Section 30.7",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No prehash/OID interface is exposed; recorded NOT_APPLICABLE"
+      ],
+      "controls": {
+        "positive_control": "a matching prehash OID verifies when a prehash API exists",
+        "negative_control": "the record is not persisted as a finding"
+      }
+    },
+    {
+      "oracle_id": "slhdsa_rng_failure",
+      "algorithm_family": "SLH-DSA",
+      "primitive_type": "sig",
+      "api_surface": [
+        "keygen",
+        "sign"
+      ],
+      "precondition": {
+        "rng_failure_injection_available": true
+      },
+      "mutation": {
+        "type": "bad_randomness",
+        "patterns": [
+          "reported_failure"
+        ]
+      },
+      "expected_relation": "NO_CRASH",
+      "comparator": "no_output_on_reported_rng_failure",
+      "triage_policy": "hardening_gap_when_void_rng_cannot_report",
+      "claim": "A reported RNG failure during SLH-DSA key generation or signing should produce a failure indication and no signature output rather than proceeding with zeroed randomness.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "FIPS 205 Section 3.1 and DeepSeek design doc Sections 22 and 28.9",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Void RNG APIs cannot report failure; continuing is a hardening gap"
+      ],
+      "controls": {
+        "positive_control": "the same call succeeds without the injected failure",
+        "negative_control": "the failure tape is observed to be consumed"
+      }
     }
   ]
 }

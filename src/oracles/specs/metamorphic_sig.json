@@ -7,7 +7,19 @@
       "field": "rng",
       "expected_relation": "EXPECT_DIFFERENT",
       "finding_subclass": "keygen_rng_ignored",
-      "requires_rng_injection": true
+      "requires_rng_injection": true,
+      "claim": "Signature key generation shall consume its random seeds so that distinct randomness streams produce distinct keys.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 204 Section 3.6.1 (key generation randomness)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Tests distinct-stream consumption only, not reported RNG failure",
+        "Low-entropy but successful RNG output is an RBG-health concern"
+      ],
+      "controls": {
+        "positive_control": "the deterministic tape is observed to be consumed",
+        "negative_control": "the produced key pair signs and verifies"
+      }
     },
     {
       "oracle_id": "sig_sign_badrng",
@@ -16,7 +28,19 @@
       "field": "rng",
       "expected_relation": "EXPECT_DIFFERENT",
       "finding_subclass": "sign_rng_ignored",
-      "requires_rng_injection": true
+      "requires_rng_injection": true,
+      "claim": "Hedged signing shall consume its random seed so that distinct randomness streams produce distinct signatures.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "FIPS 204 Section 3.4 (hedged signing)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Deterministic profiles legitimately ignore ambient randomness",
+        "Does not test reported RNG failure handling"
+      ],
+      "controls": {
+        "positive_control": "the deterministic tape is observed to be consumed",
+        "negative_control": "the produced signature verifies"
+      }
     },
     {
       "oracle_id": "sig_sign_m",
@@ -24,7 +48,19 @@
       "primitive_type": "sig",
       "field": "message",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "message_not_bound_in_signature_generation"
+      "finding_subclass": "message_not_bound_in_signature_generation",
+      "claim": "A signing input mutation that changes the message should change the produced signature bytes.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "FIPS 204 Section 5.2 (message binding)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Hedged signing with fresh randomness also changes signatures, so the relation is only meaningful with controlled randomness",
+        "Experimental oracle"
+      ],
+      "controls": {
+        "positive_control": "the baseline signature verifies",
+        "negative_control": "the mutation record shows the message changed"
+      }
     },
     {
       "oracle_id": "sig_sign_sk",
@@ -32,7 +68,19 @@
       "primitive_type": "sig",
       "field": "secret_key",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "secret_key_ignored_or_malleable"
+      "finding_subclass": "secret_key_ignored_or_malleable",
+      "claim": "A signing secret-key mutation that changes the used key material should change the produced signature.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 38.4 (relational key mutations)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Mutations in unused secret-key fields legitimately may not change the output",
+        "Experimental oracle"
+      ],
+      "controls": {
+        "positive_control": "the baseline signature verifies",
+        "negative_control": "the mutation record shows the secret key changed"
+      }
     },
     {
       "oracle_id": "sig_verify_m",
@@ -40,7 +88,19 @@
       "primitive_type": "sig",
       "field": "message",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "message_binding_failure"
+      "finding_subclass": "message_binding_failure",
+      "claim": "A signature that verifies for one message shall not verify for a distinct message.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 204 Section 3.1 (EUF-CMA message binding)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "A single held-out message mutation is not a forgery search",
+        "Does not prove EUF-CMA"
+      ],
+      "controls": {
+        "positive_control": "the original message verifies",
+        "negative_control": "the mutation record shows the message changed"
+      }
     },
     {
       "oracle_id": "sig_verify_sig",
@@ -48,7 +108,18 @@
       "primitive_type": "sig",
       "field": "signature",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "signature_malleability"
+      "finding_subclass": "signature_malleability",
+      "claim": "A mutated signature that verifies successfully is a critical signature-binding violation unless the mutation is a documented equivalent encoding.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 204 Section 3.1 (sUF-CMA byte-string signature identity)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Seed and mutation budgets bound the search; no forgery may be classified NO_COUNTEREXAMPLE, never a proof"
+      ],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows the signature changed"
+      }
     },
     {
       "oracle_id": "sig_verify_pk",
@@ -56,7 +127,18 @@
       "primitive_type": "sig",
       "field": "public_key",
       "expected_relation": "EXPECT_DIFFERENT",
-      "finding_subclass": "public_key_binding_failure"
+      "finding_subclass": "public_key_binding_failure",
+      "claim": "A signature shall not verify under a different public key.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "FIPS 204 Section 3.1 (public-key binding)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Cross-key candidates require a valid alternate key; the oracle records the replay requirements"
+      ],
+      "controls": {
+        "positive_control": "the signature verifies under the original public key",
+        "negative_control": "the alternate public key is a valid key from a second key pair"
+      }
     }
   ]
 }

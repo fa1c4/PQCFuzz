@@ -1,6 +1,7 @@
 #include "oracles/oracle_result.h"
 
 #include "oracles/oracle_executor.h"
+#include "oracles/oracle_spec.h"
 
 namespace pqcfuzz {
 namespace {
@@ -22,6 +23,18 @@ bool HasHarnessError(const KEMOracleTrace &trace) {
   return false;
 }
 
+bool AllSubtestsNotApplicable(const KEMOracleTrace &trace) {
+  if (trace.subtests.empty()) {
+    return false;
+  }
+  for (const auto &subtest : trace.subtests) {
+    if (!subtest.not_applicable) {
+      return false;
+    }
+  }
+  return true;
+}
+
 }  // namespace
 
 const char *OracleDispositionName(OracleDisposition disposition) {
@@ -32,6 +45,8 @@ const char *OracleDispositionName(OracleDisposition disposition) {
       return "diagnostic";
     case OracleDisposition::kNotEvaluable:
       return "not_evaluable";
+    case OracleDisposition::kNotApplicable:
+      return "not_applicable";
     case OracleDisposition::kRawCandidate:
       return "raw_candidate";
     case OracleDisposition::kSanitizerEvidence:
@@ -95,6 +110,9 @@ OracleDisposition FinalizeDisposition(const KEMOracleTrace &trace) {
   if (HasProcessEvidence(trace)) {
     return OracleDisposition::kProcessEvidence;
   }
+  if (AllSubtestsNotApplicable(trace)) {
+    return OracleDisposition::kNotApplicable;
+  }
   if (!trace.baseline_setup_valid || !trace.mutated_setup_valid) {
     return OracleDisposition::kNotEvaluable;
   }
@@ -152,6 +170,9 @@ TraceValidationResult ValidateTraceForPersistence(const KEMOracleTrace &trace) {
     case OracleDisposition::kNotEvaluable:
       result.reason = trace.findings.empty() ? "not_evaluable" : "non_persistable_disposition";
       return result;
+    case OracleDisposition::kNotApplicable:
+      result.reason = "not_applicable";
+      return result;
   }
   result.reason = "harness_error";
   return result;
@@ -159,6 +180,33 @@ TraceValidationResult ValidateTraceForPersistence(const KEMOracleTrace &trace) {
 
 bool IsPersistableRawEvidence(const KEMOracleTrace &trace) {
   return ValidateTraceForPersistence(trace).persistable;
+}
+
+FindingClassification ClassifyFinding(
+    const std::string &oracle_id,
+    EvidenceKind evidence_kind,
+    const std::string &) {
+  FindingClassification classification;
+  if (const OracleMetadata *metadata = FindOracleMetadata(oracle_id)) {
+    classification.claim = metadata->claim;
+    classification.evidence_class = metadata->evidence_class;
+    classification.source_reference = metadata->source_reference;
+    classification.conditional_verdict = metadata->conditional_verdict;
+    classification.limitations = metadata->limitations;
+  }
+  if (evidence_kind == EvidenceKind::kSanitizer) {
+    // A sanitizer finding is a concrete memory-safety failure; it is never
+    // downgraded by the oracle record's hardening evidence class.
+    classification.verdict = Verdict::kNonconformant;
+    return classification;
+  }
+  classification.verdict = VerdictForViolation(classification.evidence_class);
+  if (evidence_kind == EvidenceKind::kProcess && classification.verdict == Verdict::kInconclusive) {
+    // A crash or timeout remains a concrete failure even when the claim is an
+    // implementation observation.
+    classification.verdict = Verdict::kNonconformant;
+  }
+  return classification;
 }
 
 }  // namespace pqcfuzz

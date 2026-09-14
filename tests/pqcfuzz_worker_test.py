@@ -113,8 +113,8 @@ def test_worker_trace_exit_70_is_preserved(tmp_path: Path) -> None:
 import json, sys
 trace = sys.argv[sys.argv.index('--trace') + 1]
 open(trace, 'w', encoding='utf-8').write(json.dumps({
-    'version': 4,
-    'oracle_semantics_version': 4,
+    'version': 5,
+    'oracle_semantics_version': 5,
     'disposition': 'raw_candidate',
     'oracle_suite': 'metamorphic',
     'relation_mode': 'single-target',

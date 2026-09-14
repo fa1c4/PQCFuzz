@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "oracles/oracle_record.h"
+
 namespace pqcfuzz {
 
 struct MetamorphicSpec {
@@ -13,8 +15,10 @@ struct MetamorphicSpec {
   std::string expected_relation;
   std::string finding_subclass;
   bool uses_rng = false;
+  OracleMetadata metadata;
 };
 
+const std::vector<MetamorphicSpec> &AllMetamorphicSpecs();
 const MetamorphicSpec *FindMetamorphicSpec(const std::string &oracle_id);
 std::vector<std::string> DefaultMetamorphicKemOracles();
 std::vector<std::string> DefaultMetamorphicSigOracles();

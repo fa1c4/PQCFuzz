@@ -8,6 +8,8 @@
 #include "mutators/maul.h"
 #include "oracles/metamorphic_observation.h"
 #include "oracles/metamorphic_spec.h"
+#include "oracles/oracle_result.h"
+#include "oracles/oracle_spec.h"
 
 namespace pqcfuzz {
 namespace {
@@ -36,6 +38,40 @@ void AddExecutorRejection(OracleSubtestTrace *subtest, const std::string &api, p
   call.target_returned = false;
   call.rejection_layer = "executor";
   subtest->calls.push_back(call);
+}
+
+// Metamorphic findings inherit the oracle record's evidence class and verdict
+// so the default fuzzing mode reports the same design-document vocabulary as
+// the FIPS suite.
+OracleFindingTrace MakeMetamorphicFinding(
+    const MetamorphicSpec &spec,
+    const std::string &finding_class,
+    const std::string &summary) {
+  OracleFindingTrace finding;
+  finding.finding_class = finding_class;
+  finding.finding_subclass = spec.finding_subclass;
+  finding.summary = summary;
+  const FindingClassification classification =
+      ClassifyFinding(spec.oracle_id, EvidenceKind::kSemantic, finding_class);
+  finding.verdict = classification.verdict;
+  finding.evidence_class = classification.evidence_class;
+  finding.conditional_verdict = classification.conditional_verdict;
+  finding.claim = classification.claim;
+  finding.source_reference = classification.source_reference;
+  finding.limitations = classification.limitations;
+  return finding;
+}
+
+void ApplyMetamorphicControls(const MetamorphicSpec &spec, KEMOracleTrace *trace) {
+  if (trace == nullptr) {
+    return;
+  }
+  const OracleMetadata *metadata = FindOracleMetadata(spec.oracle_id);
+  if (metadata == nullptr) {
+    return;
+  }
+  trace->controls.positive_control = metadata->positive_control;
+  trace->controls.negative_control = metadata->negative_control;
 }
 
 void AddBoolCall(OracleSubtestTrace *subtest, const std::string &api, pqcfuzz_status status, bool accepted) {
@@ -186,7 +222,9 @@ SIGVerifyResult Verify(
     AddBoolCall(subtest, "verify", out.status, false);
     return out;
   }
-  if (context.size() > 255 || pk.size() != adapter->pk_len || signature.size() > adapter->sig_max_len) {
+  if ((context.size() > 255 && adapter->verify_accepts_extended_context == 0) ||
+      pk.size() != adapter->pk_len ||
+      (adapter->verify_checks_length == 0 && signature.size() > adapter->sig_max_len)) {
     out.status = PQCFUZZ_INVALID_INPUT;
     AddExecutorRejection(subtest, "verify", out.status);
     return out;
@@ -304,6 +342,7 @@ void FinalizeNoEffect(
   subtest->note = reason;
   trace->mutations.push_back(*mutation);
   trace->subtests.push_back(*subtest);
+  ApplyMetamorphicControls(spec, trace);
 }
 
 void FinalizeRngInterventionNotObserved(
@@ -552,8 +591,10 @@ void FinalizeTrace(
   if (!finding_class.empty() && finding_class != "unsupported") {
     trace->finding_class = finding_class;
     trace->finding_subclass = spec.finding_subclass;
-    trace->findings.push_back({finding_class, spec.finding_subclass, finding_class + ": " + spec.finding_subclass});
+    trace->findings.push_back(
+        MakeMetamorphicFinding(spec, finding_class, finding_class + ": " + spec.finding_subclass));
   }
+  ApplyMetamorphicControls(spec, trace);
 }
 
 void FinalizeSetupFailure(

@@ -1,6 +1,10 @@
 #ifndef PQCFUZZ_ORACLES_ORACLE_RESULT_H
 #define PQCFUZZ_ORACLES_ORACLE_RESULT_H
 
+#include <string>
+
+#include "oracles/oracle_record.h"
+
 namespace pqcfuzz {
 
 struct KEMOracleTrace;
@@ -9,6 +13,7 @@ enum class OracleDisposition {
   kPass,
   kDiagnostic,
   kNotEvaluable,
+  kNotApplicable,
   kRawCandidate,
   kSanitizerEvidence,
   kProcessEvidence,
@@ -40,6 +45,14 @@ bool HasSanitizerEvidence(const KEMOracleTrace &trace);
 bool HasProcessEvidence(const KEMOracleTrace &trace);
 TraceValidationResult ValidateTraceForPersistence(const KEMOracleTrace &trace);
 bool IsPersistableRawEvidence(const KEMOracleTrace &trace);
+
+// Binds a violated oracle claim to the design document's verdict vocabulary
+// and evidence classes.  Findings inherit the oracle record's one primary
+// evidence class; a crash or sanitizer finding is always a concrete failure.
+FindingClassification ClassifyFinding(
+    const std::string &oracle_id,
+    EvidenceKind evidence_kind,
+    const std::string &finding_class);
 
 }  // namespace pqcfuzz
 

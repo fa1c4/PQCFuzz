@@ -13,10 +13,10 @@ def load_schema(name: str) -> dict:
     return json.loads((REPO_ROOT / "src" / "schemas" / name).read_text(encoding="utf-8"))
 
 
-def test_canonical_v4_trace_requires_disposition_and_version() -> None:
+def test_canonical_v5_trace_requires_disposition_and_version() -> None:
     trace = {
-        "version": 4,
-        "oracle_semantics_version": 4,
+        "version": 5,
+        "oracle_semantics_version": 5,
         "job_id": "schema-test",
         "pair_id": "schema-test",
         "algorithm": "ML-KEM-768",
@@ -47,11 +47,67 @@ def test_canonical_v4_trace_requires_disposition_and_version() -> None:
     assert any(error.validator == "required" and "disposition" in error.message for error in errors)
 
 
-def test_canonical_v4_finding_rejects_unsupported_class() -> None:
+def test_canonical_v5_trace_finding_requires_verdict_and_evidence_class() -> None:
+    trace = {
+        "version": 5,
+        "oracle_semantics_version": 5,
+        "disposition": "raw_candidate",
+        "job_id": "schema-test",
+        "pair_id": "schema-test",
+        "algorithm": "ML-KEM-768",
+        "oracle_id": "mlkem_local_roundtrip",
+        "mutation_target": "",
+        "left_status": "OK",
+        "right_status": "OK",
+        "verify_result": False,
+        "legal_negative_outcome": False,
+        "baseline_setup_valid": True,
+        "mutated_setup_valid": True,
+        "baseline_adapter_entered": True,
+        "baseline_target_entered": True,
+        "mutated_adapter_entered": True,
+        "mutated_target_entered": True,
+        "relation_evaluable": True,
+        "intervention_supported": True,
+        "intervention_effective": True,
+        "diagnostics": [],
+        "subtests": [],
+        "mutations": [],
+        "rng_interventions": [],
+        "findings": [
+            {
+                "evidence_kind": "semantic",
+                "class": "confirmed_semantic_bug",
+                "subclass": "",
+                "summary": "test",
+                "source_phase": "fuzz",
+                "fingerprint": "test",
+            }
+        ],
+    }
+
+    errors = list(Draft202012Validator(load_schema("oracle_trace.schema.json")).iter_errors(trace))
+
+    missing = {
+        error.message
+        for error in errors
+        if error.validator == "required"
+    }
+    assert any("verdict" in message for message in missing)
+    assert any("evidence_class" in message for message in missing)
+
+
+def test_canonical_v5_finding_rejects_unsupported_class() -> None:
     finding = {
-        "version": 4,
-        "oracle_semantics_version": 4,
+        "version": 5,
+        "oracle_semantics_version": 5,
         "evidence_kind": "semantic",
+        "evidence_class": "NORMATIVE",
+        "verdict": "NONCONFORMANT",
+        "conditional_verdict": "",
+        "claim": "test claim",
+        "source_reference": "test source",
+        "limitations": [],
         "finding_id": "schema-test",
         "job_id": "schema-test",
         "pair_id": "schema-test",
@@ -82,3 +138,13 @@ def test_v3_schemas_are_retained_for_legacy_artifacts() -> None:
     assert trace_schema["properties"]["oracle_semantics_version"]["const"] == 3
     assert finding_schema["properties"]["version"]["const"] == 3
     assert finding_schema["properties"]["oracle_semantics_version"]["const"] == 3
+
+
+def test_v4_schemas_are_retained_for_legacy_artifacts() -> None:
+    trace_schema = load_schema("v4/oracle_trace.schema.json")
+    finding_schema = load_schema("v4/finding.schema.json")
+
+    assert trace_schema["properties"]["version"]["const"] == 4
+    assert trace_schema["properties"]["oracle_semantics_version"]["const"] == 4
+    assert finding_schema["properties"]["version"]["const"] == 4
+    assert finding_schema["properties"]["oracle_semantics_version"]["const"] == 4

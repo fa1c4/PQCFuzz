@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -15,6 +17,75 @@ def run_dry(*args: str) -> subprocess.CompletedProcess[str]:
         text=True,
         capture_output=True,
     )
+
+
+def test_full_test_dry_run_schedules_both_suites_per_version() -> None:
+    result = run_dry("--full-test")
+
+    assert result.returncode == 0, result.stderr
+    assert "full test: 1" in result.stdout
+    assert "campaign: liboqs-0.14.0-metamorphic" in result.stdout
+    assert "campaign: liboqs-0.14.0-fips" in result.stdout
+    assert "suite: metamorphic" in result.stdout
+    assert "suite: fips" in result.stdout
+    assert "session: pqcfuzz-liboqs-0_14_0-metamorphic" in result.stdout
+    assert "session: pqcfuzz-liboqs-0_14_0-fips" in result.stdout
+
+
+def test_single_suite_dry_run_still_schedules_one_campaign() -> None:
+    result = run_dry("--oracle-suite", "fips")
+
+    assert result.returncode == 0, result.stderr
+    assert "full test: 0" in result.stdout
+    assert "campaign: liboqs-0.14.0" in result.stdout
+    assert "campaign: liboqs-0.14.0-fips" not in result.stdout
+    assert "suite: fips" in result.stdout
+
+
+def test_full_test_overrides_oracle_suite_and_embeds_per_campaign_suite(tmp_path: Path) -> None:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    docker = bin_dir / "docker"
+    docker.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+    tmux = bin_dir / "tmux"
+    tmux.write_text(
+        "#!/usr/bin/env bash\nif [ \"$1\" = \"has-session\" ]; then exit 1; fi\nexit 0\n",
+        encoding="utf-8",
+    )
+    docker.chmod(0o755)
+    tmux.chmod(0o755)
+
+    output_root = f"workspace/pqcfuzz_eval_test_{os.getpid()}"
+    env = dict(os.environ)
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env['PATH']}"
+    result = subprocess.run(
+        [
+            "bash",
+            str(SCRIPT),
+            "--full-test",
+            "--oracle-suite",
+            "fips",
+            "--versions",
+            "0.14.0",
+            "--output-root",
+            output_root,
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+
+    try:
+        assert result.returncode in {0, 1}, result.stderr
+        metamorphic_launcher = REPO_ROOT / output_root / "launchers" / "liboqs-0.14.0-metamorphic.sh"
+        fips_launcher = REPO_ROOT / output_root / "launchers" / "liboqs-0.14.0-fips.sh"
+        assert metamorphic_launcher.is_file()
+        assert fips_launcher.is_file()
+        assert "ORACLE_SUITE=metamorphic" in metamorphic_launcher.read_text(encoding="utf-8")
+        assert "ORACLE_SUITE=fips" in fips_launcher.read_text(encoding="utf-8")
+    finally:
+        shutil.rmtree(REPO_ROOT / output_root, ignore_errors=True)
 
 
 def test_dry_run_uses_the_requested_sanitizer_profile_and_auto_leak_policy() -> None:

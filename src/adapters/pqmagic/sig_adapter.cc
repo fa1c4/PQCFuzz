@@ -127,7 +127,7 @@ PQMAGIC_SIG_BINDINGS(3)
       "pqmagic", "pqmagic_aigis_sig" #MODE "_std_" HASH_NAME,            \
       "AIGIS-SIG-" #MODE, PK, SK, SIG, 1, 0, 1,                          \
       HASH_PREFIX##Sig##MODE##Keygen, HASH_PREFIX##Sig##MODE##Sign,      \
-      HASH_PREFIX##Sig##MODE##Verify, nullptr,                           \
+      HASH_PREFIX##Sig##MODE##Verify, nullptr, 1, 1, 1,                  \
   }
 
 const pqcfuzz_sig_adapter kSm3Sig1 = PQMAGIC_SIG_ADAPTER(1, 1056, 2448, 1852, Sm3, "sm3");

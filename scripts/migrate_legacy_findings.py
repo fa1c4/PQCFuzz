@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 
-CURRENT_SEMANTICS_VERSION = 4
+CURRENT_SEMANTICS_VERSION = 5
 
 
 def sha256_file(path: Path) -> str:
@@ -61,7 +61,7 @@ def migration_entries(roots: list[Path]) -> list[dict[str, Any]]:
                     "oracle_semantics_version": semantics,
                     "legacy": True,
                     "validated": False,
-                    "invalidation_reason": "legacy_semantics_requires_v4_replay",
+                    "invalidation_reason": "legacy_semantics_requires_v5_replay",
                 }
             )
     return entries

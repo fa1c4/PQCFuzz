@@ -24,6 +24,74 @@ python3 src/jobs/generate_jobs.py \
   --algorithm-family SLH-DSA
 ```
 
+## Oracle records and verdicts
+
+`src/oracles/specs/*.json` is the source of truth for every oracle record
+(claim, evidence class, source reference, scope, limitations, controls, and
+execution metadata). `scripts/generate_oracle_specs.py` materializes the
+checked-in `generated_*_specs.inc` tables; run it without arguments after
+editing a spec, or with `--check` in CI.
+
+Findings carry the design-document verdict vocabulary
+(`CONFORMANT`, `NONCONFORMANT`, `HARDENING_GAP`, `NO_COUNTEREXAMPLE`,
+`INCONCLUSIVE`, `NOT_APPLICABLE`, `HARNESS_ERROR`) plus the primary
+`evidence_class` (`NORMATIVE`, `REFERENCE_DERIVED`, `IMPLEMENTATION_OBSERVED`,
+`ENGINEERING_RECOMMENDATION`, `INFERENCE`), the tested claim, its source
+reference, and explicit limitations. Aigis hardening observations are reported
+as `HARDENING_GAP` with a conditional verdict, never as FIPS nonconformance.
+Trace/finding artifacts use semantics version 5; versions 2-4 remain readable
+as legacy evidence.
+
+Additional case-ID oracle families: `*_implicit_rejection_relations`
+(stability, z-separation, valid-z independence, public status shape),
+`mlkem_raw_length_boundary` (`NOT_APPLICABLE` at the fixed-pointer boundary),
+`*_verify_exact_lengths` and `*_ctx_boundaries` (signature length and context
+limits at the target boundary), `mlkem_ek_canonicality` (12-bit coefficient
+boundaries), and `mldsa_hint_canonicality` (FIPS 204 Algorithm 21 canonicality
+mutations). Aigis oracles need the PQMagic snapshot under `third_party/PQMagic`
+(`.gitignore`d); `scripts/pqcfuzz_aigis_eval.sh` builds it.
+
+Every trace records `controls` (baseline repeat equality plus positive/negative
+controls), and failures use the design doc's failure-state sentinel contract
+(0xA5 prefill, output-length poison value, partial-output detection). Dedicated
+fault binaries are built by `scripts/pqcfuzz_build_fault_binaries.sh` with
+`-Wl,--wrap=malloc,calloc,realloc`; allocation failures are selected with
+`PQCFUZZ_ALLOC_FAIL_AT`/`PQCFUZZ_ALLOC_FAIL_COUNT`, and `RngTape` supports
+reported-failure, short-read, interrupted, repeated-block, and all-zero modes.
+
+PQClean reference adapters (`pqclean_reference` project, ids
+`pqclean_ref_mlkem*`/`pqclean_ref_mldsa*`/`pqclean_ref_slhdsa_*`) are built from
+the pinned PQClean commit by `scripts/build_pqclean_reference.sh`; they expose
+ML-KEM `keygen_derand`/`encaps_derand`, ML-DSA context sign/verify, and
+SLH-DSA seed key generation plus sign/verify for KAT and deterministic-hook
+oracles.
+
+KAT oracles (`fips203_kat_keygen`, `fips203_kat_encaps`,
+`fips203_kat_decaps`, `fips205_kat_keygen`) compare byte-for-byte against the
+pinned NIST ACVP vectors fetched by `scripts/fetch_kat_vectors.sh` and
+materialized into `src/oracles/kat/generated_kat_vectors.inc` by
+`scripts/parse_kat_vectors.py` (a capped subset; the manifest records source
+commit and per-file SHA-256). The executor lives in
+`src/oracles/kat_executor.{h,cc}`.
+
+Additional FIPS 204 oracles: `mldsa_z_norm_boundary` (packed response
+coefficient boundary mutations), `mldsa_rnd_determinism` (fixed zero tape
+reproducibility plus fresh-tape variation), and explicit `NOT_APPLICABLE`
+records for `*_pure_prehash_separation` / `*_ph_oid_separation` until a
+prehash-capable adapter is supplied. Reported-RNG-failure handling is checked
+by `mlkem_rng_failure`, `mldsa_rng_failure`, and `slhdsa_rng_failure` using
+the fault-injection tape modes; void RNG APIs that cannot report failure yield
+`ENGINEERING_RECOMMENDATION`/`HARDENING_GAP` findings. Allocation-failure
+output contracts are checked by `alloc_failure_contract` through
+`scripts/pqcfuzz_build_fault_binaries.sh` (`alloc_probe`, built with
+`-Wl,--wrap=malloc,calloc,realloc`); each allocation site runs in a forked
+worker so fail-stop `exit()`/`abort()` behavior is recorded as an observation.
+Quality checks and failure minimization are available via
+`scripts/check_oracle_rubric.py` (design doc Section 43),
+`scripts/minimize_input.py` (Section 37 ddmin), and
+`scripts/pqcfuzz_api_surface.py` (Sections 30.10/49 diagnostic export and
+zeroization inventory).
+
 The generator only consumes pair records supplied by `--pair-alg`; it does not
 infer implementation provenance or compatibility. Generated jobs and runtime
 configs are written under `workspace/jobs/` and `workspace/tmp/`.
@@ -66,7 +134,7 @@ same envelope/oracle pipeline:
   regions, unused-sign-bit operation).
 - **Oracle specs:** `src/oracles/specs/aigis_enc.json`, `aigis_sig.json`
   (envelope oracles 31-45). The Aigis-Sig fips suite implements the blocking
-  tests from `third_party/aigis_nist_doc/deepseek_pqc_test_oracle_design.md`:
+  tests from `plans/deepseek_pqc_test_oracle_design.md`:
   exact signature length, unused challenge sign bits, ctx_len=256
   failure-state consistency, determinism, plus implicit rejection and
   non-canonical secret-key coefficient oracles for Aigis-Enc. Aigis findings

@@ -100,8 +100,8 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
     replay_command = " ".join((shlex.quote(args.binary), shlex.quote(str(replay_input)))) if args.binary else ""
     finding_class = "ub" if finding.sanitizer == "undefined" else "memory_safety"
     finding_json: dict[str, object] = {
-        "version": 4,
-        "oracle_semantics_version": 4,
+        "version": 5,
+        "oracle_semantics_version": 5,
         "job_id": args.job_id,
         "pair_id": args.pair_id,
         "liboqs_version": args.version,
@@ -116,6 +116,12 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "summary": finding.message,
         "source_phase": args.phase,
         "evidence_kind": "sanitizer",
+        "evidence_class": "INFERENCE",
+        "verdict": "NONCONFORMANT",
+        "conditional_verdict": "",
+        "claim": "Sanitizer instrumentation shall not report memory-safety or undefined behavior for the exercised input.",
+        "source_reference": "DeepSeek design doc Sections 3.2 and 52 (sanitizer evidence)",
+        "limitations": ["A single sanitizer report does not establish general memory safety"],
         "fingerprint": finding.fingerprint,
         "sanitizer": finding.sanitizer,
         "source_location": finding.location,
@@ -128,8 +134,8 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
         "validation_failure_reason": "pending_fingerprint_replay",
     }
     trace: dict[str, object] = {
-        "version": 4,
-        "oracle_semantics_version": 4,
+        "version": 5,
+        "oracle_semantics_version": 5,
         "job_id": args.job_id,
         "pair_id": args.pair_id,
         "liboqs_version": args.version,
@@ -153,6 +159,12 @@ def artifact_payload(args: argparse.Namespace, finding: Finding, artifact_dir: P
                 "subclass": finding_json["finding_subclass"],
                 "source_phase": args.phase,
                 "fingerprint": finding.fingerprint,
+                "verdict": "NONCONFORMANT",
+                "evidence_class": "INFERENCE",
+                "conditional_verdict": "",
+                "claim": str(finding_json["claim"]),
+                "source_reference": str(finding_json["source_reference"]),
+                "limitations": list(finding_json["limitations"]),
             }
         ],
     }

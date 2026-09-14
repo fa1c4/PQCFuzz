@@ -15,6 +15,10 @@ Options:
   --versions CSV                Comma-separated liboqs versions. Default: 0.14.0,0.8.0,0.4.0.
   --oracle-suite fips|metamorphic
                                 Oracle suite. Default: metamorphic.
+  --full-test                   Run both the metamorphic (default) fuzzing mode and the
+                                FIPS case-ID oracle suite concurrently: two campaigns
+                                per liboqs version, each with its own session, workspace,
+                                and full fuzzing budget.
   --oracle-set all|security     Metamorphic oracle subset. Default: all.
   --relation-mode single-target|self-reference|cross-implementation
                                 Relation mode. Default: single-target.
@@ -213,12 +217,13 @@ print_campaign_commands() {
   local version="$1"
   local seconds="$2"
   local workspace="$3"
+  local suite="${4:-$ORACLE_SUITE}"
 
   echo "docker build --build-arg BASE_IMAGE=$BASE_IMAGE -t pqcfuzz-eval -f $DOCKERFILE_REL $DOCKER_DIR_REL"
   echo "docker run pqcfuzz-eval: clone/update liboqs $version into $workspace/build/liboqs-${version}/liboqs-src"
   echo "docker run pqcfuzz-eval: build static liboqs.a for $version"
   echo "docker run pqcfuzz-eval: generate self-reference compatibility adapter"
-  echo "docker run pqcfuzz-eval: oracle_suite: ${ORACLE_SUITE}"
+  echo "docker run pqcfuzz-eval: oracle_suite: ${suite}"
   echo "docker run pqcfuzz-eval: oracle_set: ${ORACLE_SET}"
   echo "docker run pqcfuzz-eval: relation_mode: ${RELATION_MODE}"
   echo "docker run pqcfuzz-eval: target_runtime: ${TARGET_RUNTIME}"
@@ -281,6 +286,7 @@ write_launcher() {
   local status_file_rel="$9"
   local status_file_abs="${10}"
   local seconds="${11}"
+  local oracle_suite="${12:-$ORACLE_SUITE}"
 
   {
     printf '#!/usr/bin/env bash\n'
@@ -305,7 +311,7 @@ write_launcher() {
     printf 'STATUS_FILE_REL=%q\n' "$status_file_rel"
     printf 'STATUS_FILE_ABS_HOST=%q\n' "$status_file_abs"
     printf 'FUZZING_SECONDS=%q\n\n' "$seconds"
-    printf 'ORACLE_SUITE=%q\n' "$ORACLE_SUITE"
+    printf 'ORACLE_SUITE=%q\n' "$oracle_suite"
     printf 'ORACLE_SET=%q\n' "$ORACLE_SET"
     printf 'RELATION_MODE=%q\n' "$RELATION_MODE"
     printf 'TARGET_RUNTIME=%q\n' "$TARGET_RUNTIME"
@@ -810,15 +816,15 @@ pqcfuzz_status Dsa87Verify(const uint8_t *sig, size_t sig_len, const uint8_t *ms
   return SigVerify(kDsa87Spec, sig, sig_len, msg, msg_len, pk, ctx, ctx_len);
 }
 
-const pqcfuzz_sig_adapter kLeftDsa44 = {"liboqs", "liboqs_mldsa44_wrapper_generic", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kLeftDsa65 = {"liboqs", "liboqs_mldsa65_wrapper_generic", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kLeftDsa87 = {"liboqs", "liboqs_mldsa87_wrapper_generic", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa44 = {"liboqs_self_reference", "selfref_mldsa44_via_liboqs", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa65 = {"liboqs_self_reference", "selfref_mldsa65_via_liboqs", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded};
-const pqcfuzz_sig_adapter kRightDsa87 = {"liboqs_self_reference", "selfref_mldsa87_via_liboqs", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded};
+const pqcfuzz_sig_adapter kLeftDsa44 = {"liboqs", "liboqs_mldsa44_wrapper_generic", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded, 1, 1, 1};
+const pqcfuzz_sig_adapter kLeftDsa65 = {"liboqs", "liboqs_mldsa65_wrapper_generic", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded, 1, 1, 1};
+const pqcfuzz_sig_adapter kLeftDsa87 = {"liboqs", "liboqs_mldsa87_wrapper_generic", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded, 1, 1, 1};
+const pqcfuzz_sig_adapter kRightDsa44 = {"liboqs_self_reference", "selfref_mldsa44_via_liboqs", "ML-DSA-44", 1312, 2560, 2420, kMlDsaSupportsContext, 0, 0, Dsa44Keygen, Dsa44Sign, Dsa44Verify, UnsupportedSignSeeded, 1, 1, 1};
+const pqcfuzz_sig_adapter kRightDsa65 = {"liboqs_self_reference", "selfref_mldsa65_via_liboqs", "ML-DSA-65", 1952, 4032, 3309, kMlDsaSupportsContext, 0, 0, Dsa65Keygen, Dsa65Sign, Dsa65Verify, UnsupportedSignSeeded, 1, 1, 1};
+const pqcfuzz_sig_adapter kRightDsa87 = {"liboqs_self_reference", "selfref_mldsa87_via_liboqs", "ML-DSA-87", 2592, 4896, 4627, kMlDsaSupportsContext, 0, 0, Dsa87Keygen, Dsa87Sign, Dsa87Verify, UnsupportedSignSeeded, 1, 1, 1};
 
 #define PQCFUZZ_UNSUPPORTED_SLH(symbol, project, impl, algorithm, pk, sk, sig) \
-  const pqcfuzz_sig_adapter symbol = {project, impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedSigKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded}
+  const pqcfuzz_sig_adapter symbol = {project, impl, algorithm, pk, sk, sig, 0, 0, 0, UnsupportedSigKeygen, UnsupportedSign, UnsupportedVerify, UnsupportedSignSeeded, 0, 0, 0}
 
 PQCFUZZ_UNSUPPORTED_SLH(kLeftSlhDsaSha2_128s, "liboqs", "liboqs_slhdsa_sha2_128s_wrapper_generic", "SLH-DSA-SHA2-128s", 32, 64, 7856);
 PQCFUZZ_UNSUPPORTED_SLH(kLeftSlhDsaShake_128s, "liboqs", "liboqs_slhdsa_shake_128s_wrapper_generic", "SLH-DSA-SHAKE-128s", 32, 64, 7856);
@@ -1019,14 +1025,16 @@ oracle_specs_for_primitive() {
     fips:kem)
       printf '%s\n' \
         '1:mlkem_local_roundtrip' '2:mlkem_cross_exchange_roundtrip' \
-        '3:mlkem_tampered_ciphertext_implicit_rejection' '4:mlkem_bad_randomness_sanity'
+        '3:mlkem_tampered_ciphertext_implicit_rejection' '46:mlkem_implicit_rejection_relations' \
+        '4:mlkem_bad_randomness_sanity' '52:mlkem_raw_length_boundary' '53:mlkem_ek_canonicality' '61:mlkem_rng_failure'
       ;;
     fips:sig)
       printf '%s\n' \
         '5:mldsa_local_sign_verify' '6:mldsa_cross_verify' \
         '7:mldsa_mutated_signature_negative' '8:mldsa_mutated_message_negative' \
         '9:mldsa_mutated_context_negative' '10:mldsa_oid_field_mutation_sanity' \
-        '11:mldsa_bad_randomness_sanity'
+        '11:mldsa_bad_randomness_sanity' '48:mldsa_verify_exact_lengths' \
+        '49:mldsa_ctx_boundaries' '54:mldsa_hint_canonicality' '55:mldsa_z_norm_boundary' '56:mldsa_rnd_determinism' '57:mldsa_pure_prehash_separation' '58:mldsa_ph_oid_separation' '62:mldsa_rng_failure'
       ;;
     *)
       echo "unsupported oracle suite/primitive: ${ORACLE_SUITE}/${primitive}" >&2
@@ -1706,6 +1714,7 @@ build_pqcfuzz() {
     src/adapters/liboqs/rng_control.cc
     src/adapters/pqmagic/kem_adapter.cc
     src/adapters/pqmagic/sig_adapter.cc
+    src/adapters/reference/reference_adapter.cc
     src/adapters/randombytes_override.cc
     src/mutators/envelope.cc
     src/mutators/envelope_fuzzer_mutator.cc
@@ -1723,6 +1732,7 @@ build_pqcfuzz() {
     src/oracles/expected_relation.cc
     src/oracles/oracle_spec.cc
     src/oracles/oracle_spec_loader.cc
+    src/oracles/oracle_record.cc
     src/oracles/oracle_result.cc
     src/oracles/oracle_executor.cc
     src/oracles/metamorphic_observation.cc
@@ -1761,7 +1771,7 @@ JSON
     replay_job_file="${tmp_root}/replay_job_${job}.json"
     replay_config_rel="${WORKSPACE_ROOT_REL}/tmp/liboqs-${VERSION}/generated_config_${job}.json"
     cat > "$replay_job_file" <<JSON
-{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","pair_id":"liboqs_${VERSION}_${job}_single_target","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":4,"oracle_suite":"${ORACLE_SUITE}","relation_mode":"${RELATION_MODE}","oracles":[${oracle_names_json}],"paths":{"result_dir":"${WORKSPACE_ROOT_REL}/results/${job}","generated_config":"${replay_config_rel}"},"target":{"project_id":"liboqs","implementation_id":"${implementation}"}}
+{"version":2,"job_id":"pqcfuzz_eval_${job}_liboqs_${VERSION}","pair_id":"liboqs_${VERSION}_${job}_single_target","primitive_type":"${primitive}","algorithm":"${algorithm}","oracle_semantics_version":5,"oracle_suite":"${ORACLE_SUITE}","relation_mode":"${RELATION_MODE}","oracles":[${oracle_names_json}],"paths":{"result_dir":"${WORKSPACE_ROOT_REL}/results/${job}","generated_config":"${replay_config_rel}"},"target":{"project_id":"liboqs","implementation_id":"${implementation}"}}
 JSON
     "$cxx_bin" -std=c++17 -O1 -g -fno-omit-frame-pointer -Isrc -I"${liboqs_build_dir}/include" \
       "$FUZZER_SANITIZER_FLAGS" \
@@ -2273,8 +2283,8 @@ print_progress() {
 
   echo
   echo "[pqcfuzz-eval] progress: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  printf '%-20s %-16s %-10s %-6s %-18s\n' "campaign" "phase" "elapsed" "tmux" "status"
-  printf '%-20s %-16s %-10s %-6s %-18s\n' "--------" "-----" "-------" "----" "------"
+  printf '%-36s %-16s %-10s %-6s %-18s\n' "campaign" "phase" "elapsed" "tmux" "status"
+  printf '%-36s %-16s %-10s %-6s %-18s\n' "--------" "-----" "-------" "----" "------"
 
   for id in "${CAMPAIGN_IDS[@]}"; do
     status_file="${STATUS_FILE_ABS_BY_ID[$id]}"
@@ -2298,7 +2308,7 @@ print_progress() {
       state="$result"
     fi
 
-    printf '%-20s %-16s %-10s %-6s %-18s\n' \
+    printf '%-36s %-16s %-10s %-6s %-18s\n' \
       "$id" "$phase" "$(format_elapsed "$elapsed")" "$tmux_state" "$state"
   done
   echo "[pqcfuzz-eval] next progress report in ${PROGRESS_INTERVAL}s"
@@ -2664,6 +2674,7 @@ FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="0.95"
 PAIR_ALG="src/config/pair_alg.default.json"
 DRY_RUN=0
 PREFLIGHT_ONLY=0
+FULL_TEST=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -2891,6 +2902,10 @@ while [ "$#" -gt 0 ]; do
       PREFLIGHT_ONLY=1
       shift
       ;;
+    --full-test)
+      FULL_TEST=1
+      shift
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -2980,6 +2995,7 @@ SUMMARY_TSV="${EVAL_ROOT}/summary.tsv"
 
 declare -a CAMPAIGN_IDS=()
 declare -A VERSION_BY_ID
+declare -A SUITE_BY_ID
 declare -A SESSION_BY_ID
 declare -A WORKSPACE_REL_BY_ID
 declare -A WORKSPACE_ABS_BY_ID
@@ -2991,26 +3007,39 @@ declare -A STATUS_FILE_ABS_BY_ID
 
 for version in "${VERSIONS[@]}"; do
   safe="$(safe_version "$version")"
-  campaign="liboqs-${version}"
-  session_name="${SESSION_PREFIX}-liboqs-${safe}"
-  workspace_root_rel="${EVAL_ROOT_REL}/campaigns/${campaign}/workspace"
-  workspace_root_abs="${ROOT_DIR}/${workspace_root_rel}"
-  log_file_rel="${EVAL_ROOT_REL}/logs/${campaign}.log"
-  log_file_abs="${ROOT_DIR}/${log_file_rel}"
-  launcher_file="${LAUNCHER_DIR}/${campaign}.sh"
-  status_file_rel="${EVAL_ROOT_REL}/status/${campaign}.json"
-  status_file_abs="${ROOT_DIR}/${status_file_rel}"
+  if [ "$FULL_TEST" -eq 1 ]; then
+    campaign_suites=("metamorphic" "fips")
+  else
+    campaign_suites=("$ORACLE_SUITE")
+  fi
+  for suite in "${campaign_suites[@]}"; do
+    if [ "$FULL_TEST" -eq 1 ]; then
+      campaign="liboqs-${version}-${suite}"
+      session_name="${SESSION_PREFIX}-liboqs-${safe}-${suite}"
+    else
+      campaign="liboqs-${version}"
+      session_name="${SESSION_PREFIX}-liboqs-${safe}"
+    fi
+    workspace_root_rel="${EVAL_ROOT_REL}/campaigns/${campaign}/workspace"
+    workspace_root_abs="${ROOT_DIR}/${workspace_root_rel}"
+    log_file_rel="${EVAL_ROOT_REL}/logs/${campaign}.log"
+    log_file_abs="${ROOT_DIR}/${log_file_rel}"
+    launcher_file="${LAUNCHER_DIR}/${campaign}.sh"
+    status_file_rel="${EVAL_ROOT_REL}/status/${campaign}.json"
+    status_file_abs="${ROOT_DIR}/${status_file_rel}"
 
-  CAMPAIGN_IDS+=("$campaign")
-  VERSION_BY_ID["$campaign"]="$version"
-  SESSION_BY_ID["$campaign"]="$session_name"
-  WORKSPACE_REL_BY_ID["$campaign"]="$workspace_root_rel"
-  WORKSPACE_ABS_BY_ID["$campaign"]="$workspace_root_abs"
-  LOG_FILE_REL_BY_ID["$campaign"]="$log_file_rel"
-  LOG_FILE_ABS_BY_ID["$campaign"]="$log_file_abs"
-  LAUNCHER_FILE_BY_ID["$campaign"]="$launcher_file"
-  STATUS_FILE_REL_BY_ID["$campaign"]="$status_file_rel"
-  STATUS_FILE_ABS_BY_ID["$campaign"]="$status_file_abs"
+    CAMPAIGN_IDS+=("$campaign")
+    VERSION_BY_ID["$campaign"]="$version"
+    SUITE_BY_ID["$campaign"]="$suite"
+    SESSION_BY_ID["$campaign"]="$session_name"
+    WORKSPACE_REL_BY_ID["$campaign"]="$workspace_root_rel"
+    WORKSPACE_ABS_BY_ID["$campaign"]="$workspace_root_abs"
+    LOG_FILE_REL_BY_ID["$campaign"]="$log_file_rel"
+    LOG_FILE_ABS_BY_ID["$campaign"]="$log_file_abs"
+    LAUNCHER_FILE_BY_ID["$campaign"]="$launcher_file"
+    STATUS_FILE_REL_BY_ID["$campaign"]="$status_file_rel"
+    STATUS_FILE_ABS_BY_ID["$campaign"]="$status_file_abs"
+  done
 done
 
 echo "[pqcfuzz-eval] repository: $ROOT_DIR"
@@ -3021,6 +3050,7 @@ echo "[pqcfuzz-eval] session prefix: $SESSION_PREFIX"
 echo "[pqcfuzz-eval] versions: ${VERSIONS[*]}"
 echo "[pqcfuzz-eval] base image: $BASE_IMAGE"
 echo "[pqcfuzz-eval] oracle_suite: $ORACLE_SUITE"
+echo "[pqcfuzz-eval] full test: $FULL_TEST"
 echo "[pqcfuzz-eval] oracle_set: $ORACLE_SET"
 echo "[pqcfuzz-eval] relation_mode: $RELATION_MODE"
 echo "[pqcfuzz-eval] target_runtime: $TARGET_RUNTIME"
@@ -3041,12 +3071,14 @@ echo
 if [ "$DRY_RUN" -eq 1 ]; then
   for campaign in "${CAMPAIGN_IDS[@]}"; do
     version="${VERSION_BY_ID[$campaign]}"
+    suite="${SUITE_BY_ID[$campaign]}"
     echo "[dry-run] campaign: $campaign"
+    echo "[dry-run] suite: $suite"
     echo "[dry-run] session: ${SESSION_BY_ID[$campaign]}"
     echo "[dry-run] workspace: ${WORKSPACE_REL_BY_ID[$campaign]}"
     echo "[dry-run] log: ${LOG_FILE_ABS_BY_ID[$campaign]}"
     echo "[dry-run] status: ${STATUS_FILE_ABS_BY_ID[$campaign]}"
-    print_campaign_commands "$version" "$FUZZING_SECONDS" "${WORKSPACE_REL_BY_ID[$campaign]}" |
+    print_campaign_commands "$version" "$FUZZING_SECONDS" "${WORKSPACE_REL_BY_ID[$campaign]}" "$suite" |
       sed 's/^/[dry-run] command: /'
     echo
   done
@@ -3110,7 +3142,8 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
     "${LOG_FILE_ABS_BY_ID[$campaign]}" \
     "${STATUS_FILE_REL_BY_ID[$campaign]}" \
     "${STATUS_FILE_ABS_BY_ID[$campaign]}" \
-    "$FUZZING_SECONDS"
+    "$FUZZING_SECONDS" \
+    "${SUITE_BY_ID[$campaign]}"
 
   # The launcher is generated from nested Bash/Python heredocs.  Parse the
   # generated artifact before tmux starts it so a template error is reported

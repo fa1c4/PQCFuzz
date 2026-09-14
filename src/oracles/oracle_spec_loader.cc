@@ -1,10 +1,30 @@
 #include "oracles/oracle_spec_loader.h"
 
+#include <algorithm>
 #include <fstream>
 #include <regex>
 #include <sstream>
 
 namespace pqcfuzz {
+namespace {
+
+// The loader selects records from the generated registry by the oracle_id
+// values declared in the JSON document.  Metadata and execution fields are
+// generated from the same JSON files by scripts/generate_oracle_specs.py, so
+// this path never invents or repairs a record silently.
+std::vector<std::string> OracleIdsInFile(const std::string &text) {
+  std::vector<std::string> ids;
+  const std::regex id_re("\"oracle_id\"\\s*:\\s*\"([^\"]+)\"");
+  for (std::sregex_iterator it(text.begin(), text.end(), id_re), end; it != end; ++it) {
+    const std::string oracle_id = (*it)[1].str();
+    if (std::find(ids.begin(), ids.end(), oracle_id) == ids.end()) {
+      ids.push_back(oracle_id);
+    }
+  }
+  return ids;
+}
+
+}  // namespace
 
 std::vector<OracleSpec> LoadOracleSpecs(const std::string &path, std::string *error) {
   std::ifstream input(path);
@@ -17,32 +37,31 @@ std::vector<OracleSpec> LoadOracleSpecs(const std::string &path, std::string *er
 
   std::stringstream buffer;
   buffer << input.rdbuf();
-  const std::string text = buffer.str();
-  std::vector<OracleSpec> defaults = DefaultMlKemOracleSpecs();
-  const auto mldsa_defaults = DefaultMlDsaOracleSpecs();
-  defaults.insert(defaults.end(), mldsa_defaults.begin(), mldsa_defaults.end());
-  const auto slhdsa_defaults = DefaultSlhDsaOracleSpecs();
-  defaults.insert(defaults.end(), slhdsa_defaults.begin(), slhdsa_defaults.end());
-  const auto aigisenc_defaults = DefaultAigisEncOracleSpecs();
-  defaults.insert(defaults.end(), aigisenc_defaults.begin(), aigisenc_defaults.end());
-  const auto aigissig_defaults = DefaultAigisSigOracleSpecs();
-  defaults.insert(defaults.end(), aigissig_defaults.begin(), aigissig_defaults.end());
-  std::vector<OracleSpec> loaded;
+  const std::vector<std::string> ids = OracleIdsInFile(buffer.str());
 
-  std::regex id_re("\"oracle_id\"\\s*:\\s*\"([^\"]+)\"");
-  for (std::sregex_iterator it(text.begin(), text.end(), id_re), end; it != end; ++it) {
-    const std::string oracle_id = (*it)[1].str();
-    const OracleSpec *default_spec = FindOracleSpec(defaults, oracle_id);
-    if (default_spec != nullptr) {
-      loaded.push_back(*default_spec);
+  std::vector<OracleSpec> loaded;
+  std::vector<std::string> unknown;
+  for (const std::string &oracle_id : ids) {
+    if (const OracleSpec *spec = FindAnyOracleSpec(oracle_id)) {
+      loaded.push_back(*spec);
+    } else {
+      unknown.push_back(oracle_id);
     }
   }
 
   if (loaded.empty()) {
     if (error != nullptr) {
-      *error = "oracle spec contained no known ML-KEM oracle_id entries";
+      *error = "oracle spec contained no known oracle_id entries";
     }
-    return defaults;
+    return {};
+  }
+  if (!unknown.empty() && error != nullptr) {
+    std::ostringstream message;
+    message << "oracle spec contains unknown oracle_id entries";
+    for (const std::string &oracle_id : unknown) {
+      message << ' ' << oracle_id;
+    }
+    *error = message.str();
   }
   return loaded;
 }

@@ -14,12 +14,9 @@
           "oracle_id",
           "algorithm_family",
           "primitive_type",
-          "api_surface",
-          "precondition",
-          "mutation",
-          "expected_relation",
-          "comparator",
-          "triage_policy"
+          "claim",
+          "evidence_class",
+          "source_reference"
         ],
         "properties": {
           "oracle_id": {
@@ -29,7 +26,9 @@
             "enum": [
               "ML-KEM",
               "ML-DSA",
-              "SLH-DSA"
+              "SLH-DSA",
+              "AIGIS-ENC",
+              "AIGIS-SIG"
             ]
           },
           "primitive_type": {
@@ -43,7 +42,7 @@
             "items": {
               "enum": [
                 "keygen",
-              "encaps",
+                "encaps",
                 "decaps",
                 "sign",
                 "verify"
@@ -64,6 +63,72 @@
           },
           "triage_policy": {
             "type": "string"
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_class": {
+            "enum": [
+              "NORMATIVE",
+              "REFERENCE_DERIVED",
+              "IMPLEMENTATION_OBSERVED",
+              "ENGINEERING_RECOMMENDATION",
+              "INFERENCE"
+            ]
+          },
+          "source_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "api_layer": {
+                "enum": [
+                  "external",
+                  "internal",
+                  "component",
+                  "parser",
+                  "primitive"
+                ]
+              }
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conditional_verdict": {
+            "type": "string"
+          },
+          "controls": {
+            "type": "object",
+            "properties": {
+              "positive_control": {
+                "type": "string"
+              },
+              "negative_control": {
+                "type": "string"
+              }
+            }
+          },
+          "enabled_by_default": {
+            "type": "boolean"
+          },
+          "requires_api": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "finding_subclass": {
+            "type": "string"
+          },
+          "requires_rng_injection": {
+            "type": "boolean"
           }
         }
       }

@@ -137,10 +137,10 @@ def test_grouped_writer_keeps_one_exemplar_per_group_and_counts_raw_hits(tmp_pat
     trace = json.loads((dirs[0] / "oracle_trace.json").read_text(encoding="utf-8"))
     trace_schema = json.loads((REPO_ROOT / "src/schemas/oracle_trace.schema.json").read_text(encoding="utf-8"))
     finding_schema = json.loads((REPO_ROOT / "src/schemas/finding.schema.json").read_text(encoding="utf-8"))
-    assert trace["version"] == trace["oracle_semantics_version"] == 4
+    assert trace["version"] == trace["oracle_semantics_version"] == 5
     assert trace["disposition"] == "raw_candidate"
     assert "valid_setup" not in trace
-    assert finding["version"] == finding["oracle_semantics_version"] == 4
+    assert finding["version"] == finding["oracle_semantics_version"] == 5
     assert finding["validation_state"] == "raw"
     assert not list(Draft202012Validator(trace_schema).iter_errors(trace))
     assert not list(Draft202012Validator(finding_schema).iter_errors(finding))

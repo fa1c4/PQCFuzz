@@ -157,4 +157,154 @@ std::vector<MutationRecord> MutateMlDsaPublicKey(
   return {ApplyRegionMutation(MlDsaPublicKeyRegions(params), mutation_plan, "public_key", public_key)};
 }
 
+std::vector<MutationRecord> MutateMlDsaHintCanonical(
+    const MlDsaParams &params,
+    MlDsaHintMutation mutation,
+    std::vector<uint8_t> *signature) {
+  MutationRecord record;
+  record.target = "signature.h";
+  const std::vector<uint8_t> original = signature == nullptr ? std::vector<uint8_t>{} : *signature;
+  if (signature == nullptr) {
+    record.skipped = true;
+    record.reason = "missing buffer";
+    RecordMutationEffect(&record, original, original);
+    return {record};
+  }
+  const size_t h_offset = params.c_bytes + (signature->size() > params.c_bytes + params.omega + params.k
+                                                 ? signature->size() - params.c_bytes - (params.omega + params.k)
+                                                 : 0);
+  const size_t h_len = params.omega + params.k;
+  if (signature->size() < h_offset + h_len || params.k < 2 || params.omega == 0) {
+    record.skipped = true;
+    record.reason = "signature is not full size for hint canonicality mutation";
+    RecordMutationEffect(&record, original, *signature);
+    return {record};
+  }
+  uint8_t *h = signature->data() + h_offset;
+  const size_t first_count = std::min<size_t>(h[0], params.omega);
+  const size_t second_count = std::min<size_t>(h[1], params.omega);
+
+  switch (mutation) {
+    case MlDsaHintMutation::kCountRollback:
+      record.operation = "hint_count_rollback";
+      if (h[0] > 0) {
+        // Make the second cumulative count smaller than the first.
+        h[1] = static_cast<uint8_t>(h[0] - 1);
+        record.offset = h_offset + 1;
+      } else {
+        // Raise the first count above a zero second count.
+        h[0] = 1;
+        record.offset = h_offset;
+      }
+      record.length = 1;
+      break;
+    case MlDsaHintMutation::kCountOverflow:
+      record.operation = "hint_count_overflow";
+      h[0] = static_cast<uint8_t>(params.omega + 1);
+      record.offset = h_offset;
+      record.length = 1;
+      break;
+    case MlDsaHintMutation::kNonIncreasingIndex:
+      record.operation = "hint_non_increasing_index";
+      if (second_count <= first_count + 1) {
+        record.skipped = true;
+        record.reason = "no polynomial has two or more hint positions";
+        break;
+      }
+      // Duplicate an adjacent position inside the second polynomial.
+      h[params.k + first_count] = h[params.k + first_count + 1];
+      record.offset = h_offset + params.k + first_count;
+      record.length = 1;
+      break;
+    case MlDsaHintMutation::kTrailingNonZero:
+      record.operation = "hint_trailing_non_zero";
+      if (second_count >= params.omega) {
+        record.skipped = true;
+        record.reason = "hint position array is full";
+        break;
+      }
+      h[params.k + second_count] = 0xFF;
+      record.offset = h_offset + params.k + second_count;
+      record.length = 1;
+      break;
+  }
+  RecordMutationEffect(&record, original, *signature);
+  return {record};
+}
+
+namespace {
+
+void WriteBitsLittleEndian(uint8_t *buffer, size_t bit_offset, size_t bit_count, uint64_t value) {
+  for (size_t i = 0; i < bit_count; ++i) {
+    const size_t bit = bit_offset + i;
+    const uint8_t mask = static_cast<uint8_t>(1u << (bit % 8));
+    if (((value >> i) & 1u) != 0) {
+      buffer[bit / 8] |= mask;
+    } else {
+      buffer[bit / 8] &= static_cast<uint8_t>(~mask);
+    }
+  }
+}
+
+}  // namespace
+
+std::vector<MutationRecord> MutateMlDsaZNormBoundary(
+    const MlDsaParams &params,
+    MlDsaZNormMutation mutation,
+    std::vector<uint8_t> *signature) {
+  MutationRecord record;
+  record.target = "signature.z";
+  const std::vector<uint8_t> original = signature == nullptr ? std::vector<uint8_t>{} : *signature;
+  if (signature == nullptr) {
+    record.skipped = true;
+    record.reason = "missing buffer";
+    RecordMutationEffect(&record, original, original);
+    return {record};
+  }
+  const size_t h_len = params.omega + params.k;
+  if (params.gamma1_bits == 0 || params.gamma1 == 0 || signature->size() < params.c_bytes + h_len) {
+    record.skipped = true;
+    record.reason = "signature is not full size or profile lacks response bounds";
+    RecordMutationEffect(&record, original, *signature);
+    return {record};
+  }
+  const size_t z_offset = params.c_bytes;
+  const size_t z_len = signature->size() - z_offset - h_len;
+  const size_t z_bits = z_len * 8;
+  if (params.gamma1_bits > z_bits) {
+    record.skipped = true;
+    record.reason = "signature z region is too small for a packed coefficient";
+    RecordMutationEffect(&record, original, *signature);
+    return {record};
+  }
+  uint64_t encoded = 0;
+  switch (mutation) {
+    case MlDsaZNormMutation::kValidBoundary:
+      record.operation = "z_norm_valid_boundary";
+      encoded = static_cast<uint64_t>(params.beta) + 1;
+      break;
+    case MlDsaZNormMutation::kOverBoundary:
+      record.operation = "z_norm_over_boundary";
+      encoded = static_cast<uint64_t>(params.beta);
+      break;
+    case MlDsaZNormMutation::kNegativeOverBoundary:
+      record.operation = "z_norm_negative_over_boundary";
+      encoded = 2ull * params.gamma1 - params.beta;
+      break;
+  }
+  const uint64_t limit = 1ull << params.gamma1_bits;
+  if (encoded >= limit) {
+    record.skipped = true;
+    record.reason = "encoded boundary value does not fit the packed coefficient";
+    RecordMutationEffect(&record, original, *signature);
+    return {record};
+  }
+  WriteBitsLittleEndian(signature->data() + z_offset, 0, params.gamma1_bits, encoded);
+  record.offset = z_offset;
+  record.length = (params.gamma1_bits + 7) / 8;
+  record.field_parse_status = "packed z coefficient boundary value";
+  RecordMutationEffect(&record, original, *signature);
+  return {record};
+}
+
 }  // namespace pqcfuzz

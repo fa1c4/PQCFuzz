@@ -38,6 +38,7 @@ def test_adapter_routing_requires_algorithm_identity_and_abi(tmp_path: Path) -> 
             "src/adapters/liboqs/kem_adapter.cc", "src/adapters/liboqs/sig_adapter.cc",
             "src/adapters/pqclean/kem_adapter.cc", "src/adapters/pqclean/sig_adapter.cc",
             "src/adapters/pqmagic/kem_adapter.cc", "src/adapters/pqmagic/sig_adapter.cc",
+            "src/adapters/reference/reference_adapter.cc",
             "src/adapters/status.cc",
             "-o", str(binary),
         ],

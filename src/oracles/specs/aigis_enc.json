@@ -4,70 +4,222 @@
       "oracle_id": "aigisenc_local_roundtrip",
       "algorithm_family": "AIGIS-ENC",
       "primitive_type": "kem",
-      "api_surface": ["keygen", "encaps", "decaps"],
-      "precondition": {"same_algorithm": true, "valid_lengths": true},
-      "mutation": {"type": "none"},
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "same_algorithm": true,
+        "valid_lengths": true
+      },
+      "mutation": {
+        "type": "none"
+      },
       "expected_relation": "SAME_SHARED_SECRET",
       "comparator": "bytes_equal",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "For a valid Aigis-Enc key pair, decapsulation shall recover the encapsulated shared secret.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "PQMagic snapshot kem/aigis-enc/std/kem.c; DeepSeek design doc Section 33",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "Round-trip agreement is not an IND-CCA result"
+      ],
+      "controls": {
+        "positive_control": "the baseline encapsulation succeeds",
+        "negative_control": "a one-byte ciphertext mutation is exercised by the tampered-ciphertext oracle"
+      }
     },
     {
       "oracle_id": "aigisenc_cross_exchange_roundtrip",
       "algorithm_family": "AIGIS-ENC",
       "primitive_type": "kem",
-      "api_surface": ["keygen", "encaps", "decaps"],
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
       "precondition": {
         "pair_alg_exchange_contract_required": [
           "public_key_exchange",
           "ciphertext_exchange"
         ]
       },
-      "mutation": {"type": "none"},
+      "mutation": {
+        "type": "none"
+      },
       "expected_relation": "SAME_SHARED_SECRET",
       "comparator": "bytes_equal",
-      "triage_policy": "semantic_mismatch_requires_manual_review"
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two Aigis-Enc builds with compatible object formats exchanging keys and ciphertexts shall derive the same shared secret.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Sections 32-33 (SM3 vs SHAKE profiles)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Not scheduled for the SM3-vs-SHAKE pair because the shared secret binds the hash function",
+        "No independent Aigis specification was supplied"
+      ],
+      "controls": {
+        "positive_control": "both local round trips succeed",
+        "negative_control": "the pair file declares the exchange contract before the oracle is enabled"
+      }
     },
     {
       "oracle_id": "aigisenc_tampered_ciphertext_implicit_rejection",
       "algorithm_family": "AIGIS-ENC",
       "primitive_type": "kem",
-      "api_surface": ["keygen", "encaps", "decaps"],
-      "precondition": {"valid_ciphertext_before_mutation": true},
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "valid_ciphertext_before_mutation": true
+      },
       "mutation": {
         "type": "field_aware",
-        "targets": ["ciphertext.u", "ciphertext.v"]
+        "targets": [
+          "ciphertext.u",
+          "ciphertext.v"
+        ]
       },
       "expected_relation": "REJECT_OR_DIFFERENT_SHARED_SECRET",
       "comparator": "not_equal_to_original_shared_secret_or_reject",
-      "triage_policy": "potential_crypto_vuln_if_original_secret_returned"
+      "triage_policy": "potential_crypto_vuln_if_original_secret_returned",
+      "claim": "A tampered Aigis-Enc ciphertext shall not decapsulate to the original shared secret and shall not expose a public reject flag.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Sections 33.2 and 24 (implicit rejection relations)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "Fallback stability, z-separation, and valid-z independence are separate relations",
+        "This is not an IND-CCA proof"
+      ],
+      "controls": {
+        "positive_control": "the unmodified ciphertext decapsulates to the encapsulated secret",
+        "negative_control": "the mutation record shows the ciphertext bytes changed"
+      }
     },
     {
       "oracle_id": "aigisenc_bad_randomness_sanity",
       "algorithm_family": "AIGIS-ENC",
       "primitive_type": "kem",
-      "api_surface": ["keygen", "encaps"],
-      "precondition": {"rng_injection_available": true},
+      "api_surface": [
+        "keygen",
+        "encaps"
+      ],
+      "precondition": {
+        "rng_injection_available": true
+      },
       "mutation": {
         "type": "bad_randomness",
-        "patterns": ["all_zero", "reused_seed"]
+        "patterns": [
+          "all_zero",
+          "reused_seed"
+        ]
       },
       "expected_relation": "NO_CRASH",
       "comparator": "status_only",
-      "triage_policy": "api_unsupported_is_not_failure"
+      "triage_policy": "api_unsupported_is_not_failure",
+      "claim": "Aigis-Enc key generation and encapsulation should consume the supplied randomness so that distinct streams produce distinct outputs.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Sections 22 and 35 (PQMagic randombytes)",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No applicable Aigis API requirement for RNG failure recovery was supplied",
+        "The PQMagic randombytes void/abort contract is not exercised by this oracle"
+      ],
+      "controls": {
+        "positive_control": "distinct deterministic tapes are observed to be consumed",
+        "negative_control": "the baseline encapsulation succeeds"
+      }
     },
     {
       "oracle_id": "aigisenc_sk_noncanonical_coefficient",
       "algorithm_family": "AIGIS-ENC",
       "primitive_type": "kem",
-      "api_surface": ["keygen", "encaps", "decaps"],
-      "precondition": {"valid_secret_key_before_mutation": true},
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "valid_secret_key_before_mutation": true
+      },
       "mutation": {
         "type": "field_aware",
-        "targets": ["secret_key.s_vec"]
+        "targets": [
+          "secret_key.s_vec"
+        ]
       },
       "expected_relation": "REJECT_OR_INVALID_INPUT",
       "comparator": "decode_rejects",
-      "triage_policy": "implementation_observed_noncanonical_secret_key_acceptance"
+      "triage_policy": "implementation_observed_noncanonical_secret_key_acceptance",
+      "claim": "A hardened parser profile should reject a secret key whose first s-vector 13-bit coefficient encodes the non-canonical value q=7681 before decapsulation.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "DeepSeek design doc Section 33.4; PQMagic kem/aigis-enc/std/poly.c",
+      "scope": {
+        "api_layer": "parser"
+      },
+      "limitations": [
+        "No independent Aigis secret-key canonicality requirement was supplied",
+        "INCONCLUSIVE as a standards verdict; the snapshot observation is acceptance"
+      ],
+      "conditional_verdict": "NONCONFORMANT if an applicable Aigis specification requires secret-key canonicality or exact re-encoding",
+      "controls": {
+        "positive_control": "the unmutated secret key decapsulates correctly",
+        "negative_control": "the mutation record shows the encoded coefficient changed to q"
+      }
+    },
+    {
+      "oracle_id": "aigisenc_implicit_rejection_relations",
+      "algorithm_family": "AIGIS-ENC",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "precondition": {
+        "valid_ciphertext_before_mutation": true,
+        "rejection_secret_in_sk": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.u",
+          "ciphertext.v",
+          "secret_key.z"
+        ]
+      },
+      "expected_relation": "REJECT_OR_DIFFERENT_SHARED_SECRET",
+      "comparator": "relational_implicit_rejection",
+      "triage_policy": "potential_crypto_vuln_if_fallback_not_bound_to_z",
+      "claim": "For a tampered Aigis-Enc ciphertext, decapsulation shall return a stable fallback secret bound to the stored rejection secret z, valid decapsulation shall remain independent of z, and the public status shall not expose a reject flag.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "DeepSeek design doc Sections 33.2 and 24; PQMagic kem/aigis-enc/std/kem.c",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "No independent Aigis specification was supplied",
+        "Not an IND-CCA proof",
+        "A semantically neutral ciphertext mutation is recorded as no_effect rather than a finding"
+      ],
+      "controls": {
+        "positive_control": "the untouched valid ciphertext decapsulates to the encapsulated secret",
+        "negative_control": "the mutation records show both the ciphertext and the z region changed"
+      }
     }
   ]
 }

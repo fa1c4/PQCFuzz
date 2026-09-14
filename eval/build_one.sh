@@ -94,6 +94,7 @@ deps=(
   src/adapters/liboqs/rng_control.cc
   src/adapters/pqclean/kem_adapter.cc
   src/adapters/pqclean/sig_adapter.cc
+  src/adapters/reference/reference_adapter.cc
   src/adapters/pqclean/randombytes_override.cc
   src/adapters/rng_control.cc
   src/mutators/envelope.cc
@@ -107,6 +108,7 @@ deps=(
   src/oracles/expected_relation.cc
   src/oracles/oracle_spec.cc
   src/oracles/oracle_spec_loader.cc
+  src/oracles/oracle_record.cc
   src/oracles/oracle_result.cc
   src/oracles/oracle_executor.cc
   src/oracles/metamorphic_observation.cc
