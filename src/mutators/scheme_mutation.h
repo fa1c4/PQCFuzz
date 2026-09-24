@@ -55,6 +55,14 @@ enum class SchemeMutationField : uint8_t {
   kSecretKey = 22,
   kSignedMessageFrame = 23,
   kPublicKeyPayload = 24,
+  // NTRU / KEM format-aware fields (append-only).
+  kKemCiphertext = 25,
+  kKemCiphertextCoefficient = 26,
+  kKemCiphertextPadding = 27,
+  kKemPublicKeyCoefficient = 28,
+  kKemSecretKey = 29,
+  kKemSecretKeyS3 = 30,
+  kKemSecretKeyPrf = 31,
 };
 
 struct SchemeMutation {

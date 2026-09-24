@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "family": "NTRU",
+  "primitive_type": "kem",
+  "spec": {
+    "path": "plans/specs/ntru-round3-20201016-spec.pdf",
+    "sha256": "976120f4680a869c478c69b6be6ce857c84cf44fee5babbe0baef9708a95a4f6",
+    "revision": "NTRU round-3 submission (2020-10-16); PDF cover 2020-09-30",
+    "pdf_pages": 41,
+    "pdf_page_offset": 0,
+    "source_lock": "src/config/source_locks/ntru.json"
+  },
+  "source": {
+    "project_id": "ntru",
+    "implementation_id": "ntru_reference",
+    "reference_version": "NIST round-3 submission NTRU-20201016 (Reference_Implementation)",
+    "vendored_path": "projects/NTRU/reference",
+    "build_model": "one parameter set per translation-unit set; the internal functions are not namespaced, so each NTRU parameter set is compiled separately with -DCRYPTO_NAMESPACE(s)=ntru_##s and linked into the per-algorithm adapter/test binary"
+  },
+  "api": {
+    "keygen": "crypto_kem_keypair (randombytes consumes NTRU_SAMPLE_FG_BYTES then 32 prf-key bytes)",
+    "encaps": "crypto_kem_enc (randombytes consumes NTRU_SAMPLE_RM_BYTES)",
+    "decaps": "crypto_kem_dec (implicit rejection: SHA3-256(prf_key || c) is the fail secret)",
+    "dpke_decrypt": "owcpa_dec (test-only hook; returns fail and the packed r||m)"
+  },
+  "hash": {
+    "function": "SHA3-256 for ss_valid = SHA3-256(pack_S3(r)||pack_S3(m)) and ss_invalid = SHA3-256(prf_key||ct)",
+    "note": "BoringSSL HRSS uses SHA-256; it is not exchangeable with this SHA3-256 profile"
+  },
+  "capabilities": {
+    "supports_context": false,
+    "supports_seeded_sign": false,
+    "supports_deterministic_sign": false,
+    "verify_checks_length": false,
+    "sign_accepts_extended_context": false,
+    "verify_accepts_extended_context": false,
+    "ct_padding_policy": "strict_checked",
+    "ct_padding_evidence": "ENGINEERING_RECOMMENDATION"
+  },
+  "layout": {
+    "pk": "pack_Rq0(h)[0,Bq); coefficient n-1 is reconstructed so the sum is 0 mod q",
+    "ct": "pack_Rq0(c)[0,Bq); unused high bits of the final byte must be zero",
+    "sk": "pack_S3(f)[0,B3) || pack_S3(fp)[B3,2B3) || pack_Sq(hq)[2B3,2B3+Bq) || prf_key[2B3+Bq,2B3+Bq+32)",
+    "packed_rm": "pack_S3(r)||pack_S3(m), 2*B3 bytes",
+    "packing_order": "little-endian bit packing: coefficient i occupies bits [i*logq,(i+1)*logq) of the byte stream; S3 packs 5 base-3 digits per byte with coefficient 5i as the least significant digit"
+  },
+  "parameter_sets": [
+    {
+      "algorithm": "NTRU-HPS-2048-509",
+      "variant": "HPS",
+      "n": 509,
+      "q": 2048,
+      "logq": 11,
+      "b3": 102,
+      "bq": 699,
+      "pack_trinary_bytes": 102,
+      "pk_len": 699,
+      "sk_len": 935,
+      "ct_len": 699,
+      "ss_len": 32,
+      "weight": 254,
+      "sample_fg_bytes": 2413,
+      "sample_rm_bytes": 2413,
+      "prf_key_bytes": 32,
+      "tail_unused_bits": 4,
+      "source_dir": "ntruhps2048509"
+    },
+    {
+      "algorithm": "NTRU-HPS-2048-677",
+      "variant": "HPS",
+      "n": 677,
+      "q": 2048,
+      "logq": 11,
+      "b3": 136,
+      "bq": 930,
+      "pack_trinary_bytes": 136,
+      "pk_len": 930,
+      "sk_len": 1234,
+      "ct_len": 930,
+      "ss_len": 32,
+      "weight": 254,
+      "sample_fg_bytes": 3211,
+      "sample_rm_bytes": 3211,
+      "prf_key_bytes": 32,
+      "tail_unused_bits": 4,
+      "source_dir": "ntruhps2048677"
+    },
+    {
+      "algorithm": "NTRU-HPS-4096-821",
+      "variant": "HPS",
+      "n": 821,
+      "q": 4096,
+      "logq": 12,
+      "b3": 164,
+      "bq": 1230,
+      "pack_trinary_bytes": 164,
+      "pk_len": 1230,
+      "sk_len": 1590,
+      "ct_len": 1230,
+      "ss_len": 32,
+      "weight": 510,
+      "sample_fg_bytes": 3895,
+      "sample_rm_bytes": 3895,
+      "prf_key_bytes": 32,
+      "tail_unused_bits": 0,
+      "source_dir": "ntruhps4096821"
+    },
+    {
+      "algorithm": "NTRU-HRSS-701",
+      "variant": "HRSS",
+      "n": 701,
+      "q": 8192,
+      "logq": 13,
+      "b3": 140,
+      "bq": 1138,
+      "pack_trinary_bytes": 140,
+      "pk_len": 1138,
+      "sk_len": 1450,
+      "ct_len": 1138,
+      "ss_len": 32,
+      "weight": 0,
+      "sample_fg_bytes": 1400,
+      "sample_rm_bytes": 1400,
+      "prf_key_bytes": 32,
+      "tail_unused_bits": 4,
+      "source_dir": "ntruhrss701"
+    }
+  ],
+  "build_flags": [
+    "-O2",
+    "-DCRYPTO_NAMESPACE(s)=ntru_##s",
+    "-ffp-contract=off",
+    "-fsanitize=fuzzer-no-link,address,undefined"
+  ],
+  "kat_fixture": {
+    "path": "tests/fixtures/ntru/kat_reference.json",
+    "sha256": "0d4dffc8254beb0ae4b2e913289db6787366ebb5339641036d5d5d18fbb7dd02",
+    "official": true,
+    "source": "NTRU-Round3.zip KAT/PQCkemKAT_*.rsp (first three records per parameter set)"
+  }
+}

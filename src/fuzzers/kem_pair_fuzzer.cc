@@ -8,7 +8,9 @@
 #include "mutators/aigis_enc_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_kem_layout.h"
+#include "mutators/ntru_layout.h"
 #include "oracles/metamorphic_executor.h"
+#include "oracles/ntru_executor.h"
 #include "oracles/oracle_executor.h"
 #include "runtime/adapter_registry.h"
 #include "triage/finding_writer.h"
@@ -112,28 +114,60 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   }
   pqcfuzz::MlKemParams params{};
   pqcfuzz::AigisEncParams aigis_params{};
+  pqcfuzz::NtruParams ntru_params{};
+  const bool is_ntru = pqcfuzz::GetNtruParams(expected_algorithm, &ntru_params);
   const bool is_aigis = pqcfuzz::GetAigisEncParams(expected_algorithm, &aigis_params);
   if (is_aigis) {
     params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
               aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
               aigis_params.c1_bits, aigis_params.c2_bits,
               aigis_params.z_offset, aigis_params.z_len};
-  } else if (!pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
+  } else if (!is_ntru && !pqcfuzz::GetMlKemParams(expected_algorithm, &params)) {
     return 0;
   }
   static const pqcfuzz_kem_adapter *const target =
       pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID);
   std::string routing_error;
+  size_t expected_pk_len = params.pk_len;
+  size_t expected_sk_len = params.sk_len;
+  size_t expected_ct_len = params.ct_len;
+  size_t expected_ss_len = params.ss_len;
+  if (is_ntru) {
+    expected_pk_len = ntru_params.pk_len;
+    expected_sk_len = ntru_params.sk_len;
+    expected_ct_len = ntru_params.ct_len;
+    expected_ss_len = ntru_params.ss_len;
+  }
   const pqcfuzz::AdapterRoutingExpectation expected_routing{
       PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID, expected_algorithm,
-      params.pk_len, params.sk_len, params.ct_len, params.ss_len, 0};
+      expected_pk_len, expected_sk_len, expected_ct_len, expected_ss_len, 0};
   if (!pqcfuzz::ValidateKemAdapterRouting(target, expected_routing, &routing_error)) {
+    pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
+    return 0;
+  }
+  if (is_ntru && std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
     pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
 
   pqcfuzz::KEMOracleTrace trace;
-  if (std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
+  if (is_ntru) {
+    pqcfuzz::NtruOracleConfig config;
+    config.job_id = PQCFUZZ_JOB_ID;
+    config.pair_id = PQCFUZZ_PAIR_ID;
+    config.algorithm = expected_algorithm;
+    config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
+    config.params = ntru_params;
+    config.left = target;
+    config.right = pqcfuzz::GetKemAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
+    config.exchange_contract.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;
+    config.exchange_contract.ciphertext_exchange = PQCFUZZ_CIPHERTEXT_EXCHANGE != 0;
+    config.exchange_contract.secret_key_exchange = PQCFUZZ_SECRET_KEY_EXCHANGE != 0;
+    config.exchange_contract.secret_key_format_compatible = PQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE != 0;
+    config.seed = envelope.seed;
+    config.mutation = envelope.mutation;
+    trace = pqcfuzz::ExecuteNtruOracle(config);
+  } else if (std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
     pqcfuzz::MetamorphicKemConfig config;
     config.job_id = PQCFUZZ_JOB_ID;
     config.pair_id = PQCFUZZ_PAIR_ID;

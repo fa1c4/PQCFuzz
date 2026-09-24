@@ -51,6 +51,11 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kAigisSig2:
     case AlgorithmId::kAigisSig3:
       return true;
+    case AlgorithmId::kNtruHps2048509:
+    case AlgorithmId::kNtruHps2048677:
+    case AlgorithmId::kNtruHps4096821:
+    case AlgorithmId::kNtruHrss701:
+      return true;
     case AlgorithmId::kFalcon512Compressed:
     case AlgorithmId::kFalcon1024Compressed:
     case AlgorithmId::kFalcon512Padded:
@@ -148,6 +153,23 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kMlKemRngFailure:
     case OracleId::kMlDsaRngFailure:
     case OracleId::kSlhDsaRngFailure:
+      return true;
+    case OracleId::kNtruKat:
+    case OracleId::kNtruLocalRoundtrip:
+    case OracleId::kNtruCrossExchange:
+    case OracleId::kNtruDpkeMembership:
+    case OracleId::kNtruCtPadding:
+    case OracleId::kNtruImplicitRejectionExact:
+    case OracleId::kNtruPrfKeySeparation:
+    case OracleId::kNtruKeyAlgebra:
+    case OracleId::kNtruCodecRoundtrip:
+    case OracleId::kNtruSkMalformed:
+    case OracleId::kNtruLengths:
+    case OracleId::kNtruRngAndReplay:
+    case OracleId::kNtruFailureState:
+    case OracleId::kNtruDpkeFailureOutput:
+    case OracleId::kNtruFaultChecks:
+    case OracleId::kNtruTimingResources:
       return true;
     case OracleId::kFalconKat:
     case OracleId::kFalconLocalSignVerify:
@@ -249,6 +271,14 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "AIGIS-SIG-2";
     case AlgorithmId::kAigisSig3:
       return "AIGIS-SIG-3";
+    case AlgorithmId::kNtruHps2048509:
+      return "NTRU-HPS-2048-509";
+    case AlgorithmId::kNtruHps2048677:
+      return "NTRU-HPS-2048-677";
+    case AlgorithmId::kNtruHps4096821:
+      return "NTRU-HPS-4096-821";
+    case AlgorithmId::kNtruHrss701:
+      return "NTRU-HRSS-701";
     case AlgorithmId::kFalcon512Compressed:
       return "FALCON-512-COMPRESSED";
     case AlgorithmId::kFalcon1024Compressed:
@@ -431,6 +461,38 @@ const char *OracleName(OracleId oracle_id) {
       return "mldsa_rng_failure";
     case OracleId::kSlhDsaRngFailure:
       return "slhdsa_rng_failure";
+    case OracleId::kNtruKat:
+      return "ntru_kat";
+    case OracleId::kNtruLocalRoundtrip:
+      return "ntru_local_roundtrip";
+    case OracleId::kNtruCrossExchange:
+      return "ntru_cross_exchange";
+    case OracleId::kNtruDpkeMembership:
+      return "ntru_dpke_membership";
+    case OracleId::kNtruCtPadding:
+      return "ntru_ct_padding";
+    case OracleId::kNtruImplicitRejectionExact:
+      return "ntru_implicit_rejection_exact";
+    case OracleId::kNtruPrfKeySeparation:
+      return "ntru_prf_key_separation";
+    case OracleId::kNtruKeyAlgebra:
+      return "ntru_key_algebra";
+    case OracleId::kNtruCodecRoundtrip:
+      return "ntru_codec_roundtrip";
+    case OracleId::kNtruSkMalformed:
+      return "ntru_sk_malformed";
+    case OracleId::kNtruLengths:
+      return "ntru_lengths";
+    case OracleId::kNtruRngAndReplay:
+      return "ntru_rng_and_replay";
+    case OracleId::kNtruFailureState:
+      return "ntru_failure_state";
+    case OracleId::kNtruDpkeFailureOutput:
+      return "ntru_dpke_failure_output";
+    case OracleId::kNtruFaultChecks:
+      return "ntru_fault_checks";
+    case OracleId::kNtruTimingResources:
+      return "ntru_timing_resources";
     case OracleId::kFalconKat:
       return "falcon_kat";
     case OracleId::kFalconLocalSignVerify:
@@ -588,6 +650,18 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "AIGIS-SIG-3") {
     return AlgorithmId::kAigisSig3;
+  }
+  if (name == "NTRU-HPS-2048-509") {
+    return AlgorithmId::kNtruHps2048509;
+  }
+  if (name == "NTRU-HPS-2048-677") {
+    return AlgorithmId::kNtruHps2048677;
+  }
+  if (name == "NTRU-HPS-4096-821") {
+    return AlgorithmId::kNtruHps4096821;
+  }
+  if (name == "NTRU-HRSS-701") {
+    return AlgorithmId::kNtruHrss701;
   }
   if (name == "FALCON-512-COMPRESSED") {
     return AlgorithmId::kFalcon512Compressed;
@@ -853,6 +927,54 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "slhdsa_rng_failure") {
     return OracleId::kSlhDsaRngFailure;
+  }
+  if (name == "ntru_kat") {
+    return OracleId::kNtruKat;
+  }
+  if (name == "ntru_local_roundtrip") {
+    return OracleId::kNtruLocalRoundtrip;
+  }
+  if (name == "ntru_cross_exchange") {
+    return OracleId::kNtruCrossExchange;
+  }
+  if (name == "ntru_dpke_membership") {
+    return OracleId::kNtruDpkeMembership;
+  }
+  if (name == "ntru_ct_padding") {
+    return OracleId::kNtruCtPadding;
+  }
+  if (name == "ntru_implicit_rejection_exact") {
+    return OracleId::kNtruImplicitRejectionExact;
+  }
+  if (name == "ntru_prf_key_separation") {
+    return OracleId::kNtruPrfKeySeparation;
+  }
+  if (name == "ntru_key_algebra") {
+    return OracleId::kNtruKeyAlgebra;
+  }
+  if (name == "ntru_codec_roundtrip") {
+    return OracleId::kNtruCodecRoundtrip;
+  }
+  if (name == "ntru_sk_malformed") {
+    return OracleId::kNtruSkMalformed;
+  }
+  if (name == "ntru_lengths") {
+    return OracleId::kNtruLengths;
+  }
+  if (name == "ntru_rng_and_replay") {
+    return OracleId::kNtruRngAndReplay;
+  }
+  if (name == "ntru_failure_state") {
+    return OracleId::kNtruFailureState;
+  }
+  if (name == "ntru_dpke_failure_output") {
+    return OracleId::kNtruDpkeFailureOutput;
+  }
+  if (name == "ntru_fault_checks") {
+    return OracleId::kNtruFaultChecks;
+  }
+  if (name == "ntru_timing_resources") {
+    return OracleId::kNtruTimingResources;
   }
   if (name == "falcon_kat") {
     return OracleId::kFalconKat;

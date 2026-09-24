@@ -188,8 +188,49 @@ def falcon_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
     return subtests
 
 
+def oracle_ids_for_ntru() -> list[str]:
+    # Default (P0/P1) NTRU oracles.  The P2 fault and timing lanes are opt-in
+    # only and stay out of the default schedule.
+    return [
+        "ntru_kat",
+        "ntru_local_roundtrip",
+        "ntru_cross_exchange",
+        "ntru_dpke_membership",
+        "ntru_ct_padding",
+        "ntru_implicit_rejection_exact",
+        "ntru_prf_key_separation",
+        "ntru_key_algebra",
+        "ntru_codec_roundtrip",
+        "ntru_sk_malformed",
+        "ntru_lengths",
+        "ntru_rng_and_replay",
+        "ntru_failure_state",
+        "ntru_dpke_failure_output",
+    ]
+
+
+def ntru_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_enabled = contract["public_key_exchange"] and contract["ciphertext_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_ntru():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "ntru_cross_exchange":
+            entry["required_exchange"] = ["public_key_exchange", "ciphertext_exchange"]
+            entry["enabled"] = cross_enabled
+        subtests.append(entry)
+    return subtests
+
+
 def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
     family = pair["algorithm_family"]
+    if family == "NTRU":
+        return oracle_ids_for_ntru()
     if family == "FALCON":
         return oracle_ids_for_falcon()
     if family == "CROSS":
@@ -209,6 +250,8 @@ def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
     family = pair["algorithm_family"]
+    if family == "NTRU":
+        return "src/oracles/specs/ntru.json"
     if family == "FALCON":
         return "src/oracles/specs/falcon.json"
     if family == "CROSS":
@@ -295,6 +338,22 @@ ORACLE_ENUM_BY_NAME = {
     "mlkem_rng_failure": 61,
     "mldsa_rng_failure": 62,
     "slhdsa_rng_failure": 63,
+    "ntru_kat": 64,
+    "ntru_local_roundtrip": 65,
+    "ntru_cross_exchange": 66,
+    "ntru_dpke_membership": 67,
+    "ntru_ct_padding": 68,
+    "ntru_implicit_rejection_exact": 69,
+    "ntru_prf_key_separation": 70,
+    "ntru_key_algebra": 71,
+    "ntru_codec_roundtrip": 72,
+    "ntru_sk_malformed": 73,
+    "ntru_lengths": 74,
+    "ntru_rng_and_replay": 75,
+    "ntru_failure_state": 76,
+    "ntru_dpke_failure_output": 77,
+    "ntru_fault_checks": 78,
+    "ntru_timing_resources": 79,
     "falcon_kat": 100,
     "falcon_local_sign_verify": 101,
     "falcon_cross_verify": 102,
@@ -463,6 +522,8 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
 
 def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
     family = pair["algorithm_family"]
+    if family == "NTRU":
+        return ntru_enabled_subtests(pair)
     if family == "FALCON":
         return falcon_enabled_subtests(pair)
     if family == "CROSS":

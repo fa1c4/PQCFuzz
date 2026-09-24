@@ -1,0 +1,233 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "pair_id": "ntru_hps_2048_509_ntru_reference_single",
+      "algorithm": "NTRU-HPS-2048-509",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_2048_509",
+        "abi": {
+          "pk_len": 699,
+          "sk_len": 935,
+          "ct_len": 699,
+          "ss_len": 32
+        }
+      },
+      "right": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_2048_509",
+        "abi": {
+          "pk_len": 699,
+          "sk_len": 935,
+          "ct_len": 699,
+          "ss_len": 32
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "ntru_hps_2048_677_ntru_reference_single",
+      "algorithm": "NTRU-HPS-2048-677",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_2048_677",
+        "abi": {
+          "pk_len": 930,
+          "sk_len": 1234,
+          "ct_len": 930,
+          "ss_len": 32
+        }
+      },
+      "right": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_2048_677",
+        "abi": {
+          "pk_len": 930,
+          "sk_len": 1234,
+          "ct_len": 930,
+          "ss_len": 32
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "ntru_hps_4096_821_ntru_reference_single",
+      "algorithm": "NTRU-HPS-4096-821",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_4096_821",
+        "abi": {
+          "pk_len": 1230,
+          "sk_len": 1590,
+          "ct_len": 1230,
+          "ss_len": 32
+        }
+      },
+      "right": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hps_4096_821",
+        "abi": {
+          "pk_len": 1230,
+          "sk_len": 1590,
+          "ct_len": 1230,
+          "ss_len": 32
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "ntru_hrss_701_ntru_reference_single",
+      "algorithm": "NTRU-HRSS-701",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hrss_701",
+        "abi": {
+          "pk_len": 1138,
+          "sk_len": 1450,
+          "ct_len": 1138,
+          "ss_len": 32
+        }
+      },
+      "right": {
+        "project_id": "ntru",
+        "project_name": "NTRU official reference implementation (NIST round-3 submission 2020-10-16)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "NIST-PQ-Submission-NTRU-20201016",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "ntru_reference_ntru_hrss_701",
+        "abi": {
+          "pk_len": 1138,
+          "sk_len": 1450,
+          "ct_len": 1138,
+          "ss_len": 32
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    }
+  ]
+}

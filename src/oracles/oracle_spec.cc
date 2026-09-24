@@ -50,6 +50,10 @@ std::vector<OracleSpec> DefaultFalconOracleSpecs() {
   return SpecsForFamily("FALCON");
 }
 
+std::vector<OracleSpec> DefaultNtruOracleSpecs() {
+  return SpecsForFamily("NTRU");
+}
+
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id) {
   for (const auto &spec : specs) {
     if (spec.oracle_id == oracle_id) {

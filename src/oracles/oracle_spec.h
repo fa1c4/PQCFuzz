@@ -36,6 +36,7 @@ std::vector<OracleSpec> DefaultSlhDsaOracleSpecs();
 std::vector<OracleSpec> DefaultAigisEncOracleSpecs();
 std::vector<OracleSpec> DefaultAigisSigOracleSpecs();
 std::vector<OracleSpec> DefaultFalconOracleSpecs();
+std::vector<OracleSpec> DefaultNtruOracleSpecs();
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id);
 const OracleSpec *FindAnyOracleSpec(const std::string &oracle_id);
 const OracleMetadata *FindOracleMetadata(const std::string &oracle_id);

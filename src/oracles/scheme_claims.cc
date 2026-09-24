@@ -45,7 +45,7 @@ bool LookupAttribute(
 }  // namespace
 
 bool ClaimConditionKeyKnown(const std::string &key) {
-  return key == "profile_id" || key == "algorithm" || key == "subtest_id" || key == "format";
+  return key == "profile_id" || key == "algorithm" || key == "subtest_id" || key == "format" || key == "variant";
 }
 
 bool ClaimConditionsMatch(

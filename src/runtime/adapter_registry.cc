@@ -10,6 +10,7 @@
 #include "adapters/pqmagic/sig_adapter.h"
 #include "adapters/cross/cross_adapter.h"
 #include "adapters/falcon/sig_adapter.h"
+#include "adapters/ntru/kem_adapter.h"
 #include "adapters/reference/reference_adapter.h"
 
 namespace pqcfuzz {
@@ -28,6 +29,9 @@ const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
   }
   if (project_id == "pqclean_reference") {
     return pqcfuzz_get_pqclean_reference_kem_adapter(implementation_id.c_str());
+  }
+  if (project_id == "ntru") {
+    return pqcfuzz_get_ntru_kem_adapter(implementation_id.c_str());
   }
   return nullptr;
 }

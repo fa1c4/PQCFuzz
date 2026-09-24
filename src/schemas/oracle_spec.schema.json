@@ -30,7 +30,8 @@
               "AIGIS-ENC",
               "AIGIS-SIG",
               "CROSS",
-              "FALCON"
+              "FALCON",
+              "NTRU"
             ]
           },
           "primitive_type": {

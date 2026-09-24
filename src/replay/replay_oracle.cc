@@ -13,10 +13,12 @@
 #include "mutators/falcon_layout.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/ml_kem_layout.h"
+#include "mutators/ntru_layout.h"
 #include "mutators/slh_dsa_layout.h"
 #include "oracles/cross_executor.h"
 #include "oracles/falcon_executor.h"
 #include "oracles/metamorphic_executor.h"
+#include "oracles/ntru_executor.h"
 #include "oracles/oracle_executor.h"
 #include "runtime/adapter_registry.h"
 #include "runtime/exit_codes.h"
@@ -194,26 +196,58 @@ int main(int argc, char **argv) {
   } else {
     pqcfuzz::MlKemParams params{};
     pqcfuzz::AigisEncParams aigis_params{};
+    pqcfuzz::NtruParams ntru_params{};
+    const bool is_ntru = pqcfuzz::GetNtruParams(args.algorithm, &ntru_params);
     const bool is_aigis = pqcfuzz::GetAigisEncParams(args.algorithm, &aigis_params);
     if (is_aigis) {
       params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
                 aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
                 aigis_params.c1_bits, aigis_params.c2_bits};
-    } else if (!pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
-      std::cerr << "unsupported ML-KEM algorithm: " << args.algorithm << "\n";
+    } else if (!is_ntru && !pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
+      std::cerr << "unsupported KEM algorithm: " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
     const pqcfuzz_kem_adapter *target =
         pqcfuzz::GetKemAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    size_t expected_pk_len = params.pk_len;
+    size_t expected_sk_len = params.sk_len;
+    size_t expected_ct_len = params.ct_len;
+    size_t expected_ss_len = params.ss_len;
+    if (is_ntru) {
+      expected_pk_len = ntru_params.pk_len;
+      expected_sk_len = ntru_params.sk_len;
+      expected_ct_len = ntru_params.ct_len;
+      expected_ss_len = ntru_params.ss_len;
+    }
     pqcfuzz::AdapterRoutingExpectation expected{
         args.left_project_id, args.left_implementation_id, args.algorithm,
-        params.pk_len, params.sk_len, params.ct_len, params.ss_len, 0};
+        expected_pk_len, expected_sk_len, expected_ct_len, expected_ss_len, 0};
     if (!pqcfuzz::ValidateKemAdapterRouting(target, expected, &error)) {
       std::cerr << "KEM adapter routing error: " << error << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
 
-    if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+    if (is_ntru) {
+      if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+        std::cerr << "NTRU has no metamorphic oracle suite\n";
+        return pqcfuzz::kExitInvalidInputOrConfig;
+      }
+      pqcfuzz::NtruOracleConfig config;
+      config.job_id = args.job_id;
+      config.pair_id = args.pair_id;
+      config.algorithm = args.algorithm;
+      config.oracle_id = args.oracle_id;
+      config.params = ntru_params;
+      config.left = target;
+      config.right = pqcfuzz::GetKemAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
+      config.exchange_contract.public_key_exchange = args.public_key_exchange;
+      config.exchange_contract.ciphertext_exchange = args.ciphertext_exchange;
+      config.exchange_contract.secret_key_exchange = args.secret_key_exchange;
+      config.exchange_contract.secret_key_format_compatible = args.secret_key_format_compatible;
+      config.seed = envelope.seed;
+      config.mutation = envelope.mutation;
+      trace = pqcfuzz::ExecuteNtruOracle(config);
+    } else if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
       pqcfuzz::MetamorphicKemConfig config;
       config.job_id = args.job_id;
       config.pair_id = args.pair_id;

@@ -59,6 +59,18 @@ _PROFILE_ALGORITHM_FIELDS = (
     "sk_header",
     "ct_header",
     "fg_bits",
+    # NTRU family fields.
+    "variant",
+    "logq",
+    "b3",
+    "bq",
+    "weight",
+    "pack_trinary_bytes",
+    "ss_len",
+    "prf_key_bytes",
+    "tail_unused_bits",
+    "sample_fg_bytes",
+    "sample_rm_bytes",
 )
 
 
@@ -91,11 +103,12 @@ def load_scheme_profile_algorithms() -> dict[str, dict[str, Any]]:
                     if field in parameter_set
                 }
             )
-            missing = [
-                field
-                for field in ("family", "primitive_type", "pk_len", "sk_len", "sig_max_len")
-                if field not in metadata
-            ]
+            required_fields = ["family", "primitive_type", "pk_len", "sk_len"]
+            if metadata.get("primitive_type") == "kem":
+                required_fields += ["ct_len", "ss_len"]
+            else:
+                required_fields += ["sig_max_len"]
+            missing = [field for field in required_fields if field not in metadata]
             if missing:
                 raise PairAlgError(
                     f"{path.name}:{algorithm}: scheme profile is missing {', '.join(missing)}"
