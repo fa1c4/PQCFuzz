@@ -99,6 +99,7 @@ sources=(
   src/oracles/metamorphic_observation.cc
   src/oracles/metamorphic_spec.cc
   src/oracles/metamorphic_executor.cc
+  src/adapters/cross/cross_adapter.cc
   src/runtime/adapter_registry.cc
   src/runtime/alloc_fault_injector.cc
   src/runtime/isolated_worker.cc

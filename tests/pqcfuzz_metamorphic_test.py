@@ -449,6 +449,7 @@ def test_kem_decaps_sk_z_region_mutation_is_no_effect_not_finding(tmp_path: Path
           return trace.findings.empty() &&
                          !trace.subtests.empty() &&
                          trace.subtests[0].skipped &&
+                         trace.subtests[0].not_applicable &&
                          trace.subtests[0].note == "mutation_targets_z_region_not_consumed_by_decapsulation" &&
                          trace.observed_relation == "OBSERVED_INTERVENTION_NOT_EFFECTIVE"
                      ? 0

@@ -1,0 +1,407 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "cross_kat",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"same_algorithm": true, "valid_lengths": true, "fixture_required": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "reference_profile_mismatch",
+      "claim": "For a fixed RNG tape and message, the pinned reference build shall reproduce the recorded CROSS key and signature bytes and shall accept them.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "CROSS round-2 spec §7 (PDF p.47); Algorithm 1-3; plans/specs/cross-round2-spec.pdf sha256 10ac1ef5",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Fixtures are generated from the pinned upstream reference implementation with a fixed tape, not from an official round-2 KAT file",
+        "A mismatch violates the pinned reference profile, not the CROSS specification by itself"
+      ],
+      "controls": {
+        "positive_control": "the recorded fixture decodes to the recorded ABI lengths",
+        "negative_control": "a different tape produces different signature bytes"
+      }
+    },
+    {
+      "oracle_id": "cross_local_sign_verify",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"same_algorithm": true, "valid_lengths": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "A CROSS signature produced by an honest signer shall verify under the matching public key for empty and binary messages.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.2 Algorithms 1-3 (PDF pp.16-23); §4 Table 4 (PDF p.31)",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Verification success is not an EUF-CMA or sUF-CMA result"],
+      "controls": {
+        "positive_control": "a freshly generated key pair signs and verifies",
+        "negative_control": "a one-byte signature mutation is rejected by cross_exact_lengths and cross_vector_padding"
+      }
+    },
+    {
+      "oracle_id": "cross_cross_verify",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {
+        "pair_alg_exchange_contract_required": ["public_key_exchange", "signature_exchange"]
+      },
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two pinned CROSS builds of the same variant, category, corner, and revision exchanging keys and signatures shall cross-verify.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.2 and §4 Table 4; Algorithm 3 verify contract",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Disabled in the pinned single-implementation lock because only one reference build is vendored",
+        "Different optimization corners are not interchangeable positive controls"
+      ],
+      "controls": {
+        "positive_control": "both local sign/verify paths succeed",
+        "negative_control": "the pair file declares signature_exchange before the oracle is enabled"
+      }
+    },
+    {
+      "oracle_id": "cross_message_key_binding",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "message_mutation", "targets": ["message", "public_key"]},
+      "expected_relation": "VERIFY_FALSE",
+      "comparator": "verify_rejects",
+      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies",
+      "claim": "A CROSS signature shall not verify for a message that differs from the signed message, nor under an independent honest public key.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.2 Algorithm 3 (PDF pp.21-23)",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Failure to verify under another honest key is not a rogue-key proof",
+        "A valid signature on a new message is not automatically an EUF forgery"
+      ],
+      "controls": {
+        "positive_control": "the original message under the original key verifies",
+        "negative_control": "the mutation record shows the message or public key bytes changed"
+      }
+    },
+    {
+      "oracle_id": "cross_exact_lengths",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "length_boundary", "targets": ["signature"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "appended_signature_bytes_accepted",
+      "claim": "The CROSS verifier shall require the exact CROSS_sig_t length and reject truncated or appended signature byte strings.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.2.2 signature sizes (PDF p.23); §5.4 packing (PDF pp.43-44); api.h CRYPTO_BYTES",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Length-aware wrapper observations are labelled api_layer=adapter"],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation record shows one byte appended or removed"
+      }
+    },
+    {
+      "oracle_id": "cross_packed_field_range",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.y", "signature.v", "signature.path"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "out_of_domain_wire_coefficient_accepted",
+      "claim": "Packed y, v, and vG coefficients outside Fp/Fz shall not be accepted as zero or silently reduced: decapsulation of every wire representation must be canonical.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec Algorithm 3 membership checks; §5.4 packing (PDF pp.43-44); §5.5 arithmetic (PDF p.45); pack_unpack.c unpack_fp_vec",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Internal Mersenne redundant-zero representations are not wire-level coefficients"],
+      "controls": {
+        "positive_control": "the unmodified in-domain vector verifies",
+        "negative_control": "the mutation record marks the target coefficient out of range"
+      }
+    },
+    {
+      "oracle_id": "cross_vector_padding",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "bit_padding", "targets": ["signature.y", "signature.v", "signature.syndrome"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "unused_padding_bits_accepted",
+      "claim": "Each densely packed vector is zero-padded to a byte boundary; a decoder shall reject non-zero unused padding bits rather than deriving the same value from two encodings.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §5.4 packing requires zero padding (PDF pp.43-44); pack_unpack.c unpack checks",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Byte-aligned vectors have no padding case"],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "the mutation targets a bit above the coefficient bit width"
+      }
+    },
+    {
+      "oracle_id": "cross_challenge_sampling",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "digest_mutation", "targets": ["signature.digest_chall2"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_challenge_equal",
+      "triage_policy": "challenge_sampler_divergence",
+      "claim": "The fixed-weight challenge shall be derived from the digest by the specified sampler: chall1 entries are nonzero, chall2 has Hamming weight exactly w, and an independent model shall reproduce the same bit string.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.3 Table 3 (PDF pp.23-24); expand_digest_to_fixed_weight in csprng_hash.c",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Only the rejection sampler path is exercised; probability histograms alone do not establish the predicate"],
+      "controls": {
+        "positive_control": "the model sampler reproduces the reference challenge for the fixed digest",
+        "negative_control": "a digest mutation changes the challenge"
+      }
+    },
+    {
+      "oracle_id": "cross_commitment_digests",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.digest_cmt", "signature.digest_chall2", "signature.resp1"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "commitment_digest_malleability",
+      "claim": "Verification shall recompute both final digests and accept if and only if they match the committed roots; changing digest_cmt, digest_chall2, or any response shall reject.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §2.2 Algorithm 3 lines 22-28 (PDF pp.22-23)",
+      "scope": {"api_layer": "external"},
+      "limitations": ["The independent recomputation is supplied by the Python transcript model; the native oracle observes rejection"],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "each targeted field mutation is recorded as effective"
+      }
+    },
+    {
+      "oracle_id": "cross_domain_transcript",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.salt", "signature.digest_cmt"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_transcript_equal",
+      "triage_policy": "domain_separation_divergence",
+      "claim": "Every Hash/CSPRNG call shall use the specified little-endian 16-bit role tag and digest length; the transcript model with the same tags shall reproduce the reference digests.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §5.1 domain separation (PDF pp.32-33) and §2.2",
+      "scope": {"api_layer": "internal"},
+      "limitations": [
+        "Specification §2.2.2 cmt1 text omits Salt while Algorithms 2-3 include it; the model follows the algorithms",
+        "Tags are recorded explicitly rather than adding or subtracting one globally"
+      ],
+      "controls": {
+        "positive_control": "the model reproduces the reference digest for unchanged inputs",
+        "negative_control": "a big-endian tag model diverges"
+      }
+    },
+    {
+      "oracle_id": "cross_seed_rebuild",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["sign"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "tree_flip", "targets": ["signature.path"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_seed_set_equal",
+      "triage_policy": "unexpected_seed_disclosure",
+      "claim": "RebuildLeaves(SeedPath(seed, salt, b), b, salt) shall recover exactly the published leaves, and the published node set shall equal the zero-challenge round leaves and never cover one-challenge rounds.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §5.2 SeedTree algorithms (PDF pp.34-42); Algorithms 5-10",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["Secret leaves are never written to ordinary reports"],
+      "controls": {
+        "positive_control": "the reference path rebuilds the honest round leaves",
+        "negative_control": "a flipped zero-challenge flag tree is detected by the published-set predicate"
+      }
+    },
+    {
+      "oracle_id": "cross_merkle_proof",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.proof", "signature.path"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "merkle_proof_acceptance",
+      "claim": "Changing an active Proof node, reordering active proof nodes, or corrupting an active Path seed shall make the recomputed root mismatch and verification fail.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §5.2 Merkle tree algorithms 11-16 (PDF pp.38-42)",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Fast, balanced, and small tree topologies are tested separately; unused slots are covered by cross_path_proof_consumption"],
+      "controls": {
+        "positive_control": "the honest proof recomputes the honest root",
+        "negative_control": "the mutation record distinguishes path from proof targets"
+      }
+    },
+    {
+      "oracle_id": "cross_path_proof_consumption",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["verify"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.path", "signature.proof", "signature.unused_slots"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "consumption_record_equal",
+      "triage_policy": "path_proof_index_out_of_bounds",
+      "claim": "Path and Proof consumption shall be decided by the challenge topology and shall match the recorded counts without out-of-bounds or duplicate consumption; unused fixed slots follow the pinned serializer contract.",
+      "evidence_class": "IMPLEMENTATION_OBSERVED",
+      "source_reference": "CROSS round-2 spec §2.2.2 bound and §5.2 tree shape (PDF pp.34-42)",
+      "scope": {"api_layer": "api"},
+      "limitations": [
+        "Remaining-byte rules are not fully specified in text; behaviour is reported as an implementation observation",
+        "Unused-slot zeroization is a serializer property, not §5.4 vector padding"
+      ],
+      "controls": {
+        "positive_control": "the honest signature consumes exactly the topology counts",
+        "negative_control": "an inconsistent challenge/topology fixture consumes a different count"
+      }
+    },
+    {
+      "oracle_id": "cross_key_algebra",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "precondition": {"same_algorithm": true},
+      "mutation": {"type": "field_aware", "targets": ["public_key.syndrome", "public_key.seed"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_syndrome_equal",
+      "triage_policy": "key_algebra_mismatch",
+      "claim": "ExpandSK shall rederive Seedpk and the parity matrix, and the public syndrome shall equal e*H^T (RSDP) or eG*M mod z (RSDPG) under the specified row/column order.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec Algorithm 1 and Algorithm 4 (PDF pp.16-17); §5.3-5.4 arithmetic",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["Row/column order is checked against a fixed fixture; a mismatch is reported before any target verdict"],
+      "controls": {
+        "positive_control": "the reference key satisfies the model syndrome equation",
+        "negative_control": "a mutated pk seed breaks it"
+      }
+    },
+    {
+      "oracle_id": "cross_rng_replay",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "precondition": {"rng_injection_available": true},
+      "mutation": {"type": "bad_randomness", "patterns": ["same_tape", "different_tape", "failure"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "rng_contract_violation",
+      "claim": "Key generation and signing shall consume the injected CSPRNG tape deterministically: the same tape reproduces identical bytes on the same build, and a fresh legal tape yields a verifying signature.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "CROSS round-2 spec Algorithm 1-2; csprng_hash.c platform_csprng_state; api.h CRYPTO_RANDOMBYTES",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Repeated salt or seed is a diagnostic observation, not automatically a normative rejection",
+        "Same-tape equality only holds for the same build and call path"
+      ],
+      "controls": {
+        "positive_control": "two runs under the same tape agree",
+        "negative_control": "a different tape changes the salt"
+      }
+    },
+    {
+      "oracle_id": "cross_failure_resources",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "precondition": {"api_available": true},
+      "mutation": {"type": "failure_injection", "targets": ["length", "allocation", "rng"]},
+      "expected_relation": "REJECT_OR_INVALID_INPUT",
+      "comparator": "status_or_length_state",
+      "triage_policy": "failure_output_state_inconsistent",
+      "claim": "Failure paths shall report a consistent status and leave caller output length and buffers bounded by the sentinel/canary contract; parser and allocation budgets shall stay within the configured limits.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "CROSS round-2 spec API contract; harness common API contract §1.4",
+      "scope": {"api_layer": "api"},
+      "limitations": ["The production retry policy is not modified; allocation-failure probes report the observed state only"],
+      "controls": {
+        "positive_control": "the honest path returns success with exact lengths",
+        "negative_control": "a poisoned output sentinel is detected"
+      }
+    },
+    {
+      "oracle_id": "cross_parallel_arithmetic",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "precondition": {"same_algorithm": true},
+      "mutation": {"type": "lane_batch", "targets": ["lane_count"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "batch_lane_divergence",
+      "claim": "Scalar and batch SHAKE calls shall agree for 1, 2, 3, and 4 lanes including short tail batches; Fp/Fz arithmetic shall agree with independent modular arithmetic on small-domain and boundary operands.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "CROSS round-2 spec §5.3-5.5 (PDF pp.44-46); fips202.c and fp_arith.h",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["Variable public inputs do not by themselves constitute leakage evidence"],
+      "controls": {
+        "positive_control": "lane counts that divide the round total agree with the scalar result",
+        "negative_control": "an intentionally mis-sized tail batch diverges"
+      }
+    },
+    {
+      "oracle_id": "cross_fault_seed_disclosure",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["sign"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "fault_injection", "targets": ["flag_tree", "challenge_bit"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "seed_and_response_same_round_disclosed",
+      "claim": "A fault that flips the flag tree or shifts a challenge bit shall not cause the same round to disclose both its seed and its zero-branch response; such a mutant must be detected by cross_seed_rebuild.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "CROSS round-2 spec §5.6 fault-attack boundary (PDF pp.45-46)",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["A signature that merely fails to verify is not a leakage detector"],
+      "controls": {
+        "positive_control": "the fault-free signature verifies",
+        "negative_control": "the synthetic mutant is caught by the published-seed-set predicate"
+      }
+    },
+    {
+      "oracle_id": "cross_timing",
+      "algorithm_family": "CROSS",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "precondition": {"timing_lane_available": true},
+      "mutation": {"type": "timing_probe", "targets": ["secret_syndrome", "exponentiation", "public_verify"]},
+      "expected_relation": "NO_TIMEOUT",
+      "comparator": "timing_distribution_pair",
+      "triage_policy": "timing_signal_requires_manual_review",
+      "claim": "The timing lane shall complete within the configured budget while comparing secret-dependent and public verification paths; no timing conclusion is drawn without the dedicated non-sanitized binary and multiple-comparison correction.",
+      "evidence_class": "INFERENCE",
+      "source_reference": "CROSS round-2 spec §5.5-5.6 (PDF pp.45-46); harness common §1.4",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Opt-in P2 lane; not part of the default smoke contract",
+        "No power or EM claim is made without a physical measurement setup"
+      ],
+      "controls": {
+        "positive_control": "the public verify path is measured in the same harness",
+        "negative_control": "the lane reports not_applicable when the timing binary is absent"
+      }
+    }
+  ]
+}

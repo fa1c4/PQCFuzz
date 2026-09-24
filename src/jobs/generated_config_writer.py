@@ -104,32 +104,80 @@ def oracle_ids_for_aigis_sig() -> list[str]:
     ]
 
 
+def oracle_ids_for_cross() -> list[str]:
+    # Default (P0/P1) CROSS oracles.  The P2 timing and fault lanes are
+    # opt-in only and stay out of the default schedule.
+    return [
+        "cross_kat",
+        "cross_local_sign_verify",
+        "cross_cross_verify",
+        "cross_message_key_binding",
+        "cross_exact_lengths",
+        "cross_packed_field_range",
+        "cross_vector_padding",
+        "cross_challenge_sampling",
+        "cross_commitment_digests",
+        "cross_domain_transcript",
+        "cross_seed_rebuild",
+        "cross_merkle_proof",
+        "cross_path_proof_consumption",
+        "cross_key_algebra",
+        "cross_rng_replay",
+        "cross_failure_resources",
+        "cross_parallel_arithmetic",
+    ]
+
+
+def cross_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_verify_enabled = contract["public_key_exchange"] and contract["signature_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_cross():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "cross_cross_verify":
+            entry["required_exchange"] = ["public_key_exchange", "signature_exchange"]
+            entry["enabled"] = cross_verify_enabled
+        subtests.append(entry)
+    return subtests
+
+
 def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
-    if pair["algorithm_family"] == "AIGIS-ENC":
+    family = pair["algorithm_family"]
+    if family == "CROSS":
+        return oracle_ids_for_cross()
+    if family == "AIGIS-ENC":
         return oracle_ids_for_aigis_enc()
-    if pair["algorithm_family"] == "AIGIS-SIG":
+    if family == "AIGIS-SIG":
         return oracle_ids_for_aigis_sig()
-    if pair["primitive_type"] == "kem":
+    if family == "ML-KEM":
         return oracle_ids_for_ml_kem()
-    if pair["algorithm_family"] == "ML-DSA":
+    if family == "ML-DSA":
         return oracle_ids_for_ml_dsa()
-    if pair["algorithm_family"] == "SLH-DSA":
+    if family == "SLH-DSA":
         return oracle_ids_for_slh_dsa()
-    raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
+    raise ValueError(f"unsupported algorithm family: {family}")
 
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
-    if pair["algorithm_family"] == "AIGIS-ENC":
+    family = pair["algorithm_family"]
+    if family == "CROSS":
+        return "src/oracles/specs/cross.json"
+    if family == "AIGIS-ENC":
         return "src/oracles/specs/aigis_enc.json"
-    if pair["algorithm_family"] == "AIGIS-SIG":
+    if family == "AIGIS-SIG":
         return "src/oracles/specs/aigis_sig.json"
-    if pair["primitive_type"] == "kem":
+    if family == "ML-KEM":
         return "src/oracles/specs/ml_kem.json"
-    if pair["algorithm_family"] == "ML-DSA":
+    if family == "ML-DSA":
         return "src/oracles/specs/ml_dsa.json"
-    if pair["algorithm_family"] == "SLH-DSA":
+    if family == "SLH-DSA":
         return "src/oracles/specs/slh_dsa.json"
-    raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
+    raise ValueError(f"unsupported algorithm family: {family}")
 
 
 def metamorphic_oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
@@ -201,6 +249,25 @@ ORACLE_ENUM_BY_NAME = {
     "mlkem_rng_failure": 61,
     "mldsa_rng_failure": 62,
     "slhdsa_rng_failure": 63,
+    "cross_kat": 120,
+    "cross_local_sign_verify": 121,
+    "cross_cross_verify": 122,
+    "cross_message_key_binding": 123,
+    "cross_exact_lengths": 124,
+    "cross_packed_field_range": 125,
+    "cross_vector_padding": 126,
+    "cross_challenge_sampling": 127,
+    "cross_commitment_digests": 128,
+    "cross_domain_transcript": 129,
+    "cross_seed_rebuild": 130,
+    "cross_merkle_proof": 131,
+    "cross_path_proof_consumption": 132,
+    "cross_key_algebra": 133,
+    "cross_rng_replay": 134,
+    "cross_failure_resources": 135,
+    "cross_parallel_arithmetic": 136,
+    "cross_fault_seed_disclosure": 137,
+    "cross_timing": 138,
 }
 
 SECURITY_TIER_ORACLES = {"kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"}
@@ -330,17 +397,20 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
 
 
 def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
-    if pair["algorithm_family"] == "AIGIS-ENC":
+    family = pair["algorithm_family"]
+    if family == "CROSS":
+        return cross_enabled_subtests(pair)
+    if family == "AIGIS-ENC":
         return kem_enabled_subtests(pair["exchange_contract"], "aigisenc")
-    if pair["primitive_type"] == "kem":
+    if family == "ML-KEM":
         return kem_enabled_subtests(pair["exchange_contract"], "mlkem")
-    if pair["algorithm_family"] == "ML-DSA":
+    if family == "ML-DSA":
         return sig_enabled_subtests(pair["exchange_contract"], "mldsa")
-    if pair["algorithm_family"] == "SLH-DSA":
+    if family == "SLH-DSA":
         return sig_enabled_subtests(pair["exchange_contract"], "slhdsa")
-    if pair["algorithm_family"] == "AIGIS-SIG":
+    if family == "AIGIS-SIG":
         return sig_enabled_subtests(pair["exchange_contract"], "aigissig")
-    raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
+    raise ValueError(f"unsupported algorithm family: {family}")
 
 
 def make_job_record(pair: dict[str, Any], repo_root: Path) -> dict[str, Any]:

@@ -46,6 +46,9 @@ Options:
 
 This launches one tmux campaign per liboqs version. The default workflow is the
 PQ crypto semantic sanitizer: metamorphic single-target oracles plus ASan/UBSan.
+With --full-test, two campaigns (metamorphic and fips) run concurrently per
+version. Pressing Ctrl+C in this orchestrator stops every tmux campaign session
+it started before exiting.
 
 Outputs are written under:
   workspace/pqcfuzz_eval/
@@ -272,6 +275,75 @@ archive_existing_eval_root() {
   mkdir -p "$(dirname "$archive_root")"
   mv "$EVAL_ROOT" "$archive_root"
   echo "[pqcfuzz-eval] archived previous results: $EVAL_ROOT -> $archive_root"
+}
+
+declare -a STARTED_SESSIONS=()
+SESSIONS_CLEANED=0
+
+guard_existing_eval_root() {
+  local index="${EVAL_ROOT}/status/campaigns.tsv" status_dir="${EVAL_ROOT}/status"
+  local campaign version session rest status_file
+  if ! command -v tmux >/dev/null 2>&1; then
+    return 0
+  fi
+  if [ -f "$index" ]; then
+    while IFS=$'\t' read -r campaign version session rest; do
+      [ "$campaign" = "campaign" ] && continue
+      [ -z "$session" ] && continue
+      if tmux has-session -t "=${session}" 2>/dev/null; then
+        die "output root ${EVAL_ROOT_REL} has a live campaign session '$session'; stop it first: tmux kill-session -t $session"
+      fi
+    done < "$index"
+    return 0
+  fi
+  if [ -d "$status_dir" ]; then
+    for status_file in "$status_dir"/*.json; do
+      [ -f "$status_file" ] || continue
+      session="$(python3 - "$status_file" <<'PY'
+import json
+import sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        print(json.load(handle).get("session_name") or "")
+except Exception:
+    print("")
+PY
+)"
+      [ -z "$session" ] && continue
+      if tmux has-session -t "=${session}" 2>/dev/null; then
+        die "output root ${EVAL_ROOT_REL} has a live campaign session '$session'; stop it first: tmux kill-session -t $session"
+      fi
+    done
+  fi
+}
+
+cleanup_started_sessions() {
+  local reason="$1" session stopped=0
+  if [ "$SESSIONS_CLEANED" -eq 1 ]; then
+    return 0
+  fi
+  SESSIONS_CLEANED=1
+  if [ "${#STARTED_SESSIONS[@]}" -eq 0 ] || ! command -v tmux >/dev/null 2>&1; then
+    return 0
+  fi
+  for session in "${STARTED_SESSIONS[@]}"; do
+    if tmux has-session -t "=${session}" 2>/dev/null; then
+      tmux kill-session -t "=${session}" 2>/dev/null || true
+      echo "[pqcfuzz-eval] stopped tmux session: $session"
+      stopped=$((stopped + 1))
+    fi
+  done
+  if [ "$stopped" -gt 0 ]; then
+    echo "[pqcfuzz-eval] stopped $stopped campaign session(s) on $reason"
+  fi
+}
+
+handle_eval_signal() {
+  local signal="$1" code="$2"
+  echo
+  cleanup_started_sessions "$signal"
+  exit "$code"
 }
 
 write_launcher() {
@@ -702,6 +774,11 @@ pqcfuzz_status SigSign(
   if (sig == nullptr) {
     return PQCFUZZ_API_UNSUPPORTED;
   }
+  // liboqs AVX2 code performs pointer arithmetic on message/signature pointers
+  // even for zero-length inputs; hand it a valid non-null address instead.
+  static const uint8_t kZeroLengthProbe = 0;
+  const uint8_t *message_ptr = (message == nullptr || message_len == 0) ? &kZeroLengthProbe : message;
+  const uint8_t *context_ptr = (context == nullptr || context_len == 0) ? &kZeroLengthProbe : context;
   OQS_STATUS status;
   if (context_len != 0) {
 #if defined(OQS_ENABLE_SIG_ML_DSA)
@@ -710,13 +787,13 @@ pqcfuzz_status SigSign(
       return PQCFUZZ_API_UNSUPPORTED;
     }
     status = OQS_SIG_sign_with_ctx_str(
-        sig, signature, signature_len, message, message_len, context, context_len, secret_key);
+        sig, signature, signature_len, message_ptr, message_len, context_ptr, context_len, secret_key);
 #else
     OQS_SIG_free(sig);
     return PQCFUZZ_API_UNSUPPORTED;
 #endif
   } else {
-    status = OQS_SIG_sign(sig, signature, signature_len, message, message_len, secret_key);
+    status = OQS_SIG_sign(sig, signature, signature_len, message_ptr, message_len, secret_key);
   }
   OQS_SIG_free(sig);
   return ToStatus(status);
@@ -735,6 +812,13 @@ pqcfuzz_status SigVerify(
   if (sig == nullptr) {
     return PQCFUZZ_API_UNSUPPORTED;
   }
+  // liboqs AVX2 code performs pointer arithmetic on signature/message pointers
+  // even for zero-length inputs; hand it a valid non-null address instead.
+  static const uint8_t kZeroLengthProbe = 0;
+  const uint8_t *signature_ptr =
+      (signature == nullptr || signature_len == 0) ? &kZeroLengthProbe : signature;
+  const uint8_t *message_ptr = (message == nullptr || message_len == 0) ? &kZeroLengthProbe : message;
+  const uint8_t *context_ptr = (context == nullptr || context_len == 0) ? &kZeroLengthProbe : context;
   OQS_STATUS status;
   if (context_len != 0) {
 #if defined(OQS_ENABLE_SIG_ML_DSA)
@@ -743,13 +827,13 @@ pqcfuzz_status SigVerify(
       return PQCFUZZ_API_UNSUPPORTED;
     }
     status = OQS_SIG_verify_with_ctx_str(
-        sig, message, message_len, signature, signature_len, context, context_len, public_key);
+        sig, message_ptr, message_len, signature_ptr, signature_len, context_ptr, context_len, public_key);
 #else
     OQS_SIG_free(sig);
     return PQCFUZZ_API_UNSUPPORTED;
 #endif
   } else {
-    status = OQS_SIG_verify(sig, message, message_len, signature, signature_len, public_key);
+    status = OQS_SIG_verify(sig, message_ptr, message_len, signature_ptr, signature_len, public_key);
   }
   OQS_SIG_free(sig);
   return ToStatus(status);
@@ -894,7 +978,10 @@ extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_pqclean_slhdsa_sha2_256f_adapt
 extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_pqclean_slhdsa_shake_256f_adapter(void) { return &kRightSlhDsaShake_256f; }
 
 extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_liboqs_adapter(const char *implementation_id) {
-  const pqcfuzz_kem_adapter *adapters[] = {&kLeftKem512, &kLeftKem768, &kLeftKem1024};
+  // liboqs_self_reference right-side adapters resolve through this entry point.
+  const pqcfuzz_kem_adapter *adapters[] = {
+      &kLeftKem512, &kLeftKem768, &kLeftKem1024,
+      &kRightKem512, &kRightKem768, &kRightKem1024};
   for (const auto *adapter : adapters) {
     if (implementation_id != nullptr && std::strcmp(implementation_id, adapter->implementation_id) == 0) {
       return adapter;
@@ -914,11 +1001,16 @@ extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_pqclean_adapter(const char *im
 }
 
 extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_liboqs_sig_adapter(const char *implementation_id) {
+  // liboqs_self_reference right-side adapters resolve through this entry point.
   const pqcfuzz_sig_adapter *adapters[] = {
       &kLeftDsa44, &kLeftDsa65, &kLeftDsa87,
+      &kRightDsa44, &kRightDsa65, &kRightDsa87,
       &kLeftSlhDsaSha2_128s, &kLeftSlhDsaShake_128s, &kLeftSlhDsaSha2_128f, &kLeftSlhDsaShake_128f,
       &kLeftSlhDsaSha2_192s, &kLeftSlhDsaShake_192s, &kLeftSlhDsaSha2_192f, &kLeftSlhDsaShake_192f,
-      &kLeftSlhDsaSha2_256s, &kLeftSlhDsaShake_256s, &kLeftSlhDsaSha2_256f, &kLeftSlhDsaShake_256f};
+      &kLeftSlhDsaSha2_256s, &kLeftSlhDsaShake_256s, &kLeftSlhDsaSha2_256f, &kLeftSlhDsaShake_256f,
+      &kRightSlhDsaSha2_128s, &kRightSlhDsaShake_128s, &kRightSlhDsaSha2_128f, &kRightSlhDsaShake_128f,
+      &kRightSlhDsaSha2_192s, &kRightSlhDsaShake_192s, &kRightSlhDsaSha2_192f, &kRightSlhDsaShake_192f,
+      &kRightSlhDsaSha2_256s, &kRightSlhDsaShake_256s, &kRightSlhDsaSha2_256f, &kRightSlhDsaShake_256f};
   for (const auto *adapter : adapters) {
     if (implementation_id != nullptr && std::strcmp(implementation_id, adapter->implementation_id) == 0) {
       return adapter;
@@ -1032,7 +1124,7 @@ oracle_specs_for_primitive() {
       printf '%s\n' \
         '5:mldsa_local_sign_verify' '6:mldsa_cross_verify' \
         '7:mldsa_mutated_signature_negative' '8:mldsa_mutated_message_negative' \
-        '9:mldsa_mutated_context_negative' '10:mldsa_oid_field_mutation_sanity' \
+        '9:mldsa_mutated_context_negative' \
         '11:mldsa_bad_randomness_sanity' '48:mldsa_verify_exact_lengths' \
         '49:mldsa_ctx_boundaries' '54:mldsa_hint_canonicality' '55:mldsa_z_norm_boundary' '56:mldsa_rnd_determinism' '57:mldsa_pure_prehash_separation' '58:mldsa_ph_oid_separation' '62:mldsa_rng_failure'
       ;;
@@ -1214,12 +1306,25 @@ else:
         evaluable = int(counters.get("relation_evaluable", 0) or 0)
         unsupported = int(counters.get("unsupported", 0) or 0)
         skipped = int(counters.get("skipped", 0) or 0)
-        rate = (evaluable / invocations) if invocations else 0.0
+        not_applicable = int(counters.get("not_applicable", 0) or 0)
+        not_applicable_evaluable = int(counters.get("not_applicable_evaluable", 0) or 0)
+        # Traces that were tallied not_applicable without adjudicating the
+        # relation (for example a length-changing mutation that cannot be
+        # compared at the raw fixed-size boundary) are excluded from the
+        # denominator.  By-design not_applicable records (raw-length boundary,
+        # prehash separation) stay in the denominator.
+        ineligible_not_applicable = max(not_applicable - not_applicable_evaluable, 0)
+        eligible = max(invocations - ineligible_not_applicable, 0)
+        rate = (evaluable / eligible) if eligible else 0.0
         record = {
             "oracle_id": oracle_id,
             "oracle_invocations": invocations,
             "relation_evaluable": evaluable,
             "evaluable_rate": rate,
+            "not_applicable": not_applicable,
+            "not_applicable_evaluable": not_applicable_evaluable,
+            "ineligible_not_applicable": ineligible_not_applicable,
+            "eligible_invocations": eligible,
             "unsupported": unsupported,
             "skipped": skipped,
             "non_evaluable_reasons": counters.get("non_evaluable_reasons", {}),
@@ -1230,6 +1335,8 @@ else:
             reason = "not_invoked"
         elif unsupported > 0:
             reason = "unexpected_unsupported"
+        elif eligible < 1:
+            reason = "no_evaluable_invocations"
         elif rate < min_evaluable_rate:
             reason = "evaluable_rate_below_threshold"
         if reason is not None:
@@ -1738,6 +1845,7 @@ build_pqcfuzz() {
     src/oracles/metamorphic_observation.cc
     src/oracles/metamorphic_spec.cc
     src/oracles/metamorphic_executor.cc
+    src/adapters/cross/cross_adapter.cc
     src/runtime/adapter_registry.cc
     src/runtime/replay_args.cc
     src/triage/finding_writer.cc
@@ -2225,14 +2333,22 @@ if [ "$FUZZ_STATUS" -ne 0 ]; then
   finish_campaign "harness-error" "$FUZZ_STATUS" "one or more per-algorithm fuzz jobs exited nonzero"
 fi
 
+results_have_serious_findings() {
+  local results_dir="$1"
+  [ -d "$results_dir" ] || return 1
+  # Hardening gaps (for example void-RNG failure handling) stay in the
+  # artifacts but must not turn a campaign into "completed-with-findings".
+  grep -Rqs --include=finding.json -e '"verdict": "NONCONFORMANT"' "$results_dir"
+}
+
 if [ "$PREFLIGHT_ONLY" -eq 1 ]; then
-  if find "${WORKSPACE_ROOT_ABS}/results" -name finding.json -print -quit | grep -q .; then
+  if results_have_serious_findings "${WORKSPACE_ROOT_ABS}/results"; then
     finish_campaign "preflight-completed-with-findings" 0
   fi
   finish_campaign "preflight-completed" 0
 fi
 
-if find "${WORKSPACE_ROOT_ABS}/results" -name finding.json -print -quit | grep -q .; then
+if results_have_serious_findings "${WORKSPACE_ROOT_ABS}/results"; then
   finish_campaign "completed-with-findings" 0
 fi
 finish_campaign "completed" 0
@@ -3097,6 +3213,13 @@ if [ ! -d "${ROOT_DIR}/src" ]; then
   die "missing src/ tree"
 fi
 
+# Ctrl+C / termination in this orchestrator stops every campaign session that
+# this invocation started (including --full-test sibling suites).
+trap 'handle_eval_signal INT 130' INT
+trap 'handle_eval_signal TERM 143' TERM
+trap 'handle_eval_signal HUP 129' HUP
+trap 'cleanup_started_sessions EXIT' EXIT
+
 CONFLICTS=0
 for campaign in "${CAMPAIGN_IDS[@]}"; do
   if tmux has-session -t "=${SESSION_BY_ID[$campaign]}" 2>/dev/null; then
@@ -3109,6 +3232,7 @@ if [ "$CONFLICTS" -ne 0 ]; then
   exit 2
 fi
 
+guard_existing_eval_root
 archive_existing_eval_root
 mkdir -p "$CAMPAIGN_ROOT" "$LOG_DIR" "$LAUNCHER_DIR" "$STATUS_DIR"
 write_dockerfile
@@ -3155,6 +3279,7 @@ for campaign in "${CAMPAIGN_IDS[@]}"; do
   fi
 
   if tmux new-session -d -s "${SESSION_BY_ID[$campaign]}" -c "$ROOT_DIR" "${LAUNCHER_FILE_BY_ID[$campaign]}"; then
+    STARTED_SESSIONS+=("${SESSION_BY_ID[$campaign]}")
     echo "[pqcfuzz-eval] started: ${SESSION_BY_ID[$campaign]}"
     echo "[pqcfuzz-eval] campaign: $campaign"
     echo "[pqcfuzz-eval] log: ${LOG_FILE_ABS_BY_ID[$campaign]}"

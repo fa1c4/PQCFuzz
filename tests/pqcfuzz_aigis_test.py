@@ -304,7 +304,8 @@ def test_aigis_determinism_profile_skips_non_deterministic_capability(tmp_path: 
           cfg.seed = {1, 2, 3};
           auto trace = pqcfuzz::ExecuteSigOracle(cfg);
           if (!trace.findings.empty()) return 1;
-          if (trace.subtests.empty() || !trace.subtests[0].skipped) return 2;
+          if (trace.subtests.empty() || !trace.subtests[0].not_applicable) return 2;
+          if (trace.subtests[0].skipped) return 4;
           if (!trace.subtests[0].passed) return 3;
           return 0;
         }
@@ -351,7 +352,8 @@ def test_aigis_fips_ineffective_sig_mutation_is_skipped(tmp_path: Path) -> None:
           cfg.mutation = {2, 0, 0, 0};  // set_zero on an already-zero byte
           auto trace = pqcfuzz::ExecuteSigOracle(cfg);
           if (!trace.findings.empty()) return 1;  // no_effect must not become a finding
-          if (trace.subtests.empty() || !trace.subtests[0].skipped) return 2;
+          if (trace.subtests.empty() || !trace.subtests[0].not_applicable) return 2;
+          if (trace.subtests[0].skipped) return 4;
           if (trace.subtests[0].note != "no_effect") return 3;
           return 0;
         }

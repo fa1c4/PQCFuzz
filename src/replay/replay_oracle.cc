@@ -8,10 +8,12 @@
 
 #include "mutators/aigis_enc_layout.h"
 #include "mutators/aigis_sig_layout.h"
+#include "mutators/cross_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/ml_kem_layout.h"
 #include "mutators/slh_dsa_layout.h"
+#include "oracles/cross_executor.h"
 #include "oracles/metamorphic_executor.h"
 #include "oracles/oracle_executor.h"
 #include "runtime/adapter_registry.h"
@@ -84,26 +86,50 @@ int main(int argc, char **argv) {
   if (args.primitive_type == "sig") {
     pqcfuzz::MlDsaParams dsa_params{};
     pqcfuzz::AigisSigParams aigis_sig_params{};
+    pqcfuzz::CrossParams cross_params{};
     const bool is_mldsa = pqcfuzz::GetMlDsaParams(args.algorithm, &dsa_params);
     const bool is_aigis = pqcfuzz::GetAigisSigParams(args.algorithm, &aigis_sig_params);
+    const bool is_cross = pqcfuzz::GetCrossParams(args.algorithm, &cross_params);
     if (is_aigis) {
       dsa_params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
                     aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
-    } else if (!is_mldsa) {
+    } else if (!is_mldsa && !is_cross) {
       std::cerr << "unsupported signature algorithm (SLH-DSA is not dispatched): " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
     const pqcfuzz_sig_adapter *target =
         pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    const size_t expected_pk_len = is_cross ? cross_params.pk_len : dsa_params.pk_len;
+    const size_t expected_sk_len = is_cross ? cross_params.sk_len : dsa_params.sk_len;
+    const size_t expected_sig_max_len = is_cross ? cross_params.sig_max_len : dsa_params.sig_max_len;
     pqcfuzz::AdapterRoutingExpectation expected{
         args.left_project_id, args.left_implementation_id, args.algorithm,
-        dsa_params.pk_len, dsa_params.sk_len, 0, 0, dsa_params.sig_max_len};
+        expected_pk_len, expected_sk_len, 0, 0, expected_sig_max_len};
     if (!pqcfuzz::ValidateSigAdapterRouting(target, expected, &error)) {
       std::cerr << "signature adapter routing error: " << error << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
 
-    if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+    if (is_cross) {
+      if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+        std::cerr << "CROSS has no metamorphic oracle suite\n";
+        return pqcfuzz::kExitInvalidInputOrConfig;
+      }
+      pqcfuzz::CrossOracleConfig config;
+      config.job_id = args.job_id;
+      config.pair_id = args.pair_id;
+      config.algorithm = args.algorithm;
+      config.oracle_id = args.oracle_id;
+      config.params = cross_params;
+      config.left = target;
+      config.right = pqcfuzz::GetSigAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
+      config.public_key_exchange = args.public_key_exchange;
+      config.signature_exchange = args.signature_exchange;
+      config.seed = envelope.seed;
+      config.message = DefaultMessage(envelope.msg);
+      config.mutation = envelope.mutation;
+      trace = pqcfuzz::ExecuteCrossOracle(config);
+    } else if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
       pqcfuzz::MetamorphicSigConfig config;
       config.job_id = args.job_id;
       config.pair_id = args.pair_id;

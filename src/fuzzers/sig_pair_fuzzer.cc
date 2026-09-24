@@ -6,9 +6,11 @@
 #include <vector>
 
 #include "mutators/aigis_sig_layout.h"
+#include "mutators/cross_layout.h"
 #include "mutators/envelope.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/slh_dsa_layout.h"
+#include "oracles/cross_executor.h"
 #include "oracles/metamorphic_executor.h"
 #include "oracles/oracle_executor.h"
 #include "runtime/adapter_registry.h"
@@ -71,6 +73,10 @@
 #define PQCFUZZ_SIGNATURE_EXCHANGE 1
 #endif
 
+#ifndef PQCFUZZ_PUBLIC_KEY_EXCHANGE
+#define PQCFUZZ_PUBLIC_KEY_EXCHANGE 1
+#endif
+
 namespace {
 
 std::string ReadConfigText() {
@@ -105,20 +111,29 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   }
   pqcfuzz::MlDsaParams params{};
   pqcfuzz::AigisSigParams aigis_sig_params{};
+  pqcfuzz::CrossParams cross_params{};
+  const bool is_cross = pqcfuzz::GetCrossParams(expected_algorithm, &cross_params);
   const bool is_aigis = pqcfuzz::GetAigisSigParams(expected_algorithm, &aigis_sig_params);
   if (is_aigis) {
     params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
               aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
-  } else if (!pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
+  } else if (!is_cross && !pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
     return 0;
   }
   static const pqcfuzz_sig_adapter *const target =
       pqcfuzz::GetSigAdapterByProjectAndId(PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID);
   std::string routing_error;
+  const size_t expected_pk_len = is_cross ? cross_params.pk_len : params.pk_len;
+  const size_t expected_sk_len = is_cross ? cross_params.sk_len : params.sk_len;
+  const size_t expected_sig_max_len = is_cross ? cross_params.sig_max_len : params.sig_max_len;
   const pqcfuzz::AdapterRoutingExpectation expected_routing{
       PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID, expected_algorithm,
-      params.pk_len, params.sk_len, 0, 0, params.sig_max_len};
+      expected_pk_len, expected_sk_len, 0, 0, expected_sig_max_len};
   if (!pqcfuzz::ValidateSigAdapterRouting(target, expected_routing, &routing_error)) {
+    pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
+    return 0;
+  }
+  if (is_cross && std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
     pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
@@ -137,6 +152,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.context = envelope.extra;
     config.mutation = envelope.mutation;
     trace = pqcfuzz::ExecuteMetamorphicSigOracle(config);
+  } else if (is_cross) {
+    pqcfuzz::CrossOracleConfig config;
+    config.job_id = PQCFUZZ_JOB_ID;
+    config.pair_id = PQCFUZZ_PAIR_ID;
+    config.algorithm = expected_algorithm;
+    config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
+    config.params = cross_params;
+    config.left = target;
+    config.right = pqcfuzz::GetSigAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
+    config.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;
+    config.signature_exchange = PQCFUZZ_SIGNATURE_EXCHANGE != 0;
+    config.seed = envelope.seed;
+    config.message = envelope.msg.empty() ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'} : envelope.msg;
+    config.mutation = envelope.mutation;
+    trace = pqcfuzz::ExecuteCrossOracle(config);
   } else {
     pqcfuzz::SigOracleExecutorConfig config;
     config.job_id = PQCFUZZ_JOB_ID;

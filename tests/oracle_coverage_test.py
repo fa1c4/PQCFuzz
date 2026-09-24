@@ -75,6 +75,7 @@ def test_oracle_coverage_records_execution_and_interventions(tmp_path: Path) -> 
         "rng_intervention_observed": 1,
         "skipped": 0,
         "not_applicable": 0,
+        "not_applicable_evaluable": 0,
         "unsupported": 0,
         "finding_records": 1,
         "skipped_subtest_reasons": {},

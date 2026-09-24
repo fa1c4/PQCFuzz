@@ -1,0 +1,24 @@
+{
+  "description": "Reference-derived CROSS KAT fixtures generated from the pinned NIST round-2 reference source with a fixed CSPRNG tape. These are not official NIST KAT response files.",
+  "source": {
+    "vendored_path": "projects/CROSS/reference",
+    "archive_sha256": "682e19f8deba19f543960687abcf6d81d44edbd16d8ae006f4c1dfeca8c957e6",
+    "build_flags": ["-DSKIP_ASSERT", "fixed 48-byte platform CSPRNG seed"]
+  },
+  "rng_seed_hex": "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecf",
+  "message": "PQCFuzz CROSS KAT fixture",
+  "profiles": [
+    {
+      "algorithm": "CROSS-RSDP-1-FAST",
+      "pk_sha256": "1f9533b3a3c4db71816c368c29f301bcca2d49a7b691fc759f97c7fc765e1152",
+      "sk_sha256": "5a177259f73fca35735f82b8a6f1485e809bdb7506ad245de78d65ac89f9f80d",
+      "sig_sha256": "3c1ea619b562aeeeb0698b63e2a663f81c5ba28eb85c578c66671ec840135c07"
+    },
+    {
+      "algorithm": "CROSS-RSDPG-1-FAST",
+      "pk_sha256": "b83251f5767d4cd9db24cb2aab4827a0b1eff1c215ddce94abd005dd4b7206f2",
+      "sk_sha256": "5a177259f73fca35735f82b8a6f1485e809bdb7506ad245de78d65ac89f9f80d",
+      "sig_sha256": "451b88177106cb307657e940339caa158c9eb452eede7119aac09e190e683a19"
+    }
+  ]
+}

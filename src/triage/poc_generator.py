@@ -77,6 +77,7 @@ def generate_poc(artifact_dir: Path, finding: dict[str, Any], job: dict[str, Any
                 "  src/oracles/metamorphic_observation.cc \\",
                 "  src/oracles/metamorphic_spec.cc \\",
                 "  src/oracles/metamorphic_executor.cc \\",
+                "  src/adapters/cross/cross_adapter.cc \\",
                 "  src/runtime/adapter_registry.cc \\",
                 "  src/runtime/replay_args.cc \\",
                 "  src/triage/finding_writer.cc \\",

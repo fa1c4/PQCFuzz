@@ -452,7 +452,7 @@ OracleSubtestTrace KemRandomnessSanity(
   }
   if (!rng_trace->tapes_distinct || !rng_trace->baseline_override_active || !rng_trace->mutated_override_active ||
       rng_trace->baseline_bytes_consumed == 0 || rng_trace->mutated_bytes_consumed == 0) {
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.note = "randomness intervention was not observed";
     return subtest;
   }
@@ -559,7 +559,8 @@ OracleSubtestTrace KemTamperedCiphertext(
     const std::string &oracle_id,
     const void *params,
     CtMutatorFn mutate_ct,
-    std::vector<MutationRecord> *mutations) {
+    std::vector<MutationRecord> *mutations,
+    KEMOracleTrace *trace) {
   OracleSubtestTrace subtest;
   subtest.subtest_id = "tampered_ciphertext_negative";
   subtest.oracle_id = oracle_id;
@@ -582,8 +583,24 @@ OracleSubtestTrace KemTamperedCiphertext(
       std::any_of(records.begin(), records.end(), [](const MutationRecord &record) { return !record.effective; });
   if (ineffective) {
     subtest.passed = true;
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.note = "no_effect";
+    if (trace != nullptr) {
+      trace->relation_not_applicable = true;
+    }
+    return subtest;
+  }
+  if (mutated.size() != ciphertext.ct.size()) {
+    // Design doc Section 19: a length-changing mutation is not adjudicable
+    // through the raw fixed-length ciphertext entry point; the executor-length
+    // check rejects it before the target sees the input.  It must not be read
+    // as a semantic rejection by the target.
+    subtest.passed = true;
+    subtest.not_applicable = true;
+    subtest.note = "length mutation is not adjudicable at the fixed-size ciphertext boundary";
+    if (trace != nullptr) {
+      trace->relation_not_applicable = true;
+    }
     return subtest;
   }
   KEMSharedSecret decaps_ss = Decaps(config.left, "left", mutated, keypair.sk, &subtest);
@@ -639,7 +656,7 @@ OracleSubtestTrace AigisEncSkNoncanonicalCoefficient(
       std::any_of(records.begin(), records.end(), [](const MutationRecord &record) { return !record.effective; });
   if (ineffective) {
     subtest.passed = true;
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.note = "no_effect";
     return subtest;
   }
@@ -705,7 +722,8 @@ std::vector<OracleSubtestTrace> KemImplicitRejectionRelations(
     const std::string &oracle_id,
     const void *params,
     CtMutatorFn mutate_ct,
-    std::vector<MutationRecord> *mutations) {
+    std::vector<MutationRecord> *mutations,
+    KEMOracleTrace *trace) {
   OracleSubtestTrace stability;
   stability.subtest_id = "implicit_rejection_stability";
   stability.oracle_id = oracle_id;
@@ -746,14 +764,44 @@ std::vector<OracleSubtestTrace> KemImplicitRejectionRelations(
   if (ct_ineffective) {
     for (OracleSubtestTrace *subtest : {&stability, &z_separation, &status_shape}) {
       subtest->passed = true;
-      subtest->skipped = true;
+      subtest->not_applicable = true;
       subtest->note = "no_effect";
+    }
+    if (trace != nullptr) {
+      trace->relation_not_applicable = true;
+    }
+    return {stability, z_separation, status_shape};
+  }
+  if (mutated_ct.size() != ciphertext.ct.size()) {
+    // Design doc Section 19: a length-changing mutation is not adjudicable
+    // through the raw fixed-length ciphertext entry point.  Comparing the
+    // executor-level INVALID_INPUT against a valid decapsulation would report
+    // a public-status-shape violation that the target never produced.
+    for (OracleSubtestTrace *subtest : {&stability, &z_separation, &status_shape}) {
+      subtest->passed = true;
+      subtest->not_applicable = true;
+      subtest->note = "length mutation is not adjudicable at the fixed-size ciphertext boundary";
+    }
+    if (trace != nullptr) {
+      trace->relation_not_applicable = true;
     }
     return {stability, z_separation, status_shape};
   }
 
   KEMSharedSecret first_bad = Decaps(config.left, "left", mutated_ct, keypair.sk, &stability);
   KEMSharedSecret second_bad = Decaps(config.left, "left", mutated_ct, keypair.sk, &stability);
+  if (trace != nullptr) {
+    trace->baseline.status = baseline_ss.status;
+    trace->baseline.output_size = baseline_ss.ss.size();
+    if (baseline_ss.status == PQCFUZZ_OK) {
+      trace->baseline.output_sha256 = Sha256Hex(baseline_ss.ss);
+    }
+    trace->mutated.status = first_bad.status;
+    trace->mutated.output_size = first_bad.ss.size();
+    if (first_bad.status == PQCFUZZ_OK) {
+      trace->mutated.output_sha256 = Sha256Hex(first_bad.ss);
+    }
+  }
   const bool repeated_invalid = first_bad.status == PQCFUZZ_OK && second_bad.status == PQCFUZZ_OK;
   stability.passed = first_bad.status == second_bad.status &&
       (first_bad.status != PQCFUZZ_OK || first_bad.ss == second_bad.ss);
@@ -767,7 +815,7 @@ std::vector<OracleSubtestTrace> KemImplicitRejectionRelations(
       first_bad.ss == baseline_ss.ss;
   if (neutral_mutation) {
     z_separation.passed = true;
-    z_separation.skipped = true;
+    z_separation.not_applicable = true;
     z_separation.note = "mutation did not change the derived secret; rejection relation not exercised";
   }
 
@@ -779,11 +827,11 @@ std::vector<OracleSubtestTrace> KemImplicitRejectionRelations(
 
   size_t z_offset = 0;
   size_t z_len = 0;
-  if (z_separation.skipped) {
+  if (z_separation.skipped || z_separation.not_applicable) {
     // The relation could not be exercised with this mutation.
   } else if (!KemRejectionSecretRegion(config.algorithm, &z_offset, &z_len) || z_offset + z_len > keypair.sk.size()) {
     z_separation.passed = true;
-    z_separation.skipped = true;
+    z_separation.not_applicable = true;
     z_separation.note = "rejection secret region unknown for this profile";
   } else {
     std::vector<uint8_t> mutated_sk = keypair.sk;
@@ -801,7 +849,7 @@ std::vector<OracleSubtestTrace> KemImplicitRejectionRelations(
     mutations->push_back(z_record);
     if (!z_record.effective) {
       z_separation.passed = true;
-      z_separation.skipped = true;
+      z_separation.not_applicable = true;
       z_separation.note = "no_effect";
     } else {
       KEMSharedSecret changed_bad = Decaps(config.left, "left", mutated_ct, mutated_sk, &z_separation);
@@ -1005,7 +1053,7 @@ OracleSubtestTrace SigRandomnessSanity(
   subtest.oracle_id = config.oracle_id;
   subtest.expected_relation = "DISTINCT_SIGNATURE";
   if (config.left != nullptr && config.left->supports_deterministic_sign && !config.left->supports_seeded_sign) {
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.note = "deterministic signing has no randomness control";
     return subtest;
   }
@@ -1045,7 +1093,7 @@ OracleSubtestTrace SigRandomnessSanity(
   }
   if (!rng_trace->tapes_distinct || !rng_trace->baseline_override_active || !rng_trace->mutated_override_active ||
       rng_trace->baseline_bytes_consumed == 0 || rng_trace->mutated_bytes_consumed == 0) {
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.note = "randomness intervention was not observed";
     return subtest;
   }
@@ -1172,7 +1220,7 @@ OracleSubtestTrace SigNegative(
     }
     if (any_ineffective) {
       subtest.passed = true;
-      subtest.skipped = true;
+      subtest.not_applicable = true;
       subtest.note = "no_effect";
       return subtest;
     }
@@ -1377,7 +1425,7 @@ OracleSubtestTrace AigisSigDeterminismProfile(
   // checking the declared capability.  Randomized profiles legitimately
   // produce different signatures for the same message.
   if (config.left == nullptr || config.left->supports_deterministic_sign == 0) {
-    subtest.skipped = true;
+    subtest.not_applicable = true;
     subtest.passed = true;
     subtest.note = "profile is not declared deterministic; repeated signing may differ";
     return subtest;
@@ -1458,9 +1506,11 @@ std::vector<OracleSubtestTrace> SigExactLengthBoundaryOracle(
     RecordMutationEffect(&record, signature.sig, candidate);
     mutations->push_back(record);
     const uint8_t *ctx = config.context.empty() ? nullptr : config.context.data();
+    static const uint8_t kEmptySignatureProbe = 0;
+    const uint8_t *signature_data = candidate.empty() ? &kEmptySignatureProbe : candidate.data();
     pqcfuzz_status status = config.left->verify == nullptr
         ? PQCFUZZ_API_UNSUPPORTED
-        : config.left->verify(candidate.data(), candidate.size(), config.message.data(), config.message.size(),
+        : config.left->verify(signature_data, candidate.size(), config.message.data(), config.message.size(),
                               keypair.pk.data(), ctx, config.context.size());
     AddBoolCall(&subtest, "left", "verify", status, status == PQCFUZZ_OK);
     subtest.passed = status == PQCFUZZ_REJECT || status == PQCFUZZ_INVALID_INPUT;
@@ -1625,9 +1675,11 @@ std::vector<OracleSubtestTrace> MlDsaHintCanonicalityOracle(
           return !record.effective || record.skipped;
         });
     if (ineffective) {
+      // The mutation class does not apply to this signature's hint density
+      // (for example no polynomial has two positions to reorder).
+      subtest.not_applicable = true;
       subtest.passed = true;
-      subtest.skipped = true;
-      subtest.note = "no_effect";
+      subtest.note = "no_effect: mutation class not applicable to this hint encoding";
       return subtest;
     }
     SIGVerifyResult verify_result = SigVerify(config.left, "left", candidate, config.message, config.context, keypair.pk, &subtest);
@@ -1744,7 +1796,7 @@ std::vector<OracleSubtestTrace> KemEkCanonicality(
     }
     if (changed == 0) {
       subtest.passed = true;
-      subtest.skipped = true;
+      subtest.not_applicable = true;
       subtest.note = "no_effect";
       return subtest;
     }
@@ -1805,9 +1857,9 @@ std::vector<OracleSubtestTrace> MlDsaZNormBoundaryOracle(
           return !record.effective || record.skipped;
         });
     if (ineffective) {
+      subtest.not_applicable = true;
       subtest.passed = true;
-      subtest.skipped = true;
-      subtest.note = "no_effect";
+      subtest.note = "no_effect: boundary value already present at the sampled coefficient";
       return subtest;
     }
     SIGVerifyResult verify_result =
@@ -1960,7 +2012,6 @@ std::vector<OracleSubtestTrace> SigNotApplicableOracle(
     const SigOracleExecutorConfig &config,
     const std::string &oracle_id,
     const std::string &note) {
-  (void)config;
   OracleSubtestTrace subtest;
   subtest.subtest_id = "not_applicable";
   subtest.oracle_id = oracle_id;
@@ -1968,6 +2019,15 @@ std::vector<OracleSubtestTrace> SigNotApplicableOracle(
   subtest.not_applicable = true;
   subtest.passed = true;
   subtest.note = note;
+  // A baseline keygen control recorded on the same subtest keeps the trace
+  // evaluable and proves the adapter was reachable even though the property
+  // itself is not applicable.
+  const SIGKeyPair keypair = SigKeygen(config.left, "left", &subtest);
+  (void)keypair;
+  if (IsUnsupportedOnly(subtest)) {
+    subtest.skipped = true;
+    subtest.note = "adapter API unsupported";
+  }
   return {subtest};
 }
 
@@ -2092,17 +2152,30 @@ void SetFipsTraceReachability(KEMOracleTrace *trace) {
   if (trace == nullptr || trace->subtests.empty()) {
     return;
   }
-  const OracleSubtestTrace &first = trace->subtests.front();
-  const OracleSubtestTrace &last = trace->subtests.back();
-  if (!first.calls.empty()) {
-    trace->baseline_adapter_entered = first.calls.front().adapter_entered;
-    trace->baseline_target_entered = first.calls.front().target_entered;
+  // Oracles may keep baseline and mutation calls in different subtests (or in
+  // a setup subtest that is not returned), so reachability is derived from the
+  // first and last subtests that actually recorded a call.
+  const OracleSubtestTrace *first_with_calls = nullptr;
+  const OracleSubtestTrace *last_with_calls = nullptr;
+  for (const auto &subtest : trace->subtests) {
+    if (subtest.calls.empty()) {
+      continue;
+    }
+    if (first_with_calls == nullptr) {
+      first_with_calls = &subtest;
+    }
+    last_with_calls = &subtest;
   }
-  if (!last.calls.empty()) {
-    trace->mutated_adapter_entered = last.calls.back().adapter_entered;
-    trace->mutated_target_entered = last.calls.back().target_entered;
+  if (first_with_calls != nullptr) {
+    trace->baseline_adapter_entered = first_with_calls->calls.front().adapter_entered;
+    trace->baseline_target_entered = first_with_calls->calls.front().target_entered;
   }
-  trace->relation_evaluable = trace->baseline_target_entered && trace->mutated_target_entered;
+  if (last_with_calls != nullptr) {
+    trace->mutated_adapter_entered = last_with_calls->calls.back().adapter_entered;
+    trace->mutated_target_entered = last_with_calls->calls.back().target_entered;
+  }
+  trace->relation_evaluable =
+      !trace->relation_not_applicable && trace->baseline_target_entered && trace->mutated_target_entered;
 }
 
 void AddSigFindingsForFailures(KEMOracleTrace *trace) {
@@ -2185,6 +2258,26 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
   const std::string rng_failure_oracle = std::string(traits->prefix) + "_rng_failure";
   const std::string local_oracle = std::string(traits->prefix) + "_local_roundtrip";
 
+  // A missing adapter is a harness defect, not an unsupported scheme.  Report
+  // it as an explicit harness error so preflight fails loudly instead of
+  // silently degrading to "adapter API unsupported" skips.
+  if (config.left == nullptr) {
+    trace.diagnostic_event = "harness_error: left adapter unavailable";
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
+  }
+  if ((config.oracle_id == local_oracle || config.oracle_id == cross_oracle) && config.right == nullptr) {
+    trace.diagnostic_event = "harness_error: right adapter unavailable";
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
+  }
+
   if (config.oracle_id == bad_rng_oracle) {
     RngInterventionTrace rng_trace;
     trace.subtests.push_back(KemRandomnessSanity(config, &rng_trace));
@@ -2204,7 +2297,7 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
       GetMlKemParams(config.algorithm, &mlkem_params);
       params = &mlkem_params;
     }
-    auto subtests = KemImplicitRejectionRelations(config, relations_oracle, params, traits->mutate_ct, &trace.mutations);
+    auto subtests = KemImplicitRejectionRelations(config, relations_oracle, params, traits->mutate_ct, &trace.mutations, &trace);
     trace.subtests.insert(trace.subtests.end(), subtests.begin(), subtests.end());
   } else if (config.oracle_id == tampered_oracle) {
     // Type-erased params view selected by the family traits.
@@ -2219,7 +2312,7 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
       params = &mlkem_params;
     }
     trace.subtests.push_back(
-        KemTamperedCiphertext(config, tampered_oracle, params, traits->mutate_ct, &trace.mutations));
+        KemTamperedCiphertext(config, tampered_oracle, params, traits->mutate_ct, &trace.mutations, &trace));
   } else if (config.oracle_id == cross_oracle) {
     if (config.exchange_contract.public_key_exchange && config.exchange_contract.ciphertext_exchange) {
       trace.subtests.push_back(CrossEncapsRoundtrip(
@@ -2284,6 +2377,26 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
   const std::string rng_failure_oracle = std::string(traits->prefix) + "_rng_failure";
   const std::string local_trace_oracle =
       (config.oracle_id.find("_bad_randomness_sanity") != std::string::npos) ? config.oracle_id : local_oracle;
+
+  // A missing adapter is a harness defect, not an unsupported scheme.  Report
+  // it as an explicit harness error so preflight fails loudly instead of
+  // silently degrading to "adapter API unsupported" skips.
+  if (config.left == nullptr) {
+    trace.diagnostic_event = "harness_error: left adapter unavailable";
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
+  }
+  if ((config.oracle_id == local_oracle || config.oracle_id == cross_oracle) && config.right == nullptr) {
+    trace.diagnostic_event = "harness_error: right adapter unavailable";
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
+  }
 
   // Type-erased params view selected by the family traits.
   MlDsaParams dsa_params{};

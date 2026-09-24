@@ -124,12 +124,21 @@ int main() {
 
 
 NA_SOURCE = """
+#include <cstring>
 #include "oracles/oracle_executor.h"
+
+namespace {
+pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
+  std::memset(pk, 0x11, 1312);
+  std::memset(sk, 0x22, 2560);
+  return PQCFUZZ_OK;
+}
+}  // namespace
 
 int main() {
   const pqcfuzz_sig_adapter adapter = {
       "fake", "fake_mldsa44", "ML-DSA-44", 1312, 2560, 2420, 1, 0, 0,
-      nullptr, nullptr, nullptr, nullptr, 1, 0, 0};
+      Keygen, nullptr, nullptr, nullptr, 1, 0, 0};
   pqcfuzz::SigOracleExecutorConfig cfg;
   cfg.job_id = "na-test";
   cfg.pair_id = "na-pair";
@@ -141,6 +150,8 @@ int main() {
   auto trace = pqcfuzz::ExecuteSigOracle(cfg);
   if (trace.subtests.size() != 1) return 1;
   if (!trace.subtests[0].not_applicable) return 2;
+  if (trace.subtests[0].skipped) return 6;
+  if (!trace.relation_evaluable) return 7;
   if (!trace.findings.empty()) return 3;
   if (pqcfuzz::FinalizeDisposition(trace) != pqcfuzz::OracleDisposition::kNotApplicable) return 4;
   if (pqcfuzz::IsPersistableRawEvidence(trace)) return 5;

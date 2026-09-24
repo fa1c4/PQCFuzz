@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "family": "CROSS",
+  "spec": {
+    "path": "plans/specs/cross-round2-spec.pdf",
+    "sha256": "10ac1ef5989735131b8ba2dfc360361d98b2015a85485173dcad446df30dc039",
+    "revision": "NIST additional-signatures round 2 (February 2025)",
+    "pdf_pages": 52,
+    "pdf_page_offset": 3
+  },
+  "sources": [
+    {
+      "name": "nist-round2-submission",
+      "url": "https://csrc.nist.gov/csrc/media/Projects/pqc-dig-sig/documents/round-2/submission-pkg/cross-submission-round2.zip",
+      "archive_sha256": "682e19f8deba19f543960687abcf6d81d44edbd16d8ae006f4c1dfeca8c957e6",
+      "version": "2.0 (February 2025)",
+      "license": "Public domain",
+      "vendored_path": "projects/CROSS/reference",
+      "vendored_files": [
+        "include/api.h",
+        "include/CROSS.h",
+        "include/csprng_hash.h",
+        "include/fips202.h",
+        "include/fp_arith.h",
+        "include/keccakf1600.h",
+        "include/merkle_tree.h",
+        "include/pack_unpack.h",
+        "include/parameters.h",
+        "include/restr_arith.h",
+        "include/seedtree.h",
+        "include/sha3.h",
+        "lib/CROSS.c",
+        "lib/csprng_hash.c",
+        "lib/fips202.c",
+        "lib/keccakf1600.c",
+        "lib/merkle.c",
+        "lib/pack_unpack.c",
+        "lib/seedtree.c",
+        "lib/sign.c"
+      ],
+      "status": "vendored",
+      "notes": [
+        "Reference_Implementation only; Optimized_Implementation is not vendored",
+        "No AVX2 build is present, so cross-implementation oracles are disabled for this lock"
+      ]
+    },
+    {
+      "name": "cross-lib-oqs",
+      "url": "https://github.com/CROSS-signature/cross-lib-oqs",
+      "commit": "ce9933c7023a7aace4ac05b779995334a9996e6a",
+      "version": "2.2 + PQClean and OQS patches",
+      "license": "CC0-1.0",
+      "status": "not-vendored",
+      "notes": [
+        "Maintainer organisation integration used by liboqs 0.14.0",
+        "Spec revision differs from the vendored NIST round-2 submission; do not mix revisions in one differential pair"
+      ]
+    }
+  ],
+  "kat": {
+    "status": "reference_derived_fixture",
+    "official_kat_available": false,
+    "fixture_path": "tests/fixtures/cross/kat_reference.json",
+    "fixture_sha256": "5a5b37a6768b6509a02a520992b84ae6b6c8f7c97b3131cb32ee541e957932df",
+    "notes": [
+      "The round-2 submission archive ships only KAT/sha_512_sum_KATs and KAT generation tooling, not KAT response files",
+      "cross_kat compares against fixtures generated from the pinned vendored source with a fixed RNG tape; they are REFERENCE_DERIVED, not official KATs"
+    ]
+  }
+}

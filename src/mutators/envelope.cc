@@ -51,6 +51,25 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kAigisSig2:
     case AlgorithmId::kAigisSig3:
       return true;
+    case AlgorithmId::kCrossRsdp1Fast:
+    case AlgorithmId::kCrossRsdp1Balanced:
+    case AlgorithmId::kCrossRsdp1Small:
+    case AlgorithmId::kCrossRsdp3Fast:
+    case AlgorithmId::kCrossRsdp3Balanced:
+    case AlgorithmId::kCrossRsdp3Small:
+    case AlgorithmId::kCrossRsdp5Fast:
+    case AlgorithmId::kCrossRsdp5Balanced:
+    case AlgorithmId::kCrossRsdp5Small:
+    case AlgorithmId::kCrossRsdpg1Fast:
+    case AlgorithmId::kCrossRsdpg1Balanced:
+    case AlgorithmId::kCrossRsdpg1Small:
+    case AlgorithmId::kCrossRsdpg3Fast:
+    case AlgorithmId::kCrossRsdpg3Balanced:
+    case AlgorithmId::kCrossRsdpg3Small:
+    case AlgorithmId::kCrossRsdpg5Fast:
+    case AlgorithmId::kCrossRsdpg5Balanced:
+    case AlgorithmId::kCrossRsdpg5Small:
+      return true;
     case AlgorithmId::kUnknown:
       return false;
   }
@@ -123,6 +142,26 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kMlDsaRngFailure:
     case OracleId::kSlhDsaRngFailure:
       return true;
+    case OracleId::kCrossKat:
+    case OracleId::kCrossLocalSignVerify:
+    case OracleId::kCrossCrossVerify:
+    case OracleId::kCrossMessageKeyBinding:
+    case OracleId::kCrossExactLengths:
+    case OracleId::kCrossPackedFieldRange:
+    case OracleId::kCrossVectorPadding:
+    case OracleId::kCrossChallengeSampling:
+    case OracleId::kCrossCommitmentDigests:
+    case OracleId::kCrossDomainTranscript:
+    case OracleId::kCrossSeedRebuild:
+    case OracleId::kCrossMerkleProof:
+    case OracleId::kCrossPathProofConsumption:
+    case OracleId::kCrossKeyAlgebra:
+    case OracleId::kCrossRngReplay:
+    case OracleId::kCrossFailureResources:
+    case OracleId::kCrossParallelArithmetic:
+    case OracleId::kCrossFaultSeedDisclosure:
+    case OracleId::kCrossTiming:
+      return true;
     case OracleId::kUnknown:
       return false;
   }
@@ -183,6 +222,42 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "AIGIS-SIG-2";
     case AlgorithmId::kAigisSig3:
       return "AIGIS-SIG-3";
+    case AlgorithmId::kCrossRsdp1Fast:
+      return "CROSS-RSDP-1-FAST";
+    case AlgorithmId::kCrossRsdp1Balanced:
+      return "CROSS-RSDP-1-BALANCED";
+    case AlgorithmId::kCrossRsdp1Small:
+      return "CROSS-RSDP-1-SMALL";
+    case AlgorithmId::kCrossRsdp3Fast:
+      return "CROSS-RSDP-3-FAST";
+    case AlgorithmId::kCrossRsdp3Balanced:
+      return "CROSS-RSDP-3-BALANCED";
+    case AlgorithmId::kCrossRsdp3Small:
+      return "CROSS-RSDP-3-SMALL";
+    case AlgorithmId::kCrossRsdp5Fast:
+      return "CROSS-RSDP-5-FAST";
+    case AlgorithmId::kCrossRsdp5Balanced:
+      return "CROSS-RSDP-5-BALANCED";
+    case AlgorithmId::kCrossRsdp5Small:
+      return "CROSS-RSDP-5-SMALL";
+    case AlgorithmId::kCrossRsdpg1Fast:
+      return "CROSS-RSDPG-1-FAST";
+    case AlgorithmId::kCrossRsdpg1Balanced:
+      return "CROSS-RSDPG-1-BALANCED";
+    case AlgorithmId::kCrossRsdpg1Small:
+      return "CROSS-RSDPG-1-SMALL";
+    case AlgorithmId::kCrossRsdpg3Fast:
+      return "CROSS-RSDPG-3-FAST";
+    case AlgorithmId::kCrossRsdpg3Balanced:
+      return "CROSS-RSDPG-3-BALANCED";
+    case AlgorithmId::kCrossRsdpg3Small:
+      return "CROSS-RSDPG-3-SMALL";
+    case AlgorithmId::kCrossRsdpg5Fast:
+      return "CROSS-RSDPG-5-FAST";
+    case AlgorithmId::kCrossRsdpg5Balanced:
+      return "CROSS-RSDPG-5-BALANCED";
+    case AlgorithmId::kCrossRsdpg5Small:
+      return "CROSS-RSDPG-5-SMALL";
     case AlgorithmId::kUnknown:
       return "UNKNOWN";
   }
@@ -317,6 +392,44 @@ const char *OracleName(OracleId oracle_id) {
       return "mldsa_rng_failure";
     case OracleId::kSlhDsaRngFailure:
       return "slhdsa_rng_failure";
+    case OracleId::kCrossKat:
+      return "cross_kat";
+    case OracleId::kCrossLocalSignVerify:
+      return "cross_local_sign_verify";
+    case OracleId::kCrossCrossVerify:
+      return "cross_cross_verify";
+    case OracleId::kCrossMessageKeyBinding:
+      return "cross_message_key_binding";
+    case OracleId::kCrossExactLengths:
+      return "cross_exact_lengths";
+    case OracleId::kCrossPackedFieldRange:
+      return "cross_packed_field_range";
+    case OracleId::kCrossVectorPadding:
+      return "cross_vector_padding";
+    case OracleId::kCrossChallengeSampling:
+      return "cross_challenge_sampling";
+    case OracleId::kCrossCommitmentDigests:
+      return "cross_commitment_digests";
+    case OracleId::kCrossDomainTranscript:
+      return "cross_domain_transcript";
+    case OracleId::kCrossSeedRebuild:
+      return "cross_seed_rebuild";
+    case OracleId::kCrossMerkleProof:
+      return "cross_merkle_proof";
+    case OracleId::kCrossPathProofConsumption:
+      return "cross_path_proof_consumption";
+    case OracleId::kCrossKeyAlgebra:
+      return "cross_key_algebra";
+    case OracleId::kCrossRngReplay:
+      return "cross_rng_replay";
+    case OracleId::kCrossFailureResources:
+      return "cross_failure_resources";
+    case OracleId::kCrossParallelArithmetic:
+      return "cross_parallel_arithmetic";
+    case OracleId::kCrossFaultSeedDisclosure:
+      return "cross_fault_seed_disclosure";
+    case OracleId::kCrossTiming:
+      return "cross_timing";
     case OracleId::kUnknown:
       return "unknown";
   }
@@ -398,6 +511,60 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "AIGIS-SIG-3") {
     return AlgorithmId::kAigisSig3;
+  }
+  if (name == "CROSS-RSDP-1-FAST") {
+    return AlgorithmId::kCrossRsdp1Fast;
+  }
+  if (name == "CROSS-RSDP-1-BALANCED") {
+    return AlgorithmId::kCrossRsdp1Balanced;
+  }
+  if (name == "CROSS-RSDP-1-SMALL") {
+    return AlgorithmId::kCrossRsdp1Small;
+  }
+  if (name == "CROSS-RSDP-3-FAST") {
+    return AlgorithmId::kCrossRsdp3Fast;
+  }
+  if (name == "CROSS-RSDP-3-BALANCED") {
+    return AlgorithmId::kCrossRsdp3Balanced;
+  }
+  if (name == "CROSS-RSDP-3-SMALL") {
+    return AlgorithmId::kCrossRsdp3Small;
+  }
+  if (name == "CROSS-RSDP-5-FAST") {
+    return AlgorithmId::kCrossRsdp5Fast;
+  }
+  if (name == "CROSS-RSDP-5-BALANCED") {
+    return AlgorithmId::kCrossRsdp5Balanced;
+  }
+  if (name == "CROSS-RSDP-5-SMALL") {
+    return AlgorithmId::kCrossRsdp5Small;
+  }
+  if (name == "CROSS-RSDPG-1-FAST") {
+    return AlgorithmId::kCrossRsdpg1Fast;
+  }
+  if (name == "CROSS-RSDPG-1-BALANCED") {
+    return AlgorithmId::kCrossRsdpg1Balanced;
+  }
+  if (name == "CROSS-RSDPG-1-SMALL") {
+    return AlgorithmId::kCrossRsdpg1Small;
+  }
+  if (name == "CROSS-RSDPG-3-FAST") {
+    return AlgorithmId::kCrossRsdpg3Fast;
+  }
+  if (name == "CROSS-RSDPG-3-BALANCED") {
+    return AlgorithmId::kCrossRsdpg3Balanced;
+  }
+  if (name == "CROSS-RSDPG-3-SMALL") {
+    return AlgorithmId::kCrossRsdpg3Small;
+  }
+  if (name == "CROSS-RSDPG-5-FAST") {
+    return AlgorithmId::kCrossRsdpg5Fast;
+  }
+  if (name == "CROSS-RSDPG-5-BALANCED") {
+    return AlgorithmId::kCrossRsdpg5Balanced;
+  }
+  if (name == "CROSS-RSDPG-5-SMALL") {
+    return AlgorithmId::kCrossRsdpg5Small;
   }
   return AlgorithmId::kUnknown;
 }
@@ -591,6 +758,63 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "slhdsa_rng_failure") {
     return OracleId::kSlhDsaRngFailure;
+  }
+  if (name == "cross_kat") {
+    return OracleId::kCrossKat;
+  }
+  if (name == "cross_local_sign_verify") {
+    return OracleId::kCrossLocalSignVerify;
+  }
+  if (name == "cross_cross_verify") {
+    return OracleId::kCrossCrossVerify;
+  }
+  if (name == "cross_message_key_binding") {
+    return OracleId::kCrossMessageKeyBinding;
+  }
+  if (name == "cross_exact_lengths") {
+    return OracleId::kCrossExactLengths;
+  }
+  if (name == "cross_packed_field_range") {
+    return OracleId::kCrossPackedFieldRange;
+  }
+  if (name == "cross_vector_padding") {
+    return OracleId::kCrossVectorPadding;
+  }
+  if (name == "cross_challenge_sampling") {
+    return OracleId::kCrossChallengeSampling;
+  }
+  if (name == "cross_commitment_digests") {
+    return OracleId::kCrossCommitmentDigests;
+  }
+  if (name == "cross_domain_transcript") {
+    return OracleId::kCrossDomainTranscript;
+  }
+  if (name == "cross_seed_rebuild") {
+    return OracleId::kCrossSeedRebuild;
+  }
+  if (name == "cross_merkle_proof") {
+    return OracleId::kCrossMerkleProof;
+  }
+  if (name == "cross_path_proof_consumption") {
+    return OracleId::kCrossPathProofConsumption;
+  }
+  if (name == "cross_key_algebra") {
+    return OracleId::kCrossKeyAlgebra;
+  }
+  if (name == "cross_rng_replay") {
+    return OracleId::kCrossRngReplay;
+  }
+  if (name == "cross_failure_resources") {
+    return OracleId::kCrossFailureResources;
+  }
+  if (name == "cross_parallel_arithmetic") {
+    return OracleId::kCrossParallelArithmetic;
+  }
+  if (name == "cross_fault_seed_disclosure") {
+    return OracleId::kCrossFaultSeedDisclosure;
+  }
+  if (name == "cross_timing") {
+    return OracleId::kCrossTiming;
   }
   return OracleId::kUnknown;
 }

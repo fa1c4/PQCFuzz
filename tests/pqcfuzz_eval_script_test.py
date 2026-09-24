@@ -37,9 +37,12 @@ def test_launcher_seeds_and_verifies_every_selected_oracle_with_a_global_budget(
         "mlkem_local_roundtrip", "mlkem_cross_exchange_roundtrip", "mlkem_tampered_ciphertext_implicit_rejection",
         "mlkem_bad_randomness_sanity", "mldsa_local_sign_verify", "mldsa_cross_verify",
         "mldsa_mutated_signature_negative", "mldsa_mutated_message_negative", "mldsa_mutated_context_negative",
-        "mldsa_oid_field_mutation_sanity", "mldsa_bad_randomness_sanity",
+        "mldsa_bad_randomness_sanity",
     ):
         assert oracle in script
+    fips_sig_block = script[script.index("fips:sig)") : script.index(";;", script.index("fips:sig)"))]
+    assert "mldsa_oid_field_mutation_sanity" not in fips_sig_block
+    assert "mldsa_pure_prehash_separation" in fips_sig_block
     assert "make_seed_corpus" in script
     assert "verify_oracle_coverage" in script
     assert "target_budget_seconds" in script
@@ -75,7 +78,10 @@ def test_launcher_reports_preflight_and_fuzz_effectiveness_as_distinct_gates() -
     assert '"oracle_coverage_state": oracle_coverage_state' in script
     assert 'coverage_states.append(item.get("oracle_coverage_state") or "not-run")' in script
     assert 'elif unsupported > 0:' in script
+    assert 'elif eligible < 1:' in script
     assert 'elif rate < min_evaluable_rate:' in script
+    assert 'ineligible_not_applicable = max(not_applicable - not_applicable_evaluable, 0)' in script
+    assert 'eligible = max(invocations - ineligible_not_applicable, 0)' in script
     assert 'oracle_coverage_state != "passed"' in script
     assert '0.4.0:mlkem512' in script
     assert 'PREFLIGHT_ONLY' in script

@@ -10,6 +10,85 @@ from typing import Any
 
 
 PAIR_ID_RE = re.compile(r"^[a-z0-9_]+$")
+SCHEME_PROFILES_DIR = Path(__file__).resolve().parents[1] / "config" / "scheme_profiles"
+
+# Locked family metadata lives in src/config/scheme_profiles/<family>.json.
+# The loader merges it into the built-in table so a family profile and its
+# pair_alg file cannot drift apart.
+_PROFILE_ALGORITHM_FIELDS = (
+    "family",
+    "primitive_type",
+    "pk_len",
+    "sk_len",
+    "sig_max_len",
+    "variant",
+    "category",
+    "security_level",
+    "corner",
+    "c_defines",
+    "p",
+    "z",
+    "n",
+    "k",
+    "m",
+    "g",
+    "t",
+    "w",
+    "seed_bytes",
+    "salt_bytes",
+    "digest_bytes",
+    "y_bits",
+    "v_bits",
+    "s_bits",
+    "y_bytes",
+    "v_bytes",
+    "syn_bytes",
+    "tree_nodes_to_store",
+)
+
+
+def load_scheme_profile_algorithms() -> dict[str, dict[str, Any]]:
+    """Read parameter-set metadata from src/config/scheme_profiles/*.json."""
+    algorithms: dict[str, dict[str, Any]] = {}
+    if not SCHEME_PROFILES_DIR.is_dir():
+        return algorithms
+    for path in sorted(SCHEME_PROFILES_DIR.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        for parameter_set in payload.get("parameter_sets", []):
+            if not isinstance(parameter_set, dict):
+                continue
+            algorithm = parameter_set.get("algorithm")
+            if not isinstance(algorithm, str) or not algorithm:
+                continue
+            metadata: dict[str, Any] = {}
+            for field in ("family", "primitive_type"):
+                if field in payload:
+                    metadata[field] = payload[field]
+            metadata.update(
+                {
+                    field: parameter_set[field]
+                    for field in _PROFILE_ALGORITHM_FIELDS
+                    if field in parameter_set
+                }
+            )
+            missing = [
+                field
+                for field in ("family", "primitive_type", "pk_len", "sk_len", "sig_max_len")
+                if field not in metadata
+            ]
+            if missing:
+                raise PairAlgError(
+                    f"{path.name}:{algorithm}: scheme profile is missing {', '.join(missing)}"
+                )
+            algorithms[algorithm] = metadata
+    return algorithms
+
+
 SUPPORTED_ALGORITHMS = {
     "ML-KEM-512": {
         "family": "ML-KEM",
@@ -335,6 +414,9 @@ class PairAlgError(RuntimeError):
     """Raised when pair_alg JSON cannot satisfy the explicit-pair contract."""
 
 
+SUPPORTED_ALGORITHMS.update(load_scheme_profile_algorithms())
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise PairAlgError(message)
@@ -371,10 +453,31 @@ def validate_algorithm_metadata(payload: dict[str, Any]) -> dict[str, dict[str, 
 def validate_abi(abi: Any, metadata: dict[str, Any], context: str) -> dict[str, int]:
     require(isinstance(abi, dict), f"{context}: abi must be an object")
     normalized: dict[str, int] = {}
+    overrides = abi.get("abi_overrides", {})
+    require(isinstance(overrides, dict), f"{context}: abi.abi_overrides must be an object")
     for field in ABI_FIELDS_BY_PRIMITIVE[metadata["primitive_type"]]:
         value = abi.get(field)
         require(isinstance(value, int) and value > 0, f"{context}: abi.{field} must be a positive integer")
-        require(value == metadata[field], f"{context}: abi.{field}={value} does not match {metadata['family']} metadata {metadata[field]}")
+        allowed = {metadata[field]}
+        variants = metadata.get(f"{field}_variants")
+        if isinstance(variants, list):
+            allowed.update(item for item in variants if isinstance(item, int))
+        if field in overrides:
+            override = overrides[field]
+            require(
+                isinstance(override, int) and override > 0,
+                f"{context}: abi.abi_overrides.{field} must be a positive integer",
+            )
+            require(
+                override in allowed,
+                f"{context}: abi.abi_overrides.{field}={override} is not a declared {metadata['family']} variant",
+            )
+            normalized[field] = override
+            continue
+        require(
+            value in allowed,
+            f"{context}: abi.{field}={value} does not match {metadata['family']} metadata {metadata[field]}",
+        )
         normalized[field] = value
     return normalized
 
@@ -407,7 +510,7 @@ def validate_impl(impl: Any, metadata: dict[str, Any], context: str) -> dict[str
     require(isinstance(impl, dict), f"{context}: implementation record must be an object")
     project_id = require_string(impl.get("project_id"), "project_id", context)
     implementation_id = require_string(impl.get("implementation_id"), "implementation_id", context)
-    return {
+    record = {
         "project_id": project_id,
         "project_name": require_string(impl.get("project_name", project_id), "project_name", context),
         "implementation_id": implementation_id,
@@ -415,6 +518,10 @@ def validate_impl(impl: Any, metadata: dict[str, Any], context: str) -> dict[str
         "abi": validate_abi(impl.get("abi"), metadata, context),
         "capabilities": validate_capabilities(impl.get("capabilities"), metadata, context),
     }
+    reference_version = impl.get("reference_version")
+    if reference_version is not None:
+        record["reference_version"] = require_string(reference_version, "reference_version", context)
+    return record
 
 
 def validate_exchange_contract(contract: Any, primitive_type: str, context: str) -> dict[str, bool]:

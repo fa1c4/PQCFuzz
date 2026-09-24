@@ -20,7 +20,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SPECS_DIR = REPO_ROOT / "src" / "oracles" / "specs"
-FIPS_FILES = {"ml_kem.json", "ml_dsa.json", "slh_dsa.json", "aigis_enc.json", "aigis_sig.json"}
+FIPS_FILES = {"ml_kem.json", "ml_dsa.json", "slh_dsa.json", "aigis_enc.json", "aigis_sig.json", "cross.json"}
 
 EVIDENCE_CLASSES = {
     "NORMATIVE",

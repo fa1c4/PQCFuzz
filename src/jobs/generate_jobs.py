@@ -69,6 +69,15 @@ def main() -> int:
 
     jobs_dir = REPO_ROOT / args.jobs_dir
     jobs_dir.mkdir(parents=True, exist_ok=True)
+    # Keep non-default campaign workspaces self-contained: --jobs-dir
+    # workspace/cross/jobs re-roots every generated path under
+    # workspace/cross/ instead of leaking into the shared workspace/ tree.
+    workspace_prefix = Path(args.jobs_dir).parent.as_posix()
+    if workspace_prefix not in ("workspace", "."):
+        for job in jobs:
+            for key, value in list(job["paths"].items()):
+                if value.startswith("workspace/"):
+                    job["paths"][key] = f"{workspace_prefix}/{value[len('workspace/'):]}"
     for job in jobs:
         materialize_job(REPO_ROOT, job)
 

@@ -46,7 +46,25 @@
         "AIGIS-ENC-4",
         "AIGIS-SIG-1",
         "AIGIS-SIG-2",
-        "AIGIS-SIG-3"
+        "AIGIS-SIG-3",
+        "CROSS-RSDP-1-FAST",
+        "CROSS-RSDP-1-BALANCED",
+        "CROSS-RSDP-1-SMALL",
+        "CROSS-RSDP-3-FAST",
+        "CROSS-RSDP-3-BALANCED",
+        "CROSS-RSDP-3-SMALL",
+        "CROSS-RSDP-5-FAST",
+        "CROSS-RSDP-5-BALANCED",
+        "CROSS-RSDP-5-SMALL",
+        "CROSS-RSDPG-1-FAST",
+        "CROSS-RSDPG-1-BALANCED",
+        "CROSS-RSDPG-1-SMALL",
+        "CROSS-RSDPG-3-FAST",
+        "CROSS-RSDPG-3-BALANCED",
+        "CROSS-RSDPG-3-SMALL",
+        "CROSS-RSDPG-5-FAST",
+        "CROSS-RSDPG-5-BALANCED",
+        "CROSS-RSDPG-5-SMALL"
       ]
     },
     "oracle_id": {

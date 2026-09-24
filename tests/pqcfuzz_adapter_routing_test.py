@@ -34,6 +34,7 @@ def test_adapter_routing_requires_algorithm_identity_and_abi(tmp_path: Path) -> 
     subprocess.run(
         [
             os.environ.get("CXX", "clang++"), "-std=c++17", "-Isrc", str(source),
+            "src/adapters/cross/cross_adapter.cc",
             "src/runtime/adapter_registry.cc",
             "src/adapters/liboqs/kem_adapter.cc", "src/adapters/liboqs/sig_adapter.cc",
             "src/adapters/pqclean/kem_adapter.cc", "src/adapters/pqclean/sig_adapter.cc",

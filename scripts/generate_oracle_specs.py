@@ -30,6 +30,7 @@ FIPS_FILES = [
     "slh_dsa.json",
     "aigis_enc.json",
     "aigis_sig.json",
+    "cross.json",
 ]
 METAMORPHIC_FILES = [
     "metamorphic_kem.json",

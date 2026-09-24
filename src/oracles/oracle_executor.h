@@ -165,6 +165,11 @@ struct KEMOracleTrace {
   bool mutated_adapter_entered = false;
   bool mutated_target_entered = false;
   bool relation_evaluable = true;
+  // Set when the oracle could not exercise the relation at all (for example a
+  // length-changing mutation at a raw fixed-size boundary or an ineffective
+  // intervention).  Such traces are tallied as not_applicable and excluded
+  // from fuzz-effectiveness denominators.
+  bool relation_not_applicable = false;
   bool intervention_supported = true;
   bool intervention_effective = true;
   std::string diagnostic_event;

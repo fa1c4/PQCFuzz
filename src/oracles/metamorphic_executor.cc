@@ -339,6 +339,7 @@ void FinalizeNoEffect(
   trace->diagnostics.push_back({"non_evaluable", "metamorphic_relation", trace->diagnostic_event});
   subtest->skipped = true;
   subtest->passed = true;
+  subtest->not_applicable = true;
   subtest->note = reason;
   trace->mutations.push_back(*mutation);
   trace->subtests.push_back(*subtest);

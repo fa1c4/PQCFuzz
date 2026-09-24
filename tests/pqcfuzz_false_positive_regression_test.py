@@ -122,8 +122,72 @@ def test_fips_noop_ciphertext_mutation_produces_no_finding(tmp_path: Path) -> No
           cfg.seed = {1, 2, 3};
           cfg.mutation = {1, 0, 0, 0, 0}; // xor_byte with zero delta
           auto trace = pqcfuzz::ExecuteKemOracle(cfg);
-          return trace.findings.empty() && !trace.subtests.empty() && trace.subtests[0].skipped &&
-                         trace.subtests[0].note == "no_effect" ? 0 : 1;
+          return trace.findings.empty() && !trace.subtests.empty() && trace.subtests[0].not_applicable &&
+                         !trace.subtests[0].skipped && trace.subtests[0].note == "no_effect" ? 0 : 1;
+        }
+        """,
+    )
+
+
+def test_fips_length_changing_ciphertext_mutation_is_not_applicable(tmp_path: Path) -> None:
+    compile_and_run(
+        tmp_path,
+        """
+        #include "oracles/oracle_executor.h"
+        #include <cstring>
+        #include <string>
+        #include <vector>
+
+        namespace {
+        // The target would always produce a distinct implicit-rejection secret,
+        // so any comparison against a valid decapsulation would look like a
+        // public-status violation.  A length-changing mutation must never
+        // reach the target: the executor length check rejects it first.
+        pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
+          std::memset(pk, 0x21, 1184);
+          std::memset(sk, 0x31, 2400);
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Encaps(uint8_t *ct, uint8_t *ss, const uint8_t *) {
+          std::memset(ct, 0x30, 1088);
+          std::memset(ss, 0x42, 32);
+          return PQCFUZZ_OK;
+        }
+        pqcfuzz_status Decaps(uint8_t *ss, const uint8_t *, const uint8_t *) {
+          std::memset(ss, 0x43, 32);
+          return PQCFUZZ_OK;
+        }
+        const pqcfuzz_kem_adapter kAdapter = {
+            "fake", "length_mutation", "ML-KEM-768", 1184, 2400, 1088, 32, Keygen, Encaps, Decaps};
+        }
+
+        int main() {
+          const std::vector<std::vector<uint8_t>> plans = {
+              {5, 0, 0, 0, 0xAB}, // append_trailing_garbage
+              {4, 0, 0, 1, 0},    // truncate to 1 byte
+          };
+          for (const char *oracle : {"mlkem_tampered_ciphertext_implicit_rejection",
+                                     "mlkem_implicit_rejection_relations"}) {
+            for (const auto &plan : plans) {
+              pqcfuzz::OracleExecutorConfig cfg;
+              cfg.algorithm = "ML-KEM-768";
+              cfg.oracle_id = oracle;
+              pqcfuzz::GetMlKemParams(cfg.algorithm, &cfg.params);
+              cfg.left = &kAdapter;
+              cfg.seed = {1, 2, 3};
+              cfg.mutation = plan;
+              auto trace = pqcfuzz::ExecuteKemOracle(cfg);
+              if (!trace.findings.empty()) return 1;
+              if (trace.subtests.empty()) return 2;
+              for (const auto &subtest : trace.subtests) {
+                if (!subtest.not_applicable) return 3;
+                if (subtest.note.find("length mutation is not adjudicable") == std::string::npos) return 4;
+              }
+              if (trace.relation_evaluable) return 5;
+              if (pqcfuzz::FinalizeDisposition(trace) != pqcfuzz::OracleDisposition::kNotApplicable) return 6;
+            }
+          }
+          return 0;
         }
         """,
     )

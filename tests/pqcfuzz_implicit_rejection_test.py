@@ -57,7 +57,8 @@ const pqcfuzz_kem_adapter kAdapter = {
 }  // namespace
 
 int main(int argc, char **argv) {
-  const bool z_bound = argc > 1 && std::string(argv[1]) == "z-ignored";
+  const std::string mode = argc > 1 ? argv[1] : "z-bound";
+  const bool z_bound = mode == "z-bound";
   g_z_bound = z_bound;
   pqcfuzz::OracleExecutorConfig cfg;
   cfg.job_id = "ir-test";
@@ -67,9 +68,22 @@ int main(int argc, char **argv) {
   cfg.left = &kAdapter;
   pqcfuzz::GetMlKemParams(cfg.algorithm, &cfg.params);
   cfg.seed = {1, 2, 3};
-  cfg.mutation = {0, 0, 0, 0, 0xA5};
+  // xor_byte with a zero value leaves the ciphertext unchanged.
+  cfg.mutation = mode == "no-effect" ? std::vector<uint8_t>{1, 0, 0, 0, 0}
+                                     : std::vector<uint8_t>{0, 0, 0, 0, 0xA5};
   auto trace = pqcfuzz::ExecuteKemOracle(cfg);
   if (trace.subtests.size() != 3) return 1;
+  if (mode == "no-effect") {
+    for (const auto &subtest : trace.subtests) {
+      if (!subtest.not_applicable) return 14;
+      if (subtest.skipped) return 15;
+    }
+    if (!trace.findings.empty()) return 16;
+    if (pqcfuzz::FinalizeDisposition(trace) != pqcfuzz::OracleDisposition::kNotApplicable) return 17;
+    return 0;
+  }
+  if (!trace.relation_evaluable) return 12;
+  if (!trace.mutated_target_entered || !trace.baseline_target_entered) return 13;
   for (const auto &subtest : trace.subtests) {
     if (subtest.skipped) return 2;
   }
@@ -102,6 +116,10 @@ def test_implicit_rejection_relations_pass_for_z_bound_fallback(tmp_path: Path) 
 
 def test_implicit_rejection_relations_fail_when_z_is_ignored(tmp_path: Path) -> None:
     compile_and_run(tmp_path, FAKE_KEM_SOURCE, CORE_EXECUTOR_SOURCES, args=["z-ignored"])
+
+
+def test_implicit_rejection_relations_ineffective_mutation_is_not_applicable(tmp_path: Path) -> None:
+    compile_and_run(tmp_path, FAKE_KEM_SOURCE, CORE_EXECUTOR_SOURCES, args=["no-effect"])
 
 
 def test_rejection_secret_regions_are_bound_to_layout() -> None:

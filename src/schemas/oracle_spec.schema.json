@@ -28,7 +28,8 @@
               "ML-DSA",
               "SLH-DSA",
               "AIGIS-ENC",
-              "AIGIS-SIG"
+              "AIGIS-SIG",
+              "CROSS"
             ]
           },
           "primitive_type": {

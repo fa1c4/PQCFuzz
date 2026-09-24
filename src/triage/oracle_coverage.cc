@@ -24,6 +24,7 @@ struct Counters {
   uint64_t rng_intervention_observed = 0;
   uint64_t skipped = 0;
   uint64_t not_applicable = 0;
+  uint64_t not_applicable_evaluable = 0;
   uint64_t unsupported = 0;
   uint64_t finding_records = 0;
   std::map<std::string, uint64_t> skipped_subtest_reasons;
@@ -91,8 +92,9 @@ void WriteCounters(std::ostringstream *out, const Counters &c) {
        << ",\"oracle_invocations\":" << c.oracle_invocations << ",\"valid_setup\":" << c.valid_setup
        << ",\"relation_evaluable\":" << c.relation_evaluable << ",\"not_evaluable\":" << c.not_evaluable
        << ",\"intervention_effective\":" << c.intervention_effective
-       << ",\"rng_intervention_observed\":" << c.rng_intervention_observed << ",\"skipped\":" << c.skipped
+       << ",\"rng_intervention_observed\":" << c.rng_intervention_observed        << ",\"skipped\":" << c.skipped
        << ",\"not_applicable\":" << c.not_applicable
+       << ",\"not_applicable_evaluable\":" << c.not_applicable_evaluable
        << ",\"unsupported\":" << c.unsupported << ",\"finding_records\":" << c.finding_records
        << ",\"skipped_subtest_reasons\":";
   WriteReasonCounts(out, c.skipped_subtest_reasons);
@@ -256,6 +258,12 @@ void RecordTraceCounters(Counters *c, const KEMOracleTrace &trace) {
   }
   if (all_not_applicable) {
     ++c->not_applicable;
+    if (trace.relation_evaluable) {
+      // The oracle adjudicated the trace to not_applicable by design (for
+      // example the raw fixed-size boundary record).  Such traces stay in the
+      // fuzz-effectiveness denominator because the relation was exercised.
+      ++c->not_applicable_evaluable;
+    }
   }
   if (trace.finding_class == "unsupported") {
     ++c->unsupported;

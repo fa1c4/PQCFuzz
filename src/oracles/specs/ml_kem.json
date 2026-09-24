@@ -244,7 +244,8 @@
       },
       "limitations": [
         "Boundary positions sample the first, middle, and last coefficient of every polynomial plus a byte-straddling pair",
-        "A wrapper that normalizes or reduces coefficients before encapsulation records accepted behavior as a finding"
+        "A wrapper that normalizes or reduces coefficients before encapsulation records accepted behavior as a finding",
+        "Historical liboqs releases that ship pre-standardization Kyber (0.8.0 and 0.4.0) do not implement the FIPS 203 encapsulation-key checks; NONCONFORMANT verdicts on those targets record expected profile divergence, not a defect in a FIPS 203 implementation"
       ],
       "controls": {
         "positive_control": "the unmodified encapsulation key encapsulates",

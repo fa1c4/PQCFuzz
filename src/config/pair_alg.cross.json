@@ -1,0 +1,959 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "pair_id": "cross_rsdp_1_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDP-1-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 18432
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 18432
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_1_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDP-1-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 13152
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 13152
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_1_small_cross_reference_single",
+      "algorithm": "CROSS-RSDP-1-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 12432
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 77,
+          "sk_len": 32,
+          "sig_max_len": 12432
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_3_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDP-3-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 41406
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 41406
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_3_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDP-3-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 29853
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 29853
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_3_small_cross_reference_single",
+      "algorithm": "CROSS-RSDP-3-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 28391
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 115,
+          "sk_len": 48,
+          "sig_max_len": 28391
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_5_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDP-5-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 74590
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 74590
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_5_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDP-5-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 53527
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 53527
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdp_5_small_cross_reference_single",
+      "algorithm": "CROSS-RSDP-5-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 50818
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 153,
+          "sk_len": 64,
+          "sig_max_len": 50818
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_1_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-1-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 11980
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 11980
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_1_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-1-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 9120
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 9120
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_1_small_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-1-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 8960
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 54,
+          "sk_len": 32,
+          "sig_max_len": 8960
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_3_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-3-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 26772
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 26772
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_3_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-3-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 22464
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 22464
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_3_small_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-3-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 20452
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 83,
+          "sk_len": 48,
+          "sig_max_len": 20452
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_5_fast_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-5-FAST",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 48102
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 48102
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_5_balanced_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-5-BALANCED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 40100
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 40100
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "cross_rsdpg_5_small_cross_reference_single",
+      "algorithm": "CROSS-RSDPG-5-SMALL",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 36454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "right": {
+        "project_id": "cross",
+        "project_name": "CROSS reference implementation (NIST round-2 submission)",
+        "implementation_id": "cross_reference",
+        "api_names": {
+          "keygen": "CROSS_keygen",
+          "sign": "CROSS_sign",
+          "verify": "CROSS_verify"
+        },
+        "reference_version": "nist-round2-submission-2.0",
+        "abi": {
+          "pk_len": 106,
+          "sk_len": 64,
+          "sig_max_len": 36454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    }
+  ]
+}
