@@ -93,6 +93,7 @@ struct OracleFindingTrace {
   EvidenceClass evidence_class = EvidenceClass::kInference;
   std::string conditional_verdict;
   std::string claim;
+  std::string claim_id;
   std::string source_reference;
   std::vector<std::string> limitations;
 };
@@ -145,6 +146,7 @@ struct KEMOracleTrace {
   std::string observed_relation;
   std::string finding_class;
   std::string finding_subclass;
+  std::string claim_id;
   std::string mutation_target;
   std::string configured_algorithm;
   std::string adapter_algorithm;

@@ -50,6 +50,12 @@ ALGORITHM_BY_ENUM = {
     23: "AIGIS-SIG-1",
     24: "AIGIS-SIG-2",
     25: "AIGIS-SIG-3",
+    56: "FALCON-512-COMPRESSED",
+    57: "FALCON-1024-COMPRESSED",
+    58: "FALCON-512-PADDED",
+    59: "FALCON-1024-PADDED",
+    60: "FALCON-512-CT",
+    61: "FALCON-1024-CT",
     64: "CROSS-RSDP-1-FAST",
     65: "CROSS-RSDP-1-BALANCED",
     66: "CROSS-RSDP-1-SMALL",
@@ -134,6 +140,25 @@ ORACLE_BY_ENUM = {
     61: "mlkem_rng_failure",
     62: "mldsa_rng_failure",
     63: "slhdsa_rng_failure",
+    100: "falcon_kat",
+    101: "falcon_local_sign_verify",
+    102: "falcon_cross_verify",
+    103: "falcon_message_salt_binding",
+    104: "falcon_header_profile",
+    105: "falcon_pk_coefficients",
+    106: "falcon_compressed_canonicality",
+    107: "falcon_format_lengths",
+    108: "falcon_norm_equation",
+    109: "falcon_norm_boundary_unit",
+    110: "falcon_hash_to_point",
+    111: "falcon_key_equation",
+    112: "falcon_sk_codec",
+    113: "falcon_rng_replay",
+    114: "falcon_failure_state",
+    115: "falcon_signed_message_frame",
+    116: "falcon_sampler_arithmetic",
+    117: "falcon_fault_checks",
+    118: "falcon_timing_resources",
     120: "cross_kat",
     121: "cross_local_sign_verify",
     122: "cross_cross_verify",
@@ -188,14 +213,44 @@ def _load_spec_metadata() -> None:
                 _SPEC_METADATA[oracle_id] = entry
 
 
-def oracle_metadata(oracle_id: str) -> dict[str, Any]:
+def oracle_metadata(oracle_id: str, subtest_id: str = "", profile_id: str = "") -> dict[str, Any]:
     _load_spec_metadata()
-    return _SPEC_METADATA.get(oracle_id, {})
+    entry = _SPEC_METADATA.get(oracle_id)
+    if not isinstance(entry, dict):
+        return {}
+    variants = entry.get("claim_variants")
+    if not isinstance(variants, list) or not variants:
+        return entry
+    context = {"subtest_id": subtest_id, "profile_id": profile_id, "algorithm": profile_id}
+    matches = []
+    for variant in variants:
+        if not isinstance(variant, dict):
+            continue
+        conditions = variant.get("conditions", [])
+        if not isinstance(conditions, list):
+            continue
+        ok = True
+        for condition in conditions:
+            if not isinstance(condition, dict):
+                ok = False
+                break
+            key = str(condition.get("key", ""))
+            value = str(condition.get("value", ""))
+            if context.get(key) != value:
+                ok = False
+                break
+        if ok:
+            matches.append(variant)
+    if len(matches) == 1:
+        return matches[0]
+    # Zero or multiple matches make the claim not evaluable; never pick the
+    # highest evidence class.
+    return {}
 
 
-def classify_violation(oracle_id: str, evidence_kind: str) -> dict[str, Any]:
+def classify_violation(oracle_id: str, evidence_kind: str, subtest_id: str = "", profile_id: str = "") -> dict[str, Any]:
     """Map a violated oracle claim to the design-document verdict vocabulary."""
-    metadata = oracle_metadata(oracle_id)
+    metadata = oracle_metadata(oracle_id, subtest_id=subtest_id, profile_id=profile_id)
     evidence_class = str(metadata.get("evidence_class") or "INFERENCE")
     verdict = VERDICT_FOR_EVIDENCE_CLASS.get(evidence_class, "INCONCLUSIVE")
     if evidence_kind == "sanitizer":

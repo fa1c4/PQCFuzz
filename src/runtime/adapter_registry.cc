@@ -9,6 +9,7 @@
 #include "adapters/pqmagic/kem_adapter.h"
 #include "adapters/pqmagic/sig_adapter.h"
 #include "adapters/cross/cross_adapter.h"
+#include "adapters/falcon/sig_adapter.h"
 #include "adapters/reference/reference_adapter.h"
 
 namespace pqcfuzz {
@@ -48,6 +49,9 @@ const pqcfuzz_sig_adapter *GetSigAdapterByProjectAndId(
   }
   if (project_id == "cross") {
     return pqcfuzz_get_cross_sig_adapter(implementation_id.c_str());
+  }
+  if (project_id == "falcon") {
+    return pqcfuzz_get_falcon_sig_adapter(implementation_id.c_str());
   }
   return nullptr;
 }

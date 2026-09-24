@@ -31,6 +31,7 @@ FIPS_FILES = [
     "aigis_enc.json",
     "aigis_sig.json",
     "cross.json",
+    "falcon.json",
 ]
 METAMORPHIC_FILES = [
     "metamorphic_kem.json",
@@ -100,6 +101,11 @@ def read_specs(files: list[str], *, metamorphic: bool) -> list[dict[str, Any]]:
             require(evidence in EVIDENCE_CLASSES, f"{oracle_id}: bad evidence_class {evidence!r}")
             source = entry.get("source_reference")
             require(isinstance(source, str) and source, f"{oracle_id}: missing source_reference")
+            properties = entry.get("property_ids", [])
+            require(
+                isinstance(properties, list) and all(isinstance(item, str) and item for item in properties),
+                f"{oracle_id}: property_ids must be an array of non-empty strings",
+            )
             if metamorphic:
                 require(isinstance(entry.get("field"), str), f"{oracle_id}: missing field")
                 require(
@@ -118,11 +124,13 @@ def read_specs(files: list[str], *, metamorphic: bool) -> list[dict[str, Any]]:
     return records
 
 
-def emit_metadata(lines: list[str], entry: dict[str, Any]) -> None:
+def emit_metadata_fields(lines: list[str], entry: dict[str, Any], prefix: str) -> None:
     limitations = entry.get("limitations", [])
-    require(isinstance(limitations, list), f"{entry['oracle_id']}: limitations must be an array")
+    if not isinstance(limitations, list):
+        raise SystemExit(f"oracle spec error: {entry.get('oracle_id', prefix)}: limitations must be an array")
     for item in limitations:
-        require(isinstance(item, str), f"{entry['oracle_id']}: limitations must be strings")
+        if not isinstance(item, str):
+            raise SystemExit(f"oracle spec error: {entry.get('oracle_id', prefix)}: limitations must be strings")
     scope = entry.get("scope", {})
     api_layer = entry.get("scope_api_layer", "")
     if isinstance(scope, dict):
@@ -133,16 +141,68 @@ def emit_metadata(lines: list[str], entry: dict[str, Any]) -> None:
     if isinstance(controls, dict):
         positive = controls.get("positive_control", positive)
         negative = controls.get("negative_control", negative)
-    lines.append(f"    spec.metadata.claim = {cpp_string(entry['claim'])};\n")
-    lines.append(f"    spec.metadata.evidence_class = {EVIDENCE_CLASSES[entry['evidence_class']]};\n")
-    lines.append(f"    spec.metadata.source_reference = {cpp_string(entry['source_reference'])};\n")
-    lines.append(f"    spec.metadata.scope_api_layer = {cpp_string(str(api_layer))};\n")
-    lines.append(f"    spec.metadata.limitations = {cpp_string_list(limitations)};\n")
+    lines.append(f"    {prefix}.claim = {cpp_string(entry['claim'])};\n")
+    lines.append(f"    {prefix}.evidence_class = {EVIDENCE_CLASSES[entry['evidence_class']]};\n")
+    lines.append(f"    {prefix}.source_reference = {cpp_string(entry['source_reference'])};\n")
+    lines.append(f"    {prefix}.scope_api_layer = {cpp_string(str(api_layer))};\n")
+    lines.append(f"    {prefix}.limitations = {cpp_string_list(limitations)};\n")
     lines.append(
-        f"    spec.metadata.conditional_verdict = {cpp_string(str(entry.get('conditional_verdict', '')))};\n"
+        f"    {prefix}.conditional_verdict = {cpp_string(str(entry.get('conditional_verdict', '')))};\n"
     )
-    lines.append(f"    spec.metadata.positive_control = {cpp_string(str(positive))};\n")
-    lines.append(f"    spec.metadata.negative_control = {cpp_string(str(negative))};\n")
+    lines.append(f"    {prefix}.positive_control = {cpp_string(str(positive))};\n")
+    lines.append(f"    {prefix}.negative_control = {cpp_string(str(negative))};\n")
+
+
+def emit_metadata(lines: list[str], entry: dict[str, Any]) -> None:
+    emit_metadata_fields(lines, entry, "spec.metadata")
+
+
+def validate_claim_variants(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    variants = entry.get("claim_variants", [])
+    if not isinstance(variants, list):
+        raise SystemExit(f"oracle spec error: {entry['oracle_id']}: claim_variants must be an array")
+    seen: set[str] = set()
+    for variant in variants:
+        if not isinstance(variant, dict):
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}: claim variant must be an object")
+        claim_id = variant.get("claim_id")
+        if not isinstance(claim_id, str) or not claim_id:
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}: claim variant needs claim_id")
+        if claim_id in seen:
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}: duplicate claim_id {claim_id}")
+        seen.add(claim_id)
+        if variant.get("evidence_class") not in EVIDENCE_CLASSES:
+            raise SystemExit(
+                f"oracle spec error: {entry['oracle_id']}/{claim_id}: bad evidence_class"
+            )
+        if not isinstance(variant.get("claim"), str) or not variant["claim"]:
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}/{claim_id}: missing claim")
+        if not isinstance(variant.get("source_reference"), str) or not variant["source_reference"]:
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}/{claim_id}: missing source_reference")
+        conditions = variant.get("conditions")
+        if not isinstance(conditions, list) or not conditions:
+            raise SystemExit(f"oracle spec error: {entry['oracle_id']}/{claim_id}: conditions must be non-empty")
+        for condition in conditions:
+            if not isinstance(condition, dict):
+                raise SystemExit(f"oracle spec error: {entry['oracle_id']}/{claim_id}: condition must be an object")
+            if not isinstance(condition.get("key"), str) or not isinstance(condition.get("value"), str):
+                raise SystemExit(f"oracle spec error: {entry['oracle_id']}/{claim_id}: condition key/value must be strings")
+    return variants
+
+
+def emit_claim_variants(lines: list[str], entry: dict[str, Any]) -> None:
+    for variant in validate_claim_variants(entry):
+        lines.append("    {\n")
+        lines.append("      ClaimVariant variant;\n")
+        lines.append(f"      variant.claim_id = {cpp_string(variant['claim_id'])};\n")
+        for condition in variant["conditions"]:
+            lines.append(
+                f"      variant.conditions.push_back({{{cpp_string(condition['key'])}, "
+                f"{cpp_string(condition['value'])}}});\n"
+            )
+        emit_metadata_fields(lines, variant, "variant.metadata")
+        lines.append("      spec.claim_variants.push_back(std::move(variant));\n")
+        lines.append("    }\n")
 
 
 def emit_fips(records: list[dict[str, Any]]) -> str:
@@ -174,6 +234,8 @@ def emit_fips(records: list[dict[str, Any]]) -> str:
             f"    spec.enabled_by_default = {'false' if entry.get('enabled_by_default') is False else 'true'};\n"
         )
         lines.append(f"    spec.requires_api = {cpp_string(str(entry.get('requires_api', '')))};\n")
+        lines.append(f"    spec.property_ids = {cpp_string_list(entry.get('property_ids', []))};\n")
+        emit_claim_variants(lines, entry)
         emit_metadata(lines, entry)
         lines.append("    specs.push_back(std::move(spec));\n")
         lines.append("  }\n")

@@ -22,7 +22,7 @@ bool IsKnownOp(uint8_t value) {
 }
 
 bool IsKnownField(uint8_t value) {
-  return value <= static_cast<uint8_t>(SchemeMutationField::kContext);
+  return value <= static_cast<uint8_t>(SchemeMutationField::kPublicKeyPayload);
 }
 
 }  // namespace
@@ -91,6 +91,24 @@ const char *SchemeMutationFieldName(SchemeMutationField field) {
       return "message";
     case SchemeMutationField::kContext:
       return "context";
+    case SchemeMutationField::kSignatureHeader:
+      return "signature.header";
+    case SchemeMutationField::kSignaturePayload:
+      return "signature.payload";
+    case SchemeMutationField::kSignatureCompressedCoefficient:
+      return "signature.compressed_coefficient";
+    case SchemeMutationField::kSignatureCompressedPadding:
+      return "signature.compressed_padding";
+    case SchemeMutationField::kPublicKeyHeader:
+      return "public_key.header";
+    case SchemeMutationField::kPublicKeyCoefficient:
+      return "public_key.coefficient";
+    case SchemeMutationField::kSecretKey:
+      return "secret_key";
+    case SchemeMutationField::kSignedMessageFrame:
+      return "signed_message.frame";
+    case SchemeMutationField::kPublicKeyPayload:
+      return "public_key.payload";
   }
   return "unknown";
 }

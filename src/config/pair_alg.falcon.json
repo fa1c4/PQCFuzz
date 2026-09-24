@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "pair_id": "falcon_512_compressed_falcon_reference_single",
+      "algorithm": "FALCON-512-COMPRESSED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_compressed",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 752
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_compressed",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 752
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "falcon_1024_compressed_falcon_reference_single",
+      "algorithm": "FALCON-1024-COMPRESSED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_compressed",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1462
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_compressed",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1462
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "falcon_512_padded_falcon_reference_single",
+      "algorithm": "FALCON-512-PADDED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_padded",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 666
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_padded",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 666
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "falcon_1024_padded_falcon_reference_single",
+      "algorithm": "FALCON-1024-PADDED",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_padded",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1280
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_padded",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1280
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "falcon_512_ct_falcon_reference_single",
+      "algorithm": "FALCON-512-CT",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_ct",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 809
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_512_ct",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 897,
+          "sk_len": 1281,
+          "sig_max_len": 809
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "falcon_1024_ct_falcon_reference_single",
+      "algorithm": "FALCON-1024-CT",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_ct",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1577
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "right": {
+        "project_id": "falcon",
+        "project_name": "Falcon official reference implementation (Falcon-impl-20211101)",
+        "implementation_id": "falcon_reference_1024_ct",
+        "api_names": {
+          "keygen": "falcon_keygen_make",
+          "sign": "falcon_sign_dyn",
+          "verify": "falcon_verify"
+        },
+        "reference_version": "Falcon-impl-20211101",
+        "abi": {
+          "pk_len": 1793,
+          "sk_len": 2305,
+          "sig_max_len": 1577
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": true
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    }
+  ]
+}

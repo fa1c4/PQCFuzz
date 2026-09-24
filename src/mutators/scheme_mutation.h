@@ -44,6 +44,17 @@ enum class SchemeMutationField : uint8_t {
   kPublicKeySyndrome = 13,
   kMessage = 14,
   kContext = 15,
+  // Falcon / format-aware fields.  The numbering stays append-only so a
+  // recipe encoded for one family is never silently reinterpreted as another.
+  kSignatureHeader = 16,
+  kSignaturePayload = 17,
+  kSignatureCompressedCoefficient = 18,
+  kSignatureCompressedPadding = 19,
+  kPublicKeyHeader = 20,
+  kPublicKeyCoefficient = 21,
+  kSecretKey = 22,
+  kSignedMessageFrame = 23,
+  kPublicKeyPayload = 24,
 };
 
 struct SchemeMutation {

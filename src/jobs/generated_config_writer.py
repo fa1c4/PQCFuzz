@@ -146,8 +146,52 @@ def cross_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
     return subtests
 
 
+def oracle_ids_for_falcon() -> list[str]:
+    # Default (P0/P1) Falcon oracles.  The P2 fault and timing lanes are
+    # opt-in only and stay out of the default schedule.
+    return [
+        "falcon_kat",
+        "falcon_local_sign_verify",
+        "falcon_cross_verify",
+        "falcon_message_salt_binding",
+        "falcon_header_profile",
+        "falcon_pk_coefficients",
+        "falcon_compressed_canonicality",
+        "falcon_format_lengths",
+        "falcon_norm_equation",
+        "falcon_norm_boundary_unit",
+        "falcon_hash_to_point",
+        "falcon_key_equation",
+        "falcon_sk_codec",
+        "falcon_rng_replay",
+        "falcon_failure_state",
+        "falcon_signed_message_frame",
+        "falcon_sampler_arithmetic",
+    ]
+
+
+def falcon_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_verify_enabled = contract["public_key_exchange"] and contract["signature_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_falcon():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "falcon_cross_verify":
+            entry["required_exchange"] = ["public_key_exchange", "signature_exchange"]
+            entry["enabled"] = cross_verify_enabled
+        subtests.append(entry)
+    return subtests
+
+
 def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
     family = pair["algorithm_family"]
+    if family == "FALCON":
+        return oracle_ids_for_falcon()
     if family == "CROSS":
         return oracle_ids_for_cross()
     if family == "AIGIS-ENC":
@@ -165,6 +209,8 @@ def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
     family = pair["algorithm_family"]
+    if family == "FALCON":
+        return "src/oracles/specs/falcon.json"
     if family == "CROSS":
         return "src/oracles/specs/cross.json"
     if family == "AIGIS-ENC":
@@ -249,6 +295,25 @@ ORACLE_ENUM_BY_NAME = {
     "mlkem_rng_failure": 61,
     "mldsa_rng_failure": 62,
     "slhdsa_rng_failure": 63,
+    "falcon_kat": 100,
+    "falcon_local_sign_verify": 101,
+    "falcon_cross_verify": 102,
+    "falcon_message_salt_binding": 103,
+    "falcon_header_profile": 104,
+    "falcon_pk_coefficients": 105,
+    "falcon_compressed_canonicality": 106,
+    "falcon_format_lengths": 107,
+    "falcon_norm_equation": 108,
+    "falcon_norm_boundary_unit": 109,
+    "falcon_hash_to_point": 110,
+    "falcon_key_equation": 111,
+    "falcon_sk_codec": 112,
+    "falcon_rng_replay": 113,
+    "falcon_failure_state": 114,
+    "falcon_signed_message_frame": 115,
+    "falcon_sampler_arithmetic": 116,
+    "falcon_fault_checks": 117,
+    "falcon_timing_resources": 118,
     "cross_kat": 120,
     "cross_local_sign_verify": 121,
     "cross_cross_verify": 122,
@@ -398,6 +463,8 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
 
 def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
     family = pair["algorithm_family"]
+    if family == "FALCON":
+        return falcon_enabled_subtests(pair)
     if family == "CROSS":
         return cross_enabled_subtests(pair)
     if family == "AIGIS-ENC":

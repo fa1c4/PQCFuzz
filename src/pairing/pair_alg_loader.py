@@ -44,6 +44,21 @@ _PROFILE_ALGORITHM_FIELDS = (
     "v_bytes",
     "syn_bytes",
     "tree_nodes_to_store",
+    # Falcon family fields.
+    "format",
+    "sig_type",
+    "logn",
+    "q",
+    "padded_len",
+    "ct_len",
+    "salt_len",
+    "norm_bound",
+    "compressed_coefficient_limit",
+    "pk_header",
+    "sig_header",
+    "sk_header",
+    "ct_header",
+    "fg_bits",
 )
 
 
@@ -407,7 +422,12 @@ EXCHANGE_FIELDS_BY_PRIMITIVE = {
     "kem": ("public_key_exchange", "ciphertext_exchange", "secret_key_exchange", "secret_key_format_compatible"),
     "sig": ("public_key_exchange", "signature_exchange"),
 }
-SIG_CAPABILITY_FIELDS = ("supports_context", "supports_seeded_sign", "supports_deterministic_sign")
+SIG_CAPABILITY_FIELDS = (
+    "supports_context",
+    "supports_seeded_sign",
+    "supports_deterministic_sign",
+    "supports_signed_message",
+)
 
 
 class PairAlgError(RuntimeError):

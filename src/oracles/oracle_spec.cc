@@ -46,6 +46,10 @@ std::vector<OracleSpec> DefaultAigisSigOracleSpecs() {
   return SpecsForFamily("AIGIS-SIG");
 }
 
+std::vector<OracleSpec> DefaultFalconOracleSpecs() {
+  return SpecsForFamily("FALCON");
+}
+
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id) {
   for (const auto &spec : specs) {
     if (spec.oracle_id == oracle_id) {

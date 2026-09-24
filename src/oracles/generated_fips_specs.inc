@@ -16,6 +16,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a valid ML-KEM key pair, Decaps(dk, Encaps(ek).ciphertext) shall equal Encaps(ek).shared_secret.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Sections 7.1-7.3 (external ML-KEM functions)";
@@ -40,6 +41,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"ciphertext_exchange\",\"secret_key_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two conforming ML-KEM implementations exchanging encapsulation keys and ciphertexts shall derive the same shared secret.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Sections 7.2-7.3";
@@ -64,6 +66,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_ciphertext_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A correctly sized ciphertext whose re-encryption does not match shall not yield the original encapsulated shared secret.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 203 Sections 7.3 and 3.3 (implicit rejection)";
@@ -88,6 +91,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-KEM key generation and encapsulation shall consume the supplied randomness so that distinct randomness streams produce distinct outputs.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Section 3.3 (randomness requirements)";
@@ -112,6 +116,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rejection_secret_in_sk\":true,\"valid_ciphertext_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a correctly sized invalid ML-KEM ciphertext, decapsulation shall return a stable implicit-rejection secret that depends on the stored rejection secret z, while valid decapsulation shall not depend on z, and no public reject flag shall be exposed.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 203 Sections 7.3 and 3.3; DeepSeek design doc Section 24 (implicit-rejection relations)";
@@ -136,6 +141,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Exact ciphertext length enforcement for ML-KEM decapsulation is required by FIPS 203, but the raw fixed-pointer API used here has no ciphertext length parameter; enforcement must be provided by a length-aware wrapper.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 203 Section 7.3; DeepSeek design doc Section 19 (length oracle boundary)";
@@ -160,6 +166,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_public_key_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-KEM encapsulation shall not proceed on an encapsulation key whose 12-bit polynomial coefficients are not canonical: q-1 is accepted, and q, q+1, and 4095 are rejected before encapsulation.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 203 Sections 7.2 and 4.2 (encapsulation-key checks); DeepSeek design doc Sections 28.4 and 44";
@@ -184,6 +191,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"kat_vectors_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-KEM.KeyGen_internal(d, z) shall produce byte-identical ek and dk values for the NIST ACVP ML-KEM keyGen vectors.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Section 6.1 and Algorithm 16; NIST ACVP ML-KEM-keyGen-FIPS203 expectedResults";
@@ -208,6 +216,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"kat_vectors_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-KEM.Encaps_internal(ek, m) shall produce the ACVP expected ciphertext c and shared secret k.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Section 6.2 and Algorithm 17; NIST ACVP ML-KEM-encapDecap-FIPS203 expectedResults";
@@ -232,6 +241,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"kat_vectors_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-KEM.Decaps(dk, c) shall produce the ACVP expected shared secret k.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 203 Section 6.3 and Algorithm 18; NIST ACVP ML-KEM-encapDecap-FIPS203 expectedResults";
@@ -256,6 +266,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_failure_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A reported RNG failure during ML-KEM key generation or encapsulation should produce a failure indication and no cryptographic output rather than proceeding with zeroed randomness.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "FIPS 203 Section 3.3 and DeepSeek design doc Sections 22 and 28.9";
@@ -280,6 +291,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"allocator_fault_injection_built\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "When an allocation fails during ML-KEM key generation, the call should report a failure and leave caller output buffers untouched, with no partial key material exposed.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Sections 25 and 36.7 (allocator fault injector and failure-state contract)";
@@ -304,6 +316,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature produced by ML-DSA Sign with a valid key and context shall verify under the matching public key.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 204 Sections 5.2-5.3 (external ML-DSA functions)";
@@ -328,6 +341,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true,\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two conforming ML-DSA implementations exchanging public keys and signatures shall cross-verify for the same profile and context.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 204 Sections 5.2-5.3";
@@ -352,6 +366,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A mutated ML-DSA signature component shall not verify under the signing public key.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Sections 3.6.2, 5.3, and Algorithm 27 sigDecode";
@@ -376,6 +391,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature shall not verify for a message that differs from the signed message.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 3.1 (message binding)";
@@ -400,6 +416,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature shall not verify when the verification context differs from the signing context.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.2 (context string domain separation)";
@@ -424,6 +441,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"oid_field_present_in_input_model\":true}";
     spec.enabled_by_default = false;
     spec.requires_api = "HashML-DSA";
+    spec.property_ids = {};
     spec.metadata.claim = "HashML-DSA verification shall reject a prehash object whose OID differs from the signing OID.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.4 (prehash OID binding)";
@@ -448,6 +466,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"seeded_sign_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Hedged ML-DSA signing shall consume the supplied randomness so that distinct randomness streams produce distinct signatures.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 204 Section 3.4 (hedged signing randomness)";
@@ -472,6 +491,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-DSA verification shall return false for every signature length that differs from the profile signature length, including empty, L-1, L+1 with 0x00, L+1 with 0xA5, and oversized signatures.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Sections 3.6.2 and 5.3; DeepSeek design doc Section 29.3";
@@ -496,6 +516,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"context_api_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-DSA context lengths 0, 1, 254, and 255 shall sign and verify, context length 256 shall be rejected at the signing boundary, and a different verification context shall not verify.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.2 (context string) and DeepSeek design doc Section 29.8";
@@ -520,6 +541,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-DSA verification shall reject non-canonical hint encodings: cumulative counts that decrease or exceed omega, non-increasing positions within a polynomial, and non-zero unused position bytes.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 7.2 Algorithm 21 HintBitUnpack; DeepSeek design doc Section 29.4";
@@ -544,6 +566,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ML-DSA verification shall reject signatures whose response coefficients reach or exceed the norm bound gamma1 - beta, including the negative boundary.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.3 (norm check) and DeepSeek design doc Section 29.6";
@@ -568,6 +591,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Hedged ML-DSA signing shall reproduce byte-identical signatures under a fixed zero randomness tape, and distinct randomness tapes shall produce distinct signatures that every verify.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 204 Section 3.4 (hedged and deterministic signing) and DeepSeek design doc Section 29.7";
@@ -592,6 +616,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"prehash_api_available\":false}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A pure ML-DSA signature and a prehash ML-DSA signature for the same message shall not verify in each other's domain.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.4 and DeepSeek design doc Section 29.8";
@@ -616,6 +641,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"prehash_api_available\":false}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Prehash verification shall reject a digest whose OID differs from the signing OID.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 204 Section 5.4 and DeepSeek design doc Section 29.8";
@@ -640,6 +666,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_failure_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A reported RNG failure during ML-DSA key generation or signing should produce a failure indication and no signature output rather than proceeding with zeroed randomness.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "FIPS 204 Sections 3.4 and 3.6 and DeepSeek design doc Sections 22 and 28.9";
@@ -664,6 +691,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature produced by SLH-DSA Sign with a valid key and context shall verify under the matching public key.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 205 Sections 10-11 (external SLH-DSA functions)";
@@ -688,6 +716,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true,\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two conforming SLH-DSA implementations exchanging public keys and signatures shall cross-verify for the same parameter set and context.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 205 Sections 10-11";
@@ -712,6 +741,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A mutated SLH-DSA signature component (R, FORS, hypertree root, WOTS, or authentication path) shall not verify.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Sections 10.2 and 30.9-style component mutation requirements";
@@ -736,6 +766,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature shall not verify for a message that differs from the signed message.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Section 10.2 (message binding)";
@@ -760,6 +791,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"ctx_len_lte_255\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature shall not verify when the verification context differs from the signing context.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Sections 10.2 and 11 (context domain separation)";
@@ -784,6 +816,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Hedged SLH-DSA signing shall consume the supplied opt_rand so that distinct randomness streams produce distinct signatures.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 205 Sections 9.2 and 11 (hedged signing)";
@@ -808,6 +841,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "SLH-DSA verification shall return false for every signature length that differs from the parameter-set signature length.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Section 10.2; DeepSeek design doc Section 30.3";
@@ -832,6 +866,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"context_api_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "SLH-DSA context lengths 0, 1, 254, and 255 shall sign and verify, context length 256 shall be rejected, and a different verification context shall not verify.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Sections 10.2 and 11; DeepSeek design doc Section 30.7";
@@ -856,6 +891,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"kat_vectors_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "SLH-DSA seed-based key generation shall produce the ACVP expected public and private keys from the declared seed components.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "FIPS 205 Sections 9.1 and 11; NIST ACVP SLH-DSA-keyGen-FIPS205 expectedResults";
@@ -880,6 +916,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"prehash_api_available\":false}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A pure SLH-DSA signature and a prehash SLH-DSA signature for the same message shall not verify in each other's domain.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Sections 10.2 and 11 and DeepSeek design doc Section 30.7";
@@ -904,6 +941,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"prehash_api_available\":false}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Prehash SLH-DSA verification shall reject a digest whose OID or XOF output length differs from the signing parameters.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "FIPS 205 Sections 10.2 and 11 and DeepSeek design doc Section 30.7";
@@ -928,6 +966,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_failure_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A reported RNG failure during SLH-DSA key generation or signing should produce a failure indication and no signature output rather than proceeding with zeroed randomness.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "FIPS 205 Section 3.1 and DeepSeek design doc Sections 22 and 28.9";
@@ -952,6 +991,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a valid Aigis-Enc key pair, decapsulation shall recover the encapsulated shared secret.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "PQMagic snapshot kem/aigis-enc/std/kem.c; DeepSeek design doc Section 33";
@@ -976,6 +1016,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"ciphertext_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two Aigis-Enc builds with compatible object formats exchanging keys and ciphertexts shall derive the same shared secret.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Sections 32-33 (SM3 vs SHAKE profiles)";
@@ -1000,6 +1041,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_ciphertext_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A tampered Aigis-Enc ciphertext shall not decapsulate to the original shared secret and shall not expose a public reject flag.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Sections 33.2 and 24 (implicit rejection relations)";
@@ -1024,6 +1066,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Aigis-Enc key generation and encapsulation should consume the supplied randomness so that distinct streams produce distinct outputs.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Sections 22 and 35 (PQMagic randombytes)";
@@ -1048,6 +1091,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_secret_key_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A hardened parser profile should reject a secret key whose first s-vector 13-bit coefficient encodes the non-canonical value q=7681 before decapsulation.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Section 33.4; PQMagic kem/aigis-enc/std/poly.c";
@@ -1072,6 +1116,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rejection_secret_in_sk\":true,\"valid_ciphertext_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a tampered Aigis-Enc ciphertext, decapsulation shall return a stable fallback secret bound to the stored rejection secret z, valid decapsulation shall remain independent of z, and the public status shall not expose a reject flag.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Sections 33.2 and 24; PQMagic kem/aigis-enc/std/kem.c";
@@ -1096,6 +1141,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A signature produced by Aigis-Sig with a valid key and context shall verify under the matching public key.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "PQMagic sig/aigis-sig/std/sign.c; DeepSeek design doc Section 34";
@@ -1120,6 +1166,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two Aigis-Sig builds with compatible object formats exchanging keys and signatures shall cross-verify.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Sections 32 and 34";
@@ -1144,6 +1191,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A mutated Aigis-Sig signature component shall not verify under the signing public key.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Section 34; PQMagic sig/aigis-sig/std/packing.c";
@@ -1168,6 +1216,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_message_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "An Aigis-Sig signature shall not verify for a message that differs from the signed message.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Section 34";
@@ -1192,6 +1241,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_context_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "An Aigis-Sig signature shall not verify when the verification context differs from the signing context.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Section 34";
@@ -1216,6 +1266,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Aigis-Sig key generation and hedged signing should consume the supplied randomness so that distinct streams produce different outputs.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Sections 22, 34.4, and 35";
@@ -1240,6 +1291,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A hardened public verifier should require siglen == CRYPTO_BYTES and reject a valid signature with appended bytes.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Section 34.2 and case AS-SIG-EXACT-LEN; PQMagic sig/aigis-sig/std/sign.c";
@@ -1264,6 +1316,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A hardened verifier should reject or canonicalize nonzero unused challenge sign bits rather than accepting a malleable signature encoding.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Section 34.3 and case AS-SIG-UNUSED-SIGNBITS; PQMagic sig/aigis-sig/std/packing.c";
@@ -1288,6 +1341,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_keypair_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A failed detached or combined signing call with ctx_len=256 should report one consistent failure state, leaving caller output length and buffers unchanged or zeroed.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "DeepSeek design doc Section 34.5 and cases AS-SIG-CTX256-DETACHED-STATE / AS-SIG-CTX256-COMBINED-STATE";
@@ -1312,6 +1366,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a deterministic Aigis-Sig profile, identical key, message, and context shall produce byte-identical signatures.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "DeepSeek design doc Section 34.4 and case AS-SIG-DETERMINISM-PROFILE";
@@ -1336,6 +1391,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"fixture_required\":true,\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "For a fixed RNG tape and message, the pinned reference build shall reproduce the recorded CROSS key and signature bytes and shall accept them.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a77 (PDF p.47); Algorithm 1-3; plans/specs/cross-round2-spec.pdf sha256 10ac1ef5";
@@ -1360,6 +1416,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A CROSS signature produced by an honest signer shall verify under the matching public key for empty and binary messages.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithms 1-3 (PDF pp.16-23); \u00a74 Table 4 (PDF p.31)";
@@ -1384,6 +1441,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Two pinned CROSS builds of the same variant, category, corner, and revision exchanging keys and signatures shall cross-verify.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 and \u00a74 Table 4; Algorithm 3 verify contract";
@@ -1408,6 +1466,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A CROSS signature shall not verify for a message that differs from the signed message, nor under an independent honest public key.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithm 3 (PDF pp.21-23)";
@@ -1432,6 +1491,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "The CROSS verifier shall require the exact CROSS_sig_t length and reject truncated or appended signature byte strings.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2.2 signature sizes (PDF p.23); \u00a75.4 packing (PDF pp.43-44); api.h CRYPTO_BYTES";
@@ -1456,6 +1516,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Packed y, v, and vG coefficients outside Fp/Fz shall not be accepted as zero or silently reduced: decapsulation of every wire representation must be canonical.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 3 membership checks; \u00a75.4 packing (PDF pp.43-44); \u00a75.5 arithmetic (PDF p.45); pack_unpack.c unpack_fp_vec";
@@ -1480,6 +1541,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Each densely packed vector is zero-padded to a byte boundary; a decoder shall reject non-zero unused padding bits rather than deriving the same value from two encodings.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.4 packing requires zero padding (PDF pp.43-44); pack_unpack.c unpack checks";
@@ -1504,6 +1566,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "The fixed-weight challenge shall be derived from the digest by the specified sampler: chall1 entries are nonzero, chall2 has Hamming weight exactly w, and an independent model shall reproduce the same bit string.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.3 Table 3 (PDF pp.23-24); expand_digest_to_fixed_weight in csprng_hash.c";
@@ -1528,6 +1591,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Verification shall recompute both final digests and accept if and only if they match the committed roots; changing digest_cmt, digest_chall2, or any response shall reject.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithm 3 lines 22-28 (PDF pp.22-23)";
@@ -1552,6 +1616,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Every Hash/CSPRNG call shall use the specified little-endian 16-bit role tag and digest length; the transcript model with the same tags shall reproduce the reference digests.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.1 domain separation (PDF pp.32-33) and \u00a72.2";
@@ -1576,6 +1641,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "RebuildLeaves(SeedPath(seed, salt, b), b, salt) shall recover exactly the published leaves, and the published node set shall equal the zero-challenge round leaves and never cover one-challenge rounds.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.2 SeedTree algorithms (PDF pp.34-42); Algorithms 5-10";
@@ -1600,6 +1666,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Changing an active Proof node, reordering active proof nodes, or corrupting an active Path seed shall make the recomputed root mismatch and verification fail.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.2 Merkle tree algorithms 11-16 (PDF pp.38-42)";
@@ -1624,6 +1691,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Path and Proof consumption shall be decided by the challenge topology and shall match the recorded counts without out-of-bounds or duplicate consumption; unused fixed slots follow the pinned serializer contract.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2.2 bound and \u00a75.2 tree shape (PDF pp.34-42)";
@@ -1648,6 +1716,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "ExpandSK shall rederive Seedpk and the parity matrix, and the public syndrome shall equal e*H^T (RSDP) or eG*M mod z (RSDPG) under the specified row/column order.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 1 and Algorithm 4 (PDF pp.16-17); \u00a75.3-5.4 arithmetic";
@@ -1672,6 +1741,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Key generation and signing shall consume the injected CSPRNG tape deterministically: the same tape reproduces identical bytes on the same build, and a fresh legal tape yields a verifying signature.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 1-2; csprng_hash.c platform_csprng_state; api.h CRYPTO_RANDOMBYTES";
@@ -1696,6 +1766,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"api_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Failure paths shall report a consistent status and leave caller output length and buffers bounded by the sentinel/canary contract; parser and allocation budgets shall stay within the configured limits.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec API contract; harness common API contract \u00a71.4";
@@ -1720,6 +1791,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "Scalar and batch SHAKE calls shall agree for 1, 2, 3, and 4 lanes including short tail batches; Fp/Fz arithmetic shall agree with independent modular arithmetic on small-domain and boundary operands.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.3-5.5 (PDF pp.44-46); fips202.c and fp_arith.h";
@@ -1744,6 +1816,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "A fault that flips the flag tree or shifts a challenge bit shall not cause the same round to disclose both its seed and its zero-branch response; such a mutant must be detected by cross_seed_rebuild.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.6 fault-attack boundary (PDF pp.45-46)";
@@ -1768,11 +1841,585 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"timing_lane_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
+    spec.property_ids = {};
     spec.metadata.claim = "The timing lane shall complete within the configured budget while comparing secret-dependent and public verification paths; no timing conclusion is drawn without the dedicated non-sanitized binary and multiple-comparison correction.";
     spec.metadata.evidence_class = EvidenceClass::kInference;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.5-5.6 (PDF pp.45-46); harness common \u00a71.4";
     spec.metadata.scope_api_layer = "external";
     spec.metadata.limitations = {"Opt-in P2 lane; not part of the default smoke contract", "No power or EM claim is made without a physical measurement setup"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the public verify path is measured in the same harness";
+    spec.metadata.negative_control = "the lane reports not_applicable when the timing binary is absent";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_kat";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "bytes_equal";
+    spec.triage_policy = "reference_profile_mismatch";
+    spec.precondition_json = "{\"fixture_required\":true,\"same_algorithm\":true,\"valid_lengths\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S03", "X05"};
+    spec.metadata.claim = "For the official round-3 KAT randomness (AES256-CTR-DRBG seeded by the recorded seed), the pinned Falcon-impl-20211101 reference shall reproduce the recorded pk, sk and signed-message bytes and shall open the recorded frame.";
+    spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.5-3.11.6 (PDF pp.48-50); falcon-round3.zip KAT/falcon512-KAT.rsp; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"The official KAT responses were generated on 2020-10-06 with the pre-fix PRNG API; the pinned 2021-11-01 source reproduces them because the KAT harness flips the SHAKE context explicitly", "A mismatch violates the pinned reference profile, not the Falcon specification by itself", "Only the first three records of each response file are embedded as a fixture; the full files are compared when projects/FALCON/kat is present"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the recorded fixture reproduces pk/sk/sm byte-for-byte and opens to the recorded message";
+    spec.metadata.negative_control = "a different DRBG seed produces different bytes";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_local_sign_verify";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_TRUE");
+    spec.comparator = "verify_accepts";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S03"};
+    spec.metadata.claim = "A Falcon signature produced by an honest signer shall verify under the matching public key for empty, binary and long messages, and the returned signature length shall stay within the profile capacity.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.10 p.45 Algorithm 16; \u00a73.11.3 pp.46-48; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Verification success is not an EUF-CMA or sUF-CMA result"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "a freshly generated key pair signs and verifies on all message classes";
+    spec.metadata.negative_control = "a mutated signature is rejected by falcon_compressed_canonicality and falcon_format_lengths";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_cross_verify";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_TRUE");
+    spec.comparator = "verify_accepts";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S03", "X05"};
+    spec.metadata.claim = "Two pinned Falcon builds of the same degree and compatible signature format exchanging public keys and signatures shall cross-verify.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.10 p.45 Algorithm 16; \u00a73.11.3 pp.46-48";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Disabled in the pinned single-implementation lock because only the author reference is vendored", "PQClean and liboqs share the Falcon core and are not an independent implementation", "Compressed and padded encodings are not interchangeable for a verifier pinned to the padded format"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "both local sign/verify paths succeed before the pair declares signature_exchange";
+    spec.metadata.negative_control = "the pair file disables signature_exchange until a compatible second build is pinned";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_message_salt_binding";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "message_mutation";
+    spec.mutation_targets = {"message", "signature.salt", "public_key"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE");
+    spec.comparator = "verify_rejects";
+    spec.triage_policy = "potential_crypto_vuln_if_mutated_message_verifies";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S01", "S04", "H06"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_message_salt_binding.message_normative";
+      variant.conditions.push_back({"subtest_id", "mutated_message_negative"});
+    variant.metadata.claim = "A Falcon signature shall not verify when the message differs from the signed message.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "Falcon spec v1.2 \u00a73.7 p.31 Algorithm 3; \u00a73.10 p.45 Algorithm 16";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"Not an EUF-CMA proof by itself"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the original message under the original key verifies";
+    variant.metadata.negative_control = "the mutation record shows the message bytes changed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_message_salt_binding.salt_normative";
+      variant.conditions.push_back({"subtest_id", "mutated_salt_negative"});
+    variant.metadata.claim = "The 40-byte salt is part of the hashed message; changing one salt byte shall make verification fail.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "Falcon spec v1.2 \u00a73.7 p.31; \u00a73.10 p.45";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"Same-salt reuse is a diagnostic observation, not automatically a nonce-reuse key-recovery claim"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the unmodified salt verifies";
+    variant.metadata.negative_control = "the mutation record shows one salt byte changed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_message_salt_binding.foreign_key_engineering";
+      variant.conditions.push_back({"subtest_id", "foreign_key_negative"});
+    variant.metadata.claim = "The harness shall build an independent honest key pair and observe whether the signature also verifies under that key.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Harness common contract \u00a71.3 key-ownership negative test; Falcon spec v1.2 \u00a73.11.4 pk encoding";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"Failure to verify under another honest key is not a rogue-key or key-substitution proof"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the signature verifies under its own key";
+    variant.metadata.negative_control = "an independent honest key pair is generated from a different seed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "A Falcon signature shall not verify for a different message, for a different 40-byte salt, or under an independent honest public key; accepted new messages are retained as EUF candidates.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.7 p.31 Algorithm 3 (HashToPoint); \u00a73.10 p.45 Algorithm 16";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Verification failure under another honest key is not a rogue-key proof", "A valid signature on a new message is retained as a candidate and is not automatically a forgery", "The queried message set is recorded for the sUF byte-string game"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the original message under the original key verifies";
+    spec.metadata.negative_control = "the mutation record shows the targeted message or salt bytes changed";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_header_profile";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"signature.header", "public_key.header"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT");
+    spec.comparator = "verify_rejects_or_decode_rejects";
+    spec.triage_policy = "header_format_confusion";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P11", "X05"};
+    spec.metadata.claim = "A Falcon verifier shall reject a signature header whose format nibble or degree nibble does not match the public key and the pinned profile, and shall reject a public key header that is not 0x00+logn.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.3-3.11.5 (PDF pp.46-50); vrfy.c header checks";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Header-inference mode (sig_type=0) is intentionally not the adapter contract; the profile verifies its declared format"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the unmodified header verifies";
+    spec.metadata.negative_control = "the mutation record marks the header byte as changed";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_pk_coefficients";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"public_key.coefficients"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT");
+    spec.comparator = "verify_rejects_or_decode_rejects";
+    spec.triage_policy = "public_key_coefficient_or_length_accepted";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P11"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_pk_coefficients.range_normative";
+      variant.conditions.push_back({"subtest_id", "pk_coefficient_negative"});
+    variant.metadata.claim = "A public key coefficient of q or 16383 shall be rejected by the decoder; the value q-1 is codec-valid but shall not verify against a signature made for the original key.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.4 (PDF p.49); codec.c modq_decode rejects values >= 12289";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"The oracle cannot attest to arbitrary pk/signature pairs beyond the ones it constructs"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the unmodified public key verifies";
+    variant.metadata.negative_control = "the mutation record marks the targeted 14-bit coefficient";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_pk_coefficients.adapter_length_engineering";
+      variant.conditions.push_back({"subtest_id", "adapter_pk_length_negative"});
+    variant.metadata.claim = "The length-aware adapter wrapper shall reject public keys of length 0, 1, L-1 and L+1 rather than reading past the caller buffer.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Harness common contract \u00a71.4.1; Falcon spec v1.2 \u00a73.11.4 fixed 14-bit public key length";
+    variant.metadata.scope_api_layer = "adapter";
+    variant.metadata.limitations = {"The fixed pointer API has no observable pk length; only the adapter wrapper can observe it"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the exact profile length is accepted";
+    variant.metadata.negative_control = "short and long buffers are rejected at the adapter layer";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "Every 14-bit public key coefficient shall be strictly smaller than q=12289, and a public key buffer that is not the exact profile length shall be rejected by the length-aware adapter layer.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.4 pk encoding (PDF p.49); codec.c modq_decode";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Setting a coefficient to 0 or q-1 keeps the codec valid but is not expected to verify against the original signature"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the unmodified public key verifies";
+    spec.metadata.negative_control = "the mutation record marks the targeted coefficient or length";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_compressed_canonicality";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"signature.compressed_coefficient", "signature.compressed_padding", "signature.compressed_bits"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT");
+    spec.comparator = "verify_rejects_or_decode_rejects";
+    spec.triage_policy = "noncanonical_signature_encoding_accepted";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P09"};
+    spec.metadata.claim = "The compressed bitstream shall be canonical: negative zero, a missing unary terminator, non-zero bits in the last consumed byte, and inserted/deleted bits shall all be rejected rather than decoded to an equivalent value.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.1-3.11.2 (PDF pp.46-47); codec.c comp_decode -0 and unused-bit checks";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"The pinned reference comp_decode additionally rejects |s2_i| > 2047; this is an implementation limit recorded in the profile, not a PDF rule"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the unmodified signature verifies";
+    spec.metadata.negative_control = "each mutation targets a coefficient sign bit, unary terminator, trailing bit or the bit alignment";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_format_lengths";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "length_boundary";
+    spec.mutation_targets = {"signature"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT");
+    spec.comparator = "verify_rejects_or_decode_rejects";
+    spec.triage_policy = "signature_length_boundary_accepted";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P10", "P08"};
+    spec.metadata.claim = "Each format has an exact acceptance policy: compressed accepts the exact consumed length and the full zero-padded form, padded requires the exact padded length with zero padding, CT requires the exact CT length; truncated, appended, partial-padding and zero-padding-with-nonzero-byte inputs shall be rejected.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.3 padded and partial-padding rules (PDF pp.47-48); falcon.c falcon_verify_finish length checks";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"A profile only accepts the formats declared by its adapter capabilities; rejection of the other legal formats is API behaviour, not a violation", "sig_max_len is a capacity from the target API, not the exact signature length"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the unmodified signature and the profile's legal conversion verify";
+    spec.metadata.negative_control = "each length change is recorded with its exact byte delta";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_norm_equation";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"sign", "verify"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"signature.coefficients"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_norm_equivalence";
+    spec.triage_policy = "norm_equation_divergence";
+    spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S03", "P11", "P18"};
+    spec.metadata.claim = "For s1 = centered_mod_q(HashToPoint(salt||message) - s2*h) in Z[x]/(x^n+1), the target shall accept exactly when sum(s1_i^2 + s2_i^2) <= B; the independent model records the exact norm.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.10 p.45 Algorithm 16; \u00a73.3 norm bound B (PDF pp.23-24)";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"The exact norm equality is evaluated by tests/models/falcon_model.py with an O(n^2) negacyclic convolution, not the target NTT", "Native verification observes rejection of codec-valid coefficient changes; the exact norm is computed on the model lane"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the model reproduces acceptance for the honest signature and its recorded norm is at most B";
+    spec.metadata.negative_control = "a codec-valid coefficient change that raises the norm above B is rejected";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_norm_boundary_unit";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"verify"};
+    spec.mutation_type = "norm_boundary";
+    spec.mutation_targets = {"norm_check_input"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_norm_boundary_equal";
+    spec.triage_policy = "norm_boundary_off_by_one";
+    spec.precondition_json = "{\"isolated_norm_hook_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P11", "X01"};
+    spec.metadata.claim = "The isolated norm predicate shall accept norms equal to B and reject norms B+1, and shall not overflow the 64-bit accumulators for worst-case codec-valid coefficients.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.10 p.45 Algorithm 16 (acceptance uses <= B); \u00a73.3 Table 3.3 p.51";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"A message with an honestly reachable exact-B signature is not constructed; the boundary is exercised through the isolated hook and the model"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "norm == B is accepted by the model predicate";
+    spec.metadata.negative_control = "norm == B+1 is rejected and an overflowing candidate does not wrap";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_hash_to_point";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"sign", "verify"};
+    spec.mutation_type = "hash_to_point_stream";
+    spec.mutation_targets = {"shake_output"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_hash_to_point_equal";
+    spec.triage_policy = "hash_to_point_divergence";
+    spec.precondition_json = "{\"manual_shake_fixture_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"H06", "H07", "X05"};
+    spec.metadata.claim = "HashToPoint shall read SHAKE256 as big-endian 16-bit samples, keep t < 5*q = 61445, output t mod q, and continue until exactly n coefficients are produced; the rejection model and the CT model shall agree on the same stream.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.7 p.31 Algorithm 3; common.c hash_to_point_vartime/ct; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"Only the pinned variant is tested; an alternative HashToPoint profile requires a new profile and its own byte KAT"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the model and the compiled reference agree on fixed SHAKE streams including forced t=61444 and t=65535 boundaries";
+    spec.metadata.negative_control = "a little-endian interpretation diverges";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_key_equation";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen"};
+    spec.mutation_type = "key_algebra";
+    spec.mutation_targets = {"secret_key.f/g/F"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_key_equation_equal";
+    spec.triage_policy = "key_algebra_mismatch";
+    spec.precondition_json = "{\"seeded_keygen_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P12"};
+    spec.metadata.claim = "The generated f, g, F and completed G shall satisfy fG - gF = q mod (x^n+1), f shall be invertible modulo q, and h = g/f mod q shall equal the coefficients encoded in the public key.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.4 pp.25-27 key equation; \u00a73.8 completion; \u00a73.11.5 sk layout (PDF pp.48-49)";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"The NTRU KEM relation x^n-1 is not used; the ring is Z[x]/(x^n+1)"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the reference seeded keygen satisfies the model equation";
+    spec.metadata.negative_control = "a perturbed F breaks the equation in the model";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_sk_codec";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"secret_key"};
+    spec.expected_relation = ExpectedRelationFromName("DECODE_REJECT");
+    spec.comparator = "decode_rejects";
+    spec.triage_policy = "secret_key_codec_state";
+    spec.precondition_json = "{\"valid_secret_key_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P11", "P16"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_sk_codec.codec_normative";
+      variant.conditions.push_back({"subtest_id", "sk_codec_negative"});
+    variant.metadata.claim = "A secret key with a bad header, a forbidden minimum negative coefficient or non-zero trailing bits shall be rejected by the codec.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.5 (PDF pp.48-49); codec.c trim_i8_decode";
+    variant.metadata.scope_api_layer = "internal";
+    variant.metadata.limitations = {"The codec contract is tested through the PINNED reference decoder, not the spec text alone"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest secret key decodes";
+    variant.metadata.negative_control = "the mutation record marks the header or coefficient field changed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "falcon_sk_codec.algebra_engineering";
+      variant.conditions.push_back({"subtest_id", "sk_algebra_negative"});
+    variant.metadata.claim = "A codec-valid but algebraically invalid secret key shall fail signing or produce a signature that does not verify; the observed behaviour is recorded as an API engineering observation.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Falcon spec v1.2 \u00a73.4 key equation; falcon.c falcon_sign_dyn_finish complete_private check";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"A signing error is not a security violation by itself"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest secret key signs and verifies";
+    variant.metadata.negative_control = "a codec-valid but algebraically invalid key is constructed from a different key";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "The secret key codec shall reject bad headers, forbidden minimum negative f/g/F values and non-zero trailing bits, while an algebraically invalid but codec-valid key follows the API error contract rather than a codec violation.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.5 secret key encoding (PDF pp.48-49); codec.c trim_i8_decode";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"There is no generic embedded public key or hash check in the sk encoding"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the honest secret key signs and verifies";
+    spec.metadata.negative_control = "the mutation record marks the exact codec field";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_rng_replay";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign"};
+    spec.mutation_type = "bad_randomness";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "bytes_equal";
+    spec.triage_policy = "rng_contract_violation";
+    spec.precondition_json = "{\"rng_injection_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P13", "P14", "X09"};
+    spec.metadata.claim = "Signing shall consume the injected CSPRNG deterministically on one build: the same tape reproduces the same salt and signature bytes, and a fresh legal tape yields a verifying signature.";
+    spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.9 random salt and sampler (PDF pp.38-44); rng.c and shake.c";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Same-tape equality only holds for the same build and call path", "Repeated salt is a diagnostic observation, not automatically a nonce-reuse key disclosure"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "two runs under the same tape agree and verify";
+    spec.metadata.negative_control = "a different tape changes the Salt";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_failure_state";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "failure_injection";
+    spec.mutation_targets = {"length", "allocation", "rng"};
+    spec.expected_relation = ExpectedRelationFromName("REJECT_OR_INVALID_INPUT");
+    spec.comparator = "status_or_length_state";
+    spec.triage_policy = "failure_output_state_inconsistent";
+    spec.precondition_json = "{\"api_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P16", "X01", "X02"};
+    spec.metadata.claim = "Insufficient signature capacity, an RNG failure and an empty message roundtrip shall return a consistent status and leave the caller output length and sentinel bytes within the declared contract.";
+    spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11 API contract; falcon.h error values FALCON_ERR_SIZE/FALCON_ERR_BADSIG; harness common contract \u00a71.4";
+    spec.metadata.scope_api_layer = "api";
+    spec.metadata.limitations = {"Allocation-failure probes report the observed state only; the production retry policy is not modified"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the honest path returns success with a length inside capacity";
+    spec.metadata.negative_control = "a poisoned output sentinel is detected when signing fails";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_signed_message_frame";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"sign", "verify"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"signed_message.frame", "signed_message.message", "signed_message.value"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_TRUE");
+    spec.comparator = "open_returns_exact_message";
+    spec.triage_policy = "signed_message_frame_confusion";
+    spec.precondition_json = "{\"signed_message_api_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P10", "S04", "X01"};
+    spec.metadata.claim = "The BE16 length, the nonce-less header, the salt, the message and the value boundaries shall be parsed consistently: a valid frame opens to the exact original message and a malformed frame is rejected without size_t underflow.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.6 NIST signed-message API (PDF p.50); falcon.c falcon_sign_dyn frame layout in PQClean/NIST wrappers";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Only evaluated when the adapter exposes the attached API; otherwise NOT_APPLICABLE", "The attached frame is distinct from the detached signature blob and is never fed directly to verify"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the honest frame opens to the exact message including the empty message";
+    spec.metadata.negative_control = "each frame boundary mutation is recorded as effective";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_sampler_arithmetic";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"sign", "verify"};
+    spec.mutation_type = "sampler_vector";
+    spec.mutation_targets = {"ffSampling", "fft_merge_split"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_sampler_properties";
+    spec.triage_policy = "sampler_arithmetic_divergence";
+    spec.precondition_json = "{\"fixed_fp_fixture_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"S03", "P14", "X05"};
+    spec.metadata.claim = "The reference sampler shall produce a signature whose measured norm satisfies the bound and whose FFT merge/split reconstruction matches the integer-domain product; cross-platform byte equality is not required by the arithmetic check.";
+    spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.5-3.9 (PDF pp.28-44) and \u00a74.1 floating-point profile (PDF p.52); fpr.c/fft.c";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"Floating-point range and rounding behaviour is pinned by the compiled fixture; a different FPU profile requires its own build manifest", "Cross-platform signature bytes are not required to be equal"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the reference sampler output verifies and its norm is inside B";
+    spec.metadata.negative_control = "a merge/split mis-split is detected by the model reconstruction";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_fault_checks";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"verify"};
+    spec.mutation_type = "fault_injection";
+    spec.mutation_targets = {"negative_zero_check", "padding_check", "norm_check", "final_decision"};
+    spec.expected_relation = ExpectedRelationFromName("VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT");
+    spec.comparator = "mutant_is_detected";
+    spec.triage_policy = "fault_check_missing";
+    spec.precondition_json = "{\"test_mutant_available\":true}";
+    spec.enabled_by_default = false;
+    spec.requires_api = "";
+    spec.property_ids = {"P18"};
+    spec.metadata.claim = "A deliberately faulted decoder that skips the negative-zero, padding or norm checks, or inverts the final decision, shall be detected by the corresponding canonicality, format-length and norm oracles.";
+    spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.10-3.11; harness fault-injection policy";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"Production fault self-checks are not a guarantee of every API; this is an opt-in P2 lane", "Only the shipped test mutants are exercised"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the fault-free reference is accepted";
+    spec.metadata.negative_control = "each shipped mutant is caught by its designated oracle";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "falcon_timing_resources";
+    spec.algorithm_family = "FALCON";
+    spec.primitive_type = "sig";
+    spec.api_surface = {"keygen", "sign", "verify"};
+    spec.mutation_type = "timing_probe";
+    spec.mutation_targets = {"sampler", "keygen_retries", "long_unary_parse", "fpu_rounding_mode"};
+    spec.expected_relation = ExpectedRelationFromName("NO_TIMEOUT");
+    spec.comparator = "timing_distribution_pair";
+    spec.triage_policy = "timing_signal_requires_manual_review";
+    spec.precondition_json = "{\"timing_lane_available\":true}";
+    spec.enabled_by_default = false;
+    spec.requires_api = "";
+    spec.property_ids = {"P17", "X04"};
+    spec.metadata.claim = "The opt-in timing and resource lane shall complete within its budget while probing sampler and parser retry budgets and FPU rounding-mode handling; no timing conclusion is drawn from the sanitized default binary.";
+    spec.metadata.evidence_class = EvidenceClass::kInference;
+    spec.metadata.source_reference = "Falcon spec v1.2 \u00a74.1 (PDF p.52); harness common \u00a71.4 timing policy";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Opt-in P2 lane; not part of the default smoke contract", "A public-signature decode timing difference is not automatically a key-leak claim", "A dedicated non-sanitized binary, CPU pinning, warmup and multiple-comparison correction are required before any conclusion"};
     spec.metadata.conditional_verdict = "";
     spec.metadata.positive_control = "the public verify path is measured in the same harness";
     spec.metadata.negative_control = "the lane reports not_applicable when the timing binary is absent";

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "oracles/oracle_record.h"
+#include "oracles/scheme_claims.h"
 
 namespace pqcfuzz {
 
@@ -51,6 +52,15 @@ bool IsPersistableRawEvidence(const KEMOracleTrace &trace);
 // evidence class; a crash or sanitizer finding is always a concrete failure.
 FindingClassification ClassifyFinding(
     const std::string &oracle_id,
+    EvidenceKind evidence_kind,
+    const std::string &finding_class);
+
+// Variant-aware classification: the caller resolves (oracle_id, profile_id,
+// subtest_id) through scheme_claims and the finding keeps the resolved
+// claim_id and metadata instead of being overwritten by the oracle_id-only
+// record.
+FindingClassification ClassifyFindingResolved(
+    const ResolvedClaim &resolved,
     EvidenceKind evidence_kind,
     const std::string &finding_class);
 

@@ -6,6 +6,7 @@
 
 #include "oracles/expected_relation.h"
 #include "oracles/oracle_record.h"
+#include "oracles/scheme_claims.h"
 
 namespace pqcfuzz {
 
@@ -22,6 +23,8 @@ struct OracleSpec {
   std::string precondition_json;
   bool enabled_by_default = true;
   std::string requires_api;
+  std::vector<std::string> property_ids;
+  std::vector<ClaimVariant> claim_variants;
   OracleMetadata metadata;
 };
 
@@ -32,6 +35,7 @@ std::vector<OracleSpec> DefaultMlDsaOracleSpecs();
 std::vector<OracleSpec> DefaultSlhDsaOracleSpecs();
 std::vector<OracleSpec> DefaultAigisEncOracleSpecs();
 std::vector<OracleSpec> DefaultAigisSigOracleSpecs();
+std::vector<OracleSpec> DefaultFalconOracleSpecs();
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id);
 const OracleSpec *FindAnyOracleSpec(const std::string &oracle_id);
 const OracleMetadata *FindOracleMetadata(const std::string &oracle_id);

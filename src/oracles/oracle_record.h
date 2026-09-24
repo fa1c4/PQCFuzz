@@ -57,6 +57,7 @@ struct FindingClassification {
   EvidenceClass evidence_class = EvidenceClass::kInference;
   std::string conditional_verdict;
   std::string claim;
+  std::string claim_id;
   std::string source_reference;
   std::vector<std::string> limitations;
 };

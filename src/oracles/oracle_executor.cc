@@ -2532,6 +2532,9 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
       << ",\"sk_len\":" << trace.adapter_sk_len << ",\"ct_len\":" << trace.adapter_ct_len
       << ",\"ss_len\":" << trace.adapter_ss_len << ",\"sig_max_len\":" << trace.adapter_sig_max_len << "},\n";
   out << "  \"oracle_id\": \"" << JsonEscape(trace.oracle_id) << "\",\n";
+  if (!trace.claim_id.empty()) {
+    out << "  \"claim_id\": \"" << JsonEscape(trace.claim_id) << "\",\n";
+  }
   if (!trace.field.empty()) {
     out << "  \"field\": \"" << JsonEscape(trace.field) << "\",\n";
   }
@@ -2666,6 +2669,7 @@ std::string TraceToJson(const KEMOracleTrace &trace) {
         << VerdictName(finding.verdict) << "\",\"evidence_class\":\""
         << EvidenceClassName(finding.evidence_class) << "\",\"conditional_verdict\":\""
         << JsonEscape(finding.conditional_verdict) << "\",\"claim\":\"" << JsonEscape(finding.claim)
+        << "\",\"claim_id\":\"" << JsonEscape(finding.claim_id)
         << "\",\"source_reference\":\"" << JsonEscape(finding.source_reference) << "\",\"limitations\":[";
     for (size_t j = 0; j < finding.limitations.size(); ++j) {
       if (j != 0) {

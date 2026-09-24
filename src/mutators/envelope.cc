@@ -51,6 +51,13 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kAigisSig2:
     case AlgorithmId::kAigisSig3:
       return true;
+    case AlgorithmId::kFalcon512Compressed:
+    case AlgorithmId::kFalcon1024Compressed:
+    case AlgorithmId::kFalcon512Padded:
+    case AlgorithmId::kFalcon1024Padded:
+    case AlgorithmId::kFalcon512Ct:
+    case AlgorithmId::kFalcon1024Ct:
+      return true;
     case AlgorithmId::kCrossRsdp1Fast:
     case AlgorithmId::kCrossRsdp1Balanced:
     case AlgorithmId::kCrossRsdp1Small:
@@ -142,6 +149,26 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kMlDsaRngFailure:
     case OracleId::kSlhDsaRngFailure:
       return true;
+    case OracleId::kFalconKat:
+    case OracleId::kFalconLocalSignVerify:
+    case OracleId::kFalconCrossVerify:
+    case OracleId::kFalconMessageSaltBinding:
+    case OracleId::kFalconHeaderProfile:
+    case OracleId::kFalconPkCoefficients:
+    case OracleId::kFalconCompressedCanonicality:
+    case OracleId::kFalconFormatLengths:
+    case OracleId::kFalconNormEquation:
+    case OracleId::kFalconNormBoundaryUnit:
+    case OracleId::kFalconHashToPoint:
+    case OracleId::kFalconKeyEquation:
+    case OracleId::kFalconSkCodec:
+    case OracleId::kFalconRngReplay:
+    case OracleId::kFalconFailureState:
+    case OracleId::kFalconSignedMessageFrame:
+    case OracleId::kFalconSamplerArithmetic:
+    case OracleId::kFalconFaultChecks:
+    case OracleId::kFalconTimingResources:
+      return true;
     case OracleId::kCrossKat:
     case OracleId::kCrossLocalSignVerify:
     case OracleId::kCrossCrossVerify:
@@ -222,6 +249,18 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "AIGIS-SIG-2";
     case AlgorithmId::kAigisSig3:
       return "AIGIS-SIG-3";
+    case AlgorithmId::kFalcon512Compressed:
+      return "FALCON-512-COMPRESSED";
+    case AlgorithmId::kFalcon1024Compressed:
+      return "FALCON-1024-COMPRESSED";
+    case AlgorithmId::kFalcon512Padded:
+      return "FALCON-512-PADDED";
+    case AlgorithmId::kFalcon1024Padded:
+      return "FALCON-1024-PADDED";
+    case AlgorithmId::kFalcon512Ct:
+      return "FALCON-512-CT";
+    case AlgorithmId::kFalcon1024Ct:
+      return "FALCON-1024-CT";
     case AlgorithmId::kCrossRsdp1Fast:
       return "CROSS-RSDP-1-FAST";
     case AlgorithmId::kCrossRsdp1Balanced:
@@ -392,6 +431,44 @@ const char *OracleName(OracleId oracle_id) {
       return "mldsa_rng_failure";
     case OracleId::kSlhDsaRngFailure:
       return "slhdsa_rng_failure";
+    case OracleId::kFalconKat:
+      return "falcon_kat";
+    case OracleId::kFalconLocalSignVerify:
+      return "falcon_local_sign_verify";
+    case OracleId::kFalconCrossVerify:
+      return "falcon_cross_verify";
+    case OracleId::kFalconMessageSaltBinding:
+      return "falcon_message_salt_binding";
+    case OracleId::kFalconHeaderProfile:
+      return "falcon_header_profile";
+    case OracleId::kFalconPkCoefficients:
+      return "falcon_pk_coefficients";
+    case OracleId::kFalconCompressedCanonicality:
+      return "falcon_compressed_canonicality";
+    case OracleId::kFalconFormatLengths:
+      return "falcon_format_lengths";
+    case OracleId::kFalconNormEquation:
+      return "falcon_norm_equation";
+    case OracleId::kFalconNormBoundaryUnit:
+      return "falcon_norm_boundary_unit";
+    case OracleId::kFalconHashToPoint:
+      return "falcon_hash_to_point";
+    case OracleId::kFalconKeyEquation:
+      return "falcon_key_equation";
+    case OracleId::kFalconSkCodec:
+      return "falcon_sk_codec";
+    case OracleId::kFalconRngReplay:
+      return "falcon_rng_replay";
+    case OracleId::kFalconFailureState:
+      return "falcon_failure_state";
+    case OracleId::kFalconSignedMessageFrame:
+      return "falcon_signed_message_frame";
+    case OracleId::kFalconSamplerArithmetic:
+      return "falcon_sampler_arithmetic";
+    case OracleId::kFalconFaultChecks:
+      return "falcon_fault_checks";
+    case OracleId::kFalconTimingResources:
+      return "falcon_timing_resources";
     case OracleId::kCrossKat:
       return "cross_kat";
     case OracleId::kCrossLocalSignVerify:
@@ -511,6 +588,24 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "AIGIS-SIG-3") {
     return AlgorithmId::kAigisSig3;
+  }
+  if (name == "FALCON-512-COMPRESSED") {
+    return AlgorithmId::kFalcon512Compressed;
+  }
+  if (name == "FALCON-1024-COMPRESSED") {
+    return AlgorithmId::kFalcon1024Compressed;
+  }
+  if (name == "FALCON-512-PADDED") {
+    return AlgorithmId::kFalcon512Padded;
+  }
+  if (name == "FALCON-1024-PADDED") {
+    return AlgorithmId::kFalcon1024Padded;
+  }
+  if (name == "FALCON-512-CT") {
+    return AlgorithmId::kFalcon512Ct;
+  }
+  if (name == "FALCON-1024-CT") {
+    return AlgorithmId::kFalcon1024Ct;
   }
   if (name == "CROSS-RSDP-1-FAST") {
     return AlgorithmId::kCrossRsdp1Fast;
@@ -758,6 +853,63 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "slhdsa_rng_failure") {
     return OracleId::kSlhDsaRngFailure;
+  }
+  if (name == "falcon_kat") {
+    return OracleId::kFalconKat;
+  }
+  if (name == "falcon_local_sign_verify") {
+    return OracleId::kFalconLocalSignVerify;
+  }
+  if (name == "falcon_cross_verify") {
+    return OracleId::kFalconCrossVerify;
+  }
+  if (name == "falcon_message_salt_binding") {
+    return OracleId::kFalconMessageSaltBinding;
+  }
+  if (name == "falcon_header_profile") {
+    return OracleId::kFalconHeaderProfile;
+  }
+  if (name == "falcon_pk_coefficients") {
+    return OracleId::kFalconPkCoefficients;
+  }
+  if (name == "falcon_compressed_canonicality") {
+    return OracleId::kFalconCompressedCanonicality;
+  }
+  if (name == "falcon_format_lengths") {
+    return OracleId::kFalconFormatLengths;
+  }
+  if (name == "falcon_norm_equation") {
+    return OracleId::kFalconNormEquation;
+  }
+  if (name == "falcon_norm_boundary_unit") {
+    return OracleId::kFalconNormBoundaryUnit;
+  }
+  if (name == "falcon_hash_to_point") {
+    return OracleId::kFalconHashToPoint;
+  }
+  if (name == "falcon_key_equation") {
+    return OracleId::kFalconKeyEquation;
+  }
+  if (name == "falcon_sk_codec") {
+    return OracleId::kFalconSkCodec;
+  }
+  if (name == "falcon_rng_replay") {
+    return OracleId::kFalconRngReplay;
+  }
+  if (name == "falcon_failure_state") {
+    return OracleId::kFalconFailureState;
+  }
+  if (name == "falcon_signed_message_frame") {
+    return OracleId::kFalconSignedMessageFrame;
+  }
+  if (name == "falcon_sampler_arithmetic") {
+    return OracleId::kFalconSamplerArithmetic;
+  }
+  if (name == "falcon_fault_checks") {
+    return OracleId::kFalconFaultChecks;
+  }
+  if (name == "falcon_timing_resources") {
+    return OracleId::kFalconTimingResources;
   }
   if (name == "cross_kat") {
     return OracleId::kCrossKat;

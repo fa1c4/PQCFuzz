@@ -182,18 +182,19 @@ bool IsPersistableRawEvidence(const KEMOracleTrace &trace) {
   return ValidateTraceForPersistence(trace).persistable;
 }
 
-FindingClassification ClassifyFinding(
-    const std::string &oracle_id,
-    EvidenceKind evidence_kind,
-    const std::string &) {
+namespace {
+
+FindingClassification ClassifyFromMetadata(
+    const OracleMetadata &metadata,
+    const std::string &claim_id,
+    EvidenceKind evidence_kind) {
   FindingClassification classification;
-  if (const OracleMetadata *metadata = FindOracleMetadata(oracle_id)) {
-    classification.claim = metadata->claim;
-    classification.evidence_class = metadata->evidence_class;
-    classification.source_reference = metadata->source_reference;
-    classification.conditional_verdict = metadata->conditional_verdict;
-    classification.limitations = metadata->limitations;
-  }
+  classification.claim = metadata.claim;
+  classification.claim_id = claim_id;
+  classification.evidence_class = metadata.evidence_class;
+  classification.source_reference = metadata.source_reference;
+  classification.conditional_verdict = metadata.conditional_verdict;
+  classification.limitations = metadata.limitations;
   if (evidence_kind == EvidenceKind::kSanitizer) {
     // A sanitizer finding is a concrete memory-safety failure; it is never
     // downgraded by the oracle record's hardening evidence class.
@@ -207,6 +208,25 @@ FindingClassification ClassifyFinding(
     classification.verdict = Verdict::kNonconformant;
   }
   return classification;
+}
+
+}  // namespace
+
+FindingClassification ClassifyFinding(
+    const std::string &oracle_id,
+    EvidenceKind evidence_kind,
+    const std::string &) {
+  static const OracleMetadata kUnknown;
+  const OracleMetadata *metadata = FindOracleMetadata(oracle_id);
+  const std::string claim_id = metadata == nullptr ? std::string() : oracle_id;
+  return ClassifyFromMetadata(metadata == nullptr ? kUnknown : *metadata, claim_id, evidence_kind);
+}
+
+FindingClassification ClassifyFindingResolved(
+    const ResolvedClaim &resolved,
+    EvidenceKind evidence_kind,
+    const std::string &) {
+  return ClassifyFromMetadata(resolved.metadata, resolved.claim_id, evidence_kind);
 }
 
 }  // namespace pqcfuzz

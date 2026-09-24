@@ -53,6 +53,23 @@ typedef pqcfuzz_status (*pqcfuzz_sig_keygen_seeded_fn)(
     const uint8_t *seed,
     size_t seed_len);
 
+// Optional NIST signed-message (attached) API used by schemes that expose a
+// combined BE16-length || salt || message || header || value frame (Falcon
+// section 3.11.6).  Appended after the fields above so every pre-existing
+// adapter initializer keeps its meaning and defaults these to nullptr.
+typedef pqcfuzz_status (*pqcfuzz_sig_sign_attached_fn)(
+    uint8_t *sm,
+    size_t *sm_len,
+    const uint8_t *msg,
+    size_t msg_len,
+    const uint8_t *sk);
+typedef pqcfuzz_status (*pqcfuzz_sig_open_attached_fn)(
+    uint8_t *msg,
+    size_t *msg_len,
+    const uint8_t *sm,
+    size_t sm_len,
+    const uint8_t *pk);
+
 typedef struct pqcfuzz_kem_adapter {
   const char *project_id;
   const char *implementation_id;
@@ -100,6 +117,9 @@ typedef struct pqcfuzz_sig_adapter {
   const char *reference_version;
   // Seed-based key generation used by KAT vectors.  Optional.
   pqcfuzz_sig_keygen_seeded_fn keygen_seeded;
+  // Optional attached (signed-message) API; nullptr when unsupported.
+  pqcfuzz_sig_sign_attached_fn sign_attached;
+  pqcfuzz_sig_open_attached_fn open_attached;
 } pqcfuzz_sig_adapter;
 
 #ifdef __cplusplus

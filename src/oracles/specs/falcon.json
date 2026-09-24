@@ -1,0 +1,536 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "falcon_kat",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["S03", "X05"],
+      "precondition": {"same_algorithm": true, "valid_lengths": true, "fixture_required": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "reference_profile_mismatch",
+      "claim": "For the official round-3 KAT randomness (AES256-CTR-DRBG seeded by the recorded seed), the pinned Falcon-impl-20211101 reference shall reproduce the recorded pk, sk and signed-message bytes and shall open the recorded frame.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "Falcon spec v1.2 §3.11.5-3.11.6 (PDF pp.48-50); falcon-round3.zip KAT/falcon512-KAT.rsp; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "The official KAT responses were generated on 2020-10-06 with the pre-fix PRNG API; the pinned 2021-11-01 source reproduces them because the KAT harness flips the SHAKE context explicitly",
+        "A mismatch violates the pinned reference profile, not the Falcon specification by itself",
+        "Only the first three records of each response file are embedded as a fixture; the full files are compared when projects/FALCON/kat is present"
+      ],
+      "controls": {
+        "positive_control": "the recorded fixture reproduces pk/sk/sm byte-for-byte and opens to the recorded message",
+        "negative_control": "a different DRBG seed produces different bytes"
+      }
+    },
+    {
+      "oracle_id": "falcon_local_sign_verify",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["S03"],
+      "precondition": {"same_algorithm": true, "valid_lengths": true},
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "A Falcon signature produced by an honest signer shall verify under the matching public key for empty, binary and long messages, and the returned signature length shall stay within the profile capacity.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.10 p.45 Algorithm 16; §3.11.3 pp.46-48; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Verification success is not an EUF-CMA or sUF-CMA result"],
+      "controls": {
+        "positive_control": "a freshly generated key pair signs and verifies on all message classes",
+        "negative_control": "a mutated signature is rejected by falcon_compressed_canonicality and falcon_format_lengths"
+      }
+    },
+    {
+      "oracle_id": "falcon_cross_verify",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["S03", "X05"],
+      "precondition": {"pair_alg_exchange_contract_required": ["public_key_exchange", "signature_exchange"]},
+      "mutation": {"type": "none"},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "verify_accepts",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two pinned Falcon builds of the same degree and compatible signature format exchanging public keys and signatures shall cross-verify.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.10 p.45 Algorithm 16; §3.11.3 pp.46-48",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Disabled in the pinned single-implementation lock because only the author reference is vendored",
+        "PQClean and liboqs share the Falcon core and are not an independent implementation",
+        "Compressed and padded encodings are not interchangeable for a verifier pinned to the padded format"
+      ],
+      "controls": {
+        "positive_control": "both local sign/verify paths succeed before the pair declares signature_exchange",
+        "negative_control": "the pair file disables signature_exchange until a compatible second build is pinned"
+      }
+    },
+    {
+      "oracle_id": "falcon_message_salt_binding",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["S01", "S04", "H06"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "message_mutation", "targets": ["message", "signature.salt", "public_key"]},
+      "expected_relation": "VERIFY_FALSE",
+      "comparator": "verify_rejects",
+      "triage_policy": "potential_crypto_vuln_if_mutated_message_verifies",
+      "claim": "A Falcon signature shall not verify for a different message, for a different 40-byte salt, or under an independent honest public key; accepted new messages are retained as EUF candidates.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.7 p.31 Algorithm 3 (HashToPoint); §3.10 p.45 Algorithm 16",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Verification failure under another honest key is not a rogue-key proof",
+        "A valid signature on a new message is retained as a candidate and is not automatically a forgery",
+        "The queried message set is recorded for the sUF byte-string game"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "falcon_message_salt_binding.message_normative",
+          "conditions": [{"key": "subtest_id", "value": "mutated_message_negative"}],
+          "claim": "A Falcon signature shall not verify when the message differs from the signed message.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "Falcon spec v1.2 §3.7 p.31 Algorithm 3; §3.10 p.45 Algorithm 16",
+          "scope": {"api_layer": "external"},
+          "limitations": ["Not an EUF-CMA proof by itself"],
+          "controls": {
+            "positive_control": "the original message under the original key verifies",
+            "negative_control": "the mutation record shows the message bytes changed"
+          }
+        },
+        {
+          "claim_id": "falcon_message_salt_binding.salt_normative",
+          "conditions": [{"key": "subtest_id", "value": "mutated_salt_negative"}],
+          "claim": "The 40-byte salt is part of the hashed message; changing one salt byte shall make verification fail.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "Falcon spec v1.2 §3.7 p.31; §3.10 p.45",
+          "scope": {"api_layer": "external"},
+          "limitations": ["Same-salt reuse is a diagnostic observation, not automatically a nonce-reuse key-recovery claim"],
+          "controls": {
+            "positive_control": "the unmodified salt verifies",
+            "negative_control": "the mutation record shows one salt byte changed"
+          }
+        },
+        {
+          "claim_id": "falcon_message_salt_binding.foreign_key_engineering",
+          "conditions": [{"key": "subtest_id", "value": "foreign_key_negative"}],
+          "claim": "The harness shall build an independent honest key pair and observe whether the signature also verifies under that key.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Harness common contract §1.3 key-ownership negative test; Falcon spec v1.2 §3.11.4 pk encoding",
+          "scope": {"api_layer": "external"},
+          "limitations": ["Failure to verify under another honest key is not a rogue-key or key-substitution proof"],
+          "controls": {
+            "positive_control": "the signature verifies under its own key",
+            "negative_control": "an independent honest key pair is generated from a different seed"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the original message under the original key verifies",
+        "negative_control": "the mutation record shows the targeted message or salt bytes changed"
+      }
+    },
+    {
+      "oracle_id": "falcon_header_profile",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P08", "P11", "X05"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.header", "public_key.header"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "header_format_confusion",
+      "claim": "A Falcon verifier shall reject a signature header whose format nibble or degree nibble does not match the public key and the pinned profile, and shall reject a public key header that is not 0x00+logn.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.3-3.11.5 (PDF pp.46-50); vrfy.c header checks",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Header-inference mode (sig_type=0) is intentionally not the adapter contract; the profile verifies its declared format"],
+      "controls": {
+        "positive_control": "the unmodified header verifies",
+        "negative_control": "the mutation record marks the header byte as changed"
+      }
+    },
+    {
+      "oracle_id": "falcon_pk_coefficients",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P08", "P11"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["public_key.coefficients"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "public_key_coefficient_or_length_accepted",
+      "claim": "Every 14-bit public key coefficient shall be strictly smaller than q=12289, and a public key buffer that is not the exact profile length shall be rejected by the length-aware adapter layer.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.4 pk encoding (PDF p.49); codec.c modq_decode",
+      "scope": {"api_layer": "external"},
+      "limitations": ["Setting a coefficient to 0 or q-1 keeps the codec valid but is not expected to verify against the original signature"],
+      "claim_variants": [
+        {
+          "claim_id": "falcon_pk_coefficients.range_normative",
+          "conditions": [{"key": "subtest_id", "value": "pk_coefficient_negative"}],
+          "claim": "A public key coefficient of q or 16383 shall be rejected by the decoder; the value q-1 is codec-valid but shall not verify against a signature made for the original key.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "Falcon spec v1.2 §3.11.4 (PDF p.49); codec.c modq_decode rejects values >= 12289",
+          "scope": {"api_layer": "external"},
+          "limitations": ["The oracle cannot attest to arbitrary pk/signature pairs beyond the ones it constructs"],
+          "controls": {
+            "positive_control": "the unmodified public key verifies",
+            "negative_control": "the mutation record marks the targeted 14-bit coefficient"
+          }
+        },
+        {
+          "claim_id": "falcon_pk_coefficients.adapter_length_engineering",
+          "conditions": [{"key": "subtest_id", "value": "adapter_pk_length_negative"}],
+          "claim": "The length-aware adapter wrapper shall reject public keys of length 0, 1, L-1 and L+1 rather than reading past the caller buffer.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Harness common contract §1.4.1; Falcon spec v1.2 §3.11.4 fixed 14-bit public key length",
+          "scope": {"api_layer": "adapter"},
+          "limitations": ["The fixed pointer API has no observable pk length; only the adapter wrapper can observe it"],
+          "controls": {
+            "positive_control": "the exact profile length is accepted",
+            "negative_control": "short and long buffers are rejected at the adapter layer"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the unmodified public key verifies",
+        "negative_control": "the mutation record marks the targeted coefficient or length"
+      }
+    },
+    {
+      "oracle_id": "falcon_compressed_canonicality",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P08", "P09"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.compressed_coefficient", "signature.compressed_padding", "signature.compressed_bits"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "noncanonical_signature_encoding_accepted",
+      "claim": "The compressed bitstream shall be canonical: negative zero, a missing unary terminator, non-zero bits in the last consumed byte, and inserted/deleted bits shall all be rejected rather than decoded to an equivalent value.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.1-3.11.2 (PDF pp.46-47); codec.c comp_decode -0 and unused-bit checks",
+      "scope": {"api_layer": "external"},
+      "limitations": ["The pinned reference comp_decode additionally rejects |s2_i| > 2047; this is an implementation limit recorded in the profile, not a PDF rule"],
+      "controls": {
+        "positive_control": "the unmodified signature verifies",
+        "negative_control": "each mutation targets a coefficient sign bit, unary terminator, trailing bit or the bit alignment"
+      }
+    },
+    {
+      "oracle_id": "falcon_format_lengths",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P10", "P08"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "length_boundary", "targets": ["signature"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "verify_rejects_or_decode_rejects",
+      "triage_policy": "signature_length_boundary_accepted",
+      "claim": "Each format has an exact acceptance policy: compressed accepts the exact consumed length and the full zero-padded form, padded requires the exact padded length with zero padding, CT requires the exact CT length; truncated, appended, partial-padding and zero-padding-with-nonzero-byte inputs shall be rejected.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.3 padded and partial-padding rules (PDF pp.47-48); falcon.c falcon_verify_finish length checks",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "A profile only accepts the formats declared by its adapter capabilities; rejection of the other legal formats is API behaviour, not a violation",
+        "sig_max_len is a capacity from the target API, not the exact signature length"
+      ],
+      "controls": {
+        "positive_control": "the unmodified signature and the profile's legal conversion verify",
+        "negative_control": "each length change is recorded with its exact byte delta"
+      }
+    },
+    {
+      "oracle_id": "falcon_norm_equation",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "property_ids": ["S03", "P11", "P18"],
+      "precondition": {"valid_signature_before_mutation": true},
+      "mutation": {"type": "field_aware", "targets": ["signature.coefficients"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_norm_equivalence",
+      "triage_policy": "norm_equation_divergence",
+      "claim": "For s1 = centered_mod_q(HashToPoint(salt||message) - s2*h) in Z[x]/(x^n+1), the target shall accept exactly when sum(s1_i^2 + s2_i^2) <= B; the independent model records the exact norm.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.10 p.45 Algorithm 16; §3.3 norm bound B (PDF pp.23-24)",
+      "scope": {"api_layer": "internal"},
+      "limitations": [
+        "The exact norm equality is evaluated by tests/models/falcon_model.py with an O(n^2) negacyclic convolution, not the target NTT",
+        "Native verification observes rejection of codec-valid coefficient changes; the exact norm is computed on the model lane"
+      ],
+      "controls": {
+        "positive_control": "the model reproduces acceptance for the honest signature and its recorded norm is at most B",
+        "negative_control": "a codec-valid coefficient change that raises the norm above B is rejected"
+      }
+    },
+    {
+      "oracle_id": "falcon_norm_boundary_unit",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["verify"],
+      "property_ids": ["P11", "X01"],
+      "precondition": {"isolated_norm_hook_available": true},
+      "mutation": {"type": "norm_boundary", "targets": ["norm_check_input"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_norm_boundary_equal",
+      "triage_policy": "norm_boundary_off_by_one",
+      "claim": "The isolated norm predicate shall accept norms equal to B and reject norms B+1, and shall not overflow the 64-bit accumulators for worst-case codec-valid coefficients.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.10 p.45 Algorithm 16 (acceptance uses <= B); §3.3 Table 3.3 p.51",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["A message with an honestly reachable exact-B signature is not constructed; the boundary is exercised through the isolated hook and the model"],
+      "controls": {
+        "positive_control": "norm == B is accepted by the model predicate",
+        "negative_control": "norm == B+1 is rejected and an overflowing candidate does not wrap"
+      }
+    },
+    {
+      "oracle_id": "falcon_hash_to_point",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "property_ids": ["H06", "H07", "X05"],
+      "precondition": {"manual_shake_fixture_available": true},
+      "mutation": {"type": "hash_to_point_stream", "targets": ["shake_output"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_hash_to_point_equal",
+      "triage_policy": "hash_to_point_divergence",
+      "claim": "HashToPoint shall read SHAKE256 as big-endian 16-bit samples, keep t < 5*q = 61445, output t mod q, and continue until exactly n coefficients are produced; the rejection model and the CT model shall agree on the same stream.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.7 p.31 Algorithm 3; common.c hash_to_point_vartime/ct; plans/specs/falcon-20211101-spec.pdf sha256 f887f3f9",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["Only the pinned variant is tested; an alternative HashToPoint profile requires a new profile and its own byte KAT"],
+      "controls": {
+        "positive_control": "the model and the compiled reference agree on fixed SHAKE streams including forced t=61444 and t=65535 boundaries",
+        "negative_control": "a little-endian interpretation diverges"
+      }
+    },
+    {
+      "oracle_id": "falcon_key_equation",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen"],
+      "property_ids": ["P12"],
+      "precondition": {"seeded_keygen_available": true},
+      "mutation": {"type": "key_algebra", "targets": ["secret_key.f/g/F"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_key_equation_equal",
+      "triage_policy": "key_algebra_mismatch",
+      "claim": "The generated f, g, F and completed G shall satisfy fG - gF = q mod (x^n+1), f shall be invertible modulo q, and h = g/f mod q shall equal the coefficients encoded in the public key.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.4 pp.25-27 key equation; §3.8 completion; §3.11.5 sk layout (PDF pp.48-49)",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["The NTRU KEM relation x^n-1 is not used; the ring is Z[x]/(x^n+1)"],
+      "controls": {
+        "positive_control": "the reference seeded keygen satisfies the model equation",
+        "negative_control": "a perturbed F breaks the equation in the model"
+      }
+    },
+    {
+      "oracle_id": "falcon_sk_codec",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "property_ids": ["P08", "P11", "P16"],
+      "precondition": {"valid_secret_key_available": true},
+      "mutation": {"type": "field_aware", "targets": ["secret_key"]},
+      "expected_relation": "DECODE_REJECT",
+      "comparator": "decode_rejects",
+      "triage_policy": "secret_key_codec_state",
+      "claim": "The secret key codec shall reject bad headers, forbidden minimum negative f/g/F values and non-zero trailing bits, while an algebraically invalid but codec-valid key follows the API error contract rather than a codec violation.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.5 secret key encoding (PDF pp.48-49); codec.c trim_i8_decode",
+      "scope": {"api_layer": "internal"},
+      "limitations": ["There is no generic embedded public key or hash check in the sk encoding"],
+      "claim_variants": [
+        {
+          "claim_id": "falcon_sk_codec.codec_normative",
+          "conditions": [{"key": "subtest_id", "value": "sk_codec_negative"}],
+          "claim": "A secret key with a bad header, a forbidden minimum negative coefficient or non-zero trailing bits shall be rejected by the codec.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "Falcon spec v1.2 §3.11.5 (PDF pp.48-49); codec.c trim_i8_decode",
+          "scope": {"api_layer": "internal"},
+          "limitations": ["The codec contract is tested through the PINNED reference decoder, not the spec text alone"],
+          "controls": {
+            "positive_control": "the honest secret key decodes",
+            "negative_control": "the mutation record marks the header or coefficient field changed"
+          }
+        },
+        {
+          "claim_id": "falcon_sk_codec.algebra_engineering",
+          "conditions": [{"key": "subtest_id", "value": "sk_algebra_negative"}],
+          "claim": "A codec-valid but algebraically invalid secret key shall fail signing or produce a signature that does not verify; the observed behaviour is recorded as an API engineering observation.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Falcon spec v1.2 §3.4 key equation; falcon.c falcon_sign_dyn_finish complete_private check",
+          "scope": {"api_layer": "api"},
+          "limitations": ["A signing error is not a security violation by itself"],
+          "controls": {
+            "positive_control": "the honest secret key signs and verifies",
+            "negative_control": "a codec-valid but algebraically invalid key is constructed from a different key"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the honest secret key signs and verifies",
+        "negative_control": "the mutation record marks the exact codec field"
+      }
+    },
+    {
+      "oracle_id": "falcon_rng_replay",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign"],
+      "property_ids": ["P13", "P14", "X09"],
+      "precondition": {"rng_injection_available": true},
+      "mutation": {"type": "bad_randomness", "patterns": ["same_tape", "different_tape", "failure"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "bytes_equal",
+      "triage_policy": "rng_contract_violation",
+      "claim": "Signing shall consume the injected CSPRNG deterministically on one build: the same tape reproduces the same salt and signature bytes, and a fresh legal tape yields a verifying signature.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "Falcon spec v1.2 §3.9 random salt and sampler (PDF pp.38-44); rng.c and shake.c",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Same-tape equality only holds for the same build and call path",
+        "Repeated salt is a diagnostic observation, not automatically a nonce-reuse key disclosure"
+      ],
+      "controls": {
+        "positive_control": "two runs under the same tape agree and verify",
+        "negative_control": "a different tape changes the Salt"
+      }
+    },
+    {
+      "oracle_id": "falcon_failure_state",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P16", "X01", "X02"],
+      "precondition": {"api_available": true},
+      "mutation": {"type": "failure_injection", "targets": ["length", "allocation", "rng"]},
+      "expected_relation": "REJECT_OR_INVALID_INPUT",
+      "comparator": "status_or_length_state",
+      "triage_policy": "failure_output_state_inconsistent",
+      "claim": "Insufficient signature capacity, an RNG failure and an empty message roundtrip shall return a consistent status and leave the caller output length and sentinel bytes within the declared contract.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "Falcon spec v1.2 §3.11 API contract; falcon.h error values FALCON_ERR_SIZE/FALCON_ERR_BADSIG; harness common contract §1.4",
+      "scope": {"api_layer": "api"},
+      "limitations": ["Allocation-failure probes report the observed state only; the production retry policy is not modified"],
+      "controls": {
+        "positive_control": "the honest path returns success with a length inside capacity",
+        "negative_control": "a poisoned output sentinel is detected when signing fails"
+      }
+    },
+    {
+      "oracle_id": "falcon_signed_message_frame",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "property_ids": ["P10", "S04", "X01"],
+      "precondition": {"signed_message_api_available": true},
+      "mutation": {"type": "field_aware", "targets": ["signed_message.frame", "signed_message.message", "signed_message.value"]},
+      "expected_relation": "VERIFY_TRUE",
+      "comparator": "open_returns_exact_message",
+      "triage_policy": "signed_message_frame_confusion",
+      "claim": "The BE16 length, the nonce-less header, the salt, the message and the value boundaries shall be parsed consistently: a valid frame opens to the exact original message and a malformed frame is rejected without size_t underflow.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Falcon spec v1.2 §3.11.6 NIST signed-message API (PDF p.50); falcon.c falcon_sign_dyn frame layout in PQClean/NIST wrappers",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Only evaluated when the adapter exposes the attached API; otherwise NOT_APPLICABLE",
+        "The attached frame is distinct from the detached signature blob and is never fed directly to verify"
+      ],
+      "controls": {
+        "positive_control": "the honest frame opens to the exact message including the empty message",
+        "negative_control": "each frame boundary mutation is recorded as effective"
+      }
+    },
+    {
+      "oracle_id": "falcon_sampler_arithmetic",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["sign", "verify"],
+      "property_ids": ["S03", "P14", "X05"],
+      "precondition": {"fixed_fp_fixture_available": true},
+      "mutation": {"type": "sampler_vector", "targets": ["ffSampling", "fft_merge_split"]},
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_sampler_properties",
+      "triage_policy": "sampler_arithmetic_divergence",
+      "claim": "The reference sampler shall produce a signature whose measured norm satisfies the bound and whose FFT merge/split reconstruction matches the integer-domain product; cross-platform byte equality is not required by the arithmetic check.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "Falcon spec v1.2 §3.5-3.9 (PDF pp.28-44) and §4.1 floating-point profile (PDF p.52); fpr.c/fft.c",
+      "scope": {"api_layer": "internal"},
+      "limitations": [
+        "Floating-point range and rounding behaviour is pinned by the compiled fixture; a different FPU profile requires its own build manifest",
+        "Cross-platform signature bytes are not required to be equal"
+      ],
+      "controls": {
+        "positive_control": "the reference sampler output verifies and its norm is inside B",
+        "negative_control": "a merge/split mis-split is detected by the model reconstruction"
+      }
+    },
+    {
+      "oracle_id": "falcon_fault_checks",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["verify"],
+      "property_ids": ["P18"],
+      "precondition": {"test_mutant_available": true},
+      "mutation": {"type": "fault_injection", "targets": ["negative_zero_check", "padding_check", "norm_check", "final_decision"]},
+      "expected_relation": "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT",
+      "comparator": "mutant_is_detected",
+      "triage_policy": "fault_check_missing",
+      "claim": "A deliberately faulted decoder that skips the negative-zero, padding or norm checks, or inverts the final decision, shall be detected by the corresponding canonicality, format-length and norm oracles.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "Falcon spec v1.2 §3.10-3.11; harness fault-injection policy",
+      "scope": {"api_layer": "internal"},
+      "limitations": [
+        "Production fault self-checks are not a guarantee of every API; this is an opt-in P2 lane",
+        "Only the shipped test mutants are exercised"
+      ],
+      "controls": {
+        "positive_control": "the fault-free reference is accepted",
+        "negative_control": "each shipped mutant is caught by its designated oracle"
+      },
+      "enabled_by_default": false
+    },
+    {
+      "oracle_id": "falcon_timing_resources",
+      "algorithm_family": "FALCON",
+      "primitive_type": "sig",
+      "api_surface": ["keygen", "sign", "verify"],
+      "property_ids": ["P17", "X04"],
+      "precondition": {"timing_lane_available": true},
+      "mutation": {"type": "timing_probe", "targets": ["sampler", "keygen_retries", "long_unary_parse", "fpu_rounding_mode"]},
+      "expected_relation": "NO_TIMEOUT",
+      "comparator": "timing_distribution_pair",
+      "triage_policy": "timing_signal_requires_manual_review",
+      "claim": "The opt-in timing and resource lane shall complete within its budget while probing sampler and parser retry budgets and FPU rounding-mode handling; no timing conclusion is drawn from the sanitized default binary.",
+      "evidence_class": "INFERENCE",
+      "source_reference": "Falcon spec v1.2 §4.1 (PDF p.52); harness common §1.4 timing policy",
+      "scope": {"api_layer": "external"},
+      "limitations": [
+        "Opt-in P2 lane; not part of the default smoke contract",
+        "A public-signature decode timing difference is not automatically a key-leak claim",
+        "A dedicated non-sanitized binary, CPU pinning, warmup and multiple-comparison correction are required before any conclusion"
+      ],
+      "controls": {
+        "positive_control": "the public verify path is measured in the same harness",
+        "negative_control": "the lane reports not_applicable when the timing binary is absent"
+      },
+      "enabled_by_default": false
+    }
+  ]
+}
