@@ -63,7 +63,23 @@ enum class SchemeMutationField : uint8_t {
   kKemSecretKey = 29,
   kKemSecretKeyS3 = 30,
   kKemSecretKeyPrf = 31,
+  // SIKE / SIDH format-aware fields (append-only).  A recipe encoded for one
+  // family must never be silently reinterpreted as another.
+  kSikeCiphertextC0 = 32,
+  kSikeCiphertextC1 = 33,
+  kSikeCiphertextCoordinate = 34,
+  kSikeSecretKeyS = 35,
+  kSikeSecretKeySk3 = 36,
+  kSikeSecretKeyPk3 = 37,
+  kSikePublicKeyCoordinate = 38,
+  kSidhSecretKeyScalarA = 39,
+  kSidhSecretKeyScalarB = 40,
+  kSidhPeerPublicKey = 41,
 };
+
+// Last registered field value; used by the decoder's whitelist so appending a
+// new family cannot accidentally accept an imaginary enum byte.
+constexpr uint8_t kLastSchemeMutationField = 41;
 
 struct SchemeMutation {
   SchemeMutationOp op = SchemeMutationOp::kNone;

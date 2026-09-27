@@ -33,9 +33,17 @@ def main() -> int:
     for pair in enabled:
         contract = pair["exchange_contract"]
         if pair["primitive_type"] == "kem":
-            detail = f"pk={contract['public_key_exchange']} ct={contract['ciphertext_exchange']} sk={contract['secret_key_exchange']}"
+            detail = (
+                f"pk={contract.get('public_key_exchange')} ct={contract.get('ciphertext_exchange')} "
+                f"sk={contract.get('secret_key_exchange')}"
+            )
+        elif pair["primitive_type"] == "kex":
+            detail = (
+                f"pk={contract.get('public_key_exchange')} peer={contract.get('peer_key_exchange')} "
+                f"sk={contract.get('secret_key_exchange')}"
+            )
         else:
-            detail = f"pk={contract['public_key_exchange']} sig={contract['signature_exchange']}"
+            detail = f"pk={contract.get('public_key_exchange')} sig={contract.get('signature_exchange')}"
         print(f"  {pair['pair_id']}: {pair['algorithm']} {detail}")
     return 0
 

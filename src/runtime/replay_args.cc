@@ -83,11 +83,12 @@ bool ParseRelationMode(const std::string &text, RelationMode *mode) {
 std::string ReplayArgsUsage() {
   return "usage: replay_oracle --generated-config <path> --input <structured_input.bin> "
          "--trace <oracle_trace.json> --job-id <job_id> --pair-id <pair_id> "
-         "--algorithm <algorithm> --primitive-type kem|sig --oracle-id <oracle_id> "
+         "--algorithm <algorithm> --primitive-type kem|sig|kex --oracle-id <oracle_id> "
          "--oracle-suite fips|metamorphic --relation-mode single-target|self-reference|cross-implementation "
          "--left-project-id <id> --left-implementation-id <id> --right-project-id <id> "
          "--right-implementation-id <id> --public-key-exchange 0|1 --ciphertext-exchange 0|1 "
-         "--secret-key-exchange 0|1 --secret-key-format-compatible 0|1 --signature-exchange 0|1";
+         "--secret-key-exchange 0|1 --secret-key-format-compatible 0|1 --signature-exchange 0|1 "
+         "--peer-key-exchange 0|1";
 }
 
 bool ParseReplayArgs(int argc, char **argv, ReplayArgs *args, std::string *error) {
@@ -164,6 +165,11 @@ bool ParseReplayArgs(int argc, char **argv, ReplayArgs *args, std::string *error
         if (error != nullptr) *error = "invalid --signature-exchange: " + value;
         return false;
       }
+    } else if (flag == "--peer-key-exchange") {
+      if (!ParseBool01(value, &parsed.peer_key_exchange)) {
+        if (error != nullptr) *error = "invalid --peer-key-exchange: " + value;
+        return false;
+      }
     } else {
       if (error != nullptr) {
         *error = "unknown argument: " + flag;
@@ -181,9 +187,10 @@ bool ParseReplayArgs(int argc, char **argv, ReplayArgs *args, std::string *error
     }
     return false;
   }
-  if (parsed.primitive_type != "kem" && parsed.primitive_type != "sig") {
+  if (parsed.primitive_type != "kem" && parsed.primitive_type != "sig" &&
+      parsed.primitive_type != "kex") {
     if (error != nullptr) {
-      *error = "--primitive-type must be kem or sig";
+      *error = "--primitive-type must be kem, sig or kex";
     }
     return false;
   }

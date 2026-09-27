@@ -146,6 +146,11 @@ src/mutators/cross_layout.cc
 src/mutators/cross_mutator.cc
 src/mutators/falcon_layout.cc
 src/mutators/falcon_mutator.cc
+src/mutators/sike_layout.cc
+src/mutators/sike_mutator.cc
+src/oracles/sike_executor.cc
+src/adapters/sike/reference_adapter.cc
+src/oracles/sidh_executor.cc
 src/oracles/expected_relation.cc
 src/oracles/oracle_spec.cc
 src/oracles/oracle_spec_loader.cc
@@ -159,6 +164,8 @@ src/oracles/metamorphic_observation.cc
 src/oracles/metamorphic_spec.cc
 src/oracles/metamorphic_executor.cc
 src/runtime/adapter_registry.cc
+src/adapters/sike/kem_adapter.cc
+src/adapters/sidh/kex_adapter.cc
 src/runtime/replay_args.cc
 src/adapters/cross/cross_adapter.cc
 src/triage/finding_writer.cc
@@ -456,10 +463,10 @@ preflight_job() {
   result_dir="$RESULTS_DIR/$job_id"
   binary="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
   replay_bin="$BUILD_DIR/$job_id/replay_oracle"
-  mkdir -p "$result_dir"
+  mkdir -p "$result_dir" "$CRASHES_DIR/$job_id"
   make_seed_corpus "$job_file"
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
-  "$binary" -runs=1 "$corpus_dir" >/dev/null 2>&1 || true
+  "$binary" -artifact_prefix="$CRASHES_DIR/$job_id/" -runs=1 "$corpus_dir" >/dev/null 2>&1 || true
   verify_oracle_coverage "$job_file" "$result_dir" || local_status=1
   replay_job_seeds "$job_file" "$replay_bin" "$corpus_dir" "$result_dir" || local_status=1
   if [ "$local_status" -ne 0 ]; then
@@ -556,7 +563,7 @@ smoke_job() {
   job_id=$(job_id_of "$job_file")
   result_dir="$RESULTS_DIR/$job_id"
   binary="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
-  mkdir -p "$result_dir" "$RUNS_DIR/$job_id"
+  mkdir -p "$result_dir" "$RUNS_DIR/$job_id" "$CRASHES_DIR/$job_id"
   make_seed_corpus "$job_file"
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
   local job_count
@@ -565,8 +572,8 @@ smoke_job() {
   if [ "$per_job_seconds" -lt 1 ]; then
     per_job_seconds=1
   fi
-  "$binary" -runs="$SMOKE_CORPUS_CASES" "$corpus_dir" >"$RUNS_DIR/$job_id/smoke-corpus.log" 2>&1 || true
-  "$binary" -max_total_time="$per_job_seconds" "$corpus_dir" >"$RUNS_DIR/$job_id/smoke-fuzz.log" 2>&1 || true
+  "$binary" -artifact_prefix="$CRASHES_DIR/$job_id/" -runs="$SMOKE_CORPUS_CASES" "$corpus_dir" >"$RUNS_DIR/$job_id/smoke-corpus.log" 2>&1 || true
+  "$binary" -artifact_prefix="$CRASHES_DIR/$job_id/" -max_total_time="$per_job_seconds" "$corpus_dir" >"$RUNS_DIR/$job_id/smoke-fuzz.log" 2>&1 || true
   verify_oracle_coverage "$job_file" "$result_dir" || true
   echo "ok" > "$RUNS_DIR/$job_id/smoke.status"
 }
@@ -577,10 +584,10 @@ run_job() {
   job_id=$(job_id_of "$job_file")
   result_dir="$RESULTS_DIR/$job_id"
   binary="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
-  mkdir -p "$result_dir" "$RUNS_DIR/$job_id"
+  mkdir -p "$result_dir" "$RUNS_DIR/$job_id" "$CRASHES_DIR/$job_id"
   make_seed_corpus "$job_file"
   set +e
-  "$binary" -max_total_time="$MAX_TOTAL_TIME" "$RUNS_DIR/$job_id/corpus" \
+  "$binary" -artifact_prefix="$CRASHES_DIR/$job_id/" -max_total_time="$MAX_TOTAL_TIME" "$RUNS_DIR/$job_id/corpus" \
     >"$RUNS_DIR/$job_id/fuzz.log" 2>&1
   local rc=$?
   set -e
@@ -590,7 +597,7 @@ run_job() {
 }
 
 cmd_smoke() {
-  python3 -m pytest -q tests/falcon_model_test.py tests/falcon_oracles_test.py::test_official_kat_fixture \
+  PYTHONPYCACHEPREFIX="${WORK_ROOT}/.pycache" python3 -m pytest -q tests/falcon_model_test.py tests/falcon_oracles_test.py::test_official_kat_fixture \
     >"$RUNS_DIR/model-lane.log" 2>&1 || {
     echo "[falcon] model/KAT lane failed; see $RUNS_DIR/model-lane.log" >&2
     exit 1

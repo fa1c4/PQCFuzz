@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "family": "SIKE",
+  "spec": {
+    "path": "plans/specs/sike-SIDH-spec.pdf",
+    "sha256": "9638f49b92207ec1f48d8e914adbb7e54c9e2ba223eb79d43d7c0482304449cc",
+    "revision": "SIKE/SIDH round-3 submission specification (PDF page = printed page + 3)",
+    "pdf_pages": 108,
+    "pdf_page_offset": 3,
+    "source_lock": "src/config/source_locks/sike.json"
+  },
+  "sources": [
+    {
+      "name": "microsoft-pqcrypto-sidh",
+      "url": "https://codeload.github.com/microsoft/PQCrypto-SIDH/tar.gz/98a028a473317855404a27db5696e9d0a06c7d62",
+      "repository": "https://github.com/microsoft/PQCrypto-SIDH",
+      "commit": "98a028a473317855404a27db5696e9d0a06c7d62",
+      "archive_sha256": "7e213ee545c00e51699ecd47bbbe91e8ba5828bb66aa70f7494ddc5b09f337bd",
+      "version": "microsoft/PQCrypto-SIDH master @ 98a028a (SIKE/SIDH round-3 lineage)",
+      "license": "MIT (Copyright (c) Microsoft Corporation)",
+      "vendored_path": "projects/SIKE_SIDH/src",
+      "vendored_files": [
+        "P434/P434.c",
+        "P434/P434_api.h",
+        "P434/P434_internal.h",
+        "P434/generic/fp_generic.c",
+        "P503/P503.c",
+        "P503/P503_api.h",
+        "P503/P503_internal.h",
+        "P503/generic/fp_generic.c",
+        "P610/P610.c",
+        "P610/P610_api.h",
+        "P610/P610_internal.h",
+        "P610/generic/fp_generic.c",
+        "P751/P751.c",
+        "P751/P751_api.h",
+        "P751/P751_internal.h",
+        "P751/generic/fp_generic.c",
+        "config.h",
+        "ec_isogeny.c",
+        "fpx.c",
+        "internal.h",
+        "sidh.c",
+        "sike.c",
+        "sha3/fips202.c",
+        "sha3/fips202.h",
+        "random/random.c",
+        "random/random.h"
+      ],
+      "file_sha256": {
+        "P434/P434.c": "c13245cd1c58a9fc2bc89fff2326fb27ae3c2574d28371b985cf6f9790415717",
+        "P434/P434_api.h": "dfdbb6161214095a532d949d98804158598ec79537308a67e73031ac7d0c7090",
+        "P434/P434_internal.h": "4b710a82b1420d17b5143aa41a68c6b2b6572ba0faa678946c662968b044ca27",
+        "P434/generic/fp_generic.c": "1d8f067863401ec2ba201bb9fd8cf473a00465da86cd4ff6257a8f7b427c9304",
+        "ec_isogeny.c": "636486c12f815c16ae7db1a260735f0327f55710042cfec38205edfca55a85ba",
+        "fpx.c": "68f63b5102ba27f49b10fe27efbc19ece2df297d0ad2056b2836d13e987496bb",
+        "internal.h": "562f32b1562ba5d52ed838427cd278d913a0bfaacbf7d1f4ea02901c1e256010",
+        "sidh.c": "1490e2562615bbcea3639369d81c622c6712da36a8d1e68369546f81ba1acc0e",
+        "sike.c": "2383a8e2748959beeeaf377e5093bac524426a1a0f72d6f904ecc24a1706f051",
+        "config.h": "68d2396e2841a29aecb3caeb8142d76f04dfd6c9131e3bcbb203043c0125cfd8",
+        "sha3/fips202.c": "368d13422cfcc774f3e83ef96c61e049b0f91696d33dd4142c9d3f38606be37c",
+        "sha3/fips202.h": "f764f37606af7bbc42e758b73ef1210724ad90e412610de0fb88ad3aa9c21e29",
+        "random/random.c": "ec0354ec64620345d668b40ffde00d8e1c20ae5e09449c9da4208e224cf19f2c",
+        "random/random.h": "4c626f142afddc481d79d91ff77a0dfc45024f6eae95b2db5c824e40f730a906"
+      },
+      "status": "vendored",
+      "notes": [
+        "The specification PDF is the normative source; this pinned implementation is the profile target.",
+        "PK_VALIDATION is defined in the pinned config.h, so decapsulation validates the ciphertext public-key value before recomputing c0'. This is a profile property, not a specification requirement.",
+        "The generic (portable) implementation is used for all parameter sets so a single build recipe covers ref/opt differential lanes; the AMD64 assembly was not enabled."
+      ]
+    },
+    {
+      "name": "sike-sidh-kat-drbg",
+      "url": "https://codeload.github.com/microsoft/PQCrypto-SIDH/tar.gz/98a028a473317855404a27db5696e9d0a06c7d62",
+      "commit": "98a028a473317855404a27db5696e9d0a06c7d62",
+      "archive_sha256": "7e213ee545c00e51699ecd47bbbe91e8ba5828bb66aa70f7494ddc5b09f337bd",
+      "version": "NIST AES256-CTR-DRBG (self-contained katrng, no OpenSSL dependency)",
+      "license": "public domain",
+      "vendored_path": "projects/SIKE_SIDH/kat",
+      "vendored_files": [
+        "katrng.c",
+        "katrng.h",
+        "rng.h"
+      ],
+      "file_sha256": {
+        "katrng.c": "573256baf179062eebc2eae5a6fc6575306e9b2b58deb024f983f744a4948132",
+        "katrng.h": "3e8cc11f2d21672f094b9e4f6d210e00f985ac78b2299454e6b906b9779c8f00",
+        "rng.h": "973dd2f2d1082feaa1d41e079927739cf33d25f52fd6762d3b05f417a485a091"
+      },
+      "status": "vendored-kat",
+      "notes": [
+        "Reuses the self-contained NIST AES256-CTR-DRBG already vendored for NTRU (byte-identical katrng.c/h and the rng.h shim) instead of the upstream OpenSSL-based tests/rng.",
+        "SIKE's randombytes prototype (unsigned char*, unsigned long long) matches the shim exactly."
+      ]
+    }
+  ],
+  "kat": {
+    "official_kat_available": true,
+    "fixture_path": "tests/fixtures/sike_sidh/sike_kat_reference.json",
+    "fixture_sha256": "3c9fc1c7abf205975505bfdda59463f250e74406c033943c9ded079fa7b70c9c",
+    "response_files": {
+      "P434": {
+        "path": "projects/SIKE_SIDH/KAT/PQCkemKAT_374.rsp",
+        "sha256": "03b85f6bef36ce6d394db4338e39fd06a2fd1896c6dbab33525ddddd75fa98d6"
+      },
+      "P503": {
+        "path": "projects/SIKE_SIDH/KAT/PQCkemKAT_434.rsp",
+        "sha256": "d04083a6ecaa5375c3d61246109b3996cbfb8cd4a55c54dc2cbb65a62cb418d9"
+      },
+      "P610": {
+        "path": "projects/SIKE_SIDH/KAT/PQCkemKAT_524.rsp",
+        "sha256": "05a94386b751f4bb89660bc70544aafe273bd595ebd60043c4a08a66b40a4d31"
+      },
+      "P751": {
+        "path": "projects/SIKE_SIDH/KAT/PQCkemKAT_644.rsp",
+        "sha256": "62f3f5b74ccfbaf22b0d7faef6e84a950781357c1da4407988aed732569480d2"
+      }
+    },
+    "notes": [
+      "Keypair, encapsulation, decapsulation and the recorded secret reproduced byte-for-byte for count 0 of all four parameter sets during implementation.",
+      "The response files were generated by the pinned implementation with the NIST AES256-CTR-DRBG."
+    ],
+    "cases_fixture_path": "tests/fixtures/sike_sidh/sike_cases.json",
+    "cases_fixture_sha256": "04ea36f64948a6271bd0a605e072cdc82250e40b5c432fc017d2b9f5f3f07244"
+  }
+}

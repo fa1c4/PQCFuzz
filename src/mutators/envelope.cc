@@ -56,6 +56,15 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kNtruHps4096821:
     case AlgorithmId::kNtruHrss701:
       return true;
+    case AlgorithmId::kSikeP434:
+    case AlgorithmId::kSikeP503:
+    case AlgorithmId::kSikeP610:
+    case AlgorithmId::kSikeP751:
+    case AlgorithmId::kSidhP434:
+    case AlgorithmId::kSidhP503:
+    case AlgorithmId::kSidhP610:
+    case AlgorithmId::kSidhP751:
+      return true;
     case AlgorithmId::kFalcon512Compressed:
     case AlgorithmId::kFalcon1024Compressed:
     case AlgorithmId::kFalcon512Padded:
@@ -211,6 +220,27 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kCrossFaultSeedDisclosure:
     case OracleId::kCrossTiming:
       return true;
+    case OracleId::kSikeKat:
+    case OracleId::kSikeLocalRoundtrip:
+    case OracleId::kSikeCrossExchange:
+    case OracleId::kSikeReencryptionGate:
+    case OracleId::kSikeFallbackExact:
+    case OracleId::kSikeFallbackSeedSeparation:
+    case OracleId::kSikeFieldEncoding:
+    case OracleId::kSikeKeyConsistency:
+    case OracleId::kSikePkeRelation:
+    case OracleId::kSikeLengthsState:
+    case OracleId::kSikeRngReplay:
+    case OracleId::kSidhAgreement:
+    case OracleId::kSidhCrossAgreement:
+    case OracleId::kSidhFieldCurveChecks:
+    case OracleId::kSidhRoleScalarProfile:
+    case OracleId::kSidhIsogenyMath:
+    case OracleId::kSikeCompressedProfile:
+    case OracleId::kSikeFaultGate:
+    case OracleId::kSidhResourcesRng:
+    case OracleId::kSikeSidhTiming:
+      return true;
     case OracleId::kUnknown:
       return false;
   }
@@ -279,6 +309,22 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "NTRU-HPS-4096-821";
     case AlgorithmId::kNtruHrss701:
       return "NTRU-HRSS-701";
+    case AlgorithmId::kSikeP434:
+      return "SIKE-p434";
+    case AlgorithmId::kSikeP503:
+      return "SIKE-p503";
+    case AlgorithmId::kSikeP610:
+      return "SIKE-p610";
+    case AlgorithmId::kSikeP751:
+      return "SIKE-p751";
+    case AlgorithmId::kSidhP434:
+      return "SIDH-p434";
+    case AlgorithmId::kSidhP503:
+      return "SIDH-p503";
+    case AlgorithmId::kSidhP610:
+      return "SIDH-p610";
+    case AlgorithmId::kSidhP751:
+      return "SIDH-p751";
     case AlgorithmId::kFalcon512Compressed:
       return "FALCON-512-COMPRESSED";
     case AlgorithmId::kFalcon1024Compressed:
@@ -493,6 +539,46 @@ const char *OracleName(OracleId oracle_id) {
       return "ntru_fault_checks";
     case OracleId::kNtruTimingResources:
       return "ntru_timing_resources";
+    case OracleId::kSikeKat:
+      return "sike_kat";
+    case OracleId::kSikeLocalRoundtrip:
+      return "sike_local_roundtrip";
+    case OracleId::kSikeCrossExchange:
+      return "sike_cross_exchange";
+    case OracleId::kSikeReencryptionGate:
+      return "sike_reencryption_gate";
+    case OracleId::kSikeFallbackExact:
+      return "sike_fallback_exact";
+    case OracleId::kSikeFallbackSeedSeparation:
+      return "sike_fallback_seed_separation";
+    case OracleId::kSikeFieldEncoding:
+      return "sike_field_encoding";
+    case OracleId::kSikeKeyConsistency:
+      return "sike_key_consistency";
+    case OracleId::kSikePkeRelation:
+      return "sike_pke_relation";
+    case OracleId::kSikeLengthsState:
+      return "sike_lengths_state";
+    case OracleId::kSikeRngReplay:
+      return "sike_rng_replay";
+    case OracleId::kSidhAgreement:
+      return "sidh_agreement";
+    case OracleId::kSidhCrossAgreement:
+      return "sidh_cross_agreement";
+    case OracleId::kSidhFieldCurveChecks:
+      return "sidh_field_curve_checks";
+    case OracleId::kSidhRoleScalarProfile:
+      return "sidh_role_scalar_profile";
+    case OracleId::kSidhIsogenyMath:
+      return "sidh_isogeny_math";
+    case OracleId::kSikeCompressedProfile:
+      return "sike_compressed_profile";
+    case OracleId::kSikeFaultGate:
+      return "sike_fault_gate";
+    case OracleId::kSidhResourcesRng:
+      return "sidh_resources_rng";
+    case OracleId::kSikeSidhTiming:
+      return "sike_sidh_timing";
     case OracleId::kFalconKat:
       return "falcon_kat";
     case OracleId::kFalconLocalSignVerify:
@@ -662,6 +748,30 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "NTRU-HRSS-701") {
     return AlgorithmId::kNtruHrss701;
+  }
+  if (name == "SIKE-p434") {
+    return AlgorithmId::kSikeP434;
+  }
+  if (name == "SIKE-p503") {
+    return AlgorithmId::kSikeP503;
+  }
+  if (name == "SIKE-p610") {
+    return AlgorithmId::kSikeP610;
+  }
+  if (name == "SIKE-p751") {
+    return AlgorithmId::kSikeP751;
+  }
+  if (name == "SIDH-p434") {
+    return AlgorithmId::kSidhP434;
+  }
+  if (name == "SIDH-p503") {
+    return AlgorithmId::kSidhP503;
+  }
+  if (name == "SIDH-p610") {
+    return AlgorithmId::kSidhP610;
+  }
+  if (name == "SIDH-p751") {
+    return AlgorithmId::kSidhP751;
   }
   if (name == "FALCON-512-COMPRESSED") {
     return AlgorithmId::kFalcon512Compressed;
@@ -975,6 +1085,66 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "ntru_timing_resources") {
     return OracleId::kNtruTimingResources;
+  }
+  if (name == "sike_kat") {
+    return OracleId::kSikeKat;
+  }
+  if (name == "sike_local_roundtrip") {
+    return OracleId::kSikeLocalRoundtrip;
+  }
+  if (name == "sike_cross_exchange") {
+    return OracleId::kSikeCrossExchange;
+  }
+  if (name == "sike_reencryption_gate") {
+    return OracleId::kSikeReencryptionGate;
+  }
+  if (name == "sike_fallback_exact") {
+    return OracleId::kSikeFallbackExact;
+  }
+  if (name == "sike_fallback_seed_separation") {
+    return OracleId::kSikeFallbackSeedSeparation;
+  }
+  if (name == "sike_field_encoding") {
+    return OracleId::kSikeFieldEncoding;
+  }
+  if (name == "sike_key_consistency") {
+    return OracleId::kSikeKeyConsistency;
+  }
+  if (name == "sike_pke_relation") {
+    return OracleId::kSikePkeRelation;
+  }
+  if (name == "sike_lengths_state") {
+    return OracleId::kSikeLengthsState;
+  }
+  if (name == "sike_rng_replay") {
+    return OracleId::kSikeRngReplay;
+  }
+  if (name == "sidh_agreement") {
+    return OracleId::kSidhAgreement;
+  }
+  if (name == "sidh_cross_agreement") {
+    return OracleId::kSidhCrossAgreement;
+  }
+  if (name == "sidh_field_curve_checks") {
+    return OracleId::kSidhFieldCurveChecks;
+  }
+  if (name == "sidh_role_scalar_profile") {
+    return OracleId::kSidhRoleScalarProfile;
+  }
+  if (name == "sidh_isogeny_math") {
+    return OracleId::kSidhIsogenyMath;
+  }
+  if (name == "sike_compressed_profile") {
+    return OracleId::kSikeCompressedProfile;
+  }
+  if (name == "sike_fault_gate") {
+    return OracleId::kSikeFaultGate;
+  }
+  if (name == "sidh_resources_rng") {
+    return OracleId::kSidhResourcesRng;
+  }
+  if (name == "sike_sidh_timing") {
+    return OracleId::kSikeSidhTiming;
   }
   if (name == "falcon_kat") {
     return OracleId::kFalconKat;

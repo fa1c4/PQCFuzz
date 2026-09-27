@@ -1,0 +1,718 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "sike_kat",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "K03",
+        "X05"
+      ],
+      "precondition": {
+        "same_algorithm": true,
+        "valid_lengths": true,
+        "fixture_required": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "kat_bytes_equal",
+      "triage_policy": "reference_profile_mismatch",
+      "claim": "For the official NIST KAT randomness (AES256-CTR-DRBG seeded by the recorded seed), the pinned PQCrypto-SIDH generic build of the same parameter set shall reproduce pk, sk, ct and ss byte-for-byte and the ciphertext shall decapsulate to the recorded secret.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "SIKE spec \u00a73 p.48 (KAT); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b; projects/SIKE_SIDH/KAT/PQCkemKAT_*.rsp; source lock src/config/source_locks/sike.json",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "A mismatch violates the pinned reference profile, not the SIKE specification by itself",
+        "The KAT DRBG tape is not interchangeable with an arbitrary SHAKE(seed) tape",
+        "SIKE is known broken since 2022; this is a historical-consistency check only"
+      ],
+      "controls": {
+        "positive_control": "the recorded fixture reproduces pk/sk/ct/ss and decapsulates to the recorded secret",
+        "negative_control": "a different DRBG seed produces different bytes"
+      }
+    },
+    {
+      "oracle_id": "sike_local_roundtrip",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "K03"
+      ],
+      "precondition": {
+        "same_algorithm": true,
+        "valid_lengths": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "shared_secret_equal",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "An honest KeyGen, Encaps and Decaps sequence shall succeed, return exactly the profile ABI lengths, and recover the same shared secret H(m||ct) on both sides.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.10-1.3.11 PDF pp.21-22 (Algorithms 1/2); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Success is not an IND-CCA or quantum-security result; SIKE is known broken",
+        "The hash H is computed over the concatenation m||ct, not over ct alone"
+      ],
+      "controls": {
+        "positive_control": "a freshly generated key pair encapsulates and decapsulates to the same secret",
+        "negative_control": "a tampered ciphertext is covered by sike_fallback_exact"
+      }
+    },
+    {
+      "oracle_id": "sike_cross_exchange",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "K03",
+        "X05"
+      ],
+      "precondition": {
+        "pair_alg_exchange_contract_required": [
+          "public_key_exchange",
+          "ciphertext_exchange"
+        ]
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "shared_secret_equal",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two pinned builds of the same uncompressed parameter set, hash and encoding shall cross-verify in both directions: A keygen/B encaps/A decaps and B keygen/A encaps/B decaps recover the same secret; a foreign secret-key decapsulation is enabled only when the pair declares secret-key exchange with a compatible format.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.10-1.3.11 PDF pp.21-22; NIST API contract; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Only the same pinned source is vendored, so the lane is a same-source single-implementation check unless an independent build is supplied",
+        "The compressed and uncompressed wire formats are not interchangeable"
+      ],
+      "controls": {
+        "positive_control": "both exchange directions recover the same shared secret",
+        "negative_control": "the pair declares public key and ciphertext exchange before enabling"
+      }
+    },
+    {
+      "oracle_id": "sike_reencryption_gate",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps"
+      ],
+      "property_ids": [
+        "K05",
+        "P15"
+      ],
+      "precondition": {
+        "valid_ciphertext_before_mutation": true,
+        "model_lane_available": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.c0",
+          "ciphertext.c1"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "gate_classification_equal",
+      "triage_policy": "reencryption_gate_mismatch",
+      "claim": "Starting from a valid baseline, changing one field-aligned component of c0 or c1 shall make decapsulation follow the branch independently predicted by the model: if the recomputed c0' equals the received c0 the target returns H(m'||ct), otherwise it returns H(s||ct); every candidate is classified by the model before the target verdict and no assumption is made that a mutation fails.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.11 PDF pp.21-22, Algorithm 2 lines 10-16; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "The model uses the profile's c0 exact-comparison, not a prefix or decoded-j comparison",
+        "Non-canonical field encodings may be rejected by the parser and are classified by sike_field_encoding instead"
+      ],
+      "controls": {
+        "positive_control": "the unmodified baseline takes the correct branch on both sides",
+        "negative_control": "each mutated candidate is classified as correct or fallback by the independent model before comparison"
+      }
+    },
+    {
+      "oracle_id": "sike_fallback_exact",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps"
+      ],
+      "property_ids": [
+        "P15",
+        "H06"
+      ],
+      "precondition": {
+        "fail_classified_ciphertext": true,
+        "model_lane_available": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.c0",
+          "ciphertext.c1"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "shake256_fallback_equal",
+      "triage_policy": "implicit_rejection_output_mismatch",
+      "claim": "For a parseable ciphertext whose model-recomputed c0' differs from the received c0, decapsulation shall output exactly SHAKE256(s||raw_ct, k/8) and repeat it stably; both c0 and c1 are included in the hash and the output length equals the profile ss_len.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.4 PDF pp.23-25 (H(m||ct) and H(s||ct)); Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "\"Reject or different secret\" is not accepted as a substitute for the exact SHAKE256 formula",
+        "Illegal field encodings may take a different outer result and are covered by sike_field_encoding",
+        "All-zero fallback output is not accepted as evidence"
+      ],
+      "controls": {
+        "positive_control": "the valid ciphertext output is H(m||ct) and differs from the fallback",
+        "negative_control": "the fallback output is compared with an independent SHAKE256(s||raw_ct) computation"
+      }
+    },
+    {
+      "oracle_id": "sike_fallback_seed_separation",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps",
+        "keygen"
+      ],
+      "property_ids": [
+        "P15",
+        "P12"
+      ],
+      "precondition": {
+        "valid_ciphertext_before_mutation": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "secret_key.s"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "shake256_fallback_equal",
+      "triage_policy": "fallback_seed_separation_violation",
+      "claim": "The leading s bytes of the secret key shall enter only the fallback hash: changing one s byte leaves a valid ciphertext output unchanged and makes a confirmed gate-fail ciphertext output equal SHAKE256(new_s||raw_ct, k/8), while sk3 and the embedded pk3 stay byte-identical.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.11 PDF pp.21-22, Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "An accidental output equality is not by itself a key-recovery claim; the exact hash formula is required",
+        "Only the s prefix is mutated; sk3 or pk3 changes belong to sike_key_consistency"
+      ],
+      "controls": {
+        "positive_control": "a valid ciphertext output is unaffected by the s prefix",
+        "negative_control": "a confirmed gate-fail ciphertext output tracks the mutated s prefix through the independent SHAKE256 computation"
+      }
+    },
+    {
+      "oracle_id": "sike_field_encoding",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps",
+        "encaps"
+      ],
+      "property_ids": [
+        "P08",
+        "P09",
+        "P11"
+      ],
+      "precondition": {
+        "valid_inputs_before_mutation": true,
+        "coderoundtrip_model_available": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "public_key.coordinate",
+          "ciphertext.coordinate"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "codec_classification_equal",
+      "triage_policy": "field_encoding_mismatch",
+      "claim": "For every Fp limb, the codec shall decode only canonical little-endian values in [0, p-1]; the boundary values p-1, p, p+1, all-FF and nonzero unused top bits each receive the classification predicted by the independent integer model, and a value not in [0, p-1] must not be silently reduced mod p.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15 (ostofp/fp2toos); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "parser"
+      },
+      "limitations": [
+        "The fixed-pointer KEM API has no separate parser return value; parser FAIL is not by itself a KEM rejection contract",
+        "External KEM behaviour for non-canonical inputs follows the declared PK_VALIDATION profile path"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sike_field_encoding.codec_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "codec"
+            }
+          ],
+          "claim": "The independent codec shall decode only canonical little-endian Fp values in [0, p-1] and shall not reduce a value p or above modulo p.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "parser"
+          },
+          "limitations": [
+            "The codec is a test model of ostofp/fp2toos, not a target-internal entry point"
+          ],
+          "controls": {
+            "positive_control": "p-1 decodes to the canonical representative and re-encodes identically",
+            "negative_control": "p and p+1 are classified out of range"
+          }
+        },
+        {
+          "claim_id": "sike_field_encoding.api_observation",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "api"
+            }
+          ],
+          "claim": "Through the external KEM entry points, a non-canonical ciphertext coordinate is recorded as an implementation observation: the declared PK_VALIDATION path, return code and output length are saved, but no reduction or rejection contract is invented.",
+          "evidence_class": "IMPLEMENTATION_OBSERVED",
+          "source_reference": "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15; pinned config.h PK_VALIDATION switch",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "The specification does not assign a normative outer error shape for non-canonical KEM inputs"
+          ],
+          "controls": {
+            "positive_control": "the canonical coordinate through the same path is recorded",
+            "negative_control": "the non-canonical coordinate is a real byte-level change recorded in the trace"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "canonical real/imag field fixtures decode and re-encode identically",
+        "negative_control": "each out-of-range limb is classified by the independent integer model before any target verdict"
+      }
+    },
+    {
+      "oracle_id": "sike_key_consistency",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "decaps"
+      ],
+      "property_ids": [
+        "P12"
+      ],
+      "precondition": {
+        "model_lane_available": true
+      },
+      "mutation": {
+        "type": "key_algebra",
+        "targets": [
+          "secret_key.sk3",
+          "secret_key.pk3"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "key_consistency_equal",
+      "triage_policy": "key_consistency_mismatch",
+      "claim": "For an honestly generated key, the embedded pk3 inside sk shall equal the public key returned by KeyGen and lie in the canonical field range, and the scalar sk3 shall lie in [0, 2^floor(log2(3^e3))); replacing the embedded pk3 is only observed through the gate recomputation and no undeclared key-import validation is required.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.9 PDF pp.20-21 (secret scalar spaces), Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "component"
+      },
+      "limitations": [
+        "This is a generated-key invariant; it does not claim the API rejects malformed keys",
+        "Only the uncompressed secret-key layout is covered"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sike_key_consistency.generated_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "generated"
+            }
+          ],
+          "claim": "An honestly generated secret key satisfies embedded_pk3 == pk and sk3 < 2^floor(log2(3^e3)), and the pk3 limbs are canonical.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "SIKE spec \u00a71.3.9 PDF pp.20-21; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "component"
+          },
+          "limitations": [
+            "Invariant checked from generated material only"
+          ],
+          "controls": {
+            "positive_control": "the honest key passes the embedded-key equality and scalar range checks",
+            "negative_control": "a perturbed embedded pk3 changes the recomputed gate classification"
+          }
+        },
+        {
+          "claim_id": "sike_key_consistency.import_observation",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "import"
+            }
+          ],
+          "claim": "For an imported key with a replaced embedded pk3, only the observed gate outcome is recorded; no secret-key import validation is assumed beyond the profile's declared parser behaviour.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "NIST API contract; pinned PQCrypto-SIDH wrapper; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "The NIST API does not mandate secret-key import validation"
+          ],
+          "controls": {
+            "positive_control": "the honest key decapsulates",
+            "negative_control": "the imported key is a real byte-level change recorded in the trace"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the honest generated key satisfies the embedded-key equality and scalar range",
+        "negative_control": "a changed embedded pk3 is classified by the model before any target verdict"
+      }
+    },
+    {
+      "oracle_id": "sike_pke_relation",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "K03",
+        "H06"
+      ],
+      "precondition": {
+        "model_lane_available": true,
+        "dpke_hook_available": false
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.c1"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "pke_relation_equal",
+      "triage_policy": "pke_relation_mismatch",
+      "claim": "The independent model shall check the PKE relation: fixed m and r decrypt to m, F(j) is the correct SHAKE256 output, and while a c1 XOR-delta changes the recovered PKE message it does not bypass the KEM re-encryption gate; PKE malleability is correct behaviour and is not reported as a SIKE KEM CCA vulnerability.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec Algorithm 1 \u00a71.3.10 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "internal"
+      },
+      "limitations": [
+        "The pinned external API exposes no PKE decrypt entry point, so the relation is evaluated by the independent Python model lane",
+        "The c1 XOR-delta result is interpreted only through the gate, never as a direct CCA break"
+      ],
+      "controls": {
+        "positive_control": "the model reproduces PKE Enc/Dec and F(j) on a fixed fixture",
+        "negative_control": "the XOR-delta candidate is classified as a gate failure, not a successful decapsulation"
+      }
+    },
+    {
+      "oracle_id": "sike_lengths_state",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "P10",
+        "P16",
+        "X01"
+      ],
+      "precondition": {
+        "valid_inputs_before_mutation": true
+      },
+      "mutation": {
+        "type": "length_boundary",
+        "targets": [
+          "pk",
+          "sk",
+          "ct"
+        ]
+      },
+      "expected_relation": "REJECT_OR_INVALID_INPUT",
+      "comparator": "status_or_length_state",
+      "triage_policy": "adapter_length_boundary",
+      "claim": "The length-aware adapter wrapper shall reject ciphertext, secret key and public key buffers of length 0, 1, L-1 and L+1 at the adapter layer while the exact profile length enters the fixed-size target API, and failure paths shall not leave sentinel bytes in the declared output length.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "Harness common contract \u00a71.4.1; SIKE spec NIST API layout \u00a71.3.11 PDF p.22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "adapter"
+      },
+      "limitations": [
+        "The fixed-pointer NIST API has no observable input length; short-buffer calls are not part of its conformance surface",
+        "The allowed failure output state is profile-specific; \"must zero\" is not assumed for all APIs"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sike_lengths_state.api_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "api"
+            }
+          ],
+          "claim": "Every wrong input length is rejected by the length-aware wrapper before any pointer reaches the fixed-size target, and the exact length enters the target.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "Harness common contract \u00a71.4.1; SIKE spec \u00a71.3.11 PDF p.22",
+          "scope": {
+            "api_layer": "adapter"
+          },
+          "limitations": [
+            "Adapter-layer checks are not target rejection evidence"
+          ],
+          "controls": {
+            "positive_control": "the exact profile length enters the target",
+            "negative_control": "each wrong length is rejected at the adapter layer without pointer dereference"
+          }
+        },
+        {
+          "claim_id": "sike_lengths_state.failure_state_observed",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "failure"
+            }
+          ],
+          "claim": "A failed decapsulation keeps a consistent status and leaves no 0xA5 sentinel in the declared output length when the call returns success.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Harness common contract \u00a71.4.5; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "The specification does not define an output-zeroing requirement on failure"
+          ],
+          "controls": {
+            "positive_control": "the honest decapsulation returns the full ss_len",
+            "negative_control": "a poisoned sentinel buffer is distinguished from a successful secret"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the exact profile length enters the target for pk, sk and ct",
+        "negative_control": "every wrong length is rejected at the adapter layer without pointer dereference"
+      }
+    },
+    {
+      "oracle_id": "sike_rng_replay",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps"
+      ],
+      "property_ids": [
+        "P13",
+        "P14",
+        "X09"
+      ],
+      "precondition": {
+        "rng_injection_available": true
+      },
+      "mutation": {
+        "type": "bad_randomness",
+        "patterns": [
+          "same_tape",
+          "different_tape",
+          "failure"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "rng_bytes_equal",
+      "triage_policy": "rng_contract_violation",
+      "claim": "KeyGen shall consume the s prefix and the sk3 scalar from the tape and Encaps shall consume m from the tape; the same tape on the same build shall reproduce identical outputs, a different tape shall change the key material, and an injected failure shall be observable by the RNG control rather than silently replaced by system entropy.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.9 and \u00a71.4 PDF pp.20-25 (scalar sampling and G); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Same-tape equality only holds for the same build and call path",
+        "Cross-library signature or key byte equality additionally requires an identical RNG/sampling contract",
+        "All-zero successful randomness is not by itself a specification violation"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sike_rng_replay.api_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "api"
+            }
+          ],
+          "claim": "KeyGen and Encaps consume the documented tape regions and reproduce byte-identical outputs for the same tape and build.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "SIKE spec \u00a71.3.9/\u00a71.4 PDF pp.20-25",
+          "scope": {
+            "api_layer": "external"
+          },
+          "limitations": [
+            "Reproducibility is a same-build property"
+          ],
+          "controls": {
+            "positive_control": "two runs under the same tape agree",
+            "negative_control": "a different tape changes the key material"
+          }
+        },
+        {
+          "claim_id": "sike_rng_replay.failure_hardening",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "failure"
+            }
+          ],
+          "claim": "An injected RNG failure is observable by the harness control; a void RNG API cannot report it and is recorded separately.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Harness common contract \u00a71.4.4; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "external"
+          },
+          "limitations": [
+            "The pinned randombytes returns int, so a failure can be propagated; the harness records both layers"
+          ],
+          "controls": {
+            "positive_control": "the honest tape path succeeds",
+            "negative_control": "the failure-mode tape is observed as consumed"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "two runs under the same tape agree",
+        "negative_control": "a different tape changes the key material and the failure-mode tape is observed"
+      }
+    },
+    {
+      "oracle_id": "sike_compressed_profile",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "keygen",
+        "encaps",
+        "decaps"
+      ],
+      "property_ids": [
+        "P08",
+        "P11",
+        "X05"
+      ],
+      "precondition": {
+        "compressed_source_available": false,
+        "valid_lengths": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "ciphertext.flags",
+          "public_key.torsion",
+          "ciphertext.A"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "compressed_roundtrip_equal",
+      "triage_policy": "compressed_profile_mismatch",
+      "claim": "When the opt-in compressed lane is enabled with its own locked source, KAT and ABI, a valid compressed key/ciphertext round-trips and the compressed-specific failure paths (t flag modulus, flag high bits, A limbs, truncation, invalid decompression) receive the classification of the compressed model; compressed and uncompressed bytes are never exchanged directly.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "SIKE spec \u00a71.2.10/\u00a71.5 PDF pp.15-18 and Appendix C PDF pp.87-97; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Opt-in P2 lane; disabled by default and excluded from the uncompressed completion count",
+        "The compressed ABI and KAT differ from the uncompressed profile and must be locked separately",
+        "The forward cpktoos description alone does not define decompression rejection rules"
+      ],
+      "controls": {
+        "positive_control": "the compressed KAT record round-trips under the compressed profile",
+        "negative_control": "each compressed-specific boundary is classified by the compressed model"
+      },
+      "enabled_by_default": false
+    },
+    {
+      "oracle_id": "sike_fault_gate",
+      "algorithm_family": "SIKE",
+      "primitive_type": "kem",
+      "api_surface": [
+        "decaps"
+      ],
+      "property_ids": [
+        "P18",
+        "P15"
+      ],
+      "precondition": {
+        "test_mutant_available": true
+      },
+      "mutation": {
+        "type": "fault_injection",
+        "targets": [
+          "gate_compare",
+          "conditional_select",
+          "H_input"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "mutant_is_detected",
+      "triage_policy": "fault_check_missing",
+      "claim": "A deliberately faulted build that ignores the c0 comparison, always selects the valid or fallback branch, or omits c1 from the H input shall be detected by sike_reencryption_gate, sike_fallback_exact and sike_fallback_seed_separation; the fault-free reference is accepted by the same tests.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "SIKE spec Algorithm 2 \u00a71.3.11 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "component"
+      },
+      "limitations": [
+        "Opt-in P2 lane; only the shipped test mutants are exercised"
+      ],
+      "controls": {
+        "positive_control": "the fault-free adapter is accepted",
+        "negative_control": "each shipped mutant is caught by its designated oracle"
+      },
+      "enabled_by_default": false
+    }
+  ]
+}

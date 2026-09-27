@@ -1,0 +1,469 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "pair_id": "sike_p434_sike_reference_single",
+      "algorithm": "SIKE-p434",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p434",
+        "abi": {
+          "pk_len": 330,
+          "sk_len": 374,
+          "ct_len": 346,
+          "ss_len": 16
+        }
+      },
+      "right": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p434",
+        "abi": {
+          "pk_len": 330,
+          "sk_len": 374,
+          "ct_len": 346,
+          "ss_len": 16
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sike_p503_sike_reference_single",
+      "algorithm": "SIKE-p503",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p503",
+        "abi": {
+          "pk_len": 378,
+          "sk_len": 434,
+          "ct_len": 402,
+          "ss_len": 24
+        }
+      },
+      "right": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p503",
+        "abi": {
+          "pk_len": 378,
+          "sk_len": 434,
+          "ct_len": 402,
+          "ss_len": 24
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sike_p610_sike_reference_single",
+      "algorithm": "SIKE-p610",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p610",
+        "abi": {
+          "pk_len": 462,
+          "sk_len": 524,
+          "ct_len": 486,
+          "ss_len": 24
+        }
+      },
+      "right": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p610",
+        "abi": {
+          "pk_len": 462,
+          "sk_len": 524,
+          "ct_len": 486,
+          "ss_len": 24
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sike_p751_sike_reference_single",
+      "algorithm": "SIKE-p751",
+      "primitive_type": "kem",
+      "left": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p751",
+        "abi": {
+          "pk_len": 564,
+          "sk_len": 644,
+          "ct_len": 596,
+          "ss_len": 32
+        }
+      },
+      "right": {
+        "project_id": "sike",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen": "crypto_kem_keypair",
+          "encaps": "crypto_kem_enc",
+          "decaps": "crypto_kem_dec"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sike_reference_p751",
+        "abi": {
+          "pk_len": 564,
+          "sk_len": 644,
+          "ct_len": 596,
+          "ss_len": 32
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "ciphertext_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sidh_p434_sidh_reference_single",
+      "algorithm": "SIDH-p434",
+      "primitive_type": "kex",
+      "left": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p434",
+        "abi": {
+          "pk_len": 330,
+          "sk_a_len": 27,
+          "sk_b_len": 28,
+          "shared_len": 110
+        }
+      },
+      "right": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p434",
+        "abi": {
+          "pk_len": 330,
+          "sk_a_len": 27,
+          "sk_b_len": 28,
+          "shared_len": 110
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "peer_key_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sidh_p503_sidh_reference_single",
+      "algorithm": "SIDH-p503",
+      "primitive_type": "kex",
+      "left": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p503",
+        "abi": {
+          "pk_len": 378,
+          "sk_a_len": 32,
+          "sk_b_len": 32,
+          "shared_len": 126
+        }
+      },
+      "right": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p503",
+        "abi": {
+          "pk_len": 378,
+          "sk_a_len": 32,
+          "sk_b_len": 32,
+          "shared_len": 126
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "peer_key_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sidh_p610_sidh_reference_single",
+      "algorithm": "SIDH-p610",
+      "primitive_type": "kex",
+      "left": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p610",
+        "abi": {
+          "pk_len": 462,
+          "sk_a_len": 39,
+          "sk_b_len": 38,
+          "shared_len": 154
+        }
+      },
+      "right": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p610",
+        "abi": {
+          "pk_len": 462,
+          "sk_a_len": 39,
+          "sk_b_len": 38,
+          "shared_len": 154
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "peer_key_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "sidh_p751_sidh_reference_single",
+      "algorithm": "SIDH-p751",
+      "primitive_type": "kex",
+      "left": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p751",
+        "abi": {
+          "pk_len": 564,
+          "sk_a_len": 47,
+          "sk_b_len": 48,
+          "shared_len": 188
+        }
+      },
+      "right": {
+        "project_id": "sidh",
+        "project_name": "microsoft/PQCrypto-SIDH generic implementation @ 98a028a (SIKE/SIDH round-3 lineage)",
+        "api_names": {
+          "keygen_a": "random_mod_order_A + EphemeralKeyGeneration_A",
+          "keygen_b": "random_mod_order_B + EphemeralKeyGeneration_B",
+          "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b)",
+          "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a)"
+        },
+        "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62",
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": false,
+          "supports_deterministic_sign": false
+        },
+        "implementation_id": "sidh_reference_p751",
+        "abi": {
+          "pk_len": 564,
+          "sk_a_len": 47,
+          "sk_b_len": 48,
+          "shared_len": 188
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "peer_key_exchange": true,
+        "secret_key_exchange": false,
+        "secret_key_format_compatible": false
+      },
+      "provenance_relation": "same-source-single-implementation",
+      "status": "enabled"
+    }
+  ]
+}

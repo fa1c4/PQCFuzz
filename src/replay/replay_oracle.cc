@@ -14,12 +14,15 @@
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/ml_kem_layout.h"
 #include "mutators/ntru_layout.h"
+#include "mutators/sike_layout.h"
 #include "mutators/slh_dsa_layout.h"
 #include "oracles/cross_executor.h"
 #include "oracles/falcon_executor.h"
 #include "oracles/metamorphic_executor.h"
 #include "oracles/ntru_executor.h"
 #include "oracles/oracle_executor.h"
+#include "oracles/sidh_executor.h"
+#include "oracles/sike_executor.h"
 #include "runtime/adapter_registry.h"
 #include "runtime/exit_codes.h"
 #include "runtime/replay_args.h"
@@ -193,17 +196,54 @@ int main(int argc, char **argv) {
       config.mutation = envelope.mutation;
       trace = pqcfuzz::ExecuteSigOracle(config);
     }
+  } else if (args.primitive_type == "kex") {
+    pqcfuzz::SidhParams sidh_params{};
+    if (!pqcfuzz::GetSidhParams(args.algorithm, &sidh_params)) {
+      std::cerr << "unsupported KEX algorithm: " << args.algorithm << "\n";
+      return pqcfuzz::kExitInvalidInputOrConfig;
+    }
+    const pqcfuzz_kex_adapter *target =
+        pqcfuzz::GetKexAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    pqcfuzz::AdapterRoutingExpectation expected{
+        args.left_project_id, args.left_implementation_id, args.algorithm,
+        sidh_params.pk_len, 0, 0, 0, 0,
+        sidh_params.sk_a_len, sidh_params.sk_b_len, sidh_params.shared_len};
+    if (!pqcfuzz::ValidateKexAdapterRouting(target, expected, &error)) {
+      std::cerr << "KEX adapter routing error: " << error << "\n";
+      return pqcfuzz::kExitInvalidInputOrConfig;
+    }
+    if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+      std::cerr << "SIDH has no metamorphic oracle suite\n";
+      return pqcfuzz::kExitInvalidInputOrConfig;
+    }
+    pqcfuzz::SidhOracleConfig config;
+    config.job_id = args.job_id;
+    config.pair_id = args.pair_id;
+    config.algorithm = args.algorithm;
+    config.oracle_id = args.oracle_id;
+    config.params = sidh_params;
+    config.left = target;
+    config.right = pqcfuzz::GetKexAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
+    config.exchange_contract.public_key_exchange = args.public_key_exchange;
+    config.exchange_contract.peer_key_exchange = args.peer_key_exchange;
+    config.exchange_contract.secret_key_exchange = args.secret_key_exchange;
+    config.exchange_contract.secret_key_format_compatible = args.secret_key_format_compatible;
+    config.seed = envelope.seed;
+    config.mutation = envelope.mutation;
+    trace = pqcfuzz::ExecuteSidhOracle(config);
   } else {
     pqcfuzz::MlKemParams params{};
     pqcfuzz::AigisEncParams aigis_params{};
     pqcfuzz::NtruParams ntru_params{};
+    pqcfuzz::SikeParams sike_params{};
     const bool is_ntru = pqcfuzz::GetNtruParams(args.algorithm, &ntru_params);
+    const bool is_sike = pqcfuzz::GetSikeParams(args.algorithm, &sike_params);
     const bool is_aigis = pqcfuzz::GetAigisEncParams(args.algorithm, &aigis_params);
     if (is_aigis) {
       params = {aigis_params.algorithm, aigis_params.pk_len, aigis_params.sk_len,
                 aigis_params.ct_len, aigis_params.ss_len, aigis_params.k,
                 aigis_params.c1_bits, aigis_params.c2_bits};
-    } else if (!is_ntru && !pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
+    } else if (!is_sike && !is_ntru && !pqcfuzz::GetMlKemParams(args.algorithm, &params)) {
       std::cerr << "unsupported KEM algorithm: " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
@@ -218,6 +258,11 @@ int main(int argc, char **argv) {
       expected_sk_len = ntru_params.sk_len;
       expected_ct_len = ntru_params.ct_len;
       expected_ss_len = ntru_params.ss_len;
+    } else if (is_sike) {
+      expected_pk_len = sike_params.pk_len;
+      expected_sk_len = sike_params.sk_len;
+      expected_ct_len = sike_params.ct_len;
+      expected_ss_len = sike_params.ss_len;
     }
     pqcfuzz::AdapterRoutingExpectation expected{
         args.left_project_id, args.left_implementation_id, args.algorithm,
@@ -227,7 +272,27 @@ int main(int argc, char **argv) {
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
 
-    if (is_ntru) {
+    if (is_sike) {
+      if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+        std::cerr << "SIKE has no metamorphic oracle suite\n";
+        return pqcfuzz::kExitInvalidInputOrConfig;
+      }
+      pqcfuzz::SikeOracleConfig config;
+      config.job_id = args.job_id;
+      config.pair_id = args.pair_id;
+      config.algorithm = args.algorithm;
+      config.oracle_id = args.oracle_id;
+      config.params = sike_params;
+      config.left = target;
+      config.right = pqcfuzz::GetKemAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
+      config.exchange_contract.public_key_exchange = args.public_key_exchange;
+      config.exchange_contract.ciphertext_exchange = args.ciphertext_exchange;
+      config.exchange_contract.secret_key_exchange = args.secret_key_exchange;
+      config.exchange_contract.secret_key_format_compatible = args.secret_key_format_compatible;
+      config.seed = envelope.seed;
+      config.mutation = envelope.mutation;
+      trace = pqcfuzz::ExecuteSikeOracle(config);
+    } else if (is_ntru) {
       if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
         std::cerr << "NTRU has no metamorphic oracle suite\n";
         return pqcfuzz::kExitInvalidInputOrConfig;
@@ -289,6 +354,14 @@ int main(int argc, char **argv) {
     trace.adapter_sk_len = adapter->sk_len;
     trace.adapter_ct_len = adapter->ct_len;
     trace.adapter_ss_len = adapter->ss_len;
+  } else if (args.primitive_type == "kex") {
+    const auto *adapter = pqcfuzz::GetKexAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
+    trace.adapter_algorithm = adapter->algorithm;
+    trace.project_id = adapter->project_id;
+    trace.implementation_id = adapter->implementation_id;
+    trace.adapter_pk_len = adapter->pk_len;
+    trace.adapter_sk_len = adapter->sk_a_len;
+    trace.adapter_sig_max_len = 0;
   } else {
     const auto *adapter = pqcfuzz::GetSigAdapterByProjectAndId(args.left_project_id, args.left_implementation_id);
     trace.adapter_algorithm = adapter->algorithm;

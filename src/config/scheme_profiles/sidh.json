@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "family": "SIDH",
+  "primitive_type": "kex",
+  "security_status": "known_broken",
+  "security_status_note": "SIKE and SIDH are insecure since the 2022 attacks (Castryck-Decru and follow-ups). SIDH key agreement is unauthenticated and carries no contributory-behaviour, forward-secrecy or CCA claim. This profile is used only for historical conformance, parser/memory-safety, failure-behaviour and regression research.",
+  "spec": {
+    "path": "plans/specs/sike-SIDH-spec.pdf",
+    "sha256": "9638f49b92207ec1f48d8e914adbb7e54c9e2ba223eb79d43d7c0482304449cc",
+    "revision": "SIKE/SIDH round-3 submission specification (PDF page = printed page + 3)",
+    "pdf_pages": 108,
+    "pdf_page_offset": 3,
+    "source_lock": "src/config/source_locks/sidh.json"
+  },
+  "source": {
+    "project_id": "sidh",
+    "implementation_id": "sidh_reference",
+    "reference_version": "microsoft/PQCrypto-SIDH @ 98a028a473317855404a27db5696e9d0a06c7d62 (generic implementation)",
+    "vendored_path": "projects/SIKE_SIDH",
+    "build_model": "one parameter set per translation unit; P<size>.c includes fpx.c/ec_isogeny.c/sidh.c/sike.c and is linked with P<size>/generic/fp_generic.c, sha3/fips202.c, and the randombytes override"
+  },
+  "api": {
+    "keygen_a": "random_mod_order_A then EphemeralKeyGeneration_A (Alice role, 2-isogenies)",
+    "keygen_b": "random_mod_order_B then EphemeralKeyGeneration_B (Bob role, 3-isogenies)",
+    "derive_a": "EphemeralSecretAgreement_A(own_sk_a, peer_pk_b) -> 2*Np-byte j-invariant encoding",
+    "derive_b": "EphemeralSecretAgreement_B(own_sk_b, peer_pk_a) -> 2*Np-byte j-invariant encoding",
+    "role_order": "derive_a(out, peer_pk_b, own_sk_a); derive_b(out, peer_pk_a, own_sk_b)"
+  },
+  "hash": {
+    "function": "no hash is applied to the shared value; the raw j-invariant is encoded as Fp2 = LE_Np(real) || LE_Np(imag)",
+    "note": "the native shared value is 2*Np bytes, not a SIKE KDF secret"
+  },
+  "capabilities": {
+    "supports_context": false,
+    "supports_seeded_sign": false,
+    "supports_deterministic_sign": false,
+    "verify_checks_length": false,
+    "sign_accepts_extended_context": false,
+    "verify_accepts_extended_context": false,
+    "authenticated": false,
+    "contributory": false,
+    "compressed_profiles_enabled": false
+  },
+  "layout": {
+    "pk": "pk = xP || xQ || xR, each Fp2 = LE_Np(real) || LE_Np(imag)",
+    "sk_a": "LE Nsk2-byte scalar in [0, 2^e2)",
+    "sk_b": "LE Nsk3-byte scalar in [0, 2^sbits) with sbits=floor(log2(3^e3))",
+    "shared": "j-invariant Fp2 = LE_Np(real) || LE_Np(imag), 2*Np bytes",
+    "field_element": "little-endian Np-byte encoding, canonical range [0, p-1]"
+  },
+  "parameter_sets": [
+    {
+      "algorithm": "SIDH-p434",
+      "variant": "uncompressed",
+      "e2": 216,
+      "e3": 137,
+      "np": 55,
+      "nsk2": 27,
+      "nsk3": 28,
+      "pk_len": 330,
+      "sk_a_len": 27,
+      "sk_b_len": 28,
+      "shared_len": 110,
+      "source_dir": "P434",
+      "api_header": "P434_api.h",
+      "kat_response": "KAT/PQCkemKAT_374.rsp",
+      "kat_sk_field": 374
+    },
+    {
+      "algorithm": "SIDH-p503",
+      "variant": "uncompressed",
+      "e2": 250,
+      "e3": 159,
+      "np": 63,
+      "nsk2": 32,
+      "nsk3": 32,
+      "pk_len": 378,
+      "sk_a_len": 32,
+      "sk_b_len": 32,
+      "shared_len": 126,
+      "source_dir": "P503",
+      "api_header": "P503_api.h",
+      "kat_response": "KAT/PQCkemKAT_434.rsp",
+      "kat_sk_field": 434
+    },
+    {
+      "algorithm": "SIDH-p610",
+      "variant": "uncompressed",
+      "e2": 305,
+      "e3": 192,
+      "np": 77,
+      "nsk2": 39,
+      "nsk3": 38,
+      "pk_len": 462,
+      "sk_a_len": 39,
+      "sk_b_len": 38,
+      "shared_len": 154,
+      "source_dir": "P610",
+      "api_header": "P610_api.h",
+      "kat_response": "KAT/PQCkemKAT_524.rsp",
+      "kat_sk_field": 524
+    },
+    {
+      "algorithm": "SIDH-p751",
+      "variant": "uncompressed",
+      "e2": 372,
+      "e3": 239,
+      "np": 94,
+      "nsk2": 47,
+      "nsk3": 48,
+      "pk_len": 564,
+      "sk_a_len": 47,
+      "sk_b_len": 48,
+      "shared_len": 188,
+      "source_dir": "P751",
+      "api_header": "P751_api.h",
+      "kat_response": "KAT/PQCkemKAT_644.rsp",
+      "kat_sk_field": 644
+    }
+  ],
+  "build_flags": [
+    "-O2",
+    "-D_GENERIC_",
+    "-D_AMD64_",
+    "-D__NIX__",
+    "-ffp-contract=off",
+    "-fsanitize=fuzzer-no-link,address,undefined"
+  ],
+  "kat_fixture": {
+    "path": "tests/fixtures/sike_sidh/sidh_kat_reference.json",
+    "sha256": "f605b7cf9383172c27285f00be975c50f007805a85a00bca879fe2adf202cf37",
+    "official": false,
+    "source": "no official SIDH KAT response file is published in the pinned repository; the SIDH lane validates role agreement and recorded reference transcripts"
+  }
+}

@@ -54,6 +54,9 @@ struct PairExchangeContract {
   bool secret_key_exchange = false;
   bool secret_key_format_compatible = false;
   bool signature_exchange = false;
+  // Appended for the key-exchange primitive; existing aggregate initializers
+  // keep their meaning.
+  bool peer_key_exchange = false;
 };
 
 struct OracleCallTrace {

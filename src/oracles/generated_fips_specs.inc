@@ -2853,5 +2853,673 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.metadata.negative_control = "the lane reports not_applicable when the timing binary is absent";
     specs.push_back(std::move(spec));
   }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_kat";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps", "decaps"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "kat_bytes_equal";
+    spec.triage_policy = "reference_profile_mismatch";
+    spec.precondition_json = "{\"fixture_required\":true,\"same_algorithm\":true,\"valid_lengths\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K03", "X05"};
+    spec.metadata.claim = "For the official NIST KAT randomness (AES256-CTR-DRBG seeded by the recorded seed), the pinned PQCrypto-SIDH generic build of the same parameter set shall reproduce pk, sk, ct and ss byte-for-byte and the ciphertext shall decapsulate to the recorded secret.";
+    spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
+    spec.metadata.source_reference = "SIKE spec \u00a73 p.48 (KAT); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b; projects/SIKE_SIDH/KAT/PQCkemKAT_*.rsp; source lock src/config/source_locks/sike.json";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"A mismatch violates the pinned reference profile, not the SIKE specification by itself", "The KAT DRBG tape is not interchangeable with an arbitrary SHAKE(seed) tape", "SIKE is known broken since 2022; this is a historical-consistency check only"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the recorded fixture reproduces pk/sk/ct/ss and decapsulates to the recorded secret";
+    spec.metadata.negative_control = "a different DRBG seed produces different bytes";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_local_roundtrip";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps", "decaps"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("SAME_SHARED_SECRET");
+    spec.comparator = "shared_secret_equal";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K03"};
+    spec.metadata.claim = "An honest KeyGen, Encaps and Decaps sequence shall succeed, return exactly the profile ABI lengths, and recover the same shared secret H(m||ct) on both sides.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.10-1.3.11 PDF pp.21-22 (Algorithms 1/2); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Success is not an IND-CCA or quantum-security result; SIKE is known broken", "The hash H is computed over the concatenation m||ct, not over ct alone"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "a freshly generated key pair encapsulates and decapsulates to the same secret";
+    spec.metadata.negative_control = "a tampered ciphertext is covered by sike_fallback_exact";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_cross_exchange";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps", "decaps"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("SAME_SHARED_SECRET");
+    spec.comparator = "shared_secret_equal";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"ciphertext_exchange\"]}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K03", "X05"};
+    spec.metadata.claim = "Two pinned builds of the same uncompressed parameter set, hash and encoding shall cross-verify in both directions: A keygen/B encaps/A decaps and B keygen/A encaps/B decaps recover the same secret; a foreign secret-key decapsulation is enabled only when the pair declares secret-key exchange with a compatible format.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.10-1.3.11 PDF pp.21-22; NIST API contract; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Only the same pinned source is vendored, so the lane is a same-source single-implementation check unless an independent build is supplied", "The compressed and uncompressed wire formats are not interchangeable"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "both exchange directions recover the same shared secret";
+    spec.metadata.negative_control = "the pair declares public key and ciphertext exchange before enabling";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_reencryption_gate";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"decaps"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"ciphertext.c0", "ciphertext.c1"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "gate_classification_equal";
+    spec.triage_policy = "reencryption_gate_mismatch";
+    spec.precondition_json = "{\"model_lane_available\":true,\"valid_ciphertext_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K05", "P15"};
+    spec.metadata.claim = "Starting from a valid baseline, changing one field-aligned component of c0 or c1 shall make decapsulation follow the branch independently predicted by the model: if the recomputed c0' equals the received c0 the target returns H(m'||ct), otherwise it returns H(s||ct); every candidate is classified by the model before the target verdict and no assumption is made that a mutation fails.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.11 PDF pp.21-22, Algorithm 2 lines 10-16; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"The model uses the profile's c0 exact-comparison, not a prefix or decoded-j comparison", "Non-canonical field encodings may be rejected by the parser and are classified by sike_field_encoding instead"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the unmodified baseline takes the correct branch on both sides";
+    spec.metadata.negative_control = "each mutated candidate is classified as correct or fallback by the independent model before comparison";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_fallback_exact";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"decaps"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"ciphertext.c0", "ciphertext.c1"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "shake256_fallback_equal";
+    spec.triage_policy = "implicit_rejection_output_mismatch";
+    spec.precondition_json = "{\"fail_classified_ciphertext\":true,\"model_lane_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P15", "H06"};
+    spec.metadata.claim = "For a parseable ciphertext whose model-recomputed c0' differs from the received c0, decapsulation shall output exactly SHAKE256(s||raw_ct, k/8) and repeat it stably; both c0 and c1 are included in the hash and the output length equals the profile ss_len.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.4 PDF pp.23-25 (H(m||ct) and H(s||ct)); Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"\"Reject or different secret\" is not accepted as a substitute for the exact SHAKE256 formula", "Illegal field encodings may take a different outer result and are covered by sike_field_encoding", "All-zero fallback output is not accepted as evidence"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the valid ciphertext output is H(m||ct) and differs from the fallback";
+    spec.metadata.negative_control = "the fallback output is compared with an independent SHAKE256(s||raw_ct) computation";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_fallback_seed_separation";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"decaps", "keygen"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"secret_key.s"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "shake256_fallback_equal";
+    spec.triage_policy = "fallback_seed_separation_violation";
+    spec.precondition_json = "{\"valid_ciphertext_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P15", "P12"};
+    spec.metadata.claim = "The leading s bytes of the secret key shall enter only the fallback hash: changing one s byte leaves a valid ciphertext output unchanged and makes a confirmed gate-fail ciphertext output equal SHAKE256(new_s||raw_ct, k/8), while sk3 and the embedded pk3 stay byte-identical.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.11 PDF pp.21-22, Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"An accidental output equality is not by itself a key-recovery claim; the exact hash formula is required", "Only the s prefix is mutated; sk3 or pk3 changes belong to sike_key_consistency"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "a valid ciphertext output is unaffected by the s prefix";
+    spec.metadata.negative_control = "a confirmed gate-fail ciphertext output tracks the mutated s prefix through the independent SHAKE256 computation";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_field_encoding";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"decaps", "encaps"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"public_key.coordinate", "ciphertext.coordinate"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "codec_classification_equal";
+    spec.triage_policy = "field_encoding_mismatch";
+    spec.precondition_json = "{\"coderoundtrip_model_available\":true,\"valid_inputs_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P09", "P11"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_field_encoding.codec_normative";
+      variant.conditions.push_back({"format", "codec"});
+    variant.metadata.claim = "The independent codec shall decode only canonical little-endian Fp values in [0, p-1] and shall not reduce a value p or above modulo p.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "parser";
+    variant.metadata.limitations = {"The codec is a test model of ostofp/fp2toos, not a target-internal entry point"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "p-1 decodes to the canonical representative and re-encodes identically";
+    variant.metadata.negative_control = "p and p+1 are classified out of range";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_field_encoding.api_observation";
+      variant.conditions.push_back({"format", "api"});
+    variant.metadata.claim = "Through the external KEM entry points, a non-canonical ciphertext coordinate is recorded as an implementation observation: the declared PK_VALIDATION path, return code and output length are saved, but no reduction or rejection contract is invented.";
+    variant.metadata.evidence_class = EvidenceClass::kImplementationObserved;
+    variant.metadata.source_reference = "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15; pinned config.h PK_VALIDATION switch";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"The specification does not assign a normative outer error shape for non-canonical KEM inputs"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the canonical coordinate through the same path is recorded";
+    variant.metadata.negative_control = "the non-canonical coordinate is a real byte-level change recorded in the trace";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "For every Fp limb, the codec shall decode only canonical little-endian values in [0, p-1]; the boundary values p-1, p, p+1, all-FF and nonzero unused top bits each receive the classification predicted by the independent integer model, and a value not in [0, p-1] must not be silently reduced mod p.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.2.3-1.2.5 PDF pp.11-15 (ostofp/fp2toos); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "parser";
+    spec.metadata.limitations = {"The fixed-pointer KEM API has no separate parser return value; parser FAIL is not by itself a KEM rejection contract", "External KEM behaviour for non-canonical inputs follows the declared PK_VALIDATION profile path"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "canonical real/imag field fixtures decode and re-encode identically";
+    spec.metadata.negative_control = "each out-of-range limb is classified by the independent integer model before any target verdict";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_key_consistency";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "decaps"};
+    spec.mutation_type = "key_algebra";
+    spec.mutation_targets = {"secret_key.sk3", "secret_key.pk3"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "key_consistency_equal";
+    spec.triage_policy = "key_consistency_mismatch";
+    spec.precondition_json = "{\"model_lane_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P12"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_key_consistency.generated_normative";
+      variant.conditions.push_back({"format", "generated"});
+    variant.metadata.claim = "An honestly generated secret key satisfies embedded_pk3 == pk and sk3 < 2^floor(log2(3^e3)), and the pk3 limbs are canonical.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "SIKE spec \u00a71.3.9 PDF pp.20-21; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "component";
+    variant.metadata.limitations = {"Invariant checked from generated material only"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest key passes the embedded-key equality and scalar range checks";
+    variant.metadata.negative_control = "a perturbed embedded pk3 changes the recomputed gate classification";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_key_consistency.import_observation";
+      variant.conditions.push_back({"format", "import"});
+    variant.metadata.claim = "For an imported key with a replaced embedded pk3, only the observed gate outcome is recorded; no secret-key import validation is assumed beyond the profile's declared parser behaviour.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "NIST API contract; pinned PQCrypto-SIDH wrapper; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"The NIST API does not mandate secret-key import validation"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest key decapsulates";
+    variant.metadata.negative_control = "the imported key is a real byte-level change recorded in the trace";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "For an honestly generated key, the embedded pk3 inside sk shall equal the public key returned by KeyGen and lie in the canonical field range, and the scalar sk3 shall lie in [0, 2^floor(log2(3^e3))); replacing the embedded pk3 is only observed through the gate recomputation and no undeclared key-import validation is required.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.9 PDF pp.20-21 (secret scalar spaces), Algorithm 2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "component";
+    spec.metadata.limitations = {"This is a generated-key invariant; it does not claim the API rejects malformed keys", "Only the uncompressed secret-key layout is covered"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the honest generated key satisfies the embedded-key equality and scalar range";
+    spec.metadata.negative_control = "a changed embedded pk3 is classified by the model before any target verdict";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_pke_relation";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"encaps", "decaps"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"ciphertext.c1"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "pke_relation_equal";
+    spec.triage_policy = "pke_relation_mismatch";
+    spec.precondition_json = "{\"dpke_hook_available\":false,\"model_lane_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K03", "H06"};
+    spec.metadata.claim = "The independent model shall check the PKE relation: fixed m and r decrypt to m, F(j) is the correct SHAKE256 output, and while a c1 XOR-delta changes the recovered PKE message it does not bypass the KEM re-encryption gate; PKE malleability is correct behaviour and is not reported as a SIKE KEM CCA vulnerability.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec Algorithm 1 \u00a71.3.10 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"The pinned external API exposes no PKE decrypt entry point, so the relation is evaluated by the independent Python model lane", "The c1 XOR-delta result is interpreted only through the gate, never as a direct CCA break"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the model reproduces PKE Enc/Dec and F(j) on a fixed fixture";
+    spec.metadata.negative_control = "the XOR-delta candidate is classified as a gate failure, not a successful decapsulation";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_lengths_state";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps", "decaps"};
+    spec.mutation_type = "length_boundary";
+    spec.mutation_targets = {"pk", "sk", "ct"};
+    spec.expected_relation = ExpectedRelationFromName("REJECT_OR_INVALID_INPUT");
+    spec.comparator = "status_or_length_state";
+    spec.triage_policy = "adapter_length_boundary";
+    spec.precondition_json = "{\"valid_inputs_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P10", "P16", "X01"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_lengths_state.api_normative";
+      variant.conditions.push_back({"format", "api"});
+    variant.metadata.claim = "Every wrong input length is rejected by the length-aware wrapper before any pointer reaches the fixed-size target, and the exact length enters the target.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "Harness common contract \u00a71.4.1; SIKE spec \u00a71.3.11 PDF p.22";
+    variant.metadata.scope_api_layer = "adapter";
+    variant.metadata.limitations = {"Adapter-layer checks are not target rejection evidence"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the exact profile length enters the target";
+    variant.metadata.negative_control = "each wrong length is rejected at the adapter layer without pointer dereference";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_lengths_state.failure_state_observed";
+      variant.conditions.push_back({"format", "failure"});
+    variant.metadata.claim = "A failed decapsulation keeps a consistent status and leaves no 0xA5 sentinel in the declared output length when the call returns success.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Harness common contract \u00a71.4.5; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"The specification does not define an output-zeroing requirement on failure"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest decapsulation returns the full ss_len";
+    variant.metadata.negative_control = "a poisoned sentinel buffer is distinguished from a successful secret";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "The length-aware adapter wrapper shall reject ciphertext, secret key and public key buffers of length 0, 1, L-1 and L+1 at the adapter layer while the exact profile length enters the fixed-size target API, and failure paths shall not leave sentinel bytes in the declared output length.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "Harness common contract \u00a71.4.1; SIKE spec NIST API layout \u00a71.3.11 PDF p.22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "adapter";
+    spec.metadata.limitations = {"The fixed-pointer NIST API has no observable input length; short-buffer calls are not part of its conformance surface", "The allowed failure output state is profile-specific; \"must zero\" is not assumed for all APIs"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the exact profile length enters the target for pk, sk and ct";
+    spec.metadata.negative_control = "every wrong length is rejected at the adapter layer without pointer dereference";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_rng_replay";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps"};
+    spec.mutation_type = "bad_randomness";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "rng_bytes_equal";
+    spec.triage_policy = "rng_contract_violation";
+    spec.precondition_json = "{\"rng_injection_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P13", "P14", "X09"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_rng_replay.api_normative";
+      variant.conditions.push_back({"format", "api"});
+    variant.metadata.claim = "KeyGen and Encaps consume the documented tape regions and reproduce byte-identical outputs for the same tape and build.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "SIKE spec \u00a71.3.9/\u00a71.4 PDF pp.20-25";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"Reproducibility is a same-build property"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "two runs under the same tape agree";
+    variant.metadata.negative_control = "a different tape changes the key material";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sike_rng_replay.failure_hardening";
+      variant.conditions.push_back({"format", "failure"});
+    variant.metadata.claim = "An injected RNG failure is observable by the harness control; a void RNG API cannot report it and is recorded separately.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Harness common contract \u00a71.4.4; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"The pinned randombytes returns int, so a failure can be propagated; the harness records both layers"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest tape path succeeds";
+    variant.metadata.negative_control = "the failure-mode tape is observed as consumed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "KeyGen shall consume the s prefix and the sk3 scalar from the tape and Encaps shall consume m from the tape; the same tape on the same build shall reproduce identical outputs, a different tape shall change the key material, and an injected failure shall be observable by the RNG control rather than silently replaced by system entropy.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.9 and \u00a71.4 PDF pp.20-25 (scalar sampling and G); plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Same-tape equality only holds for the same build and call path", "Cross-library signature or key byte equality additionally requires an identical RNG/sampling contract", "All-zero successful randomness is not by itself a specification violation"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "two runs under the same tape agree";
+    spec.metadata.negative_control = "a different tape changes the key material and the failure-mode tape is observed";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_compressed_profile";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"keygen", "encaps", "decaps"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"ciphertext.flags", "public_key.torsion", "ciphertext.A"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "compressed_roundtrip_equal";
+    spec.triage_policy = "compressed_profile_mismatch";
+    spec.precondition_json = "{\"compressed_source_available\":false,\"valid_lengths\":true}";
+    spec.enabled_by_default = false;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P11", "X05"};
+    spec.metadata.claim = "When the opt-in compressed lane is enabled with its own locked source, KAT and ABI, a valid compressed key/ciphertext round-trips and the compressed-specific failure paths (t flag modulus, flag high bits, A limbs, truncation, invalid decompression) receive the classification of the compressed model; compressed and uncompressed bytes are never exchanged directly.";
+    spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
+    spec.metadata.source_reference = "SIKE spec \u00a71.2.10/\u00a71.5 PDF pp.15-18 and Appendix C PDF pp.87-97; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Opt-in P2 lane; disabled by default and excluded from the uncompressed completion count", "The compressed ABI and KAT differ from the uncompressed profile and must be locked separately", "The forward cpktoos description alone does not define decompression rejection rules"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the compressed KAT record round-trips under the compressed profile";
+    spec.metadata.negative_control = "each compressed-specific boundary is classified by the compressed model";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_fault_gate";
+    spec.algorithm_family = "SIKE";
+    spec.primitive_type = "kem";
+    spec.api_surface = {"decaps"};
+    spec.mutation_type = "fault_injection";
+    spec.mutation_targets = {"gate_compare", "conditional_select", "H_input"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "mutant_is_detected";
+    spec.triage_policy = "fault_check_missing";
+    spec.precondition_json = "{\"test_mutant_available\":true}";
+    spec.enabled_by_default = false;
+    spec.requires_api = "";
+    spec.property_ids = {"P18", "P15"};
+    spec.metadata.claim = "A deliberately faulted build that ignores the c0 comparison, always selects the valid or fallback branch, or omits c1 from the H input shall be detected by sike_reencryption_gate, sike_fallback_exact and sike_fallback_seed_separation; the fault-free reference is accepted by the same tests.";
+    spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    spec.metadata.source_reference = "SIKE spec Algorithm 2 \u00a71.3.11 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "component";
+    spec.metadata.limitations = {"Opt-in P2 lane; only the shipped test mutants are exercised"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the fault-free adapter is accepted";
+    spec.metadata.negative_control = "each shipped mutant is caught by its designated oracle";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_agreement";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("SAME_SHARED_SECRET");
+    spec.comparator = "shared_secret_equal";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"K03", "X05"};
+    spec.metadata.claim = "Two real role key generations and derivations shall succeed, return the role ABI lengths, and produce the same native shared value: fp2toos(isoex2(pkB,skA)) == fp2toos(isoex3(pkA,skB)) at length 2*Np; the derandomization hook shall accept scalar 0, 1 and the largest legal scalar as positive controls.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.6-1.3.9 PDF pp.18-21 and \u00a71.3.10 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"SIDH is not authenticated and provides no contributory behaviour, forward secrecy or CCA protection", "The native shared value is the 2*Np-byte j-invariant encoding, never a SIKE KDF secret", "SIKE and SIDH shared values are not interchangeable"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "both roles derive the same 2*Np-byte shared value";
+    spec.metadata.negative_control = "the SIKE ss_len is never used as the expected SIDH length";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_cross_agreement";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "none";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("SAME_SHARED_SECRET");
+    spec.comparator = "shared_secret_equal";
+    spec.triage_policy = "semantic_mismatch_requires_manual_review";
+    spec.precondition_json = "{\"compatible_reference_available\":false,\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"peer_key_exchange\"]}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"X05"};
+    spec.metadata.claim = "When a compatible independent reference or optimized build of the same parameter set is supplied, Alice's scalar and public key computed by either build shall agree and both role orders shall recover the same shared value; the normal and optimized strategies shall produce identical j-invariants after normalization.";
+    spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.8 PDF pp.19-20 and Appendices A/B \u00a72.1-2.2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Only the pinned generic source is vendored, so the lane degrades to a same-source single-implementation check and must be reported as such", "Textbook Weierstrass examples from the specification are not a byte-compatible pair", "Projective coordinates are compared only after normalization to a mathematical invariant"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "both builds and both role orders recover the same shared value";
+    spec.metadata.negative_control = "the pair declares peer key exchange and a compatible reference before enabling";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_field_curve_checks";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "field_aware";
+    spec.mutation_targets = {"public_key.coordinate"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "codec_classification_equal";
+    spec.triage_policy = "field_encoding_mismatch";
+    spec.precondition_json = "{\"model_lane_available\":true,\"valid_inputs_before_mutation\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P08", "P11", "X01"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sidh_field_curve_checks.hook_normative";
+      variant.conditions.push_back({"format", "hook"});
+    variant.metadata.claim = "The model cfpk/coordinate checks classify canonical boundaries and a zero x-coordinate exactly as the pinned reference helper does.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "SIKE spec \u00a71.2.1 and Appendix A/B; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "component";
+    variant.metadata.limitations = {"The hook is a test-only build of the pinned helper, not a public API"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "p-1 and a valid basis are classified as accepted";
+    variant.metadata.negative_control = "p, p+1 and x=0 are classified as rejected";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sidh_field_curve_checks.api_observation";
+      variant.conditions.push_back({"format", "api"});
+    variant.metadata.claim = "Degenerate or malformed peer keys passed through the external KEX API are recorded as observations (status, output length, shared value), because the API does not declare full public-key validation.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "NIST API contract; pinned PQCrypto-SIDH implementation; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"No rejection contract is assumed; acceptance of a malformed peer key is reported, not treated as a specification violation"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest peer key produces the expected shared value";
+    variant.metadata.negative_control = "each malformed peer key is a real byte-level change recorded in the trace";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "The independent model shall classify public-key coordinates against the canonical field range (p-1 accepted, p and above rejected) and a cfpk fixture with x=0 shall be classified as FAIL; degenerate curves (A^2=4), repeated points and low-order points are treated as a robustness set whose behaviour is recorded, without inventing a complete public-key validation promise for the target.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.2.1 PDF pp.11-12 and \u00a71.1.4; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "component";
+    spec.metadata.limitations = {"Range-valid is not the same as a valid basis or a valid curve", "The target API does not promise full subgroup or supersingularity validation; target-side behaviour is a separate API observation"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "canonical coordinates and an honest public key are accepted";
+    spec.metadata.negative_control = "out-of-range, zero and degenerate candidates are classified by the independent model before any target verdict";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_role_scalar_profile";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "key_algebra";
+    spec.mutation_targets = {"secret_key.scalar_a", "secret_key.scalar_b"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "role_scalar_classification_equal";
+    spec.triage_policy = "role_scalar_profile_mismatch";
+    spec.precondition_json = "{\"model_lane_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P11", "P12", "X05"};
+    spec.metadata.claim = "The model shall check role-specific scalar spaces: skA in [0,2^e2) with Nsk2 bytes and skB in [0,2^floor(log2(3^e3))) with Nsk3 bytes, the public keys use the complementary torsion basis, and a typed wrapper shall reject passing skA where skB or a peer key role is expected.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3.3 and \u00a71.3.9 PDF pp.18-21; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "adapter";
+    spec.metadata.limitations = {"Role separation in a C wrapper is a harness contract, not a high-level authentication guarantee", "Scalar range validity is not a security result against the 2022 attacks"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the minimum, maximum and honestly generated scalars for each role are classified as in range";
+    spec.metadata.negative_control = "an out-of-range or role-swapped scalar is classified as misrouted or out of range";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_isogeny_math";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "math_relation";
+    spec.mutation_targets = {"fp2_arithmetic", "cfpk", "j_invariant"};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "model_math_equal";
+    spec.triage_policy = "isogeny_math_mismatch";
+    spec.precondition_json = "{\"hook_lane_available\":true,\"model_lane_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P12", "X05"};
+    spec.metadata.claim = "The independent integer model shall agree with the pinned reference on Fp2 multiplication and inversion, cfpk from a public basis, and the j-invariant, including j(A=6) = 287496 mod p; after an isogeny the basis order and normalized mathematical quantities shall agree with the reference computation.";
+    spec.metadata.evidence_class = EvidenceClass::kNormative;
+    spec.metadata.source_reference = "SIKE spec \u00a71.1 PDF pp.8-11 and Appendices A/B; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "internal";
+    spec.metadata.limitations = {"The expensive full isogeny reference is the pinned generic implementation; the Python model provides an independent cross-check of the intermediate layers only", "Projective coordinates are compared only through normalized invariants"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the model reproduces the pinned reference on fixed field, cfpk and j-invariant fixtures";
+    spec.metadata.negative_control = "a perturbed A or coordinate changes the normalized j-invariant";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sidh_resources_rng";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"keygen_a", "keygen_b", "derive_a", "derive_b"};
+    spec.mutation_type = "bad_randomness";
+    spec.mutation_targets = {};
+    spec.expected_relation = ExpectedRelationFromName("EXPECT_EQUAL");
+    spec.comparator = "rng_and_state_equal";
+    spec.triage_policy = "rng_contract_violation";
+    spec.precondition_json = "{\"isolated_worker_available\":true,\"rng_injection_available\":true}";
+    spec.enabled_by_default = true;
+    spec.requires_api = "";
+    spec.property_ids = {"P13", "P16", "X01", "X04"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sidh_resources_rng.api_normative";
+      variant.conditions.push_back({"format", "api"});
+    variant.metadata.claim = "Key generation consumes the documented tape and reproduces the same public key for the same scalar and tape; the shared output length is exactly 2*Np.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "SIKE spec \u00a71.3.6-1.3.9 PDF pp.18-21";
+    variant.metadata.scope_api_layer = "external";
+    variant.metadata.limitations = {"Reproducibility is a same-build property"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the same tape and scalar reproduce the same public key";
+    variant.metadata.negative_control = "a different tape or scalar changes the public key";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "sidh_resources_rng.failure_hardening";
+      variant.conditions.push_back({"format", "failure"});
+    variant.metadata.claim = "A failure-mode tape is observed by the harness control and does not silently fall back to system entropy; no sentinel bytes remain in a successful output.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "Harness common contract \u00a71.4.4-1.4.5; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"The allowed failure output state is profile-specific; \"must zero\" is not assumed"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the honest path returns the full shared length";
+    variant.metadata.negative_control = "the failure-mode tape is observed as consumed";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    spec.metadata.claim = "Each role's key generation shall consume its own tape, a failure shall be observable rather than silently replaced, the declared output length shall always be fully written on success (no 0xA5 sentinel), and anomalous peer keys shall execute in the isolated worker without inventing a rejection contract.";
+    spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    spec.metadata.source_reference = "SIKE spec \u00a71.3 PDF pp.18-20; harness common contract \u00a71.4.4-1.4.6; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"The API does not declare a rejection of anomalous peer keys, so only safe execution and the declared output shape are checked", "Same-tape equality is a same-build property", "Timing conclusions are excluded from this oracle"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the honest keygen/derive paths return the full declared lengths";
+    spec.metadata.negative_control = "failure-mode tapes are observed and anomalous inputs are a recorded byte-level change";
+    specs.push_back(std::move(spec));
+  }
+  {
+    OracleSpec spec;
+    spec.oracle_id = "sike_sidh_timing";
+    spec.algorithm_family = "SIDH";
+    spec.primitive_type = "kex";
+    spec.api_surface = {"derive_a", "derive_b"};
+    spec.mutation_type = "timing_probe";
+    spec.mutation_targets = {"sike_correct_vs_fallback", "sidh_scalar_classes"};
+    spec.expected_relation = ExpectedRelationFromName("NO_TIMEOUT");
+    spec.comparator = "timing_distribution_pair";
+    spec.triage_policy = "timing_signal_requires_manual_review";
+    spec.precondition_json = "{\"timing_lane_available\":false}";
+    spec.enabled_by_default = false;
+    spec.requires_api = "";
+    spec.property_ids = {"P17", "X02"};
+    spec.metadata.claim = "The opt-in timing lane shall compare SIKE correct versus fallback path and SIDH scalar classes in a dedicated non-sanitized binary with CPU control, warmup and multiple-comparison correction; the generic variable-time reference is never used to claim that an optimized target is unsafe.";
+    spec.metadata.evidence_class = EvidenceClass::kInference;
+    spec.metadata.source_reference = "SIKE spec \u00a72.1-2.2 and \u00a75.3; harness common \u00a71.4 timing policy; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b";
+    spec.metadata.scope_api_layer = "external";
+    spec.metadata.limitations = {"Opt-in P2 lane; not part of the default smoke contract", "Sanitized default binaries never produce a timing conclusion", "Only candidate evidence is produced; the measured object is labelled explicitly"};
+    spec.metadata.conditional_verdict = "";
+    spec.metadata.positive_control = "the valid class is measured in the same harness";
+    spec.metadata.negative_control = "the lane reports not_applicable when the timing binary or capability is absent";
+    specs.push_back(std::move(spec));
+  }
   return specs;
 }

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "adapters/adapter_interface.h"
+#include "adapters/kex_adapter_interface.h"
 
 namespace pqcfuzz {
 
@@ -16,6 +17,11 @@ struct AdapterRoutingExpectation {
   size_t ct_len = 0;
   size_t ss_len = 0;
   size_t sig_max_len = 0;
+  // Appended for the key-exchange primitive; default zero keeps existing
+  // aggregate initializers meaningful.
+  size_t sk_a_len = 0;
+  size_t sk_b_len = 0;
+  size_t shared_len = 0;
 };
 
 const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
@@ -26,12 +32,20 @@ const pqcfuzz_sig_adapter *GetSigAdapterByProjectAndId(
     const std::string &project_id,
     const std::string &implementation_id);
 
+const pqcfuzz_kex_adapter *GetKexAdapterByProjectAndId(
+    const std::string &project_id,
+    const std::string &implementation_id);
+
 bool ValidateKemAdapterRouting(
     const pqcfuzz_kem_adapter *adapter,
     const AdapterRoutingExpectation &expected,
     std::string *error);
 bool ValidateSigAdapterRouting(
     const pqcfuzz_sig_adapter *adapter,
+    const AdapterRoutingExpectation &expected,
+    std::string *error);
+bool ValidateKexAdapterRouting(
+    const pqcfuzz_kex_adapter *adapter,
     const AdapterRoutingExpectation &expected,
     std::string *error);
 

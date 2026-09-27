@@ -22,7 +22,7 @@ bool IsKnownOp(uint8_t value) {
 }
 
 bool IsKnownField(uint8_t value) {
-  return value <= static_cast<uint8_t>(SchemeMutationField::kKemSecretKeyPrf);
+  return value <= kLastSchemeMutationField;
 }
 
 }  // namespace
@@ -123,6 +123,26 @@ const char *SchemeMutationFieldName(SchemeMutationField field) {
       return "kem.secret_key.s3";
     case SchemeMutationField::kKemSecretKeyPrf:
       return "kem.secret_key.prf";
+    case SchemeMutationField::kSikeCiphertextC0:
+      return "sike.ciphertext.c0";
+    case SchemeMutationField::kSikeCiphertextC1:
+      return "sike.ciphertext.c1";
+    case SchemeMutationField::kSikeCiphertextCoordinate:
+      return "sike.ciphertext.coordinate";
+    case SchemeMutationField::kSikeSecretKeyS:
+      return "sike.secret_key.s";
+    case SchemeMutationField::kSikeSecretKeySk3:
+      return "sike.secret_key.sk3";
+    case SchemeMutationField::kSikeSecretKeyPk3:
+      return "sike.secret_key.pk3";
+    case SchemeMutationField::kSikePublicKeyCoordinate:
+      return "sike.public_key.coordinate";
+    case SchemeMutationField::kSidhSecretKeyScalarA:
+      return "sidh.secret_key.scalar_a";
+    case SchemeMutationField::kSidhSecretKeyScalarB:
+      return "sidh.secret_key.scalar_b";
+    case SchemeMutationField::kSidhPeerPublicKey:
+      return "sidh.peer_public_key";
   }
   return "unknown";
 }

@@ -36,6 +36,7 @@ struct ReplayArgs {
   bool secret_key_exchange = false;
   bool secret_key_format_compatible = false;
   bool signature_exchange = false;
+  bool peer_key_exchange = false;
 };
 
 const char *OracleSuiteName(OracleSuite suite);

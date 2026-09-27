@@ -71,6 +71,26 @@ _PROFILE_ALGORITHM_FIELDS = (
     "tail_unused_bits",
     "sample_fg_bytes",
     "sample_rm_bytes",
+    # SIKE / SIDH family fields.
+    "e2",
+    "e3",
+    "np",
+    "nsk2",
+    "nsk3",
+    "msg_bytes",
+    "shared_len",
+    "sk_a_len",
+    "sk_b_len",
+    "sk_s_off",
+    "sk_sk3_off",
+    "sk_pk_off",
+    "c0_len",
+    "c1_off",
+    "role",
+    "source_dir",
+    "api_header",
+    "kat_response",
+    "kat_sk_field",
 )
 
 
@@ -103,11 +123,16 @@ def load_scheme_profile_algorithms() -> dict[str, dict[str, Any]]:
                     if field in parameter_set
                 }
             )
-            required_fields = ["family", "primitive_type", "pk_len", "sk_len"]
-            if metadata.get("primitive_type") == "kem":
-                required_fields += ["ct_len", "ss_len"]
+            if metadata.get("primitive_type") == "kex":
+                # A key-exchange pair has role-specific private keys; a single
+                # global sk_len must not overwrite either side's storage format.
+                required_fields = ["family", "primitive_type", "pk_len", "sk_a_len", "sk_b_len", "shared_len"]
             else:
-                required_fields += ["sig_max_len"]
+                required_fields = ["family", "primitive_type", "pk_len", "sk_len"]
+                if metadata.get("primitive_type") == "kem":
+                    required_fields += ["ct_len", "ss_len"]
+                else:
+                    required_fields += ["sig_max_len"]
             missing = [field for field in required_fields if field not in metadata]
             if missing:
                 raise PairAlgError(
@@ -426,14 +451,22 @@ SUPPORTED_ALGORITHMS = {
 API_NAMES_BY_PRIMITIVE = {
     "kem": ("keygen", "encaps", "decaps"),
     "sig": ("keygen", "sign", "verify"),
+    # key exchange: role-typed keygen and derivation.  derive_a consumes the
+    # peer's B public key and the caller's A private key; derive_b is the
+    # mirror image.
+    "kex": ("keygen_a", "keygen_b", "derive_a", "derive_b"),
 }
 ABI_FIELDS_BY_PRIMITIVE = {
     "kem": ("pk_len", "sk_len", "ct_len", "ss_len"),
     "sig": ("pk_len", "sk_len", "sig_max_len"),
+    "kex": ("pk_len", "sk_a_len", "sk_b_len", "shared_len"),
 }
 EXCHANGE_FIELDS_BY_PRIMITIVE = {
     "kem": ("public_key_exchange", "ciphertext_exchange", "secret_key_exchange", "secret_key_format_compatible"),
     "sig": ("public_key_exchange", "signature_exchange"),
+    # peer_key_exchange states that the two roles exchange public keys and
+    # derive the same shared value.
+    "kex": ("public_key_exchange", "peer_key_exchange", "secret_key_exchange", "secret_key_format_compatible"),
 }
 SIG_CAPABILITY_FIELDS = (
     "supports_context",

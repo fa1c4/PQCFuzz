@@ -1,0 +1,397 @@
+{
+  "oracles": [
+    {
+      "oracle_id": "sidh_agreement",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "K03",
+        "X05"
+      ],
+      "precondition": {
+        "same_algorithm": true,
+        "valid_lengths": true
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "shared_secret_equal",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "Two real role key generations and derivations shall succeed, return the role ABI lengths, and produce the same native shared value: fp2toos(isoex2(pkB,skA)) == fp2toos(isoex3(pkA,skB)) at length 2*Np; the derandomization hook shall accept scalar 0, 1 and the largest legal scalar as positive controls.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.6-1.3.9 PDF pp.18-21 and \u00a71.3.10 PDF pp.21-22; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "SIDH is not authenticated and provides no contributory behaviour, forward secrecy or CCA protection",
+        "The native shared value is the 2*Np-byte j-invariant encoding, never a SIKE KDF secret",
+        "SIKE and SIDH shared values are not interchangeable"
+      ],
+      "controls": {
+        "positive_control": "both roles derive the same 2*Np-byte shared value",
+        "negative_control": "the SIKE ss_len is never used as the expected SIDH length"
+      }
+    },
+    {
+      "oracle_id": "sidh_cross_agreement",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "X05"
+      ],
+      "precondition": {
+        "pair_alg_exchange_contract_required": [
+          "public_key_exchange",
+          "peer_key_exchange"
+        ],
+        "compatible_reference_available": false
+      },
+      "mutation": {
+        "type": "none"
+      },
+      "expected_relation": "SAME_SHARED_SECRET",
+      "comparator": "shared_secret_equal",
+      "triage_policy": "semantic_mismatch_requires_manual_review",
+      "claim": "When a compatible independent reference or optimized build of the same parameter set is supplied, Alice's scalar and public key computed by either build shall agree and both role orders shall recover the same shared value; the normal and optimized strategies shall produce identical j-invariants after normalization.",
+      "evidence_class": "REFERENCE_DERIVED",
+      "source_reference": "SIKE spec \u00a71.3.8 PDF pp.19-20 and Appendices A/B \u00a72.1-2.2; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Only the pinned generic source is vendored, so the lane degrades to a same-source single-implementation check and must be reported as such",
+        "Textbook Weierstrass examples from the specification are not a byte-compatible pair",
+        "Projective coordinates are compared only after normalization to a mathematical invariant"
+      ],
+      "controls": {
+        "positive_control": "both builds and both role orders recover the same shared value",
+        "negative_control": "the pair declares peer key exchange and a compatible reference before enabling"
+      }
+    },
+    {
+      "oracle_id": "sidh_field_curve_checks",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "P08",
+        "P11",
+        "X01"
+      ],
+      "precondition": {
+        "model_lane_available": true,
+        "valid_inputs_before_mutation": true
+      },
+      "mutation": {
+        "type": "field_aware",
+        "targets": [
+          "public_key.coordinate"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "codec_classification_equal",
+      "triage_policy": "field_encoding_mismatch",
+      "claim": "The independent model shall classify public-key coordinates against the canonical field range (p-1 accepted, p and above rejected) and a cfpk fixture with x=0 shall be classified as FAIL; degenerate curves (A^2=4), repeated points and low-order points are treated as a robustness set whose behaviour is recorded, without inventing a complete public-key validation promise for the target.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.2.1 PDF pp.11-12 and \u00a71.1.4; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "component"
+      },
+      "limitations": [
+        "Range-valid is not the same as a valid basis or a valid curve",
+        "The target API does not promise full subgroup or supersingularity validation; target-side behaviour is a separate API observation"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sidh_field_curve_checks.hook_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "hook"
+            }
+          ],
+          "claim": "The model cfpk/coordinate checks classify canonical boundaries and a zero x-coordinate exactly as the pinned reference helper does.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "SIKE spec \u00a71.2.1 and Appendix A/B; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "component"
+          },
+          "limitations": [
+            "The hook is a test-only build of the pinned helper, not a public API"
+          ],
+          "controls": {
+            "positive_control": "p-1 and a valid basis are classified as accepted",
+            "negative_control": "p, p+1 and x=0 are classified as rejected"
+          }
+        },
+        {
+          "claim_id": "sidh_field_curve_checks.api_observation",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "api"
+            }
+          ],
+          "claim": "Degenerate or malformed peer keys passed through the external KEX API are recorded as observations (status, output length, shared value), because the API does not declare full public-key validation.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "NIST API contract; pinned PQCrypto-SIDH implementation; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "No rejection contract is assumed; acceptance of a malformed peer key is reported, not treated as a specification violation"
+          ],
+          "controls": {
+            "positive_control": "the honest peer key produces the expected shared value",
+            "negative_control": "each malformed peer key is a real byte-level change recorded in the trace"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "canonical coordinates and an honest public key are accepted",
+        "negative_control": "out-of-range, zero and degenerate candidates are classified by the independent model before any target verdict"
+      }
+    },
+    {
+      "oracle_id": "sidh_role_scalar_profile",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "P11",
+        "P12",
+        "X05"
+      ],
+      "precondition": {
+        "model_lane_available": true
+      },
+      "mutation": {
+        "type": "key_algebra",
+        "targets": [
+          "secret_key.scalar_a",
+          "secret_key.scalar_b"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "role_scalar_classification_equal",
+      "triage_policy": "role_scalar_profile_mismatch",
+      "claim": "The model shall check role-specific scalar spaces: skA in [0,2^e2) with Nsk2 bytes and skB in [0,2^floor(log2(3^e3))) with Nsk3 bytes, the public keys use the complementary torsion basis, and a typed wrapper shall reject passing skA where skB or a peer key role is expected.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.3.3 and \u00a71.3.9 PDF pp.18-21; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "adapter"
+      },
+      "limitations": [
+        "Role separation in a C wrapper is a harness contract, not a high-level authentication guarantee",
+        "Scalar range validity is not a security result against the 2022 attacks"
+      ],
+      "controls": {
+        "positive_control": "the minimum, maximum and honestly generated scalars for each role are classified as in range",
+        "negative_control": "an out-of-range or role-swapped scalar is classified as misrouted or out of range"
+      }
+    },
+    {
+      "oracle_id": "sidh_isogeny_math",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "P12",
+        "X05"
+      ],
+      "precondition": {
+        "model_lane_available": true,
+        "hook_lane_available": true
+      },
+      "mutation": {
+        "type": "math_relation",
+        "targets": [
+          "fp2_arithmetic",
+          "cfpk",
+          "j_invariant"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "model_math_equal",
+      "triage_policy": "isogeny_math_mismatch",
+      "claim": "The independent integer model shall agree with the pinned reference on Fp2 multiplication and inversion, cfpk from a public basis, and the j-invariant, including j(A=6) = 287496 mod p; after an isogeny the basis order and normalized mathematical quantities shall agree with the reference computation.",
+      "evidence_class": "NORMATIVE",
+      "source_reference": "SIKE spec \u00a71.1 PDF pp.8-11 and Appendices A/B; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "internal"
+      },
+      "limitations": [
+        "The expensive full isogeny reference is the pinned generic implementation; the Python model provides an independent cross-check of the intermediate layers only",
+        "Projective coordinates are compared only through normalized invariants"
+      ],
+      "controls": {
+        "positive_control": "the model reproduces the pinned reference on fixed field, cfpk and j-invariant fixtures",
+        "negative_control": "a perturbed A or coordinate changes the normalized j-invariant"
+      }
+    },
+    {
+      "oracle_id": "sidh_resources_rng",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "keygen_a",
+        "keygen_b",
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "P13",
+        "P16",
+        "X01",
+        "X04"
+      ],
+      "precondition": {
+        "rng_injection_available": true,
+        "isolated_worker_available": true
+      },
+      "mutation": {
+        "type": "bad_randomness",
+        "patterns": [
+          "failure",
+          "same_tape",
+          "different_tape"
+        ]
+      },
+      "expected_relation": "EXPECT_EQUAL",
+      "comparator": "rng_and_state_equal",
+      "triage_policy": "rng_contract_violation",
+      "claim": "Each role's key generation shall consume its own tape, a failure shall be observable rather than silently replaced, the declared output length shall always be fully written on success (no 0xA5 sentinel), and anomalous peer keys shall execute in the isolated worker without inventing a rejection contract.",
+      "evidence_class": "ENGINEERING_RECOMMENDATION",
+      "source_reference": "SIKE spec \u00a71.3 PDF pp.18-20; harness common contract \u00a71.4.4-1.4.6; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "The API does not declare a rejection of anomalous peer keys, so only safe execution and the declared output shape are checked",
+        "Same-tape equality is a same-build property",
+        "Timing conclusions are excluded from this oracle"
+      ],
+      "claim_variants": [
+        {
+          "claim_id": "sidh_resources_rng.api_normative",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "api"
+            }
+          ],
+          "claim": "Key generation consumes the documented tape and reproduces the same public key for the same scalar and tape; the shared output length is exactly 2*Np.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "SIKE spec \u00a71.3.6-1.3.9 PDF pp.18-21",
+          "scope": {
+            "api_layer": "external"
+          },
+          "limitations": [
+            "Reproducibility is a same-build property"
+          ],
+          "controls": {
+            "positive_control": "the same tape and scalar reproduce the same public key",
+            "negative_control": "a different tape or scalar changes the public key"
+          }
+        },
+        {
+          "claim_id": "sidh_resources_rng.failure_hardening",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "failure"
+            }
+          ],
+          "claim": "A failure-mode tape is observed by the harness control and does not silently fall back to system entropy; no sentinel bytes remain in a successful output.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "Harness common contract \u00a71.4.4-1.4.5; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "The allowed failure output state is profile-specific; \"must zero\" is not assumed"
+          ],
+          "controls": {
+            "positive_control": "the honest path returns the full shared length",
+            "negative_control": "the failure-mode tape is observed as consumed"
+          }
+        }
+      ],
+      "controls": {
+        "positive_control": "the honest keygen/derive paths return the full declared lengths",
+        "negative_control": "failure-mode tapes are observed and anomalous inputs are a recorded byte-level change"
+      }
+    },
+    {
+      "oracle_id": "sike_sidh_timing",
+      "algorithm_family": "SIDH",
+      "primitive_type": "kex",
+      "api_surface": [
+        "derive_a",
+        "derive_b"
+      ],
+      "property_ids": [
+        "P17",
+        "X02"
+      ],
+      "precondition": {
+        "timing_lane_available": false
+      },
+      "mutation": {
+        "type": "timing_probe",
+        "targets": [
+          "sike_correct_vs_fallback",
+          "sidh_scalar_classes"
+        ]
+      },
+      "expected_relation": "NO_TIMEOUT",
+      "comparator": "timing_distribution_pair",
+      "triage_policy": "timing_signal_requires_manual_review",
+      "claim": "The opt-in timing lane shall compare SIKE correct versus fallback path and SIDH scalar classes in a dedicated non-sanitized binary with CPU control, warmup and multiple-comparison correction; the generic variable-time reference is never used to claim that an optimized target is unsafe.",
+      "evidence_class": "INFERENCE",
+      "source_reference": "SIKE spec \u00a72.1-2.2 and \u00a75.3; harness common \u00a71.4 timing policy; plans/specs/sike-SIDH-spec.pdf sha256 9638f49b",
+      "scope": {
+        "api_layer": "external"
+      },
+      "limitations": [
+        "Opt-in P2 lane; not part of the default smoke contract",
+        "Sanitized default binaries never produce a timing conclusion",
+        "Only candidate evidence is produced; the measured object is labelled explicitly"
+      ],
+      "controls": {
+        "positive_control": "the valid class is measured in the same harness",
+        "negative_control": "the lane reports not_applicable when the timing binary or capability is absent"
+      },
+      "enabled_by_default": false
+    }
+  ]
+}

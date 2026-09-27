@@ -31,13 +31,16 @@
               "AIGIS-SIG",
               "CROSS",
               "FALCON",
-              "NTRU"
+              "NTRU",
+              "SIKE",
+              "SIDH"
             ]
           },
           "primitive_type": {
             "enum": [
               "kem",
-              "sig"
+              "sig",
+              "kex"
             ]
           },
           "api_surface": {
@@ -48,7 +51,11 @@
                 "encaps",
                 "decaps",
                 "sign",
-                "verify"
+                "verify",
+                "keygen_a",
+                "keygen_b",
+                "derive_a",
+                "derive_b"
               ]
             }
           },

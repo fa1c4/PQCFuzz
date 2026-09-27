@@ -26,6 +26,12 @@ workspace/
 *.log
 core
 core.*
+# libFuzzer artifacts (must be written under workspace/ via -artifact_prefix)
+slow-unit-*
+crash-*
+leak-*
+oom-*
+timeout-*
 
 plans/
 results/

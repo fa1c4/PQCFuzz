@@ -1,5 +1,6 @@
 #include "mutators/sha3.h"
 
+#include <algorithm>
 #include <array>
 #include <cstdio>
 
@@ -114,6 +115,40 @@ std::string Sha3_256Hex(const uint8_t *data, size_t size) {
 
 std::string Sha3_256Hex(const std::vector<uint8_t> &data) {
   return Sha3_256Hex(data.data(), data.size());
+}
+
+std::vector<uint8_t> Shake256(const uint8_t *data, size_t size, size_t out_len) {
+  uint64_t state[kStateLanes] = {};
+  size_t offset = 0;
+  while (offset + kRate <= size) {
+    AbsorbBlock(state, data + offset);
+    offset += kRate;
+  }
+  uint8_t tail[kRate] = {};
+  const size_t remaining = size - offset;
+  for (size_t i = 0; i < remaining; ++i) {
+    tail[i] = data[offset + i];
+  }
+  tail[remaining] = 0x1F;  // SHAKE domain separation
+  tail[kRate - 1] |= static_cast<uint8_t>(0x80);
+  AbsorbBlock(state, tail);
+
+  std::vector<uint8_t> out;
+  out.reserve(out_len);
+  while (out.size() < out_len) {
+    const size_t block = std::min(kRate, out_len - out.size());
+    for (size_t i = 0; i < block; ++i) {
+      out.push_back(static_cast<uint8_t>((state[i / 8] >> (8 * (i % 8))) & 0xFFu));
+    }
+    if (out.size() < out_len) {
+      KeccakF1600(state);
+    }
+  }
+  return out;
+}
+
+std::vector<uint8_t> Shake256(const std::vector<uint8_t> &data, size_t out_len) {
+  return Shake256(data.data(), data.size(), out_len);
 }
 
 }  // namespace pqcfuzz

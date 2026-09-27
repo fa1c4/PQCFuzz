@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "family": "SIDH",
+  "spec": {
+    "path": "plans/specs/sike-SIDH-spec.pdf",
+    "sha256": "9638f49b92207ec1f48d8e914adbb7e54c9e2ba223eb79d43d7c0482304449cc",
+    "revision": "SIKE/SIDH round-3 submission specification (PDF page = printed page + 3)",
+    "pdf_pages": 108,
+    "pdf_page_offset": 3,
+    "source_lock": "src/config/source_locks/sidh.json"
+  },
+  "sources": [
+    {
+      "name": "microsoft-pqcrypto-sidh",
+      "url": "https://codeload.github.com/microsoft/PQCrypto-SIDH/tar.gz/98a028a473317855404a27db5696e9d0a06c7d62",
+      "repository": "https://github.com/microsoft/PQCrypto-SIDH",
+      "commit": "98a028a473317855404a27db5696e9d0a06c7d62",
+      "archive_sha256": "7e213ee545c00e51699ecd47bbbe91e8ba5828bb66aa70f7494ddc5b09f337bd",
+      "version": "microsoft/PQCrypto-SIDH master @ 98a028a (SIKE/SIDH round-3 lineage)",
+      "license": "MIT (Copyright (c) Microsoft Corporation)",
+      "vendored_path": "projects/SIKE_SIDH/src",
+      "vendored_files": [
+        "P434/P434.c",
+        "P434/P434_api.h",
+        "P434/P434_internal.h",
+        "P434/generic/fp_generic.c",
+        "P503/P503.c",
+        "P503/P503_api.h",
+        "P503/P503_internal.h",
+        "P503/generic/fp_generic.c",
+        "P610/P610.c",
+        "P610/P610_api.h",
+        "P610/P610_internal.h",
+        "P610/generic/fp_generic.c",
+        "P751/P751.c",
+        "P751/P751_api.h",
+        "P751/P751_internal.h",
+        "P751/generic/fp_generic.c",
+        "config.h",
+        "ec_isogeny.c",
+        "fpx.c",
+        "internal.h",
+        "sidh.c",
+        "sike.c",
+        "sha3/fips202.c",
+        "sha3/fips202.h"
+      ],
+      "file_sha256": {
+        "P434/P434.c": "c13245cd1c58a9fc2bc89fff2326fb27ae3c2574d28371b985cf6f9790415717",
+        "P434/P434_api.h": "dfdbb6161214095a532d949d98804158598ec79537308a67e73031ac7d0c7090",
+        "P434/P434_internal.h": "4b710a82b1420d17b5143aa41a68c6b2b6572ba0faa678946c662968b044ca27",
+        "P434/generic/fp_generic.c": "1d8f067863401ec2ba201bb9fd8cf473a00465da86cd4ff6257a8f7b427c9304",
+        "ec_isogeny.c": "636486c12f815c16ae7db1a260735f0327f55710042cfec38205edfca55a85ba",
+        "fpx.c": "68f63b5102ba27f49b10fe27efbc19ece2df297d0ad2056b2836d13e987496bb",
+        "internal.h": "562f32b1562ba5d52ed838427cd278d913a0bfaacbf7d1f4ea02901c1e256010",
+        "sidh.c": "1490e2562615bbcea3639369d81c622c6712da36a8d1e68369546f81ba1acc0e",
+        "sike.c": "2383a8e2748959beeeaf377e5093bac524426a1a0f72d6f904ecc24a1706f051",
+        "config.h": "68d2396e2841a29aecb3caeb8142d76f04dfd6c9131e3bcbb203043c0125cfd8",
+        "sha3/fips202.c": "368d13422cfcc774f3e83ef96c61e049b0f91696d33dd4142c9d3f38606be37c",
+        "sha3/fips202.h": "f764f37606af7bbc42e758b73ef1210724ad90e412610de0fb88ad3aa9c21e29"
+      },
+      "status": "vendored",
+      "notes": [
+        "SIDH and SIKE share the same pinned source tree and object files; the SIDH adapter selects the Ephemeral* API instead of the KEM API.",
+        "The generic (portable) implementation is used for all parameter sets so a single build recipe covers ref/opt differential lanes; the AMD64 assembly was not enabled."
+      ]
+    },
+    {
+      "name": "sike-sidh-randombytes-override",
+      "url": "https://codeload.github.com/microsoft/PQCrypto-SIDH/tar.gz/98a028a473317855404a27db5696e9d0a06c7d62",
+      "commit": "98a028a473317855404a27db5696e9d0a06c7d62",
+      "archive_sha256": "7e213ee545c00e51699ecd47bbbe91e8ba5828bb66aa70f7494ddc5b09f337bd",
+      "version": "PQCFuzz deterministic randombytes override",
+      "license": "MIT",
+      "vendored_path": "src/adapters/sike/sike_randombytes_override.cc",
+      "vendored_files": [],
+      "file_sha256": {},
+      "status": "harness",
+      "notes": [
+        "The oracle executor links the override instead of the upstream /dev/urandom-backed random/random.c so RNG tapes and failure injection are observable."
+      ]
+    }
+  ],
+  "kat": {
+    "official_kat_available": false,
+    "fixture_path": "tests/fixtures/sike_sidh/sidh_reference.json",
+    "fixture_sha256": "f605b7cf9383172c27285f00be975c50f007805a85a00bca879fe2adf202cf37",
+    "notes": [
+      "No official SIDH response file is published in the pinned repository; upstream only ships randomized agreement tests.",
+      "The fixture records deterministic (scalarA, scalarB, pkA, pkB, sharedA, sharedB) transcripts generated from the pinned source, so the reference profile is pinned by content hash rather than by an official KAT.",
+      "The profile claim for SIDH is REFERENCE_DERIVED: a mismatch violates the pinned reference profile, not the specification by itself."
+    ]
+  }
+}

@@ -54,6 +54,14 @@ std::vector<OracleSpec> DefaultNtruOracleSpecs() {
   return SpecsForFamily("NTRU");
 }
 
+std::vector<OracleSpec> DefaultSikeOracleSpecs() {
+  return SpecsForFamily("SIKE");
+}
+
+std::vector<OracleSpec> DefaultSidhOracleSpecs() {
+  return SpecsForFamily("SIDH");
+}
+
 const OracleSpec *FindOracleSpec(const std::vector<OracleSpec> &specs, const std::string &oracle_id) {
   for (const auto &spec : specs) {
     if (spec.oracle_id == oracle_id) {

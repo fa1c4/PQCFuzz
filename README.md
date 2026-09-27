@@ -223,6 +223,55 @@ are reference-derived); only the single pinned reference build is vendored, so
 `cross_cross_verify` is disabled rather than faked; and the P2 timing/fault lanes
 are opt-in. Reports never claim IND-CCA/EUF/sUF or quantum security.
 
+## SIKE/SIDH Workflow
+
+PQCFuzz fuzzes the pinned microsoft/PQCrypto-SIDH generic build vendored at
+`projects/SIKE_SIDH` (commit and archive SHA-256 recorded in
+`src/config/source_locks/{sike,sidh}.json`). The four uncompressed SIKE KEM
+parameter sets (`SIKE-p434/p503/p610/p751`, AlgorithmIds 40-43) and the four
+SIDH key-exchange sets (`SIDH-p434/p503/p610/p751`, AlgorithmIds 48-51, a
+distinct `kex` primitive with role-typed keygen/derive) share the source tree
+but have separate adapters, executors and oracle specs
+(`src/oracles/specs/{sike,sidh}.json`, oracle IDs 80-99).
+
+**SIKE and SIDH are known broken since the 2022 attacks.** This lane covers
+historical conformance, parser/memory-safety, failure behaviour and regression
+research only; no report claims IND-CCA, key-agreement security or quantum
+security. The SIKE re-encryption gate and fallback formula are checked against
+an independent harness SHAKE256 plus the pinned isogeny reference, and the
+official KAT responses are verified record-by-record.
+
+```bash
+# Validate the explicit pair file and materialize both families' jobs:
+python3 src/pairing/validate_pair_alg.py --pair-alg src/config/pair_alg.sike_sidh.json
+python3 src/jobs/generate_jobs.py --pair-alg src/config/pair_alg.sike_sidh.json \
+  --algorithm-family SIKE --oracle-suite fips --jobs-dir workspace/sike_sidh/jobs
+python3 src/jobs/generate_jobs.py --pair-alg src/config/pair_alg.sike_sidh.json \
+  --algorithm-family SIDH --oracle-suite fips --jobs-dir workspace/sike_sidh/sidh_jobs
+
+# Build the sanitizer fuzzers/replays, preflight every oracle, run a smoke
+# campaign, and write workspace/sike_sidh/report/summary.{json,md}:
+scripts/pqcfuzz_sike_sidh_eval.sh build
+scripts/pqcfuzz_sike_sidh_eval.sh preflight
+scripts/pqcfuzz_sike_sidh_eval.sh smoke
+scripts/pqcfuzz_sike_sidh_eval.sh report
+
+# Longer campaign (per-job seconds); FAMILY=SIKE|SIDH|all selects a lane:
+MAX_TOTAL_TIME=3600 scripts/pqcfuzz_sike_sidh_eval.sh run
+```
+
+The independent Python models (`tests/models/sike_model.py`,
+`tests/models/sidh_model.py`) cover the field codecs, SHAKE256 framing, gate
+selection, Fp2 arithmetic, the j-invariant identity `j(A=6)=287496 mod p` and
+the pinned reference transcripts. `tests/sike_oracles_test.py`,
+`tests/sidh_oracles_test.py` and `tests/sike_model_test.py` cover routing,
+envelope IDs, structured recipes, honest oracles on the real adapters, the
+official SIKE KAT fixture, and detection by deliberately broken fake adapters
+(ignored gate, always-fallback, dropped c1, mismatched SIDH agreement).
+`scripts/generate_sike_sidh_fixtures.py` regenerates the fixtures and their
+hashes. Compressed SIKE and the fault/timing lanes are opt-in P2 and are not
+built by default.
+
 ## Notes
 
 - `projects/` is reserved for upstream source trees only.

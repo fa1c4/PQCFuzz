@@ -12,6 +12,8 @@
 #include "adapters/falcon/sig_adapter.h"
 #include "adapters/ntru/kem_adapter.h"
 #include "adapters/reference/reference_adapter.h"
+#include "adapters/sidh/kex_adapter.h"
+#include "adapters/sike/kem_adapter.h"
 
 namespace pqcfuzz {
 
@@ -32,6 +34,18 @@ const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
   }
   if (project_id == "ntru") {
     return pqcfuzz_get_ntru_kem_adapter(implementation_id.c_str());
+  }
+  if (project_id == "sike") {
+    return pqcfuzz_get_sike_kem_adapter(implementation_id.c_str());
+  }
+  return nullptr;
+}
+
+const pqcfuzz_kex_adapter *GetKexAdapterByProjectAndId(
+    const std::string &project_id,
+    const std::string &implementation_id) {
+  if (project_id == "sidh") {
+    return pqcfuzz_get_sidh_kex_adapter(implementation_id.c_str());
   }
   return nullptr;
 }
@@ -100,6 +114,21 @@ bool ValidateSigAdapterRouting(
   if (!Same(adapter->algorithm, expected.algorithm)) return Fail(error, "adapter algorithm mismatch");
   if (adapter->pk_len != expected.pk_len || adapter->sk_len != expected.sk_len ||
       adapter->sig_max_len != expected.sig_max_len) {
+    return Fail(error, "adapter ABI length mismatch");
+  }
+  return true;
+}
+
+bool ValidateKexAdapterRouting(
+    const pqcfuzz_kex_adapter *adapter,
+    const AdapterRoutingExpectation &expected,
+    std::string *error) {
+  if (adapter == nullptr) return Fail(error, "adapter unavailable");
+  if (!Same(adapter->project_id, expected.project_id)) return Fail(error, "adapter project mismatch");
+  if (!Same(adapter->implementation_id, expected.implementation_id)) return Fail(error, "adapter implementation mismatch");
+  if (!Same(adapter->algorithm, expected.algorithm)) return Fail(error, "adapter algorithm mismatch");
+  if (adapter->pk_len != expected.pk_len || adapter->sk_a_len != expected.sk_a_len ||
+      adapter->sk_b_len != expected.sk_b_len || adapter->shared_len != expected.shared_len) {
     return Fail(error, "adapter ABI length mismatch");
   }
   return true;

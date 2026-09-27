@@ -86,13 +86,22 @@
               "CROSS-RSDPG-3-SMALL",
               "CROSS-RSDPG-5-FAST",
               "CROSS-RSDPG-5-BALANCED",
-              "CROSS-RSDPG-5-SMALL"
+              "CROSS-RSDPG-5-SMALL",
+              "SIKE-p434",
+              "SIKE-p503",
+              "SIKE-p610",
+              "SIKE-p751",
+              "SIDH-p434",
+              "SIDH-p503",
+              "SIDH-p610",
+              "SIDH-p751"
             ]
           },
           "primitive_type": {
             "enum": [
               "kem",
-              "sig"
+              "sig",
+              "kex"
             ]
           },
           "left": {
@@ -138,9 +147,7 @@
         },
         "api_names": {
           "type": "object",
-          "required": [
-            "keygen"
-          ],
+          "required": [],
           "properties": {
             "keygen": {
               "type": "string"
@@ -159,6 +166,18 @@
             },
             "sign_seeded": {
               "type": "string"
+            },
+            "keygen_a": {
+              "type": "string"
+            },
+            "keygen_b": {
+              "type": "string"
+            },
+            "derive_a": {
+              "type": "string"
+            },
+            "derive_b": {
+              "type": "string"
             }
           }
         },
@@ -170,8 +189,7 @@
     "abi": {
       "type": "object",
       "required": [
-        "pk_len",
-        "sk_len"
+        "pk_len"
       ],
       "properties": {
         "pk_len": {
@@ -191,6 +209,18 @@
           "minimum": 1
         },
         "sig_max_len": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sk_a_len": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sk_b_len": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shared_len": {
           "type": "integer",
           "minimum": 1
         }
@@ -216,6 +246,9 @@
           "default": false
         },
         "signature_exchange": {
+          "type": "boolean"
+        },
+        "peer_key_exchange": {
           "type": "boolean"
         }
       }

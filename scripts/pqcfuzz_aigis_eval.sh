@@ -218,6 +218,11 @@ src/mutators/aigis_enc_layout.cc
 src/mutators/aigis_enc_mutator.cc
 src/mutators/aigis_sig_layout.cc
 src/mutators/aigis_sig_mutator.cc
+src/mutators/sike_layout.cc
+src/mutators/sike_mutator.cc
+src/oracles/sike_executor.cc
+src/adapters/sike/reference_adapter.cc
+src/oracles/sidh_executor.cc
 src/oracles/expected_relation.cc
 src/oracles/oracle_spec.cc
 src/oracles/oracle_spec_loader.cc
@@ -229,6 +234,8 @@ src/oracles/metamorphic_spec.cc
 src/oracles/metamorphic_executor.cc
 src/adapters/cross/cross_adapter.cc
 src/runtime/adapter_registry.cc
+src/adapters/sike/kem_adapter.cc
+src/adapters/sidh/kex_adapter.cc
 src/runtime/replay_args.cc
 src/triage/finding_writer.cc
 src/triage/oracle_coverage.cc

@@ -227,8 +227,78 @@ def ntru_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
     return subtests
 
 
+def oracle_ids_for_sike() -> list[str]:
+    # Default (P0/P1) SIKE oracles.  The opt-in P2 compressed and fault lanes
+    # stay out of the default schedule.
+    return [
+        "sike_kat",
+        "sike_local_roundtrip",
+        "sike_cross_exchange",
+        "sike_reencryption_gate",
+        "sike_fallback_exact",
+        "sike_fallback_seed_separation",
+        "sike_field_encoding",
+        "sike_key_consistency",
+        "sike_pke_relation",
+        "sike_lengths_state",
+        "sike_rng_replay",
+    ]
+
+
+def sike_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_enabled = contract["public_key_exchange"] and contract["ciphertext_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_sike():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "sike_cross_exchange":
+            entry["required_exchange"] = ["public_key_exchange", "ciphertext_exchange"]
+            entry["enabled"] = cross_enabled
+        subtests.append(entry)
+    return subtests
+
+
+def oracle_ids_for_sidh() -> list[str]:
+    # Default (P0/P1) SIDH oracles.  The opt-in P2 timing lane stays out.
+    return [
+        "sidh_agreement",
+        "sidh_cross_agreement",
+        "sidh_field_curve_checks",
+        "sidh_role_scalar_profile",
+        "sidh_isogeny_math",
+        "sidh_resources_rng",
+    ]
+
+
+def sidh_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_enabled = contract["public_key_exchange"] and contract["peer_key_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_sidh():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "sidh_cross_agreement":
+            entry["required_exchange"] = ["public_key_exchange", "peer_key_exchange"]
+            entry["enabled"] = cross_enabled
+        subtests.append(entry)
+    return subtests
+
+
 def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
     family = pair["algorithm_family"]
+    if family == "SIKE":
+        return oracle_ids_for_sike()
+    if family == "SIDH":
+        return oracle_ids_for_sidh()
     if family == "NTRU":
         return oracle_ids_for_ntru()
     if family == "FALCON":
@@ -250,6 +320,10 @@ def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
     family = pair["algorithm_family"]
+    if family == "SIKE":
+        return "src/oracles/specs/sike.json"
+    if family == "SIDH":
+        return "src/oracles/specs/sidh.json"
     if family == "NTRU":
         return "src/oracles/specs/ntru.json"
     if family == "FALCON":
@@ -270,6 +344,8 @@ def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
 
 
 def metamorphic_oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
+    if pair["algorithm_family"] in ("SIKE", "SIDH"):
+        raise ValueError("SIKE/SIDH have no metamorphic oracle suite")
     if pair["algorithm_family"] == "SLH-DSA":
         raise ValueError("SLH-DSA jobs are disabled until a supported adapter is available")
     if pair["primitive_type"] == "kem":
@@ -354,6 +430,26 @@ ORACLE_ENUM_BY_NAME = {
     "ntru_dpke_failure_output": 77,
     "ntru_fault_checks": 78,
     "ntru_timing_resources": 79,
+    "sike_kat": 80,
+    "sike_local_roundtrip": 81,
+    "sike_cross_exchange": 82,
+    "sike_reencryption_gate": 83,
+    "sike_fallback_exact": 84,
+    "sike_fallback_seed_separation": 85,
+    "sike_field_encoding": 86,
+    "sike_key_consistency": 87,
+    "sike_pke_relation": 88,
+    "sike_lengths_state": 89,
+    "sike_rng_replay": 90,
+    "sidh_agreement": 91,
+    "sidh_cross_agreement": 92,
+    "sidh_field_curve_checks": 93,
+    "sidh_role_scalar_profile": 94,
+    "sidh_isogeny_math": 95,
+    "sike_compressed_profile": 96,
+    "sike_fault_gate": 97,
+    "sidh_resources_rng": 98,
+    "sike_sidh_timing": 99,
     "falcon_kat": 100,
     "falcon_local_sign_verify": 101,
     "falcon_cross_verify": 102,
@@ -408,6 +504,9 @@ def fuzzer_source_for_pair(pair: dict[str, Any]) -> str:
         return "src/fuzzers/kem_pair_fuzzer.cc"
     if pair["primitive_type"] == "sig":
         return "src/fuzzers/sig_pair_fuzzer.cc"
+    if pair["primitive_type"] == "kex":
+        # A kex pair must never fall through to the KEM fuzzer.
+        return "src/fuzzers/kex_pair_fuzzer.cc"
     raise ValueError(f"unsupported primitive type: {pair['primitive_type']}")
 
 
@@ -522,6 +621,10 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
 
 def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
     family = pair["algorithm_family"]
+    if family == "SIKE":
+        return sike_enabled_subtests(pair)
+    if family == "SIDH":
+        return sidh_enabled_subtests(pair)
     if family == "NTRU":
         return ntru_enabled_subtests(pair)
     if family == "FALCON":
