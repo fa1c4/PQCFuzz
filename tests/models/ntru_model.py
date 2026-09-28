@@ -415,6 +415,62 @@ def model_valid_secret(profile: NtruProfile, sk: bytes, ct: bytes) -> bytes:
     return hashlib.sha3_256(decoded["packed_rm"]).digest()
 
 
+def _hrss_g_space(centered: list[int], profile: NtruProfile) -> bool:
+    """Check that centered == (x-1)*g0 for a ternary g0.
+
+    The HRSS key relation is h*f = 3*(x-1)*g0, so g0 is recovered from the
+    cumulative sums of the centered quotient up to one constant.
+    """
+    if sum(centered) % profile.q != 0:
+        return False
+    for start in (-1, 0, 1):
+        g0 = [0] * profile.n
+        g0[0] = start
+        for index in range(1, profile.n):
+            g0[index] = g0[index - 1] - centered[index]
+        if all(value in (-1, 0, 1) for value in g0):
+            return True
+    return False
+
+
+def key_algebra(profile: NtruProfile, pk: bytes, sk: bytes) -> dict[str, bool]:
+    """Independent key-equation checks for Algorithm 1/2 (oracle 71).
+
+    * f * fp = 1 mod (3, x^n+1) (poly_S3_inv / poly_S3_mul semantics)
+    * h * f = 3g with g in the sampled space (HPS ternary, HRSS (x-1)*ternary)
+    * h * hq = 1 modulo (q, x-1): NTRU keys are sum-zero, so the reference
+      inverse (poly_Rq_inv) is defined in the quotient by (x-1).  The packed
+      hq drops its last coefficient, hence the product may differ from the
+      identity by a constant multiple of 1+x+...+x^(n-1).
+    """
+    f, fp, hq, _ = decode_sk(sk, profile)
+    h = decode_pk(pk, profile)
+    result: dict[str, bool] = {}
+
+    product3 = mod3_phi(cyclic_mul(f, fp))
+    result["f_fp_inverse_mod3"] = all(
+        value % 3 == (1 if index == 0 else 0) for index, value in enumerate(product3)
+    )
+
+    fq = z3_to_zq(f, profile.q)
+    quotient = [(value * pow(3, -1, profile.q)) % profile.q for value in cyclic_mul(h, fq, q=profile.q)]
+    centered = [value - profile.q if value > profile.q // 2 else value for value in quotient]
+    if profile.variant == "HPS":
+        result["h_f_three_g"] = all(value in (-1, 0, 1) for value in centered)
+    else:
+        result["h_f_three_g"] = _hrss_g_space(centered, profile)
+
+    product_q = cyclic_mul(h, hq, q=profile.q)
+    base = (product_q[0] - 1) % profile.q
+    result["h_hq_inverse_mod_x_minus_1"] = all(
+        (product_q[index] - (1 if index == 0 else 0) - base) % profile.q == 0
+        for index in range(profile.n)
+    )
+
+    result["f_g_decodable"] = len(f) == profile.n and len(h) == profile.n
+    return result
+
+
 # ------------------------------------------------------------- mutant catalogue
 
 

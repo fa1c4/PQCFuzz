@@ -29,6 +29,7 @@ RESULTS_DIR="${RESULTS_DIR:-$WORK_ROOT/results}"
 CRASHES_DIR="${CRASHES_DIR:-$WORK_ROOT/crashes}"
 REPORT_DIR="${REPORT_DIR:-$WORK_ROOT/report}"
 CROSS_SRC="${CROSS_SRC:-projects/CROSS/reference}"
+CROSS_AVX2_SRC="${CROSS_AVX2_SRC:-projects/CROSS/avx2}"
 SOURCE_LOCK="${SOURCE_LOCK:-src/config/source_locks/cross.json}"
 SCHEME_PROFILE="${SCHEME_PROFILE:-src/config/scheme_profiles/cross.json}"
 
@@ -148,6 +149,9 @@ src/mutators/aigis_enc_mutator.cc
 src/mutators/aigis_sig_layout.cc
 src/mutators/aigis_sig_mutator.cc
 src/mutators/scheme_mutation.cc
+src/mutators/snova_layout.cc
+src/mutators/snova_mutator.cc
+src/mutators/sha3.cc
 src/mutators/cross_layout.cc
 src/mutators/cross_mutator.cc
 src/mutators/sike_layout.cc
@@ -162,9 +166,23 @@ src/oracles/oracle_record.cc
 src/oracles/oracle_result.cc
 src/oracles/oracle_executor.cc
 src/oracles/cross_executor.cc
+src/oracles/snova_public_map.cc
+src/oracles/snova_executor.cc
+src/mutators/falcon_layout.cc
+src/mutators/falcon_mutator.cc
+src/mutators/ntru_layout.cc
+src/mutators/ntru_mutator.cc
+src/oracles/scheme_claims.cc
+src/oracles/falcon_executor.cc
+src/oracles/ntru_executor.cc
+src/adapters/falcon/sig_adapter.cc
+src/adapters/falcon/signed_message_adapter.cc
+src/adapters/ntru/kem_adapter.cc
+src/adapters/ntru/reference_adapter.cc
 src/oracles/metamorphic_observation.cc
 src/oracles/metamorphic_spec.cc
 src/oracles/metamorphic_executor.cc
+src/adapters/snova/sig_adapter.cc
 src/runtime/adapter_registry.cc
 src/adapters/sike/kem_adapter.cc
 src/adapters/sidh/kex_adapter.cc
@@ -230,6 +248,54 @@ build_cross_objects() {
   : > "$obj_dir/.complete"
 }
 
+cross_avx2_object_dir_for_job() {
+  local job_file="$1"
+  local algorithm
+  algorithm=$(job_algorithm "$job_file")
+  echo "$CCACHE_OBJ_ROOT/avx2-$(echo "$algorithm" | tr 'A-Z' 'a-z' | tr - _)"
+}
+
+# The optimized overlay replaces the CROSS/merkle/seedtree translation units
+# and adds the 4-way Keccak; the entry points shared with the reference build
+# are renamed opt_* so both implementations link into one binary.
+build_cross_avx2_objects() {
+  local job_file="$1"
+  local defines
+  defines=$(cross_defines_for_job "$job_file")
+  local obj_dir
+  obj_dir=$(cross_avx2_object_dir_for_job "$job_file")
+  if [ -f "$obj_dir/.complete" ]; then
+    return 0
+  fi
+  mkdir -p "$obj_dir"
+  rm -f "$obj_dir"/*.o "$obj_dir/.complete" "$obj_dir/rename.txt"
+  local f status=0
+  local pids=()
+  for f in CROSS merkle seedtree fips202x4 KeccakP-1600-times4-SIMD256; do
+    # shellcheck disable=SC2086
+    "$CC_BIN" -std=c11 $CROSS_CFLAGS -mavx2 -I"$CROSS_AVX2_SRC/include" -I"$CROSS_SRC/include" \
+      $defines -c "$CROSS_AVX2_SRC/lib/$f.c" -o "$obj_dir/$f.o" &
+    pids+=("$!")
+  done
+  local pid
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=1
+  done
+  if [ "$status" -ne 0 ]; then
+    echo "[cross] AVX2 object build failed for $algorithm" >&2
+    rm -f "$obj_dir/.complete"
+    return 1
+  fi
+  nm -g --defined-only "$obj_dir"/*.o | awk '{print $3}' |
+    grep -E '^(CROSS_keygen|CROSS_sign|CROSS_verify|gen_seed_tree|psalt|pseed|ptree|rebuild_tree|recompute_root|seed_leaves|seed_path|tree_proof|tree_root)$' |
+    sort -u | awk '{print $1" opt_"$1}' > "$obj_dir/rename.txt"
+  local obj
+  for obj in "$obj_dir"/*.o; do
+    objcopy --redefine-syms="$obj_dir/rename.txt" "$obj"
+  done
+  : > "$obj_dir/.complete"
+}
+
 build_job() {
   local job_file="$1"
   local job_id algorithm algorithm_enum defines obj_dir out_bin replay_bin
@@ -237,11 +303,36 @@ build_job() {
   algorithm=$(job_algorithm "$job_file")
   algorithm_enum=$(algorithm_enum_for_job "$job_file")
   defines=$(cross_defines_for_job "$job_file")
+  local left_impl right_impl
+  left_impl=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['pair']['left']['implementation_id'])" "$job_file")
+  right_impl=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['pair']['right']['implementation_id'])" "$job_file")
   build_cross_objects "$job_file"
   obj_dir=$(cross_object_dir_for_job "$job_file")
+  local avx2_dir="" avx2_objects=()
+  if [ "$left_impl" = "cross_avx2" ] || [ "$right_impl" = "cross_avx2" ]; then
+    build_cross_avx2_objects "$job_file" || return 1
+    avx2_dir=$(cross_avx2_object_dir_for_job "$job_file")
+  fi
+  local sig_exchange
+  sig_exchange=$(python3 -c "import json,sys;print(1 if json.load(open(sys.argv[1]))['pair']['exchange_contract'].get('signature_exchange') else 0)" "$job_file")
   "$CXX_BIN" -std=c++17 $CROSS_CFLAGS -Isrc -I"$CROSS_SRC/include" $defines \
     -DPQCFUZZ_HAVE_CROSS -DPQCFUZZ_CROSS_ALGORITHM="\"$algorithm\"" \
+    -DPQCFUZZ_CROSS_DELEGATE_AVX2 \
     -c src/adapters/cross/cross_adapter.cc -o "$obj_dir/cross_adapter.o"
+  if [ -n "$avx2_dir" ]; then
+    # The adapter TU only needs the reference headers (the AVX2 parallel
+    # helpers are C-only); the renamed entry points are selected by macros.
+    "$CXX_BIN" -std=c++17 $CROSS_CFLAGS -Isrc -I"$CROSS_SRC/include" $defines \
+      -DPQCFUZZ_HAVE_CROSS -DPQCFUZZ_CROSS_ALGORITHM="\"$algorithm\"" \
+      -DPQCFUZZ_CROSS_IMPLEMENTATION_ID="\"cross_avx2\"" \
+      -DPQCFUZZ_CROSS_ADAPTER_GETTER=pqcfuzz_get_cross_avx2_sig_adapter \
+      -DPQCFUZZ_CROSS_NO_PLATFORM_RNG_HOOK \
+      -DCROSS_keygen=opt_CROSS_keygen -DCROSS_sign=opt_CROSS_sign -DCROSS_verify=opt_CROSS_verify \
+      -c src/adapters/cross/cross_adapter.cc -o "$avx2_dir/cross_adapter_avx2.o"
+  fi
+  if [ -n "$avx2_dir" ]; then
+    avx2_objects=("$avx2_dir"/*.o)
+  fi
   out_bin="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
   replay_bin="$BUILD_DIR/$job_id/replay_oracle"
   mkdir -p "$BUILD_DIR/$job_id"
@@ -262,15 +353,15 @@ build_job() {
     -DPQCFUZZ_ORACLE_SUITE="\"fips\"" \
     -DPQCFUZZ_RELATION_MODE="\"cross-implementation\"" \
     -DPQCFUZZ_LEFT_PROJECT_ID="\"cross\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"cross_reference\"" \
-    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"cross_reference\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$left_impl\"" \
+    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_impl\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"cross\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"cross_reference\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_impl\"" \
     -DPQCFUZZ_PUBLIC_KEY_EXCHANGE=1 \
-    -DPQCFUZZ_SIGNATURE_EXCHANGE=0 \
+    -DPQCFUZZ_SIGNATURE_EXCHANGE="$sig_exchange" \
     src/fuzzers/sig_pair_fuzzer.cc \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o \
+    "$COMMON_ARCHIVE" "$obj_dir"/*.o "${avx2_objects[@]}" \
     -o "$out_bin"
 
   "$CXX_BIN" -std=c++17 -O1 -g -fno-omit-frame-pointer -Isrc -I"$CROSS_SRC/include" \
@@ -278,13 +369,13 @@ build_job() {
     -DPQCFUZZ_CROSS_ALGORITHM="\"$algorithm\"" \
     $REPLAY_SANITIZER_FLAGS \
     -DPQCFUZZ_LEFT_PROJECT_ID="\"cross\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"cross_reference\"" \
-    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"cross_reference\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$left_impl\"" \
+    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_impl\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"cross\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"cross_reference\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_impl\"" \
     src/replay/replay_oracle.cc \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o \
+    "$COMMON_ARCHIVE" "$obj_dir"/*.o "${avx2_objects[@]}" \
     -o "$replay_bin"
 
   manifests_dir
@@ -543,6 +634,9 @@ smoke_job() {
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
   local job_count
   job_count=$(job_files | wc -l)
+  if [ "$job_count" -lt 1 ]; then
+    job_count=1
+  fi
   per_job_seconds=$(( SMOKE_FUZZ_SECONDS / job_count ))
   if [ "$per_job_seconds" -lt 1 ]; then
     per_job_seconds=1

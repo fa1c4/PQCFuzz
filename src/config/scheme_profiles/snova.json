@@ -30,7 +30,7 @@
   "hash": {
     "message_digest": "SHAKE256(message) squeezed to 64 bytes before signing",
     "target_hash": "SHAKE256(public_key_seed || digest || salt) squeezed to bytes_hash",
-    "private_seed_expansion": "SHAKE256(private_seed, 32) for T12 and per-retry vinegar",
+    "private_seed_expansion": "T12 = SHAKE256(private_seed) (32-byte seed input); per-retry vinegar = SHAKE256(private_seed || digest || salt || uint8_le(num_sign)); num_sign is a per-signature retry counter that starts at 1 and increments on every Gauss redo",
     "pk_expand_aes": "AES-128-CTR with the 16-byte public seed as the key and a zero nonce; counter convention locked by the pinned source/KAT",
     "pk_expand_shake": "indexed SHAKE128: block_i = SHAKE128(public_seed || LE64(i), rate 168), stream = block_0 || block_1 || ...",
     "fixed_abq": "SHAKE256(\"SNOVA ABQ\") expansion used for l <= 3; independent of the public seed",
@@ -56,7 +56,7 @@
     "public_key": "spublic[16] || P22 (low-nibble-first nibble stream, zero-filled high nibble when odd)",
     "signature": "U (n matrices, low-nibble-first nibble stream) || salt[16]; pad nibble belongs to the last data byte before salt",
     "ssk": "public_seed[16] || private_seed[32]",
-    "esk": "cut-in-half nibble packing of ABQ|F11|F12|F21|T12 matrices followed by public_seed[16] || private_seed[32]",
+    "esk": "cut-in-half nibble packing of A|B|Q1|Q2|T12|F11|F12|F21 matrices followed by public_seed[16] || private_seed[32]",
     "gf16_polynomial": "x^4 + x + 1; addition is XOR; multiplication is polynomial reduction (not integer mod 16)",
     "nibble_order": "low nibble first; an odd nibble count pads the high nibble of the final data byte with zero"
   },

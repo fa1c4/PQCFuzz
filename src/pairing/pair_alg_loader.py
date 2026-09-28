@@ -668,7 +668,16 @@ def load_pair_alg(path: str | Path) -> dict[str, Any]:
     }
 
 
+def known_algorithm_families() -> set[str]:
+    return {metadata.get("family") for metadata in SUPPORTED_ALGORITHMS.values() if metadata.get("family")}
+
+
 def enabled_pairs_for_family(document: dict[str, Any], algorithm_family: str) -> list[dict[str, Any]]:
+    require(
+        algorithm_family in known_algorithm_families(),
+        f"unsupported algorithm family '{algorithm_family}' "
+        f"(known: {', '.join(sorted(known_algorithm_families()))})",
+    )
     return [
         pair
         for pair in document["pairs"]

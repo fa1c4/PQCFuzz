@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -36,6 +37,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-version", default="", help="optional target runtime version label")
     parser.add_argument("--target-algorithm", default="", help="optional single algorithm filter")
     parser.add_argument("--oracle-set", choices=["all", "security"], default="all", help="metamorphic oracle subset")
+    parser.add_argument(
+        "--include-p2",
+        action="store_true",
+        default=os.environ.get("PQCFUZZ_INCLUDE_P2", "") == "1",
+        help="schedule the opt-in P2 fault/timing/compressed oracles (env: PQCFUZZ_INCLUDE_P2=1)",
+    )
     return parser.parse_args()
 
 
@@ -65,19 +72,30 @@ def main() -> int:
             for oracle_id in oracle_ids:
                 jobs.append(make_metamorphic_job_record(pair, REPO_ROOT, args.target_runtime, args.target_version, oracle_id=oracle_id))
     else:
-        jobs = [make_job_record(pair, REPO_ROOT) for pair in sorted(pairs, key=lambda item: item["pair_id"])]
+        jobs = [
+            make_job_record(pair, REPO_ROOT, include_p2=args.include_p2)
+            for pair in sorted(pairs, key=lambda item: item["pair_id"])
+        ]
 
     jobs_dir = REPO_ROOT / args.jobs_dir
     jobs_dir.mkdir(parents=True, exist_ok=True)
-    # Keep non-default campaign workspaces self-contained: --jobs-dir
-    # workspace/cross/jobs re-roots every generated path under
-    # workspace/cross/ instead of leaking into the shared workspace/ tree.
+    # Every generated job JSON must land inside the requested --jobs-dir (the
+    # eval scripts scan that directory).  Non-job artifacts keep the campaign
+    # workspace self-contained: --jobs-dir workspace/cross/jobs re-roots every
+    # other generated path under workspace/cross/ instead of leaking into the
+    # shared workspace/ tree.  The default --jobs-dir workspace/jobs keeps the
+    # historical shared layout.
     workspace_prefix = Path(args.jobs_dir).parent.as_posix()
-    if workspace_prefix not in ("workspace", "."):
-        for job in jobs:
-            for key, value in list(job["paths"].items()):
-                if value.startswith("workspace/"):
-                    job["paths"][key] = f"{workspace_prefix}/{value[len('workspace/'):]}"
+    jobs_dir_posix = Path(args.jobs_dir).as_posix()
+    for job in jobs:
+        job["paths"]["job"] = f"{jobs_dir_posix}/{job['job_id']}.json"
+        if workspace_prefix in ("workspace", "."):
+            continue
+        for key, value in list(job["paths"].items()):
+            if key == "job":
+                continue
+            if value.startswith("workspace/"):
+                job["paths"][key] = f"{workspace_prefix}/{value[len('workspace/'):]}"
     for job in jobs:
         materialize_job(REPO_ROOT, job)
 
@@ -88,6 +106,8 @@ def main() -> int:
     except ValueError:
         display_summary = summary_path
     print(f"wrote {display_summary} with {len(jobs)} PQCFuzz jobs")
+    if args.include_p2:
+        print("opt-in P2 oracles included (PQCFUZZ_INCLUDE_P2)")
     for job in jobs:
         print(f"  {job['paths']['job']}")
     return 0

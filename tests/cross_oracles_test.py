@@ -65,6 +65,7 @@ def _run_cpp(
     defines: list[str] | None = None,
     sources: list[str] | None = None,
     include_dirs: list[Path] | None = None,
+    args: list[str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     main = tmp_path / "main.cc"
     binary = tmp_path / "case"
@@ -85,7 +86,7 @@ def _run_cpp(
     compile_result = subprocess.run(command, capture_output=True, text=True, cwd=REPO_ROOT)
     if compile_result.returncode != 0:
         raise RuntimeError(f"C++ compile failed:\n{compile_result.stderr}")
-    return subprocess.run([str(binary)], capture_output=True, text=True, cwd=REPO_ROOT)
+    return subprocess.run([str(binary), *(args or [])], capture_output=True, text=True, cwd=REPO_ROOT)
 
 
 def test_pair_alg_routing_and_job_generation(tmp_path: Path) -> None:
@@ -102,7 +103,10 @@ def test_pair_alg_routing_and_job_generation(tmp_path: Path) -> None:
 
     document = load_pair_alg(REPO_ROOT / "src" / "config" / "pair_alg.cross.json")
     pairs = enabled_pairs_for_family(document, "CROSS")
-    assert len(pairs) == 18
+    # 18 same-source pairs plus 18 reference-vs-AVX2 second-build pairs.
+    assert len(pairs) == 36
+    same_source = 0
+    avx2_pairs = 0
     for pair in pairs:
         assert pair["algorithm_family"] == "CROSS"
         assert pair["primitive_type"] == "sig"
@@ -112,7 +116,15 @@ def test_pair_alg_routing_and_job_generation(tmp_path: Path) -> None:
         assert oracle_spec_for_pair(pair) == "src/oracles/specs/cross.json"
         subtests = enabled_subtests_for_pair(pair)
         cross_verify = [item for item in subtests if item["oracle_id"] == "cross_cross_verify"][0]
-        assert cross_verify["enabled"] is False
+        if pair["provenance_relation"] == "same-source-reference-vs-avx2":
+            avx2_pairs += 1
+            assert pair["right"]["implementation_id"] == "cross_avx2"
+            assert cross_verify["enabled"] is True
+        else:
+            same_source += 1
+            assert cross_verify["enabled"] is False
+    assert same_source == 18
+    assert avx2_pairs == 18
 
     assert ORACLE_ENUM_BY_NAME["cross_kat"] == 120
     assert ORACLE_ENUM_BY_NAME["cross_timing"] == 138
@@ -205,7 +217,7 @@ def test_cross_envelope_and_scheme_mutation_roundtrip(tmp_path: Path) -> None:
         printf("roundtrip_mismatch\\n");
         return 1;
       }
-      std::vector<uint8_t> bad = {0x02, 0x23, 0, 0, 0, 0, 0, 0, 0, 0};
+      std::vector<uint8_t> bad = {0x02, 0x60, 0, 0, 0, 0, 0, 0, 0, 0};
       if (pqcfuzz::DecodeSchemeMutation(bad, &decoded, &error)) { printf("bad_field_accepted\\n"); return 1; }
       if (encoded.size() < 11 || encoded[0] != 0x07 || encoded[1] != 0x05) { printf("encoding_mismatch\\n"); return 1; }
       printf("ok\\n");
@@ -370,94 +382,104 @@ def test_cross_real_adapter_honest_oracles(tmp_path: Path) -> None:
     assert "ok" in result.stdout.splitlines()
 
 
-def test_cross_executor_detects_always_accepting_adapter(tmp_path: Path) -> None:
+CROSS_FAKE_SOURCES = [
+    "src/adapters/status.cc",
+    "src/adapters/rng_control.cc",
+    "src/adapters/liboqs/rng_control.cc",
+    "src/mutators/envelope.cc",
+    "src/mutators/ml_kem_layout.cc",
+    "src/mutators/ml_kem_mutator.cc",
+    "src/mutators/scheme_mutation.cc",
+    "src/mutators/cross_layout.cc",
+    "src/mutators/cross_mutator.cc",
+    "src/oracles/expected_relation.cc",
+    "src/oracles/oracle_spec.cc",
+    "src/oracles/oracle_spec_loader.cc",
+    "src/oracles/oracle_record.cc",
+    "src/oracles/oracle_result.cc",
+    "src/oracles/scheme_claims.cc",
+    "src/oracles/metamorphic_spec.cc",
+    "src/oracles/cross_executor.cc",
+    "tests/fake_adapters/fake_cross.cc",
+]
+
+
+def _run_cross_fake_adapter(tmp_path: Path, mode: str, oracle_ids: list[str]) -> dict[str, str]:
     source = """
     #include <cstdio>
     #include <cstring>
+    #include <string>
     #include <vector>
     #include "oracles/cross_executor.h"
 
-    static pqcfuzz_status Keygen(uint8_t *pk, uint8_t *sk) {
-      memset(pk, 0x11, 77);
-      memset(sk, 0x22, 32);
-      return PQCFUZZ_OK;
-    }
-    static pqcfuzz_status Sign(uint8_t *sig, size_t *sig_len, const uint8_t *, size_t, const uint8_t *,
-                               const uint8_t *, size_t) {
-      memset(sig, 0x00, 18432);
-      *sig_len = 18432;
-      return PQCFUZZ_OK;
-    }
-    static pqcfuzz_status KeygenSeeded(uint8_t *pk, uint8_t *sk, const uint8_t *, size_t) {
-      return Keygen(pk, sk);
-    }
-    static pqcfuzz_status SignSeeded(uint8_t *sig, size_t *sig_len, const uint8_t *, size_t,
-                                     const uint8_t *, const uint8_t *, size_t, const uint8_t *, size_t) {
-      return Sign(sig, sig_len, nullptr, 0, nullptr, nullptr, 0);
-    }
-    static pqcfuzz_status AcceptVerify(const uint8_t *, size_t, const uint8_t *, size_t, const uint8_t *,
-                                       const uint8_t *, size_t) {
-      return PQCFUZZ_OK;
-    }
-    static const pqcfuzz_sig_adapter kBrokenAdapter = {
-        "cross", "cross_reference", "CROSS-RSDP-1-FAST", 77, 32, 18432,
-        0, 1, 0, Keygen, Sign, AcceptVerify, SignSeeded, 1, 0, 0, "broken", KeygenSeeded};
+    extern "C" void pqcfuzz_fake_cross_configure(
+        const char *, size_t, size_t, size_t, const char *);
+    extern "C" const pqcfuzz_sig_adapter *pqcfuzz_fake_cross_adapter();
 
-    int main() {
-      const char *oracles[] = {
-          "cross_exact_lengths", "cross_vector_padding", "cross_packed_field_range",
-          "cross_message_key_binding", "cross_commitment_digests", "cross_merkle_proof"};
-      int expected_subclasses = 0;
-      for (const char *oracle_id : oracles) {
+    int main(int argc, char **argv) {
+      const char *mode = argc > 1 ? argv[1] : "always_accept";
+      pqcfuzz_fake_cross_configure("CROSS-RSDP-1-FAST", 77, 32, 18432, mode);
+      const pqcfuzz_sig_adapter *adapter = pqcfuzz_fake_cross_adapter();
+      for (int index = 2; index < argc; ++index) {
         pqcfuzz::CrossOracleConfig config;
         config.job_id = "test";
         config.pair_id = "test";
         config.algorithm = "CROSS-RSDP-1-FAST";
-        config.oracle_id = oracle_id;
+        config.oracle_id = argv[index];
         if (!pqcfuzz::GetCrossParams(config.algorithm, &config.params)) { printf("params_missing\\n"); return 1; }
-        config.left = &kBrokenAdapter;
-        config.right = &kBrokenAdapter;
+        config.left = adapter;
+        config.right = adapter;
         config.seed.assign(32, 0x42);
         config.message = {'P', 'Q', 'C', 'F', 'u', 'z', 'z'};
         pqcfuzz::KEMOracleTrace trace = pqcfuzz::ExecuteCrossOracle(config);
-        if (trace.findings.empty()) {
-          printf("not_detected:%s\\n", oracle_id);
-          return 1;
-        }
+        int findings = 0;
         for (const auto &finding : trace.findings) {
           if (finding.finding_class != "potential_crypto_vuln") {
-            printf("wrong_class:%s:%s\\n", oracle_id, finding.finding_class.c_str());
+            printf("wrong_class:%s:%s\\n", argv[index], finding.finding_class.c_str());
             return 1;
           }
-          ++expected_subclasses;
+          ++findings;
         }
+        printf("findings:%s=%d\\n", argv[index], findings);
       }
-      if (expected_subclasses == 0) { printf("no_findings\\n"); return 1; }
       printf("ok\\n");
       return 0;
     }
     """
-    result = _run_cpp(
-        tmp_path,
-        source,
-        sources=[
-            "src/adapters/status.cc",
-            "src/adapters/rng_control.cc",
-            "src/adapters/liboqs/rng_control.cc",
-            "src/mutators/envelope.cc",
-            "src/mutators/ml_kem_layout.cc",
-            "src/mutators/ml_kem_mutator.cc",
-            "src/mutators/scheme_mutation.cc",
-            "src/mutators/cross_layout.cc",
-            "src/mutators/cross_mutator.cc",
-            "src/oracles/expected_relation.cc",
-            "src/oracles/oracle_spec.cc",
-            "src/oracles/oracle_spec_loader.cc",
-            "src/oracles/oracle_record.cc",
-            "src/oracles/oracle_result.cc",
-            "src/oracles/metamorphic_spec.cc",
-            "src/oracles/cross_executor.cc",
-        ],
-    )
+    result = _run_cpp(tmp_path, source, sources=CROSS_FAKE_SOURCES, args=[mode, *oracle_ids])
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.strip() == "ok"
+    lines = dict(line.split(":")[1].split("=", 1) for line in result.stdout.splitlines() if line.startswith("findings:"))
+    for oracle_id in oracle_ids:
+        assert oracle_id in lines, result.stdout
+    assert result.stdout.strip().endswith("ok")
+    return lines
+
+
+def test_cross_executor_detects_always_accepting_adapter(tmp_path: Path) -> None:
+    oracles = [
+        "cross_exact_lengths",
+        "cross_vector_padding",
+        "cross_packed_field_range",
+        "cross_message_key_binding",
+        "cross_commitment_digests",
+        "cross_merkle_proof",
+    ]
+    findings = _run_cross_fake_adapter(tmp_path, "always_accept", oracles)
+    for oracle_id in oracles:
+        assert int(findings[oracle_id]) > 0, oracle_id
+
+
+def test_cross_exact_length_oracle_is_precise_for_length_respecting_mutant(tmp_path: Path) -> None:
+    content_oracles = [
+        "cross_vector_padding",
+        "cross_packed_field_range",
+        "cross_message_key_binding",
+        "cross_commitment_digests",
+        "cross_merkle_proof",
+    ]
+    findings = _run_cross_fake_adapter(tmp_path, "accept_exact_length", ["cross_exact_lengths", *content_oracles])
+    # The length-respecting mutant keeps the exact-length oracle green...
+    assert int(findings["cross_exact_lengths"]) == 0
+    # ...while every content oracle still detects the broken verifier.
+    for oracle_id in content_oracles:
+        assert int(findings[oracle_id]) > 0, oracle_id

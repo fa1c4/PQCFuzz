@@ -73,12 +73,18 @@ ADAPTER_IDS = {
 def test_pair_alg_routing_and_job_generation():
     document = load_pair_alg(PAIR_ALG)
     pairs = [pair for pair in document["pairs"] if pair["status"] == "enabled"]
-    assert len(pairs) == 6
+    # Six same-source pairs plus the four reference-vs-PQClean second-build pairs.
+    assert len(pairs) == 10
     assert {pair["algorithm"] for pair in pairs} == set(ALGORITHMS)
     for pair in pairs:
         assert pair["algorithm_family"] == "FALCON"
         assert pair["primitive_type"] == "sig"
-        assert pair["exchange_contract"] == {"public_key_exchange": True, "signature_exchange": False}
+        if pair["provenance_relation"] == "same-source-shared-core-pqclean":
+            assert pair["exchange_contract"]["public_key_exchange"] is True
+            assert pair["exchange_contract"]["signature_exchange"] is True
+            assert pair["right"]["implementation_id"].startswith("falcon_pqclean_")
+        else:
+            assert pair["exchange_contract"] == {"public_key_exchange": True, "signature_exchange": False}
         assert oracle_spec_for_pair(pair) == "src/oracles/specs/falcon.json"
         assert oracle_ids_for_pair(pair) == [
             "falcon_kat",
@@ -100,7 +106,8 @@ def test_pair_alg_routing_and_job_generation():
             "falcon_sampler_arithmetic",
         ]
         subtests = {entry["oracle_id"]: entry for entry in enabled_subtests_for_pair(pair)}
-        assert subtests["falcon_cross_verify"]["enabled"] is False
+        expected_cross = pair["provenance_relation"] == "same-source-shared-core-pqclean"
+        assert subtests["falcon_cross_verify"]["enabled"] is expected_cross
         assert subtests["falcon_local_sign_verify"]["enabled"] is True
 
     assert ORACLE_ENUM_BY_NAME["falcon_kat"] == 100

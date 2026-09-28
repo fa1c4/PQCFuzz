@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <initializer_list>
 #include <vector>
 
 #include "adapters/rng_control.h"
@@ -313,6 +314,26 @@ bool AnyEffective(const std::vector<MutationRecord> &records) {
   });
 }
 
+// Structured mutation recipe v1 attached by the fuzz corpus.  Returns false
+// when no recipe is present or the recipe is malformed; callers then keep
+// their deterministic default mutation so the oracle predicate stays defined.
+bool DecodeCorpusRecipe(const std::vector<uint8_t> &bytes, SchemeMutation *out) {
+  if (bytes.empty()) {
+    return false;
+  }
+  std::string error;
+  return DecodeSchemeMutation(bytes, out, &error);
+}
+
+bool RecipeFieldIn(const SchemeMutation &recipe, std::initializer_list<SchemeMutationField> fields) {
+  for (SchemeMutationField field : fields) {
+    if (recipe.field == field) {
+      return true;
+    }
+  }
+  return false;
+}
+
 OracleSubtestTrace RunMutationNegative(
     const FalconOracleConfig &config,
     const std::string &subtest_id,
@@ -615,11 +636,22 @@ std::vector<OracleSubtestTrace> FalconMessageSaltBinding(const FalconOracleConfi
   message_recipe.op = SchemeMutationOp::kFlipBit;
   message_recipe.field = SchemeMutationField::kMessage;
   message_recipe.index = 0;
+  SchemeMutation corpus_recipe;
+  if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+      corpus_recipe.field == SchemeMutationField::kMessage) {
+    message_recipe = corpus_recipe;
+  }
   auto message_records = MutateFalconMessage(EncodeSchemeMutation(message_recipe), &mutated_message);
   subtests.push_back(run("mutated_message_negative", mutated_message, keypair.pk, message_records,
                          "signature verified for a different message"));
 
-  const std::vector<MutationRecord> salt_records = {MutateFalconSaltByte(config.params, 0, 0x01, &signature.sig)};
+  std::vector<MutationRecord> salt_records;
+  if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+      RecipeFieldIn(corpus_recipe, {SchemeMutationField::kSignatureSalt, SchemeMutationField::kSignature})) {
+    salt_records = MutateFalconSignature(config.params, config.mutation, &signature.sig);
+  } else {
+    salt_records = {MutateFalconSaltByte(config.params, 0, 0x01, &signature.sig)};
+  }
   subtests.push_back(run("mutated_salt_negative", config.message, keypair.pk, salt_records,
                          "signature verified after changing a salt byte"));
 
@@ -717,11 +749,17 @@ std::vector<OracleSubtestTrace> FalconPkCoefficients(const FalconOracleConfig &c
     subtests.push_back(coefficient_subtest);
   } else {
     bool all_rejected = true;
+    size_t coefficient_index = 0;
+    SchemeMutation pk_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &pk_recipe) &&
+        RecipeFieldIn(pk_recipe, {SchemeMutationField::kPublicKeyCoefficient, SchemeMutationField::kPublicKey})) {
+      coefficient_index = pk_recipe.index % config.params.n;
+    }
     const uint16_t values[] = {0, static_cast<uint16_t>(config.params.q - 1), static_cast<uint16_t>(config.params.q),
                                16383};
     for (uint16_t value : values) {
       std::vector<uint8_t> mutated_pk = keypair.pk;
-      const MutationRecord record = WriteFalconPublicKeyCoefficient(config.params, 0, value, &mutated_pk);
+      const MutationRecord record = WriteFalconPublicKeyCoefficient(config.params, coefficient_index, value, &mutated_pk);
       RecordMutationEffect({record}, trace);
       if (!record.effective) {
         continue;
@@ -826,7 +864,16 @@ std::vector<OracleSubtestTrace> FalconCompressedCanonicality(const FalconOracleC
   }
 
   size_t zero_index = 0;
-  if (FindFalconCompressedZeroCoefficient(config.params, signature.sig, &zero_index)) {
+  SchemeMutation coefficient_recipe;
+  if (DecodeCorpusRecipe(config.mutation, &coefficient_recipe) &&
+      RecipeFieldIn(coefficient_recipe,
+                    {SchemeMutationField::kSignatureCompressedCoefficient, SchemeMutationField::kSignature}) &&
+      coefficient_recipe.index < config.params.n) {
+    zero_index = coefficient_recipe.index;
+  } else if (!FindFalconCompressedZeroCoefficient(config.params, signature.sig, &zero_index)) {
+    zero_index = config.params.n;
+  }
+  if (zero_index < config.params.n) {
     std::vector<uint8_t> mutated = signature.sig;
     const MutationRecord record = SetFalconCompressedNegativeZeroBit(config.params, zero_index, &mutated);
     subtests.push_back(run("negative_zero_negative", record, mutated,
@@ -943,9 +990,21 @@ std::vector<OracleSubtestTrace> FalconFormatLengths(const FalconOracleConfig &co
     long_ct.push_back(0x00);
     subtests.push_back(run("ct_appended_negative", long_ct, true, "an appended CT signature was accepted"));
   } else {
+    // A legal padded conversion only exists when the compressed payload is
+    // shorter than the padded capacity; a compressed signature that already
+    // reaches the capacity has no padded form and must not be re-sent as if
+    // it were padded.
+    const bool padded_form_available = padded.size() == padded_len && padded.size() > baseline.size();
     if (config.params.format == FalconFormat::kCompressed) {
-      subtests.push_back(run("padded_full_form_positive", padded, false,
-                             "a legally padded compressed signature was rejected"));
+      if (padded_form_available) {
+        subtests.push_back(run("padded_full_form_positive", padded, false,
+                               "a legally padded compressed signature was rejected"));
+      } else {
+        OracleSubtestTrace subtest = MakeSubtest("padded_full_form_positive", config.oracle_id, "VERIFY_TRUE");
+        MarkNotApplicable(&subtest,
+                          "compressed signature already reaches the padded capacity; no legal padded conversion exists");
+        subtests.push_back(std::move(subtest));
+      }
     } else {
       subtests.push_back(run("padded_full_form_positive", baseline, false, "the honest padded signature did not verify"));
       FalconSignatureView view;
@@ -957,17 +1016,19 @@ std::vector<OracleSubtestTrace> FalconFormatLengths(const FalconOracleConfig &co
                                "a padded-only verifier accepted an unpadded length"));
       }
     }
-    std::vector<uint8_t> partial = padded;
-    if (!partial.empty()) {
-      partial.pop_back();
+    if (padded_form_available || config.params.format != FalconFormat::kCompressed) {
+      std::vector<uint8_t> partial = padded;
+      if (!partial.empty()) {
+        partial.pop_back();
+      }
+      subtests.push_back(run("partial_padding_negative", partial, true, "a partial padded signature was accepted"));
+      std::vector<uint8_t> nonzero_padding = padded;
+      if (!nonzero_padding.empty()) {
+        nonzero_padding.back() = 0x01;
+      }
+      subtests.push_back(run("nonzero_padding_negative", nonzero_padding, true,
+                             "a padded signature with a non-zero padding byte was accepted"));
     }
-    subtests.push_back(run("partial_padding_negative", partial, true, "a partial padded signature was accepted"));
-    std::vector<uint8_t> nonzero_padding = padded;
-    if (!nonzero_padding.empty()) {
-      nonzero_padding.back() = 0x01;
-    }
-    subtests.push_back(run("nonzero_padding_negative", nonzero_padding, true,
-                           "a padded signature with a non-zero padding byte was accepted"));
   }
 
   std::vector<uint8_t> truncated = baseline;

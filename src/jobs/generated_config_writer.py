@@ -104,7 +104,23 @@ def oracle_ids_for_aigis_sig() -> list[str]:
     ]
 
 
-def oracle_ids_for_cross() -> list[str]:
+# P2 hardening/fault/timing oracles are explicit opt-in only.  They are never
+# scheduled by default and require --include-p2 (or PQCFUZZ_INCLUDE_P2=1).
+P2_ORACLES_BY_FAMILY: dict[str, list[str]] = {
+    "CROSS": ["cross_fault_seed_disclosure", "cross_timing"],
+    "FALCON": ["falcon_fault_checks", "falcon_timing_resources"],
+    "NTRU": ["ntru_fault_checks", "ntru_timing_resources"],
+    "SIKE": ["sike_compressed_profile", "sike_fault_gate", "sike_sidh_timing"],
+    "SIDH": ["sike_sidh_timing"],
+    "SNOVA": ["snova_fault_checks", "snova_timing_resources"],
+}
+
+
+def p2_oracle_ids_for_family(family: str) -> list[str]:
+    return list(P2_ORACLES_BY_FAMILY.get(family, []))
+
+
+def oracle_ids_for_cross(include_p2: bool = False) -> list[str]:
     # Default (P0/P1) CROSS oracles.  The P2 timing and fault lanes are
     # opt-in only and stay out of the default schedule.
     return [
@@ -336,31 +352,37 @@ def sidh_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
     return subtests
 
 
-def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
+def oracle_ids_for_pair(pair: dict[str, Any], include_p2: bool = False) -> list[str]:
     family = pair["algorithm_family"]
     if family == "SIKE":
-        return oracle_ids_for_sike()
-    if family == "SIDH":
-        return oracle_ids_for_sidh()
-    if family == "NTRU":
-        return oracle_ids_for_ntru()
-    if family == "FALCON":
-        return oracle_ids_for_falcon()
-    if family == "CROSS":
-        return oracle_ids_for_cross()
-    if family == "SNOVA":
-        return oracle_ids_for_snova()
-    if family == "AIGIS-ENC":
-        return oracle_ids_for_aigis_enc()
-    if family == "AIGIS-SIG":
-        return oracle_ids_for_aigis_sig()
-    if family == "ML-KEM":
-        return oracle_ids_for_ml_kem()
-    if family == "ML-DSA":
-        return oracle_ids_for_ml_dsa()
-    if family == "SLH-DSA":
-        return oracle_ids_for_slh_dsa()
-    raise ValueError(f"unsupported algorithm family: {family}")
+        oracle_ids = oracle_ids_for_sike()
+    elif family == "SIDH":
+        oracle_ids = oracle_ids_for_sidh()
+    elif family == "NTRU":
+        oracle_ids = oracle_ids_for_ntru()
+    elif family == "FALCON":
+        oracle_ids = oracle_ids_for_falcon()
+    elif family == "CROSS":
+        oracle_ids = oracle_ids_for_cross()
+    elif family == "SNOVA":
+        oracle_ids = oracle_ids_for_snova()
+    elif family == "AIGIS-ENC":
+        oracle_ids = oracle_ids_for_aigis_enc()
+    elif family == "AIGIS-SIG":
+        oracle_ids = oracle_ids_for_aigis_sig()
+    elif family == "ML-KEM":
+        oracle_ids = oracle_ids_for_ml_kem()
+    elif family == "ML-DSA":
+        oracle_ids = oracle_ids_for_ml_dsa()
+    elif family == "SLH-DSA":
+        oracle_ids = oracle_ids_for_slh_dsa()
+    else:
+        raise ValueError(f"unsupported algorithm family: {family}")
+    if include_p2:
+        for oracle_id in p2_oracle_ids_for_family(family):
+            if oracle_id not in oracle_ids:
+                oracle_ids.append(oracle_id)
+    return oracle_ids
 
 
 def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
@@ -686,34 +708,49 @@ def sig_enabled_subtests(exchange_contract: dict[str, bool], oracle_prefix: str)
     ]
 
 
-def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
+def enabled_subtests_for_pair(pair: dict[str, Any], include_p2: bool = False) -> list[dict[str, Any]]:
     family = pair["algorithm_family"]
     if family == "SIKE":
-        return sike_enabled_subtests(pair)
-    if family == "SIDH":
-        return sidh_enabled_subtests(pair)
-    if family == "NTRU":
-        return ntru_enabled_subtests(pair)
-    if family == "FALCON":
-        return falcon_enabled_subtests(pair)
-    if family == "CROSS":
-        return cross_enabled_subtests(pair)
-    if family == "SNOVA":
-        return snova_enabled_subtests(pair)
-    if family == "AIGIS-ENC":
-        return kem_enabled_subtests(pair["exchange_contract"], "aigisenc")
-    if family == "ML-KEM":
-        return kem_enabled_subtests(pair["exchange_contract"], "mlkem")
-    if family == "ML-DSA":
-        return sig_enabled_subtests(pair["exchange_contract"], "mldsa")
-    if family == "SLH-DSA":
-        return sig_enabled_subtests(pair["exchange_contract"], "slhdsa")
-    if family == "AIGIS-SIG":
-        return sig_enabled_subtests(pair["exchange_contract"], "aigissig")
-    raise ValueError(f"unsupported algorithm family: {family}")
+        subtests = sike_enabled_subtests(pair)
+    elif family == "SIDH":
+        subtests = sidh_enabled_subtests(pair)
+    elif family == "NTRU":
+        subtests = ntru_enabled_subtests(pair)
+    elif family == "FALCON":
+        subtests = falcon_enabled_subtests(pair)
+    elif family == "CROSS":
+        subtests = cross_enabled_subtests(pair)
+    elif family == "SNOVA":
+        subtests = snova_enabled_subtests(pair)
+    elif family == "AIGIS-ENC":
+        subtests = kem_enabled_subtests(pair["exchange_contract"], "aigisenc")
+    elif family == "ML-KEM":
+        subtests = kem_enabled_subtests(pair["exchange_contract"], "mlkem")
+    elif family == "ML-DSA":
+        subtests = sig_enabled_subtests(pair["exchange_contract"], "mldsa")
+    elif family == "SLH-DSA":
+        subtests = sig_enabled_subtests(pair["exchange_contract"], "slhdsa")
+    elif family == "AIGIS-SIG":
+        subtests = sig_enabled_subtests(pair["exchange_contract"], "aigissig")
+    else:
+        raise ValueError(f"unsupported algorithm family: {family}")
+    if include_p2:
+        scheduled = {entry["oracle_id"] for entry in subtests}
+        for oracle_id in p2_oracle_ids_for_family(family):
+            if oracle_id in scheduled:
+                continue
+            subtests.append(
+                {
+                    "subtest_id": oracle_id,
+                    "oracle_id": oracle_id,
+                    "required_exchange": [],
+                    "enabled": True,
+                }
+            )
+    return subtests
 
 
-def make_job_record(pair: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+def make_job_record(pair: dict[str, Any], repo_root: Path, include_p2: bool = False) -> dict[str, Any]:
     job_id = make_job_id(pair["pair_id"])
     paths = make_workspace_paths(job_id)
     return {
@@ -721,6 +758,7 @@ def make_job_record(pair: dict[str, Any], repo_root: Path) -> dict[str, Any]:
         "job_id": job_id,
         "pair_id": pair["pair_id"],
         "oracle_suite": "fips",
+        "include_p2": include_p2,
         "relation_mode": "cross-implementation",
         "algorithm": pair["algorithm"],
         "algorithm_family": pair["algorithm_family"],
@@ -733,8 +771,8 @@ def make_job_record(pair: dict[str, Any], repo_root: Path) -> dict[str, Any]:
             "provenance_relation": pair["provenance_relation"],
         },
         "oracle_spec": oracle_spec_for_pair(pair),
-        "oracles": oracle_ids_for_pair(pair),
-        "enabled_subtests": enabled_subtests_for_pair(pair),
+        "oracles": oracle_ids_for_pair(pair, include_p2),
+        "enabled_subtests": enabled_subtests_for_pair(pair, include_p2),
         "fuzzer_source": fuzzer_source_for_pair(pair),
         "paths": paths,
         "status": "pending",
@@ -798,6 +836,7 @@ def make_generated_config(job: dict[str, Any]) -> dict[str, Any]:
         "job_id": job["job_id"],
         "pair_id": job["pair_id"],
         "oracle_suite": job.get("oracle_suite", "fips"),
+        "include_p2": job.get("include_p2", False),
         "relation_mode": job.get("relation_mode", "cross-implementation"),
         "algorithm": job["algorithm"],
         "algorithm_family": job["algorithm_family"],

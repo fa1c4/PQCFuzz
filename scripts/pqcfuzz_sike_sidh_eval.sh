@@ -60,15 +60,28 @@ job_filter_matches() {
   [ -z "$JOB_FILTER" ] || case "$1" in *"$JOB_FILTER"*) return 0 ;; *) return 1 ;; esac
 }
 
+job_family_matches() {
+  local job_file="$1"
+  [ "$FAMILY" = "all" ] && return 0
+  [ "$(job_field "$job_file" 'j["algorithm_family"]')" = "$FAMILY" ]
+}
+
 job_files() {
-  local dir
+  local dir job_file job_id
+  local seen=" "
   for dir in "$SIKE_JOBS_DIR" "$SIDH_JOBS_DIR"; do
-    [ "$FAMILY" = "SIKE" ] && [ "$dir" = "$SIDH_JOBS_DIR" ] && continue
-    [ "$FAMILY" = "SIDH" ] && [ "$dir" = "$SIKE_JOBS_DIR" ] && continue
-    local job_file
+    [ -d "$dir" ] || continue
     for job_file in "$dir"/job_*.json; do
       [ -e "$job_file" ] || continue
       job_filter_matches "$(basename "$job_file")" || continue
+      job_family_matches "$job_file" || continue
+      # A job JSON may exist in both directories when an older run wrote the
+      # SIDH lane into the shared SIKE jobs directory; process it once.
+      job_id=$(basename "$job_file" .json)
+      case "$seen" in
+        *" $job_id "*) continue ;;
+      esac
+      seen="$seen$job_id "
       echo "$job_file"
     done
   done
@@ -140,19 +153,36 @@ for oracle_id in job.get("oracles", []):
 PY
 }
 
-sike_adapter_defines_for_job() {
-  local job_file="$1"
-  local algorithm source_dir
+side_implementation_id() {
+  local job_file="$1" side="$2"
+  job_field "$job_file" "j[\"pair\"][\"$side\"][\"implementation_id\"]"
+}
+
+implementation_is_optimized() {
+  case "$1" in
+    *optimized*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+sike_adapter_defines_for_side() {
+  local job_file="$1" side="$2" override="${3:-}"
+  local algorithm source_dir implementation_id
   algorithm=$(job_field "$job_file" 'j["algorithm"]')
   source_dir=$(source_dir_for_job "$job_file")
-  python3 - "$algorithm" "$source_dir" <<'PY'
+  implementation_id="${override:-$(side_implementation_id "$job_file" "$side")}"
+  python3 - "$algorithm" "$source_dir" "$implementation_id" <<'PY'
 import sys
 
-algorithm, source_dir = sys.argv[1], sys.argv[2]
+algorithm, source_dir, implementation_id = sys.argv[1:4]
 suffix = algorithm.split("-")[1]
-header = f"{source_dir}_api.h"
-sike_impl = f"sike_reference_{suffix}"
-sidh_impl = f"sidh_reference_{suffix}"
+optimized = "optimized" in implementation_id
+prefix = "opt_" if optimized else ""
+header = f"opt_{source_dir}_api.h" if optimized else f"{source_dir}_api.h"
+if algorithm.startswith("SIKE"):
+    sike_impl, sidh_impl = implementation_id, implementation_id.replace("sike_", "sidh_")
+else:
+    sike_impl, sidh_impl = implementation_id.replace("sidh_", "sike_"), implementation_id
 defines = [
     "PQCFUZZ_HAVE_SIKE",
     "PQCFUZZ_HAVE_SIDH",
@@ -164,17 +194,57 @@ defines = [
     f'PQCFUZZ_SIKE_IMPLEMENTATION_ID="{sike_impl}"',
     f'PQCFUZZ_SIDH_ALGORITHM="SIDH-{suffix}"',
     f'PQCFUZZ_SIDH_IMPLEMENTATION_ID="{sidh_impl}"',
-    f"PQCFUZZ_SIKE_KEYPAIR=crypto_kem_keypair_SIKE{suffix}",
-    f"PQCFUZZ_SIKE_ENC=crypto_kem_enc_SIKE{suffix}",
-    f"PQCFUZZ_SIKE_DEC=crypto_kem_dec_SIKE{suffix}",
-    f"PQCFUZZ_SIDH_KEYGEN_A=EphemeralKeyGeneration_A_SIDH{suffix}",
-    f"PQCFUZZ_SIDH_KEYGEN_B=EphemeralKeyGeneration_B_SIDH{suffix}",
-    f"PQCFUZZ_SIDH_DERIVE_A=EphemeralSecretAgreement_A_SIDH{suffix}",
-    f"PQCFUZZ_SIDH_DERIVE_B=EphemeralSecretAgreement_B_SIDH{suffix}",
-    f"PQCFUZZ_SIDH_RANDOM_MOD_A=random_mod_order_A_SIDH{suffix}",
-    f"PQCFUZZ_SIDH_RANDOM_MOD_B=random_mod_order_B_SIDH{suffix}",
+    f"PQCFUZZ_SIKE_KEYPAIR={prefix}crypto_kem_keypair_SIKE{suffix}",
+    f"PQCFUZZ_SIKE_ENC={prefix}crypto_kem_enc_SIKE{suffix}",
+    f"PQCFUZZ_SIKE_DEC={prefix}crypto_kem_dec_SIKE{suffix}",
+    f"PQCFUZZ_SIDH_KEYGEN_A={prefix}EphemeralKeyGeneration_A_SIDH{suffix}",
+    f"PQCFUZZ_SIDH_KEYGEN_B={prefix}EphemeralKeyGeneration_B_SIDH{suffix}",
+    f"PQCFUZZ_SIDH_DERIVE_A={prefix}EphemeralSecretAgreement_A_SIDH{suffix}",
+    f"PQCFUZZ_SIDH_DERIVE_B={prefix}EphemeralSecretAgreement_B_SIDH{suffix}",
+    f"PQCFUZZ_SIDH_RANDOM_MOD_A={prefix}random_mod_order_A_SIDH{suffix}",
+    f"PQCFUZZ_SIDH_RANDOM_MOD_B={prefix}random_mod_order_B_SIDH{suffix}",
 ]
+if optimized:
+    defines += [
+        "PQCFUZZ_SIKE_ADAPTER_GETTER=pqcfuzz_get_sike_optimized_kem_adapter",
+        "PQCFUZZ_SIDH_ADAPTER_GETTER=pqcfuzz_get_sidh_optimized_kex_adapter",
+    ]
+else:
+    defines += [
+        "PQCFUZZ_SIKE_DELEGATE_OPTIMIZED",
+        "PQCFUZZ_SIDH_DELEGATE_OPTIMIZED",
+    ]
 print(" ".join(f"-D{define}" for define in defines))
+PY
+}
+
+# The optimized AMD64 objects define the same symbols as the generic build, so
+# every defined symbol is renamed with an opt_ prefix and the optimized adapter
+# is compiled against a generated API header that declares the renamed entry
+# points.
+write_optimized_api_header() {
+  local source_dir="$1" out_dir="$2"
+  mkdir -p "$out_dir"
+  python3 - "$source_dir" "$out_dir/opt_${source_dir}_api.h" <<'PY'
+import sys
+
+source_dir, path = sys.argv[1:3]
+suffix = "p" + source_dir[1:]
+renamed = "\n".join(
+    [
+        f"int opt_crypto_kem_keypair_SIKE{suffix}(unsigned char *pk, unsigned char *sk);",
+        f"int opt_crypto_kem_enc_SIKE{suffix}(unsigned char *ct, unsigned char *ss, const unsigned char *pk);",
+        f"int opt_crypto_kem_dec_SIKE{suffix}(unsigned char *ss, const unsigned char *ct, const unsigned char *sk);",
+        f"int opt_random_mod_order_A_SIDH{suffix}(unsigned char *random_digits);",
+        f"int opt_random_mod_order_B_SIDH{suffix}(unsigned char *random_digits);",
+        f"int opt_EphemeralKeyGeneration_A_SIDH{suffix}(const unsigned char *PrivateKeyA, unsigned char *PublicKeyA);",
+        f"int opt_EphemeralKeyGeneration_B_SIDH{suffix}(const unsigned char *PrivateKeyB, unsigned char *PublicKeyB);",
+        f"int opt_EphemeralSecretAgreement_A_SIDH{suffix}(const unsigned char *PrivateKeyA, const unsigned char *PublicKeyB, unsigned char *SharedSecretA);",
+        f"int opt_EphemeralSecretAgreement_B_SIDH{suffix}(const unsigned char *PrivateKeyB, const unsigned char *PublicKeyA, unsigned char *SharedSecretB);",
+    ]
+)
+with open(path, "w", encoding="utf-8") as fh:
+    fh.write(f'#include "{source_dir}_api.h"\n{renamed}\n')
 PY
 }
 
@@ -213,6 +283,8 @@ src/mutators/falcon_mutator.cc
 src/mutators/sha3.cc
 src/mutators/ntru_layout.cc
 src/mutators/ntru_mutator.cc
+src/mutators/snova_layout.cc
+src/mutators/snova_mutator.cc
 src/mutators/sike_layout.cc
 src/mutators/sike_mutator.cc
 src/oracles/expected_relation.cc
@@ -225,6 +297,8 @@ src/oracles/oracle_executor.cc
 src/oracles/cross_executor.cc
 src/oracles/falcon_executor.cc
 src/oracles/ntru_executor.cc
+src/oracles/snova_public_map.cc
+src/oracles/snova_executor.cc
 src/oracles/sike_executor.cc
 src/oracles/sidh_executor.cc
 src/oracles/metamorphic_observation.cc
@@ -236,6 +310,7 @@ src/adapters/ntru/kem_adapter.cc
 src/adapters/cross/cross_adapter.cc
 src/adapters/falcon/sig_adapter.cc
 src/adapters/falcon/signed_message_adapter.cc
+src/adapters/snova/sig_adapter.cc
 src/triage/finding_writer.cc
 src/triage/oracle_coverage.cc
 EOF
@@ -263,67 +338,205 @@ build_common_archive() {
   echo "[sike_sidh] common archive: $COMMON_ARCHIVE"
 }
 
-reference_object_dir_for_job() {
-  local source_dir
-  source_dir=$(source_dir_for_job "$1")
-  echo "${BUILD_DIR}/reference-obj/${source_dir}"
+generic_object_dir() {
+  echo "${BUILD_DIR}/reference-obj/$1"
 }
 
-build_reference_objects() {
-  local job_file="$1"
-  local source_dir obj_dir
-  source_dir=$(source_dir_for_job "$job_file")
-  obj_dir=$(reference_object_dir_for_job "$job_file")
-  if [ -f "$obj_dir/.complete" ]; then
-    return 0
-  fi
+optimized_object_dir() {
+  echo "${BUILD_DIR}/optimized-obj/$1"
+}
+
+shared_object_dir() {
+  echo "${BUILD_DIR}/shared-obj/$1"
+}
+
+build_shared_objects() {
+  local source_dir="$1" obj_dir
+  obj_dir=$(shared_object_dir "$source_dir")
   mkdir -p "$obj_dir"
-  local status=0
-  local source
-  for source in "$SIKE_ROOT/src/$source_dir/$source_dir.c" \
-                "$SIKE_ROOT/src/$source_dir/generic/fp_generic.c" \
-                "$SIKE_ROOT/src/sha3/fips202.c"; do
-    local name
-    name=$(basename "$source" .c)
+  (
+    flock -x 9
+    if [ -f "$obj_dir/.complete" ]; then exit 0; fi
+    rm -f "$obj_dir"/.complete "$obj_dir"/*.o
     "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -D_GENERIC_ -D_AMD64_ -D__NIX__ \
-      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" -c "$source" -o "$obj_dir/$name.o" &
-  done
-  wait || status=$?
-  if [ "$status" -ne 0 ]; then
-    echo "[sike_sidh] reference object build failed for $source_dir" >&2
-    rm -f "$obj_dir/.complete"
+      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" \
+      -c "$SIKE_ROOT/src/sha3/fips202.c" -o "$obj_dir/fips202.o" || exit 1
+    : > "$obj_dir/.complete"
+  ) 9>"$obj_dir/.lock"
+}
+
+build_generic_objects() {
+  local source_dir="$1" obj_dir
+  obj_dir=$(generic_object_dir "$source_dir")
+  mkdir -p "$obj_dir"
+  (
+    flock -x 9
+    if [ -f "$obj_dir/.complete" ]; then exit 0; fi
+    rm -f "$obj_dir"/.complete "$obj_dir"/*.o
+    local status=0 source name pids=() pid
+    for source in "$SIKE_ROOT/src/$source_dir/$source_dir.c" \
+                  "$SIKE_ROOT/src/$source_dir/generic/fp_generic.c"; do
+      name=$(basename "$source" .c)
+      "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -D_GENERIC_ -D_AMD64_ -D__NIX__ \
+        -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" -c "$source" -o "$obj_dir/$name.o" &
+      pids+=("$!")
+    done
+    for pid in "${pids[@]}"; do
+      wait "$pid" || status=1
+    done
+    [ "$status" -ne 0 ] && exit 1
+    : > "$obj_dir/.complete"
+  ) 9>"$obj_dir/.lock"
+  if [ ! -f "$obj_dir/.complete" ]; then
+    echo "[sike_sidh] generic object build failed for $source_dir" >&2
     return 1
   fi
-  : > "$obj_dir/.complete"
+}
+
+# The AMD64 objects define the same symbols as the generic build; rename every
+# defined symbol with an opt_ prefix so both link into one binary.  The
+# generated API header declares the renamed entry points for the optimized
+# adapter.
+build_optimized_objects() {
+  local source_dir="$1" obj_dir
+  obj_dir=$(optimized_object_dir "$source_dir")
+  mkdir -p "$obj_dir"
+  (
+    flock -x 9
+    if [ -f "$obj_dir/.complete" ]; then exit 0; fi
+    rm -f "$obj_dir"/.complete "$obj_dir"/*.o "$obj_dir"/rename.txt
+    local status=0 source name pids=() pid
+    local flags="-D_AMD64_ -D__NIX__ -D_MULX_ -D_ADX_"
+    for source in "$SIKE_ROOT/src/$source_dir/$source_dir.c" \
+                  "$SIKE_ROOT/src/$source_dir/AMD64/fp_x64.c"; do
+      name=$(basename "$source" .c)
+      # shellcheck disable=SC2086
+      "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS $flags \
+        -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" -c "$source" -o "$obj_dir/$name.o" &
+      pids+=("$!")
+    done
+    # shellcheck disable=SC2086
+    "$CC_BIN" $flags -c "$SIKE_ROOT/src/$source_dir/AMD64/fp_x64_asm.S" -o "$obj_dir/fp_x64_asm.o" &
+    pids+=("$!")
+    for pid in "${pids[@]}"; do
+      wait "$pid" || status=1
+    done
+    [ "$status" -ne 0 ] && exit 1
+    nm -g --defined-only "$obj_dir"/*.o | awk '{print $3}' | grep -v '^$' | sort -u |
+      awk '{print $1" opt_"$1}' > "$obj_dir/rename.txt"
+    local obj
+    for obj in "$obj_dir"/*.o; do
+      objcopy --redefine-syms="$obj_dir/rename.txt" "$obj"
+    done
+    : > "$obj_dir/.complete"
+  ) 9>"$obj_dir/.lock"
+  if [ ! -f "$obj_dir/.complete" ]; then
+    echo "[sike_sidh] optimized object build failed for $source_dir" >&2
+    return 1
+  fi
+}
+
+build_adapter_bundle() {
+  local source_dir="$1" adapter_dir="$2" api_dir="$3" defines="$4"
+  mkdir -p "$adapter_dir"
+  local api_flags=()
+  [ -n "$api_dir" ] && api_flags=("-I$api_dir")
+  (
+    flock -x 9
+    if [ -f "$adapter_dir/.complete" ]; then exit 0; fi
+    rm -f "$adapter_dir"/.complete "$adapter_dir"/kem_adapter.o "$adapter_dir"/kex_adapter.o
+    # shellcheck disable=SC2086
+    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc "${api_flags[@]}" \
+      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
+      -c src/adapters/sike/kem_adapter.cc -o "$adapter_dir/kem_adapter.o" || exit 1
+    # shellcheck disable=SC2086
+    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc "${api_flags[@]}" \
+      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
+      -c src/adapters/sidh/kex_adapter.cc -o "$adapter_dir/kex_adapter.o" || exit 1
+    : > "$adapter_dir/.complete"
+  ) 9>"$adapter_dir/.lock"
+}
+
+build_reference_hooks() {
+  local source_dir="$1" adapter_dir="$2" defines="$3"
+  mkdir -p "$adapter_dir"
+  (
+    flock -x 9
+    if [ -f "$adapter_dir/.hooks-complete" ]; then exit 0; fi
+    rm -f "$adapter_dir"/.hooks-complete "$adapter_dir"/reference_adapter.o "$adapter_dir"/randombytes.o
+    # shellcheck disable=SC2086
+    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
+      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
+      -c src/adapters/sike/reference_adapter.cc -o "$adapter_dir/reference_adapter.o" || exit 1
+    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
+      -c src/adapters/sike/sike_randombytes_override.cc -o "$adapter_dir/randombytes.o" || exit 1
+    : > "$adapter_dir/.hooks-complete"
+  ) 9>"$adapter_dir/.lock"
 }
 
 build_job() {
   local job_file="$1"
-  local job_id algorithm source_dir primitive has_reference
+  local job_id algorithm source_dir primitive left_id right_id
   job_id=$(job_id_of "$job_file")
   algorithm=$(job_field "$job_file" 'j["algorithm"]')
   source_dir=$(source_dir_for_job "$job_file")
   primitive=$(job_field "$job_file" 'j["primitive_type"]')
-  build_reference_objects "$job_file"
-  local obj_dir
-  obj_dir=$(reference_object_dir_for_job "$job_file")
-  local adapter_dir="${BUILD_DIR}/adapters/${source_dir}"
-  mkdir -p "$adapter_dir"
-  local defines
-  defines=$(sike_adapter_defines_for_job "$job_file")
-  if [ ! -f "$adapter_dir/kem_adapter.o" ]; then
-    # shellcheck disable=SC2086
-    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
-      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
-      -c src/adapters/sike/kem_adapter.cc -o "$adapter_dir/kem_adapter.o"
-    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
-      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
-      -c src/adapters/sidh/kex_adapter.cc -o "$adapter_dir/kex_adapter.o"
-    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
-      -I"$SIKE_ROOT/src/$source_dir" -I"$SIKE_ROOT/src" $defines \
-      -c src/adapters/sike/reference_adapter.cc -o "$adapter_dir/reference_adapter.o"
-    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
-      -c src/adapters/sike/sike_randombytes_override.cc -o "$adapter_dir/randombytes.o"
+  left_id=$(side_implementation_id "$job_file" left)
+  right_id=$(side_implementation_id "$job_file" right)
+
+  build_generic_objects "$source_dir" || return 1
+  build_shared_objects "$source_dir" || return 1
+  local link_objects=("$(shared_object_dir "$source_dir")/fips202.o")
+  local object
+  # Older build directories may carry a per-implementation fips202.o.
+  rm -f "$(generic_object_dir "$source_dir")/fips202.o"
+  rm -f "$(optimized_object_dir "$source_dir")/fips202.o"
+  for object in "$(generic_object_dir "$source_dir")"/*.o; do
+    link_objects+=("$object")
+  done
+
+  local has_optimized=0
+  if implementation_is_optimized "$left_id" || implementation_is_optimized "$right_id"; then
+    has_optimized=1
+  fi
+  if [ "$has_optimized" = 1 ]; then
+    build_optimized_objects "$source_dir" || return 1
+    for object in "$(optimized_object_dir "$source_dir")"/*.o; do
+      link_objects+=("$object")
+    done
+  fi
+
+  # The reference adapter carries the dispatcher getter; the optimized adapter
+  # exports the renamed getter when a second implementation is linked.
+  local suffix reference_id
+  suffix=$(python3 -c "print('$algorithm'.split('-')[1])")
+  if [ "$primitive" = "kem" ]; then
+    reference_id="sike_reference_${suffix}"
+  else
+    reference_id="sidh_reference_${suffix}"
+  fi
+  local reference_dir="${BUILD_DIR}/adapters/${source_dir}/reference"
+  local reference_defines
+  reference_defines=$(sike_adapter_defines_for_side "$job_file" left "$reference_id")
+  build_adapter_bundle "$source_dir" "$reference_dir" "" "$reference_defines"
+  build_reference_hooks "$source_dir" "$reference_dir" "$reference_defines"
+  local adapter_objects=("$reference_dir/kem_adapter.o" "$reference_dir/kex_adapter.o"
+                         "$reference_dir/reference_adapter.o" "$reference_dir/randombytes.o")
+
+  if [ "$has_optimized" = 1 ]; then
+    local opt_api_dir="${BUILD_DIR}/adapters/${source_dir}/opt-api"
+    write_optimized_api_header "$source_dir" "$opt_api_dir"
+    local optimized_dir="${BUILD_DIR}/adapters/${source_dir}/optimized"
+    local optimized_id
+    if implementation_is_optimized "$right_id"; then
+      optimized_id="$right_id"
+    else
+      optimized_id="$left_id"
+    fi
+    local optimized_defines
+    optimized_defines=$(sike_adapter_defines_for_side "$job_file" right "$optimized_id")
+    build_adapter_bundle "$source_dir" "$optimized_dir" "$opt_api_dir" "$optimized_defines"
+    adapter_objects+=("$optimized_dir/kem_adapter.o" "$optimized_dir/kex_adapter.o")
   fi
 
   local out_bin="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
@@ -343,13 +556,13 @@ build_job() {
       fuzzer_source="src/fuzzers/kem_pair_fuzzer.cc"
       left_project="sike"
       right_project="sike"
-      implementation_id=$(job_field "$job_file" 'j["pair"]["left"]["implementation_id"]')
+      implementation_id="$left_id"
       ;;
     kex)
       fuzzer_source="src/fuzzers/kex_pair_fuzzer.cc"
       left_project="sidh"
       right_project="sidh"
-      implementation_id=$(job_field "$job_file" 'j["pair"]["left"]["implementation_id"]')
+      implementation_id="$left_id"
       ;;
     *)
       echo "[sike_sidh] unsupported primitive $primitive" >&2
@@ -358,7 +571,7 @@ build_job() {
   esac
 
   # shellcheck disable=SC2086
-  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc $defines \
+  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
     $FUZZER_SANITIZER_FLAGS \
     -DPQCFUZZ_JOB_ID="\"$job_id\"" \
     -DPQCFUZZ_PAIR_ID="\"$pair_id\"" \
@@ -371,37 +584,43 @@ build_job() {
     -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$implementation_id\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"$right_project\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_id\"" \
     -DPQCFUZZ_PUBLIC_KEY_EXCHANGE="$pk_exchange" \
     -DPQCFUZZ_CIPHERTEXT_EXCHANGE="$ct_exchange" \
     -DPQCFUZZ_PEER_KEY_EXCHANGE="$peer_exchange" \
     -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 \
     -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
     "$fuzzer_source" \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o "$adapter_dir"/*.o \
+    "$COMMON_ARCHIVE" "${link_objects[@]}" "${adapter_objects[@]}" \
     -o "$out_bin"
 
   # shellcheck disable=SC2086
-  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc $defines \
+  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
     $REPLAY_SANITIZER_FLAGS \
     -DPQCFUZZ_LEFT_PROJECT_ID="\"$left_project\"" \
     -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$implementation_id\"" \
     -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$implementation_id\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"$right_project\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_id\"" \
     src/replay/replay_oracle.cc \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o "$adapter_dir"/*.o \
+    "$COMMON_ARCHIVE" "${link_objects[@]}" "${adapter_objects[@]}" \
     -o "$replay_bin"
 
   manifests_dir
-  python3 - "$BUILD_DIR/manifests/${job_id}.json" "$job_file" "$out_bin" "$replay_bin" "$source_dir" <<'PY'
+  python3 - "$BUILD_DIR/manifests/${job_id}.json" "$job_file" "$out_bin" "$replay_bin" "$source_dir" "$left_id" "$right_id" <<'PY'
 import json
 import sys
 
-path, job_file, out_bin, replay_bin, source_dir = sys.argv[1:]
+path, job_file, out_bin, replay_bin, source_dir, left_id, right_id = sys.argv[1:]
 with open(job_file, encoding="utf-8") as fh:
     job = json.load(fh)
+
+
+def implementation_root(implementation_id):
+    return "AMD64 optimized" if "optimized" in implementation_id else "generic reference"
+
+
 payload = {
     "job_id": job["job_id"],
     "pair_id": job["pair_id"],
@@ -414,9 +633,14 @@ payload = {
     "replay_binary": replay_bin,
     "real_library": True,
     "source_dir": source_dir,
+    "implementations": [
+        {"implementation_id": implementation_id, "variant": implementation_root(implementation_id)}
+        for implementation_id in dict.fromkeys([left_id, right_id])
+    ],
     "provenance_relation": job.get("pair", {}).get("provenance_relation", "same-source-single-implementation"),
     "build_flags": {
         "reference": "-O2 -D_GENERIC_ -D_AMD64_ -D__NIX__",
+        "optimized": "-O2 -D_AMD64_ -D__NIX__ -D_MULX_ -D_ADX_ (asm, opt_ symbol prefix)",
         "sanitizers": ["address", "undefined"],
     },
 }
@@ -653,32 +877,46 @@ replay_job_seeds() {
 }
 
 cmd_preflight() {
-  local job_file status=0
+  local job_file status=0 job_count=0
   while IFS= read -r job_file; do
+    job_count=$((job_count + 1))
     preflight_job "$job_file" || status=1
   done < <(job_files)
-  python3 - "$WORK_ROOT/preflight_manifest.json" "$SOURCE_LOCK" "$status" <<'PY'
+  python3 - "$WORK_ROOT/preflight_manifest.json" "$SOURCE_LOCK" "$status" "$job_count" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-path, source_lock, status = sys.argv[1], sys.argv[2], int(sys.argv[3])
+path, source_lock, status, job_count = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
 with open(source_lock, encoding="utf-8") as fh:
     lock = json.load(fh)
+if job_count == 0:
+    coverage_gate = "no_jobs"
+    kat_status = "not_run"
+elif status == 0:
+    coverage_gate = "passed"
+    # The preflight replay lane exercises the fixture-backed oracle contracts;
+    # the official KAT response comparison runs in the model lane, so the
+    # manifest only asserts availability here.
+    kat_status = "fixture_available"
+else:
+    coverage_gate = "failed"
+    kat_status = "not_verified"
 payload = {
     "families": ["SIKE", "SIDH"],
     "real_library": True,
     "dependency_status": "vendored-reference-present",
     "official_kat": lock["kat"]["official_kat_available"],
-    "kat_status": "official_kat_reproduced",
+    "kat_status": kat_status,
+    "jobs": job_count,
     "security_status": "known_broken",
-    "coverage_gate": "passed" if status == 0 else "failed",
+    "coverage_gate": coverage_gate,
 }
 Path(path).parent.mkdir(parents=True, exist_ok=True)
 with open(path, "w", encoding="utf-8") as fh:
     json.dump(payload, fh, indent=2, sort_keys=True)
     fh.write("\n")
-print(f"[sike_sidh] preflight coverage gate: {'passed' if status == 0 else 'FAILED'}")
+print(f"[sike_sidh] preflight coverage gate: {coverage_gate}")
 PY
   exit "$status"
 }
@@ -694,6 +932,9 @@ smoke_job() {
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
   local job_count
   job_count=$(job_files | wc -l)
+  if [ "$job_count" -lt 1 ]; then
+    job_count=1
+  fi
   per_job_seconds=$(( SMOKE_FUZZ_SECONDS / job_count ))
   if [ "$per_job_seconds" -lt 1 ]; then
     per_job_seconds=1

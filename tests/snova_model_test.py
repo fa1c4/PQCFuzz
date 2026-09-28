@@ -148,6 +148,49 @@ def test_target_hash_binding_mutants() -> None:
     assert model.target_hash(profile, seed, digest[:-1] + bytes([digest[-1] ^ 1]), salt) != baseline
 
 
+def test_target_hash_dropped_component_mutants() -> None:
+    profile = PROFILES["SNOVA-R2-24-5-16-4-AES"]
+    seed = bytes(range(16))
+    digest = model.message_digest(b"PQCFuzz SNOVA mutant")
+    salt = bytes(range(16, 32))
+    baseline = model.target_hash(profile, seed, digest, salt)
+    assert model.target_hash_dropped_salt(profile, seed, digest, salt) != baseline
+    assert model.target_hash_dropped_spublic(profile, seed, digest, salt) != baseline
+
+
+def test_p12_p21_swap_and_counter_mutants() -> None:
+    profile = PROFILES["SNOVA-R2-24-5-16-4-AES"]
+    public_seed = bytes(range(16))
+    private_seed = bytes(range(16, 48))
+    p = model.gen_a_b_q_p(profile, public_seed)
+    t12 = model.gen_t12(profile, private_seed)
+    f = model.gen_f(profile, p, t12)
+    baseline = model.gen_p22(profile, t12, p["P21"], f["F12"])
+    assert model.p12_p21_swap_p22(profile, t12, p["P21"], f["F12"]) != baseline
+
+    seed = bytes(range(16))
+    assert model.indexed_shake_constant_index(seed, 168) == model.snova_shake_stream(seed, 168)
+    assert model.indexed_shake_constant_index(seed, 336) != model.snova_shake_stream(seed, 336)
+    assert model.indexed_shake_constant_index(seed, 168 + 1) != model.snova_shake_stream(seed, 168 + 1)
+
+
+def test_gauss_unverified_solution_mutant() -> None:
+    singular = [[1, 1], [2, 2]]
+    assert model.gauss_solve_gf16(singular, [1, 0]) is None
+    candidate = model.gauss_unverified_solution(singular, [1, 0])
+    assert candidate is not None
+    product = [
+        model.gf16_add(
+            model.gf16_mul(singular[row][0], candidate[0]),
+            model.gf16_mul(singular[row][1], candidate[1]),
+        )
+        for row in range(2)
+    ]
+    assert product != [1, 0]
+    unique = [[1, 2], [3, 1]]
+    assert model.gauss_unverified_solution(unique, [1, 2]) == model.gauss_solve_gf16(unique, [1, 2])
+
+
 def test_gauss_fixtures_and_mutants() -> None:
     # Unique solution.
     unique = [[1, 2], [3, 1]]

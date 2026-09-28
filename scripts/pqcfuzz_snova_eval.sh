@@ -227,6 +227,54 @@ build_snova_objects() {
   fi
 }
 
+snova_avx2_object_dir_for_job() {
+  local algorithm
+  algorithm=$(job_field "$1" 'j["algorithm"]')
+  echo "$OBJ_ROOT/avx2-$(echo "$algorithm" | tr '[:upper:]' '[:lower:]' | tr -d '-')"
+}
+
+# The plasma/AVX2 build recompiles the kernel with OPTIMISATION=2 and -mavx2;
+# every defined kernel symbol is renamed opt_* so the reference and AVX2 sets
+# link into one binary.  The AES helpers are shared between both builds.
+build_snova_avx2_objects() {
+  local job_file="$1" obj_dir defines
+  obj_dir=$(snova_avx2_object_dir_for_job "$job_file")
+  if [ -f "$obj_dir/.complete" ]; then
+    return 0
+  fi
+  defines=$(snova_defines_for_job "$job_file" | sed 's/-DOPTIMISATION=0//')
+  mkdir -p "$obj_dir"
+  rm -f "$obj_dir"/*.o "$obj_dir/.complete" "$obj_dir/rename.txt"
+  local status=0 pids=() pid source base
+  local extra_shake=""
+  case " $defines " in
+    *"PK_EXPAND_SHAKE=1"*) extra_shake="shake/snova_shake_opt.c shake/KeccakP-1600-times4-SIMD256.c" ;;
+  esac
+  for source in snova.c ct_functions.c shake/KeccakHash.c shake/KeccakSponge.c shake/KeccakP-1600-opt64.c \
+                shake/SimpleFIPS202.c shake/snova_shake_ref.c $extra_shake; do
+    base=$(basename "$source")
+    # shellcheck disable=SC2086
+    "$CC_BIN" -std=c11 $SNOVA_C_CFLAGS -mavx2 -I"$SNOVA_SRC" $defines -DOPTIMISATION=1 -Dsk_is_seed=0 \
+      -c "$SNOVA_SRC/$source" -o "$obj_dir/$base.o" &
+    pids+=("$!")
+  done
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=1
+  done
+  if [ "$status" -ne 0 ]; then
+    echo "[snova] AVX2 object build failed" >&2
+    rm -f "$obj_dir/.complete"
+    return 1
+  fi
+  nm -g --defined-only "$obj_dir"/*.o | awk '{print $3}' | grep -v '^$' | sort -u |
+    awk '{print $1" opt_"$1}' > "$obj_dir/rename.txt"
+  local obj
+  for obj in "$obj_dir"/*.o; do
+    objcopy --redefine-syms="$obj_dir/rename.txt" "$obj"
+  done
+  : > "$obj_dir/.complete"
+}
+
 build_job() {
   local job_file="$1"
   local job_id algorithm algorithm_enum left_impl right_impl left_sk_len
@@ -241,12 +289,35 @@ build_job() {
   mkdir -p "$obj_dir" "$BUILD_DIR/$job_id"
   local defines
   defines=$(snova_defines_for_job "$job_file")
+  local avx2_dir="" avx2_objects=()
+  if [[ "$left_impl" == snova_avx2* || "$right_impl" == snova_avx2* ]]; then
+    build_snova_avx2_objects "$job_file" || return 1
+    avx2_dir=$(snova_avx2_object_dir_for_job "$job_file")
+    avx2_objects=("$avx2_dir"/*.o)
+  fi
 
   "$CXX_BIN" -std=c++17 $SNOVA_CFLAGS -Isrc -I"$SNOVA_SRC" $defines \
     -DPQCFUZZ_HAVE_SNOVA \
     -DPQCFUZZ_SNOVA_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_SNOVA_IMPLEMENTATION_BASE="\"snova_reference\"" \
+    -DPQCFUZZ_SNOVA_DELEGATE_AVX2 \
     -c src/adapters/snova/sig_adapter.cc -o "$obj_dir/snova_adapter.o"
+  if [ -n "$avx2_dir" ]; then
+    "$CXX_BIN" -std=c++17 $SNOVA_CFLAGS -Isrc -I"$SNOVA_SRC" $defines \
+      -DPQCFUZZ_HAVE_SNOVA \
+      -DPQCFUZZ_SNOVA_ALGORITHM="\"$algorithm\"" \
+      -DPQCFUZZ_SNOVA_IMPLEMENTATION_BASE="\"snova_avx2\"" \
+      -DPQCFUZZ_SNOVA_ADAPTER_GETTER=pqcfuzz_get_snova_avx2_sig_adapter \
+      -DPQCFUZZ_SNOVA_API_GETTER=pqcfuzz_get_snova_avx2_api \
+      -Dsnova_init=opt_snova_init \
+      -Dgenerate_keys_ssk=opt_generate_keys_ssk \
+      -Dgenerate_keys_esk=opt_generate_keys_esk \
+      -Dsign_digest_ssk=opt_sign_digest_ssk \
+      -Dsign_digest_esk=opt_sign_digest_esk \
+      -Dverify_signture=opt_verify_signture \
+      -Dexpand_public_pack=opt_expand_public_pack \
+      -c src/adapters/snova/sig_adapter.cc -o "$obj_dir/snova_adapter_avx2.o"
+  fi
 
   local config_file pair_id pk_exchange sig_exchange
   config_file=$(job_field "$job_file" 'j["paths"]["generated_config"]')
@@ -271,7 +342,7 @@ build_job() {
     -DPQCFUZZ_PUBLIC_KEY_EXCHANGE="$pk_exchange" \
     -DPQCFUZZ_SIGNATURE_EXCHANGE="$sig_exchange" \
     src/fuzzers/sig_pair_fuzzer.cc \
-    "$COMMON_ARCHIVE" "$(snova_object_dir_for_job "$job_file")"/*.o "$obj_dir"/*.o \
+    "$COMMON_ARCHIVE" "$(snova_object_dir_for_job "$job_file")"/*.o "$obj_dir"/*.o "${avx2_objects[@]}" \
     -o "$BUILD_DIR/$job_id/pqcfuzz_$job_id"
 
   "$CXX_BIN" -std=c++17 $SNOVA_CFLAGS -Isrc -I"$SNOVA_SRC" $defines $REPLAY_SANITIZER_FLAGS \
@@ -283,7 +354,7 @@ build_job() {
     -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_impl\"" \
     -DPQCFUZZ_EXPECTED_SK_LEN="$left_sk_len" \
     src/replay/replay_oracle.cc \
-    "$COMMON_ARCHIVE" "$(snova_object_dir_for_job "$job_file")"/*.o "$obj_dir"/*.o \
+    "$COMMON_ARCHIVE" "$(snova_object_dir_for_job "$job_file")"/*.o "$obj_dir"/*.o "${avx2_objects[@]}" \
     -o "$BUILD_DIR/$job_id/replay_oracle"
 
   mkdir -p "$BUILD_DIR/manifests"
@@ -627,6 +698,15 @@ lock = json.loads(Path(sys.argv[4]).read_text())
 oracles = {}
 findings = 0
 jobs = []
+coverage_totals = {
+    "scheduled": 0,
+    "entered": 0,
+    "evaluable": 0,
+    "not_applicable": 0,
+    "unsupported": 0,
+    "skipped": 0,
+    "findings": 0,
+}
 for job_path in sorted(jobs_dir.glob("job_snova_*.json")):
     job = json.loads(job_path.read_text())
     coverage_path = results_dir / job["job_id"] / "oracle_coverage.json"
@@ -637,12 +717,34 @@ for job_path in sorted(jobs_dir.glob("job_snova_*.json")):
         invocations = entry.get("oracle_invocations", 0)
         findings_for_oracle = entry.get("finding_records", 0)
         finding_records += findings_for_oracle
-        summary = oracles.setdefault(oracle, {"invocations": 0, "findings": 0, "profiles": 0})
+        summary = oracles.setdefault(
+            oracle,
+            {
+                "invocations": 0,
+                "findings": 0,
+                "profiles": 0,
+                "evaluable": 0,
+                "not_applicable": 0,
+                "unsupported": 0,
+                "skipped": 0,
+            },
+        )
         summary["invocations"] += invocations
         summary["findings"] += findings_for_oracle
         summary["profiles"] += 1
+        summary["evaluable"] += entry.get("relation_evaluable", 0)
+        summary["not_applicable"] += entry.get("not_applicable", 0)
+        summary["unsupported"] += entry.get("unsupported", 0)
+        summary["skipped"] += entry.get("skipped", 0)
+        coverage_totals["scheduled"] += 1
+        coverage_totals["entered"] += 1 if invocations else 0
+        coverage_totals["evaluable"] += entry.get("relation_evaluable", 0)
+        coverage_totals["not_applicable"] += entry.get("not_applicable", 0)
+        coverage_totals["unsupported"] += entry.get("unsupported", 0)
+        coverage_totals["skipped"] += entry.get("skipped", 0)
     findings += finding_records
     jobs.append({"job_id": job["job_id"], "algorithm": job["algorithm"], "finding_records": finding_records})
+coverage_totals["findings"] = findings
 summary = {
     "family": "SNOVA",
     "spec": lock["spec"],
@@ -650,7 +752,25 @@ summary = {
     "kat": lock["kat"],
     "jobs": jobs,
     "oracles": oracles,
+    "coverage": coverage_totals,
     "total_finding_records": findings,
+    "claims": "conformance and counterexample search only; no IND-CCA, EUF-CMA, sUF or quantum-security proof is claimed",
+    "sanitizer": {
+        "status": "see workspace/snova/runs/*/smoke-fuzz.log for the sanitizer lane",
+        "build": "ASan/UBSan sanitizer fuzzers are built by scripts/pqcfuzz_snova_eval.sh build",
+    },
+    "false_positive_controls": [
+        "honest signature verifies for every default profile",
+        "accepted nonzero input padding nibble is reported as a byte alias, never as an EUF forgery",
+        "AES and SHAKE public-expansion backends are never cross-verified",
+        "same-source SSK/ESK provenance is labelled and never reported as independent",
+        "fixed coins under a recorded salt are not reported as insufficient randomness",
+    ],
+    "fault_detection": {
+        "status": "not scheduled by default",
+        "oracles": ["snova_fault_checks"],
+        "note": "P2 fault mutants are opt-in; run with PQCFUZZ_INCLUDE_P2=1 after enabling the fault lane",
+    },
     "not_covered": {
         "p2_lanes": ["snova_fault_checks", "snova_timing_resources"],
         "notes": [
@@ -671,13 +791,52 @@ lines = [
     "- Official KAT: %s" % ("yes (count=0 records)" if lock["kat"]["official_kat_available"] else "no"),
     "- Jobs: %d" % len(jobs),
     "- Total finding records: %d" % findings,
+    "- Coverage: %d scheduled, %d entered, %d evaluable, %d not applicable, %d unsupported, %d skipped"
+    % (
+        coverage_totals["scheduled"],
+        coverage_totals["entered"],
+        coverage_totals["evaluable"],
+        coverage_totals["not_applicable"],
+        coverage_totals["unsupported"],
+        coverage_totals["skipped"],
+    ),
+    "- Claims: %s" % summary["claims"],
     "",
-    "| oracle | invocations | findings | profiles |",
-    "| --- | ---: | ---: | ---: |",
+    "| oracle | invocations | evaluable | not applicable | unsupported | skipped | findings | profiles |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
 ]
 for oracle, data in sorted(oracles.items()):
-    lines.append("| %s | %d | %d | %d |" % (oracle, data["invocations"], data["findings"], data["profiles"]))
+    lines.append(
+        "| %s | %d | %d | %d | %d | %d | %d | %d |"
+        % (
+            oracle,
+            data["invocations"],
+            data["evaluable"],
+            data["not_applicable"],
+            data["unsupported"],
+            data["skipped"],
+            data["findings"],
+            data["profiles"],
+        )
+    )
 lines += [
+    "",
+    "## Sanitizer",
+    "",
+    "- %s" % summary["sanitizer"]["build"],
+    "- %s" % summary["sanitizer"]["status"],
+    "",
+    "## False-positive controls",
+    "",
+]
+for control in summary["false_positive_controls"]:
+    lines.append("- %s" % control)
+lines += [
+    "",
+    "## Fault detection",
+    "",
+    "- Status: %s" % summary["fault_detection"]["status"],
+    "- %s" % summary["fault_detection"]["note"],
     "",
     "## Not covered",
     "",

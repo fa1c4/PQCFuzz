@@ -89,6 +89,10 @@ const pqcfuzz_sig_adapter *const kFalconAdapters[] = {
 
 }  // namespace
 
+#if defined(PQCFUZZ_FALCON_DELEGATE_PQCLEAN)
+extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_falcon_pqclean_sig_adapter() __attribute__((weak));
+#endif
+
 extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_falcon_sig_adapter(const char *implementation_id) {
   if (implementation_id == nullptr) {
     return nullptr;
@@ -98,6 +102,14 @@ extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_falcon_sig_adapter(const char 
       return adapter;
     }
   }
+#if defined(PQCFUZZ_FALCON_DELEGATE_PQCLEAN)
+  if (pqcfuzz_get_falcon_pqclean_sig_adapter != nullptr) {
+    const pqcfuzz_sig_adapter *pqclean = pqcfuzz_get_falcon_pqclean_sig_adapter();
+    if (pqclean != nullptr && std::strcmp(pqclean->implementation_id, implementation_id) == 0) {
+      return pqclean;
+    }
+  }
+#endif
   return nullptr;
 }
 

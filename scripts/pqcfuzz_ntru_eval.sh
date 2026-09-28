@@ -169,6 +169,8 @@ src/mutators/falcon_mutator.cc
 src/mutators/sha3.cc
 src/mutators/ntru_layout.cc
 src/mutators/ntru_mutator.cc
+src/mutators/snova_layout.cc
+src/mutators/snova_mutator.cc
 src/mutators/sike_layout.cc
 src/mutators/sike_mutator.cc
 src/oracles/sike_executor.cc
@@ -184,6 +186,8 @@ src/oracles/oracle_executor.cc
 src/oracles/cross_executor.cc
 src/oracles/falcon_executor.cc
 src/oracles/ntru_executor.cc
+src/oracles/snova_public_map.cc
+src/oracles/snova_executor.cc
 src/oracles/metamorphic_observation.cc
 src/oracles/metamorphic_spec.cc
 src/oracles/metamorphic_executor.cc
@@ -194,6 +198,7 @@ src/runtime/replay_args.cc
 src/adapters/cross/cross_adapter.cc
 src/adapters/falcon/sig_adapter.cc
 src/adapters/falcon/signed_message_adapter.cc
+src/adapters/snova/sig_adapter.cc
 src/triage/finding_writer.cc
 src/triage/oracle_coverage.cc
 EOF
@@ -221,61 +226,155 @@ build_common_archive() {
   echo "[ntru] common archive: $COMMON_ARCHIVE"
 }
 
-reference_object_dir_for_job() {
-  local job_file="$1"
-  local source_dir
-  source_dir=$(source_dir_for_job "$(job_field "$job_file" 'j["algorithm"]')")
-  echo "${BUILD_DIR}/ntru-obj/${source_dir}"
+right_implementation_id() {
+  job_field "$1" 'j["pair"]["right"]["implementation_id"]'
 }
 
-build_reference_objects() {
-  local job_file="$1"
-  local algorithm source_dir namespace obj_dir
-  algorithm=$(job_field "$job_file" 'j["algorithm"]')
-  source_dir=$(source_dir_for_job "$algorithm")
-  namespace=$(namespace_for_job "$job_file")
-  obj_dir=$(reference_object_dir_for_job "$job_file")
+# The pinned round-3 submission ships a reference and an optimized build of the
+# same algorithm; the optimized sources are vendored under projects/NTRU/optimized.
+implementation_source_root_for_id() {
+  case "$1" in
+    *optimized*) echo "projects/NTRU/optimized" ;;
+    *) echo "projects/NTRU/reference" ;;
+  esac
+}
+
+implementation_namespace_for_id() {
+  python3 - "$1" <<'PY'
+import re
+import sys
+
+name = sys.argv[1]
+if name.startswith("ntru_optimized_"):
+    suffix, prefix = name[len("ntru_optimized_"):], "ntru_opt_"
+elif name.startswith("ntru_reference_"):
+    suffix, prefix = name[len("ntru_reference_"):], "ntru_ref_"
+else:
+    suffix, prefix = name, "ntru_"
+print(prefix + re.sub(r"[^0-9A-Za-z_]", "_", suffix) + "_")
+PY
+}
+
+implementation_object_dir() {
+  local root="$1" source_dir="$2"
+  echo "${BUILD_DIR}/ntru-obj/$(basename "$root")/${source_dir}"
+}
+
+# fips202.c is byte-identical in the reference and optimized trees and exports
+# un-namespaced SHA-3 symbols, so it is compiled once per parameter set and
+# linked into every binary that uses the parameter set.
+shared_object_dir() {
+  local source_dir="$1"
+  echo "${BUILD_DIR}/ntru-obj/shared/${source_dir}"
+}
+
+build_shared_objects() {
+  local source_dir="$1"
+  local obj_dir
+  obj_dir=$(shared_object_dir "$source_dir")
   if [ -f "$obj_dir/.complete" ]; then
     return 0
   fi
   mkdir -p "$obj_dir"
-  local status=0
-  local source
-  for source in "$NTRU_SRC/$source_dir"/*.c; do
-    local name
+  "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -I"$NTRU_SRC/$source_dir" -I"$NTRU_KAT" \
+    -c "$NTRU_SRC/$source_dir/fips202.c" -o "$obj_dir/fips202.o"
+  : > "$obj_dir/.complete"
+}
+
+build_implementation_objects() {
+  local root="$1" source_dir="$2" namespace="$3"
+  local obj_dir
+  obj_dir=$(implementation_object_dir "$root" "$source_dir")
+  if [ -f "$obj_dir/.complete" ]; then
+    return 0
+  fi
+  mkdir -p "$obj_dir"
+  local status=0 source name pids=() pid
+  for source in "$root/$source_dir"/*.c; do
     name=$(basename "$source" .c)
-    "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -I"$NTRU_SRC/$source_dir" -I"$NTRU_KAT" \
+    [ "$name" = "fips202" ] && continue
+    "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -I"$root/$source_dir" -I"$NTRU_KAT" \
       "-DCRYPTO_NAMESPACE(s)=${namespace}##s" -c "$source" -o "$obj_dir/$name.o" &
+    pids+=("$!")
   done
-  wait || status=$?
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=1
+  done
   if [ "$status" -ne 0 ]; then
-    echo "[ntru] reference object build failed for $algorithm" >&2
+    echo "[ntru] object build failed for $root/$source_dir" >&2
     rm -f "$obj_dir/.complete"
     return 1
   fi
   : > "$obj_dir/.complete"
 }
 
+build_implementation_adapter() {
+  local root="$1" source_dir="$2" namespace="$3" implementation_id="$4" algorithm="$5"
+  local adapter_dir="${BUILD_DIR}/ntru-adapter/$(basename "$root")/${source_dir}"
+  mkdir -p "$adapter_dir"
+  local getter_flag=() delegate_flag=()
+  case "$implementation_id" in
+    *optimized*)
+      getter_flag=("-DPQCFUZZ_NTRU_ADAPTER_GETTER=pqcfuzz_get_ntru_optimized_adapter")
+      ;;
+    *)
+      delegate_flag=("-DPQCFUZZ_NTRU_DELEGATE_OPTIMIZED")
+      ;;
+  esac
+  if [ ! -f "$adapter_dir/kem_adapter.o" ]; then
+    "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc -I"$root/$source_dir" -I"$NTRU_KAT" \
+      -DPQCFUZZ_HAVE_NTRU "-DCRYPTO_NAMESPACE(s)=${namespace}##s" \
+      "-DPQCFUZZ_NTRU_ALGORITHM=\"$algorithm\"" \
+      "-DPQCFUZZ_NTRU_IMPLEMENTATION_ID=\"$implementation_id\"" \
+      "${getter_flag[@]}" "${delegate_flag[@]}" \
+      -c src/adapters/ntru/kem_adapter.cc -o "$adapter_dir/kem_adapter.o"
+  fi
+  echo "$adapter_dir"
+}
+
 build_job() {
   local job_file="$1"
-  local job_id algorithm source_dir namespace implementation_id
+  local job_id algorithm source_dir left_id right_id
   job_id=$(job_id_of "$job_file")
   algorithm=$(job_field "$job_file" 'j["algorithm"]')
   source_dir=$(source_dir_for_job "$algorithm")
-  namespace=$(namespace_for_job "$job_file")
-  implementation_id=$(left_implementation_id "$job_file")
-  build_reference_objects "$job_file"
-  local obj_dir
-  obj_dir=$(reference_object_dir_for_job "$job_file")
-  local adapter_dir="${BUILD_DIR}/ntru-adapter/${source_dir}"
-  mkdir -p "$adapter_dir"
-  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc -I"$NTRU_SRC/$source_dir" -I"$NTRU_KAT" \
-    -DPQCFUZZ_HAVE_NTRU "-DCRYPTO_NAMESPACE(s)=${namespace}##s" \
-    -DPQCFUZZ_NTRU_ALGORITHM="\"$algorithm\"" \
-    -DPQCFUZZ_NTRU_IMPLEMENTATION_ID="\"$implementation_id\"" \
-    -c src/adapters/ntru/kem_adapter.cc -o "$adapter_dir/kem_adapter.o"
-  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
-    -c src/adapters/ntru/ntru_randombytes_override.cc -o "$adapter_dir/randombytes.o"
+  left_id=$(left_implementation_id "$job_file")
+  right_id=$(right_implementation_id "$job_file")
+  build_shared_objects "$source_dir" || return 1
+
+  local seen_ids=" " object_dirs=() adapter_objects=() randombytes_obj="" implementation
+  for implementation in "$left_id" "$right_id"; do
+    case "$seen_ids" in
+      *" $implementation "*) continue ;;
+    esac
+    seen_ids="$seen_ids$implementation "
+    local root namespace obj_dir adapter_dir
+    root=$(implementation_source_root_for_id "$implementation")
+    if [ ! -d "$root/$source_dir" ]; then
+      echo "[ntru] missing vendored implementation for $implementation: $root/$source_dir" >&2
+      return 1
+    fi
+    namespace=$(implementation_namespace_for_id "$implementation")
+    build_implementation_objects "$root" "$source_dir" "$namespace" || return 1
+    obj_dir=$(implementation_object_dir "$root" "$source_dir")
+    adapter_dir=$(build_implementation_adapter "$root" "$source_dir" "$namespace" "$implementation" "$algorithm")
+    object_dirs+=("$obj_dir")
+    adapter_objects+=("$adapter_dir/kem_adapter.o")
+    if [ -z "$randombytes_obj" ]; then
+      randombytes_obj="$adapter_dir/randombytes.o"
+      if [ ! -f "$randombytes_obj" ]; then
+        "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
+          -c src/adapters/ntru/ntru_randombytes_override.cc -o "$randombytes_obj"
+      fi
+    fi
+  done
+  local link_objects=("$(shared_object_dir "$source_dir")/fips202.o")
+  for obj_dir in "${object_dirs[@]}"; do
+    # Older build directories may carry a per-implementation fips202.o.
+    rm -f "$obj_dir/fips202.o"
+    link_objects+=("$obj_dir"/*.o)
+  done
+  link_objects+=("${adapter_objects[@]}" "$randombytes_obj")
 
   local out_bin="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
   local replay_bin="$BUILD_DIR/$job_id/replay_oracle"
@@ -296,39 +395,43 @@ build_job() {
     -DPQCFUZZ_ORACLE_SUITE="\"fips\"" \
     -DPQCFUZZ_RELATION_MODE="\"cross-implementation\"" \
     -DPQCFUZZ_LEFT_PROJECT_ID="\"ntru\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$implementation_id\"" \
-    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$left_id\"" \
+    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_id\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"ntru\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_id\"" \
     -DPQCFUZZ_PUBLIC_KEY_EXCHANGE="$pk_exchange" \
     -DPQCFUZZ_CIPHERTEXT_EXCHANGE="$ct_exchange" \
     -DPQCFUZZ_SECRET_KEY_EXCHANGE=0 \
     -DPQCFUZZ_SECRET_KEY_FORMAT_COMPATIBLE=0 \
     src/fuzzers/kem_pair_fuzzer.cc \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o "$adapter_dir"/*.o \
+    "$COMMON_ARCHIVE" "${link_objects[@]}" \
     -o "$out_bin"
 
   "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
     $REPLAY_SANITIZER_FLAGS \
     -DPQCFUZZ_LEFT_PROJECT_ID="\"ntru\"" \
-    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$implementation_id\"" \
-    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_LEFT_IMPLEMENTATION_ID="\"$left_id\"" \
+    -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_id\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"ntru\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$implementation_id\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_id\"" \
     src/replay/replay_oracle.cc \
-    "$COMMON_ARCHIVE" "$obj_dir"/*.o "$adapter_dir"/*.o \
+    "$COMMON_ARCHIVE" "${link_objects[@]}" \
     -o "$replay_bin"
 
   manifests_dir
-  python3 - "$BUILD_DIR/manifests/${job_id}.json" "$job_file" "$out_bin" "$replay_bin" "$source_dir" "$namespace" <<'PY'
+  python3 - "$BUILD_DIR/manifests/${job_id}.json" "$job_file" "$out_bin" "$replay_bin" "$source_dir" "$left_id" "$right_id" <<'PY'
 import json
 import sys
 
-path, job_file, out_bin, replay_bin, source_dir, namespace = sys.argv[1:]
+path, job_file, out_bin, replay_bin, source_dir, left_id, right_id = sys.argv[1:]
 with open(job_file, encoding="utf-8") as fh:
     job = json.load(fh)
+
+def implementation_root(implementation_id):
+    return "projects/NTRU/optimized" if "optimized" in implementation_id else "projects/NTRU/reference"
+
 payload = {
     "job_id": job["job_id"],
     "pair_id": job["pair_id"],
@@ -340,9 +443,16 @@ payload = {
     "real_library": True,
     "adapter_project": "ntru",
     "adapter_implementation": job.get("pair", {}).get("left", {}).get("implementation_id", ""),
+    "right_implementation": job.get("pair", {}).get("right", {}).get("implementation_id", ""),
     "provenance_relation": job.get("pair", {}).get("provenance_relation", "same-source-single-implementation"),
     "source_dir": source_dir,
-    "namespace": namespace,
+    "implementations": [
+        {
+            "implementation_id": implementation_id,
+            "source_root": implementation_root(implementation_id),
+        }
+        for implementation_id in dict.fromkeys([left_id, right_id])
+    ],
     "build_flags": {
         "reference": "-O2 -DCRYPTO_NAMESPACE(s)=<param>##s",
         "sanitizers": ["address", "undefined"],
@@ -606,6 +716,9 @@ smoke_job() {
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
   local job_count
   job_count=$(job_files | wc -l)
+  if [ "$job_count" -lt 1 ]; then
+    job_count=1
+  fi
   per_job_seconds=$(( SMOKE_FUZZ_SECONDS / job_count ))
   if [ "$per_job_seconds" -lt 1 ]; then
     per_job_seconds=1

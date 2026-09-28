@@ -53,7 +53,9 @@ ALGORITHMS = list(util.PARAMS)
 def test_pair_alg_routing_and_job_generation():
     document = load_pair_alg(PAIR_ALG)
     pairs = [pair for pair in document["pairs"] if pair["status"] == "enabled"]
-    assert len(pairs) == 4
+    # Four same-source pairs plus the four reference-vs-optimized cross pairs
+    # that exercise the second vendored implementation.
+    assert len(pairs) == 8
     assert {pair["algorithm"] for pair in pairs} == set(ALGORITHMS)
     for pair in pairs:
         assert pair["algorithm_family"] == "NTRU"
@@ -67,6 +69,12 @@ def test_pair_alg_routing_and_job_generation():
         assert subtests["ntru_cross_exchange"]["enabled"] is True
         assert "ntru_fault_checks" not in subtests
         assert "ntru_timing_resources" not in subtests
+
+    cross_pairs = [pair for pair in pairs if pair["provenance_relation"] == "same-source-reference-vs-optimized"]
+    assert len(cross_pairs) == 4
+    for pair in cross_pairs:
+        assert pair["left"]["implementation_id"].startswith("ntru_reference_")
+        assert pair["right"]["implementation_id"].startswith("ntru_optimized_")
 
     assert ORACLE_ENUM_BY_NAME["ntru_kat"] == 64
     assert ORACLE_ENUM_BY_NAME["ntru_timing_resources"] == 79
@@ -425,12 +433,14 @@ FAKE_MAIN = r"""
 extern "C" const pqcfuzz_kem_adapter *pqcfuzz_fake_ntru_adapter();
 extern "C" void pqcfuzz_fake_ntru_configure(const char *algorithm, size_t pk_len, size_t sk_len, size_t ct_len,
                                             size_t ss_len);
+extern "C" void pqcfuzz_fake_ntru_set_mode(const char *mode);
 
-int main() {
+int main(int argc, char **argv) {
   const char *algorithm = "NTRU-HPS-2048-509";
   pqcfuzz::NtruParams params;
   if (!pqcfuzz::GetNtruParams(algorithm, &params)) { printf("params\n"); return 1; }
   pqcfuzz_fake_ntru_configure(algorithm, params.pk_len, params.sk_len, params.ct_len, params.ss_len);
+  pqcfuzz_fake_ntru_set_mode(argc > 1 ? argv[1] : "swallow_fail");
   const pqcfuzz_kem_adapter *adapter = pqcfuzz_fake_ntru_adapter();
   const char *oracles[] = {"ntru_ct_padding", "ntru_implicit_rejection_exact", "ntru_prf_key_separation"};
   int findings_total = 0;
@@ -458,7 +468,8 @@ int main() {
 """
 
 
-def test_executor_detects_broken_fallback_adapter(tmp_path):
+@pytest.mark.parametrize("mode", ["swallow_fail", "prf_off_by_one", "shake256_fallback", "zero_on_fail"])
+def test_executor_detects_broken_fallback_adapter(tmp_path, mode):
     from _falcon_util import compile_test_main
 
     binary = compile_test_main(
@@ -466,6 +477,6 @@ def test_executor_detects_broken_fallback_adapter(tmp_path):
         FAKE_MAIN,
         extra_sources=util.NTRU_CORE_SOURCES + ["tests/fake_adapters/fake_ntru.cc"],
     )
-    result = subprocess.run([str(binary)], cwd=REPO_ROOT, capture_output=True, text=True)
+    result = subprocess.run([str(binary), mode], cwd=REPO_ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.strip() == "ok"
+    assert result.stdout.strip() == "ok", f"{mode}: {result.stdout}"

@@ -52,7 +52,8 @@ ALGORITHMS = [name for name in util.PARAMS if name.startswith("SIKE-")]
 def test_pair_alg_routing_and_job_generation():
     document = load_pair_alg(PAIR_ALG)
     pairs = [pair for pair in document["pairs"] if pair["status"] == "enabled" and pair["algorithm_family"] == "SIKE"]
-    assert len(pairs) == 4
+    # Four same-source pairs plus the four generic-vs-AMD64 optimized pairs.
+    assert len(pairs) == 8
     assert {pair["algorithm"] for pair in pairs} == set(ALGORITHMS)
     for pair in pairs:
         assert pair["primitive_type"] == "kem"
@@ -65,6 +66,11 @@ def test_pair_alg_routing_and_job_generation():
         assert subtests["sike_cross_exchange"]["enabled"] is True
         assert "sike_compressed_profile" not in subtests
         assert "sike_fault_gate" not in subtests
+
+    cross_pairs = [pair for pair in pairs if pair["provenance_relation"] == "same-source-reference-vs-optimized"]
+    assert len(cross_pairs) == 4
+    for pair in cross_pairs:
+        assert pair["right"]["implementation_id"].startswith("sike_optimized_")
 
     assert ORACLE_ENUM_BY_NAME["sike_kat"] == 80
     assert ORACLE_ENUM_BY_NAME["sike_rng_replay"] == 90
@@ -411,6 +417,7 @@ def test_official_kat_fixture(tmp_path):
 
 FAKE_MAIN = r"""
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -421,15 +428,15 @@ extern "C" const pqcfuzz_kem_adapter *pqcfuzz_fake_sike_adapter();
 extern "C" void pqcfuzz_fake_sike_configure(const char *algorithm, size_t pk_len, size_t sk_len, size_t ct_len,
                                             size_t ss_len, size_t e2, int mode);
 
-int main() {
+int main(int argc, char **argv) {
   const char *algorithm = "SIKE-p434";
+  const int mode = argc > 1 ? atoi(argv[1]) : 1;
   pqcfuzz::SikeParams params;
   if (!pqcfuzz::GetSikeParams(algorithm, &params)) { printf("params\n"); return 1; }
-  pqcfuzz_fake_sike_configure(algorithm, params.pk_len, params.sk_len, params.ct_len, params.ss_len, params.e2, 1);
+  pqcfuzz_fake_sike_configure(algorithm, params.pk_len, params.sk_len, params.ct_len, params.ss_len, params.e2, mode);
   const pqcfuzz_kem_adapter *adapter = pqcfuzz_fake_sike_adapter();
   const char *oracles[] = {"sike_reencryption_gate", "sike_fallback_exact",
                            "sike_fallback_seed_separation"};
-  int detected = 0;
   for (const char *oracle_id : oracles) {
     pqcfuzz::SikeOracleConfig config;
     config.job_id = "pytest";
@@ -441,16 +448,23 @@ int main() {
     config.right = adapter;
     config.seed.assign(32, 0x42);
     pqcfuzz::KEMOracleTrace trace = pqcfuzz::ExecuteSikeOracle(config);
-    if (!trace.findings.empty()) ++detected;
+    printf("detected:%s=%d\n", oracle_id, trace.findings.empty() ? 0 : 1);
   }
-  if (detected != 3) { printf("not_detected:%d\n", detected); return 1; }
   printf("ok\n");
   return 0;
 }
 """
 
 
-def test_executor_detects_broken_gate_adapter(tmp_path):
+@pytest.mark.parametrize(
+    "mode,required_oracle",
+    [
+        (1, "sike_reencryption_gate"),
+        (2, "sike_fallback_seed_separation"),
+        (3, "sike_fallback_exact"),
+    ],
+)
+def test_executor_detects_broken_gate_adapter(tmp_path, mode, required_oracle):
     from _falcon_util import compile_test_main
 
     sources = [source for source in util.SIKE_CORE_SOURCES
@@ -460,6 +474,13 @@ def test_executor_detects_broken_gate_adapter(tmp_path):
         FAKE_MAIN,
         extra_sources=sources + ["tests/fake_adapters/fake_sike_sidh.cc"],
     )
-    result = subprocess.run([str(binary)], cwd=REPO_ROOT, capture_output=True, text=True)
+    result = subprocess.run([str(binary), str(mode)], cwd=REPO_ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.strip() == "ok"
+    detected = {}
+    for line in result.stdout.splitlines():
+        if line.startswith("detected:"):
+            oracle_id, value = line.split(":", 1)[1].split("=", 1)
+            detected[oracle_id] = int(value)
+    assert detected.get(required_oracle) == 1, result.stdout
+    assert any(value == 1 for value in detected.values()), result.stdout
+    assert result.stdout.strip().endswith("ok")

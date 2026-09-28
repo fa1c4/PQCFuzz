@@ -524,7 +524,7 @@
       "expected_relation": "EXPECT_EQUAL",
       "comparator": "expanded_abq_equal",
       "triage_policy": "semantic_mismatch_requires_manual_review",
-      "claim": "For l<=3 profiles the ABQ block is the fixed SHAKE256(\"SNOVA ABQ\") expansion and is identical across public seeds; l>3 profiles derive ABQ from the public seed.",
+      "claim": "For l<=3 profiles the ABQ block is the fixed SHAKE256(\"SNOVA_ABQ\") expansion and is identical across public seeds; l>3 profiles derive ABQ from the public seed.",
       "evidence_class": "NORMATIVE",
       "source_reference": "SNOVA round-2 spec p.23 fixed ABQ design; projects/SNOVA/reference/snova.c gen_ABQ; projects/SNOVA/reference/snova_kernel.h gen_A_B_Q_P; plans/specs/snova-round2-spec.pdf sha256 7266dc2a8de1cfcf34f6933e0d6c886b9b23affd19ac88a270bc54b1ea59ba6e",
       "scope": {

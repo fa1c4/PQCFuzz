@@ -32,6 +32,15 @@
 #define PQCFUZZ_SNOVA_IMPLEMENTATION_BASE "snova_reference"
 #endif
 
+// Kernel functions are renamed opt_* in the AVX2 build; the adapter selects
+// its implementation with these macros and exports a per-build getter.
+#ifndef PQCFUZZ_SNOVA_ADAPTER_GETTER
+#define PQCFUZZ_SNOVA_ADAPTER_GETTER pqcfuzz_get_snova_sig_adapter
+#endif
+#ifndef PQCFUZZ_SNOVA_API_GETTER
+#define PQCFUZZ_SNOVA_API_GETTER pqcfuzz_get_snova_api
+#endif
+
 #ifdef PK_EXPAND_SHAKE
 #if PK_EXPAND_SHAKE
 #define PQCFUZZ_SNOVA_BACKEND "SHAKE"
@@ -347,7 +356,12 @@ const pqcfuzz_sig_adapter kSnovaAdapterEsk = {
 
 #endif  // PQCFUZZ_HAVE_SNOVA
 
-extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_snova_sig_adapter(const char *implementation_id) {
+#if defined(PQCFUZZ_SNOVA_DELEGATE_AVX2)
+extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_snova_avx2_sig_adapter(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_sig_adapter *PQCFUZZ_SNOVA_ADAPTER_GETTER(const char *implementation_id) {
 #ifdef PQCFUZZ_HAVE_SNOVA
   if (implementation_id != nullptr) {
     if (std::strcmp(implementation_id, PQCFUZZ_SNOVA_IMPLEMENTATION_BASE "_ssk") == 0) {
@@ -356,6 +370,14 @@ extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_snova_sig_adapter(const char *
     if (std::strcmp(implementation_id, PQCFUZZ_SNOVA_IMPLEMENTATION_BASE "_esk") == 0) {
       return &kSnovaAdapterEsk;
     }
+#if defined(PQCFUZZ_SNOVA_DELEGATE_AVX2)
+    if (pqcfuzz_get_snova_avx2_sig_adapter != nullptr) {
+      const pqcfuzz_sig_adapter *avx2 = pqcfuzz_get_snova_avx2_sig_adapter(implementation_id);
+      if (avx2 != nullptr) {
+        return avx2;
+      }
+    }
+#endif
   }
 #else
   (void)implementation_id;
@@ -363,7 +385,12 @@ extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_snova_sig_adapter(const char *
   return nullptr;
 }
 
-extern "C" const pqcfuzz_snova_api *pqcfuzz_get_snova_api(const char *implementation_id) {
+#if defined(PQCFUZZ_SNOVA_DELEGATE_AVX2)
+extern "C" const pqcfuzz_snova_api *pqcfuzz_get_snova_avx2_api(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_snova_api *PQCFUZZ_SNOVA_API_GETTER(const char *implementation_id) {
 #ifdef PQCFUZZ_HAVE_SNOVA
   if (implementation_id != nullptr) {
     if (std::strcmp(implementation_id, PQCFUZZ_SNOVA_IMPLEMENTATION_BASE "_ssk") == 0) {
@@ -372,6 +399,14 @@ extern "C" const pqcfuzz_snova_api *pqcfuzz_get_snova_api(const char *implementa
     if (std::strcmp(implementation_id, PQCFUZZ_SNOVA_IMPLEMENTATION_BASE "_esk") == 0) {
       return &kSnovaApiEsk;
     }
+#if defined(PQCFUZZ_SNOVA_DELEGATE_AVX2)
+    if (pqcfuzz_get_snova_avx2_api != nullptr) {
+      const pqcfuzz_snova_api *avx2_api = pqcfuzz_get_snova_avx2_api(implementation_id);
+      if (avx2_api != nullptr) {
+        return avx2_api;
+      }
+    }
+#endif
   }
 #else
   (void)implementation_id;

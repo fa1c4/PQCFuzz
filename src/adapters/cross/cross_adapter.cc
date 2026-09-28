@@ -23,6 +23,13 @@ extern "C" {
 #define PQCFUZZ_CROSS_IMPLEMENTATION_ID "cross_reference"
 #endif
 
+// The reference and AVX2 builds both define the adapter getter; each
+// translation unit exports its own name and the reference getter delegates to
+// the AVX2 one when that weak symbol is linked.
+#ifndef PQCFUZZ_CROSS_ADAPTER_GETTER
+#define PQCFUZZ_CROSS_ADAPTER_GETTER pqcfuzz_get_cross_sig_adapter
+#endif
+
 namespace {
 
 #ifdef PQCFUZZ_HAVE_CROSS
@@ -188,17 +195,31 @@ const pqcfuzz_sig_adapter kCrossAdapter = {
 
 }  // namespace
 
-extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_cross_sig_adapter(const char *implementation_id) {
+#if defined(PQCFUZZ_CROSS_DELEGATE_AVX2)
+extern "C" const pqcfuzz_sig_adapter *pqcfuzz_get_cross_avx2_sig_adapter(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_sig_adapter *PQCFUZZ_CROSS_ADAPTER_GETTER(const char *implementation_id) {
 #ifdef PQCFUZZ_HAVE_CROSS
   if (implementation_id != nullptr && std::strcmp(implementation_id, PQCFUZZ_CROSS_IMPLEMENTATION_ID) == 0) {
     return &kCrossAdapter;
   }
+#if defined(PQCFUZZ_CROSS_DELEGATE_AVX2)
+  if (pqcfuzz_get_cross_avx2_sig_adapter != nullptr) {
+    const pqcfuzz_sig_adapter *avx2 = pqcfuzz_get_cross_avx2_sig_adapter(implementation_id);
+    if (avx2 != nullptr) {
+      return avx2;
+    }
+  }
+#endif
 #else
   (void)implementation_id;
 #endif
   return nullptr;
 }
 
+#ifndef PQCFUZZ_CROSS_NO_PLATFORM_RNG_HOOK
 extern "C" int pqcfuzz_cross_seed_platform_rng(const uint8_t *seed, size_t seed_len) {
 #ifdef PQCFUZZ_HAVE_CROSS
   return SeedPlatformFromSeed(seed, seed_len) == PQCFUZZ_OK ? 0 : 1;
@@ -208,3 +229,4 @@ extern "C" int pqcfuzz_cross_seed_platform_rng(const uint8_t *seed, size_t seed_
   return 1;
 #endif
 }
+#endif  // PQCFUZZ_CROSS_NO_PLATFORM_RNG_HOOK

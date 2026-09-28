@@ -216,6 +216,387 @@ def expand_fixed_weight(
 
 
 # ---------------------------------------------------------------------------
+# Exact CROSS seed tree / Merkle tree (port of the pinned round-2
+# seedtree.c and merkle.c, including the truncated non-power-of-two topology).
+# ---------------------------------------------------------------------------
+
+def _clog2(value: int) -> int:
+    if value < 1:
+        raise CrossModelError("clog2 requires a positive value")
+    return max((value - 1).bit_length(), 1)
+
+
+def _l_child(node: int) -> int:
+    return 2 * node + 1
+
+
+def _r_child(node: int) -> int:
+    return 2 * node + 2
+
+
+def _parent(node: int) -> int:
+    return (node - 1) // 2 if node % 2 else (node - 2) // 2
+
+
+@dataclass(frozen=True)
+class TreeLayout:
+    depth: int
+    offsets: list[int]
+    nodes_per_level: list[int]
+    leaves_per_level: list[int]
+    start_indices: list[int]  # deepest leaf group first
+    consecutive_leaves: list[int]
+    level_start: list[int]
+
+    @property
+    def total_nodes(self) -> int:
+        return sum(self.nodes_per_level)
+
+
+def tree_offsets_and_nodes(t: int) -> tuple[list[int], list[int]]:
+    """Port of Additional_Implementations/.../compute_derived_parameters.py."""
+    depth = _clog2(t)
+    missing = [2 ** (index - 1) for index in range(1, depth + 1)]
+    missing.insert(0, 0)
+    remaining = t - 2 ** (depth - 1)
+    level = 1
+    while remaining > 0:
+        inner_depth = 0
+        found = False
+        while not found:
+            if remaining <= 2**inner_depth:
+                for index in range(inner_depth, 0, -1):
+                    missing[level + index] -= 2 ** (index - 1)
+                remaining -= (2 ** _clog2(remaining)) // 2
+                missing[level] -= 1
+                level += 1
+                found = True
+            else:
+                inner_depth += 1
+    offsets = list(missing)
+    for index in range(depth, -1, -1):
+        for prior in range(index):
+            offsets[index] -= offsets[prior]
+    nodes_per_level = [2**index - missing[index] for index in range(depth + 1)]
+    return offsets, nodes_per_level
+
+
+def tree_leaves(t: int, offsets: list[int]) -> tuple[list[int], list[int], list[int]]:
+    """Port of tree_leaves: leaf count per level plus ordered groups."""
+    depth = _clog2(t)
+    leaves_per_level = [0] * (depth + 1)
+    start_index_per_level = [0] * (depth + 1)
+    remaining = t
+    level = 0
+    root_node = 0
+    left_child = _l_child(root_node) - offsets[level]
+    while remaining > 0:
+        inner_depth = 1
+        subtree_found = False
+        while not subtree_found:
+            if remaining <= 2**inner_depth:
+                for _ in range((2 ** _clog2(remaining)) // 2):
+                    if remaining == 1:
+                        leaves_per_level[level] += 1
+                        if start_index_per_level[level] == 0:
+                            start_index_per_level[level] = root_node
+                    else:
+                        leaves_per_level[level + inner_depth] += 1
+                        if start_index_per_level[level + inner_depth] == 0:
+                            start_index_per_level[level + inner_depth] = left_child
+                root_node = _r_child(root_node) - offsets[level]
+                left_child = _l_child(root_node) - offsets[level]
+                level += 1
+                remaining -= (2 ** _clog2(remaining)) // 2
+                subtree_found = True
+            else:
+                left_child = _l_child(left_child) - offsets[level + inner_depth]
+                inner_depth += 1
+    consecutive = [count for count in leaves_per_level if count != 0]
+    starts = [index for index in start_index_per_level if index != 0]
+    return leaves_per_level, starts[::-1], consecutive[::-1]
+
+
+def tree_layout(t: int) -> TreeLayout:
+    depth = _clog2(t)
+    offsets, nodes_per_level = tree_offsets_and_nodes(t)
+    leaves_per_level, start_indices, consecutive = tree_leaves(t, offsets)
+    level_start = [0] * (depth + 1)
+    running = 0
+    for index, count in enumerate(nodes_per_level):
+        level_start[index] = running
+        running += count
+    if running != 2 * t - 1:
+        raise CrossModelError(f"derived tree for t={t} has {running} nodes, expected {2 * t - 1}")
+    if sum(leaves_per_level) != t:
+        raise CrossModelError(f"derived tree for t={t} has {sum(leaves_per_level)} leaves")
+    return TreeLayout(
+        depth=depth,
+        offsets=offsets,
+        nodes_per_level=nodes_per_level,
+        leaves_per_level=leaves_per_level,
+        start_indices=start_indices,
+        consecutive_leaves=consecutive,
+        level_start=level_start,
+    )
+
+
+def _domain_tag(dsc: int) -> bytes:
+    return (dsc & 0xFFFF).to_bytes(2, "little")
+
+
+def gen_seed_tree(profile: Profile, root_seed: bytes, salt: bytes, layout: TreeLayout | None = None) -> bytes:
+    """SHAKE expansion of the full linearized seed tree (seedtree.c)."""
+    if len(root_seed) != profile.seed_bytes or len(salt) != profile.salt_bytes:
+        raise CrossModelError("seed tree root/salt length mismatch")
+    layout = layout or tree_layout(profile.t)
+    seed_len = profile.seed_bytes
+    tree = bytearray(layout.total_nodes * seed_len)
+    tree[0:seed_len] = root_seed
+    for level in range(layout.depth):
+        internal = layout.nodes_per_level[level] - layout.leaves_per_level[level]
+        for node_in_level in range(internal):
+            father = layout.level_start[level] + node_in_level
+            left_child = 2 * father + 1 - layout.offsets[level]
+            dsc = (CSPRNG_DOMAIN_SEP_CONST + father) & 0xFFFF
+            children = shake_stream(
+                profile,
+                [bytes(tree[father * seed_len : (father + 1) * seed_len]), salt, _domain_tag(dsc)],
+                2 * seed_len,
+            )
+            tree[left_child * seed_len : (left_child + 2) * seed_len] = children
+    return bytes(tree)
+
+
+def seed_leaves(profile: Profile, tree: bytes, layout: TreeLayout | None = None) -> list[bytes]:
+    """Extract the t round seeds in round order (seedtree.c seed_leaves)."""
+    layout = layout or tree_layout(profile.t)
+    seed_len = profile.seed_bytes
+    if len(tree) != layout.total_nodes * seed_len:
+        raise CrossModelError("seed tree length mismatch")
+    leaves: list[bytes] = []
+    for group, count in enumerate(layout.consecutive_leaves):
+        for index in range(count):
+            offset = (layout.start_indices[group] + index) * seed_len
+            leaves.append(tree[offset : offset + seed_len])
+    return leaves
+
+
+def compute_seeds_to_publish(layout: TreeLayout, indices_to_publish: Sequence[int]) -> bytearray:
+    """Port of compute_seeds_to_publish (flag-tree over the truncated topology)."""
+    if len(indices_to_publish) != sum(layout.consecutive_leaves):
+        raise CrossModelError("challenge length does not match the tree leaf count")
+    flags = bytearray(layout.total_nodes)
+    ordered = list(indices_to_publish)
+    counter = 0
+    for group, count in enumerate(layout.consecutive_leaves):
+        for index in range(count):
+            flags[layout.start_indices[group] + index] = 1 if ordered[counter] else 0
+            counter += 1
+    start_node = layout.start_indices[0]
+    for level in range(layout.depth, 0, -1):
+        for index in range(layout.nodes_per_level[level] - 2, -1, -2):
+            current = start_node + index
+            parent = _parent(current) + (layout.offsets[level - 1] >> 1)
+            flags[parent] = 1 if (flags[current] == 1 and flags[current + 1] == 1) else 0
+        start_node -= layout.nodes_per_level[level - 1]
+    return flags
+
+
+def seed_path(
+    profile: Profile,
+    tree: bytes,
+    indices_to_publish: Sequence[int],
+    layout: TreeLayout | None = None,
+) -> tuple[bytes, int]:
+    """Published seed nodes for one challenge (seedtree.c seed_path)."""
+    layout = layout or tree_layout(profile.t)
+    flags = compute_seeds_to_publish(layout, indices_to_publish)
+    seed_len = profile.seed_bytes
+    if len(tree) != layout.total_nodes * seed_len:
+        raise CrossModelError("seed tree length mismatch")
+    published = bytearray()
+    start_node = 1
+    for level in range(1, layout.depth + 1):
+        for node_in_level in range(layout.nodes_per_level[level]):
+            current = start_node + node_in_level
+            father = _parent(current) + (layout.offsets[level - 1] >> 1)
+            if flags[current] == 1 and flags[father] == 0:
+                published.extend(tree[current * seed_len : (current + 1) * seed_len])
+        start_node += layout.nodes_per_level[level]
+    return bytes(published), len(published) // seed_len
+
+
+def rebuild_tree(
+    profile: Profile,
+    indices_to_publish: Sequence[int],
+    stored_seeds: bytes,
+    salt: bytes,
+    layout: TreeLayout | None = None,
+) -> tuple[bytes, bool]:
+    """Rebuild the published seeds and check the zero-padding contract."""
+    layout = layout or tree_layout(profile.t)
+    flags = compute_seeds_to_publish(layout, indices_to_publish)
+    seed_len = profile.seed_bytes
+    tree = bytearray(layout.total_nodes * seed_len)
+    nodes_used = 0
+    start_node = 1
+    for level in range(1, layout.depth + 1):
+        for node_in_level in range(layout.nodes_per_level[level]):
+            current = start_node + node_in_level
+            father = _parent(current) + (layout.offsets[level - 1] >> 1)
+            left_child = 2 * current + 1 - layout.offsets[level]
+            if flags[current] == 1 and flags[father] == 0:
+                tree[current * seed_len : (current + 1) * seed_len] = stored_seeds[
+                    nodes_used * seed_len : (nodes_used + 1) * seed_len
+                ]
+                nodes_used += 1
+            if flags[current] == 1 and node_in_level < layout.nodes_per_level[level] - layout.leaves_per_level[level]:
+                dsc = (CSPRNG_DOMAIN_SEP_CONST + current) & 0xFFFF
+                children = shake_stream(
+                    profile,
+                    [bytes(tree[current * seed_len : (current + 1) * seed_len]), salt, _domain_tag(dsc)],
+                    2 * seed_len,
+                )
+                tree[left_child * seed_len : (left_child + 2) * seed_len] = children
+        start_node += layout.nodes_per_level[level]
+    expected_bytes = profile.tree_nodes_to_store * seed_len
+    padding = stored_seeds[nodes_used * seed_len :]
+    padding_ok = len(stored_seeds) == expected_bytes and all(byte == 0 for byte in padding)
+    return bytes(tree), padding_ok
+
+
+def _merkle_place(layout: TreeLayout, tree: list[bytes | None], leaves: Sequence[bytes]) -> None:
+    if len(leaves) != sum(layout.consecutive_leaves):
+        raise CrossModelError("commitment count does not match the tree leaf count")
+    counter = 0
+    for group, count in enumerate(layout.consecutive_leaves):
+        for index in range(count):
+            tree[layout.start_indices[group] + index] = leaves[counter]
+            counter += 1
+
+
+def _merkle_hash(profile: Profile, left: bytes, right: bytes) -> bytes:
+    return shake_stream(
+        profile,
+        [left, right, _domain_tag(HASH_DOMAIN_SEP_CONST)],
+        profile.digest_bytes,
+    )
+
+
+def merkle_tree_root(
+    profile: Profile,
+    leaves: Sequence[bytes],
+    layout: TreeLayout | None = None,
+) -> tuple[bytes, list[bytes]]:
+    """Bottom-up Merkle root over the CROSS truncated tree (merkle.c)."""
+    layout = layout or tree_layout(profile.t)
+    tree: list[bytes | None] = [None] * layout.total_nodes
+    _merkle_place(layout, tree, leaves)
+    start_node = layout.start_indices[0]
+    for level in range(layout.depth, 0, -1):
+        for index in range(layout.nodes_per_level[level] - 2, -1, -2):
+            current = start_node + index
+            parent = _parent(current) + (layout.offsets[level - 1] >> 1)
+            left = tree[current]
+            right = tree[current + 1]
+            if left is None or right is None:
+                raise CrossModelError("merkle tree is missing a child node")
+            tree[parent] = _merkle_hash(profile, left, right)
+        start_node -= layout.nodes_per_level[level - 1]
+    root = tree[0]
+    if root is None:
+        raise CrossModelError("merkle tree root was not computed")
+    return root, [node if node is not None else b"" for node in tree]
+
+
+def merkle_tree_proof(
+    profile: Profile,
+    tree: Sequence[bytes],
+    leaves_to_reveal: Sequence[int],
+    layout: TreeLayout | None = None,
+) -> tuple[bytes, int]:
+    """Port of tree_proof (sibling digests for the hidden leaves)."""
+    layout = layout or tree_layout(profile.t)
+    flags = bytearray(layout.total_nodes)
+    ordered = list(leaves_to_reveal)
+    counter = 0
+    for group, count in enumerate(layout.consecutive_leaves):
+        for index in range(count):
+            if ordered[counter] == 0:
+                flags[layout.start_indices[group] + index] = 1
+            counter += 1
+    proof = bytearray()
+    start_node = layout.start_indices[0]
+    published = 0
+    for level in range(layout.depth, 0, -1):
+        for index in range(layout.nodes_per_level[level] - 2, -1, -2):
+            current = start_node + index
+            parent = _parent(current) + (layout.offsets[level - 1] >> 1)
+            flags[parent] = 1 if (flags[current] == 1 or flags[current + 1] == 1) else 0
+            if flags[current] == 0 and flags[current + 1] == 1:
+                proof.extend(tree[current])
+                published += 1
+            if flags[current] == 1 and flags[current + 1] == 0:
+                proof.extend(tree[current + 1])
+                published += 1
+        start_node -= layout.nodes_per_level[level - 1]
+    return bytes(proof), published
+
+
+def recompute_merkle_root(
+    profile: Profile,
+    leaves: Sequence[bytes],
+    proof: bytes,
+    leaves_to_reveal: Sequence[int],
+    layout: TreeLayout | None = None,
+) -> tuple[bytes, bool]:
+    """Port of recompute_root including the zero-padding check."""
+    layout = layout or tree_layout(profile.t)
+    digest_len = profile.digest_bytes
+    tree: list[bytes | None] = [None] * layout.total_nodes
+    _merkle_place(layout, tree, leaves)
+    flags = bytearray(layout.total_nodes)
+    ordered = list(leaves_to_reveal)
+    counter = 0
+    for group, count in enumerate(layout.consecutive_leaves):
+        for index in range(count):
+            if ordered[counter] == 0:
+                flags[layout.start_indices[group] + index] = 1
+            counter += 1
+    published = 0
+    start_node = layout.start_indices[0]
+    for level in range(layout.depth, 0, -1):
+        for index in range(layout.nodes_per_level[level] - 2, -1, -2):
+            current = start_node + index
+            parent = _parent(current) + (layout.offsets[level - 1] >> 1)
+            if flags[current] == 0 and flags[current + 1] == 0:
+                continue
+            if flags[current] == 1:
+                left = tree[current]
+            else:
+                left = proof[published * digest_len : (published + 1) * digest_len]
+                published += 1
+            if flags[current + 1] == 1:
+                right = tree[current + 1]
+            else:
+                right = proof[published * digest_len : (published + 1) * digest_len]
+                published += 1
+            if left is None or right is None:
+                raise CrossModelError("merkle recompute is missing a child digest")
+            tree[parent] = _merkle_hash(profile, left, right)
+            flags[parent] = 1
+        start_node -= layout.nodes_per_level[level - 1]
+    root = tree[0]
+    if root is None:
+        raise CrossModelError("merkle root was not recomputed")
+    expected_bytes = profile.tree_nodes_to_store * digest_len
+    padding = proof[published * digest_len :]
+    padding_ok = len(proof) == expected_bytes and all(byte == 0 for byte in padding)
+    return root, padding_ok
+
+
+# ---------------------------------------------------------------------------
 # Toy seed/flag tree with the published-set semantics of the CROSS tree.
 # ---------------------------------------------------------------------------
 

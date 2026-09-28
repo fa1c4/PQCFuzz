@@ -87,6 +87,35 @@ def test_sidh_model_math():
     )
 
 
+def test_sidh_cfpk_curve_checks():
+    records = sidh_model.load_reference()
+    for profile in sidh_model.load_profiles().values():
+        suffix = profile.algorithm.split("-")[1]
+        record = records[suffix]
+        honest_pk = bytes.fromhex(record["pk_a"])
+        honest = sidh_model.cfpk_curve_checks(honest_pk, profile)
+        assert all(honest.values()), (profile.algorithm, honest)
+
+        p = sidh_model.field_prime(profile.e2, profile.e3)
+        # xP = 0 degenerates the get_A denominator.
+        zero_pk = bytearray(honest_pk)
+        zero_pk[: 2 * profile.np] = bytes(2 * profile.np)
+        bad = sidh_model.cfpk_curve_checks(bytes(zero_pk), profile)
+        assert bad["decodable"] and not bad["denominator_nonzero"]
+        # Out-of-range limb must not decode.
+        out_of_range = bytearray(honest_pk)
+        out_of_range[: profile.np] = p.to_bytes(profile.np, "little")
+        assert not sidh_model.cfpk_curve_checks(bytes(out_of_range), profile)["decodable"]
+        # Truncated key is rejected by length.
+        assert not sidh_model.cfpk_curve_checks(honest_pk[:-1], profile)["pk_length"]
+        # A^2 = 4 is a degenerate Montgomery curve.
+        try:
+            sidh_model.j_invariant(2, p)
+            raise AssertionError("degenerate Montgomery curve must not have a j-invariant")
+        except ValueError:
+            pass
+
+
 def test_sidh_reference_fixture():
     records = sidh_model.load_reference()
     for profile in sidh_model.load_profiles().values():

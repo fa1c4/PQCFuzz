@@ -128,5 +128,8 @@
       "The fixture is regenerable with a checkout of the pinned KAT commit; every response-file SHA-256 is embedded in the fixture",
       "The 75/33/2 SHAKE-ESK and AES-ESK source responses are stored gzip-compressed upstream and hashed in that form"
     ]
-  }
+  },
+  "notes": [
+    "The reference-vs-optimized lane compiles the vendored plasma/AVX2 overlay with OPTIMISATION=1. OPTIMISATION=2 (VTL) was reproduced by this harness to perform an unaligned 32-byte __m256i access in snova_plasma/plasma_general/../snova_plasma_avx2.h (gf16_32_mul_32_add) during SSK signing and is therefore recorded as a known upstream memory-safety finding rather than enabled in the standing lane."
+  ]
 }

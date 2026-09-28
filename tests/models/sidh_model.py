@@ -140,6 +140,65 @@ def fp2_decode(raw: bytes, np: int, p: int) -> tuple[int, int]:
     return (fp_decode(raw[:np], p), fp_decode(raw[np:], p))
 
 
+def montgomery_a_from_basis(
+    xp: tuple[int, int],
+    xq: tuple[int, int],
+    xr: tuple[int, int],
+    p: int,
+) -> tuple[int, int]:
+    """Recompute the Montgomery A coefficient from (xP, xQ, xR = xQ - xP).
+
+    Independent Python transcription of the pinned generic reference
+    `get_A` (projects/SIKE_SIDH/src/ec_isogeny.c); raises when the basis
+    degenerates (zero denominator).
+    """
+    t1 = fp2_add(xp, xq, p)
+    t0 = fp2_mul(xp, xq, p)
+    a = fp2_mul(xr, t1, p)
+    a = fp2_add(t0, a, p)
+    t0 = fp2_mul(t0, xr, p)
+    a = ((a[0] - 1) % p, a[1])
+    t0 = fp2_add(t0, t0, p)
+    t1 = fp2_add(t1, xr, p)
+    t0 = fp2_add(t0, t0, p)
+    if t0 == (0, 0):
+        raise ValueError("cfpk denominator is zero")
+    a = fp2_mul(a, a, p)
+    t0 = fp2_inv(t0, p)
+    a = fp2_mul(a, t0, p)
+    return ((a[0] - t1[0]) % p, (a[1] - t1[1]) % p)
+
+
+def cfpk_curve_checks(pk: bytes, profile: SidhProfile) -> dict[str, bool]:
+    """Independent cfpk/decoding classification of a SIDH public key."""
+    p = field_prime(profile.e2, profile.e3)
+    np = profile.np
+    result = {
+        "pk_length": len(pk) == profile.pk_len,
+        "decodable": False,
+        "denominator_nonzero": False,
+        "nondegenerate": False,
+    }
+    if not result["pk_length"]:
+        return result
+    try:
+        points = [
+            fp2_decode(pk[index * 2 * np : (index + 1) * 2 * np], np, p)
+            for index in range(3)
+        ]
+    except ValueError:
+        return result
+    result["decodable"] = True
+    try:
+        montgomery_a = montgomery_a_from_basis(points[0], points[1], points[2], p)
+    except ValueError:
+        return result
+    result["denominator_nonzero"] = True
+    a_squared = fp2_mul(montgomery_a, montgomery_a, p)
+    result["nondegenerate"] = a_squared != (4, 0)
+    return result
+
+
 def load_reference() -> dict[str, dict[str, str]]:
     payload = json.loads(REFERENCE_PATH.read_text(encoding="utf-8"))
     return payload["records"]

@@ -44,7 +44,7 @@
     "compressed": "0x39/0x3A || salt[40] || compressed s2 bitstream (variable length, capacity from the API contract)",
     "padded": "0x39/0x3A || salt[40] || compressed s2 || zero padding to exactly 666/1280 bytes; partial padding is invalid",
     "ct": "0x59/0x5A || salt[40] || n 12-bit signed s2 coefficients, -2048 forbidden; exact length 809/1577",
-    "accepted_formats_by_profile": "adapter verifies with the profile sig_type; sig_type=0 header inference is deliberately not used as the adapter contract",
+    "accepted_formats_by_profile": "compressed profiles pre-check the 0x39/0x3A header profile and then verify with sig_type=0 so the pinned reference accepts both the exact compressed length and the full zero-padded form; padded profiles verify with sig_type=PADDED, CT profiles with sig_type=CT",
     "sig_max_len_semantics": "capacity from the target API FALCON_SIG_COMPRESSED_MAXSIZE/FALCON_SIG_PADDED_SIZE/FALCON_SIG_CT_SIZE; not an exact length",
     "compressed_coefficient_limit": "the pinned reference comp_decode rejects |s2_i| > 2047; recorded as an implementation limit rather than a PDF mathematical rule"
   },

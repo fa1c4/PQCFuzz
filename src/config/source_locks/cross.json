@@ -45,6 +45,53 @@
       ]
     },
     {
+      "name": "nist-round2-submission-avx2",
+      "url": "https://csrc.nist.gov/csrc/media/Projects/pqc-dig-sig/documents/round-2/submission-pkg/cross-submission-round2.zip",
+      "archive_sha256": "682e19f8deba19f543960687abcf6d81d44edbd16d8ae006f4c1dfeca8c957e6",
+      "version": "2.0 (February 2025) Optimized_Implementation (AVX2)",
+      "license": "Public domain",
+      "vendored_path": "projects/CROSS/avx2",
+      "vendored_files": [
+        "lib/CROSS.c",
+        "lib/KeccakP-1600-times4-SIMD256.c",
+        "lib/fips202x4.c",
+        "lib/merkle.c",
+        "lib/seedtree.c",
+        "include/KeccakP-1600-times4-SnP.h",
+        "include/KeccakP-1600-unrolling.macros",
+        "include/SIMD256-config.h",
+        "include/align.h",
+        "include/architecture_detect.h",
+        "include/csprng_hash.h",
+        "include/fips202x4.h",
+        "include/fp_arith.h",
+        "include/restr_arith.h",
+        "include/sha3.h"
+      ],
+      "file_sha256": {
+        "lib/CROSS.c": "3a47815270252c1c7cf0ddc5e6f39bb831373e7dcb1989e6d175814df877c99d",
+        "lib/KeccakP-1600-times4-SIMD256.c": "1239795a2ea512d92bf95a244e7da9607533a610dbb5605b4f11aa0b3639636d",
+        "lib/fips202x4.c": "65e049e615cb756762fa7b5d5571add887d597ba96c11ba8adbaafebd3d2895e",
+        "lib/merkle.c": "62bb87513b28e467b9e0e92c330d672b525d69d553223219265e559dd659fb12",
+        "lib/seedtree.c": "ecc11eeec7f8f9ed84714c77ffdf36e6aa3319bb431a91073192e3cb2e2732c8",
+        "include/KeccakP-1600-times4-SnP.h": "4741359d05ca7445d980c21b5b60a7c4f24de6978687a8b5af44f980e7d0f2ba",
+        "include/KeccakP-1600-unrolling.macros": "acdd27303f6be64cf4126f0d7f27e60c5c3f93028cf59c2085d0db81ae8e00bc",
+        "include/SIMD256-config.h": "2a19f12b6e6291de05044230bef6ac0d98f95a87a94bdcc482769051f75eb923",
+        "include/align.h": "6df805789c8ee948ec4da7f5d204f36099b0844720eff76044391575d8798681",
+        "include/architecture_detect.h": "e9336059fe12ba973b264d9c206f9cbd23117e714c722b0ae1542ced6fb991fb",
+        "include/csprng_hash.h": "16d367dafa920c3f2d18ed24e397f86baf3a785593c9016fc5301cc9eb69071d",
+        "include/fips202x4.h": "0ab5dc8a0ebba7bee84f78062944e57559198634e3b304eaa85acd690a92aec9",
+        "include/fp_arith.h": "88bb4dd9f421b78db47421f144120e5e1b62c002be0e710744375e4cf6b361ad",
+        "include/restr_arith.h": "1b813a97a421d0d65b13bce163b6894ce735e8bf2f976a888db9afe83c5b0c6a",
+        "include/sha3.h": "345338e9a51230209cd42bcfa6af9b49f11adcf5992e8043037190e4bf0d828b"
+      },
+      "status": "vendored",
+      "notes": [
+        "Optimized_Implementation overlay: replaces CROSS.c/merkle.c/seedtree.c and adds fips202x4/Keccak-times4 SIMD256; the reference pack_unpack/sign/csprng_hash/fips202/keccakf1600 files are shared",
+        "Compiled with -mavx2 and linked alongside the reference build with the shared tree/CROSS entry points renamed opt_*"
+      ]
+    },
+    {
       "name": "cross-lib-oqs",
       "url": "https://github.com/CROSS-signature/cross-lib-oqs",
       "commit": "ce9933c7023a7aace4ac05b779995334a9996e6a",

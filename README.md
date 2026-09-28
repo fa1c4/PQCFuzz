@@ -78,6 +78,33 @@ python3 src/replay/replay_one.py \
   --input tests/seeds/mlkem_roundtrip_seed.bin
 ```
 
+## All-Lane Evaluation
+
+`scripts/pqcfuzz_all_eval.sh` drives every algorithm lane behind one command
+interface: the liboqs ML-KEM/ML-DSA/SLH-DSA campaigns, the PQMagic Aigis
+campaign, and the CROSS, Falcon, NTRU, SIKE/SIDH and SNOVA family lanes.
+
+```bash
+# Everything: liboqs + Aigis + CROSS/Falcon/NTRU/SIKE/SIDH/SNOVA.
+MAX_TOTAL_TIME=3600 scripts/pqcfuzz_all_eval.sh all
+
+# Select lanes (liboqs, aigis, cross, falcon, ntru, sike_sidh, snova):
+SUITES=cross,falcon,ntru,sike_sidh,snova scripts/pqcfuzz_all_eval.sh all
+SUITES=liboqs VERSIONS=0.14.0,0.8.0,0.4.0 scripts/pqcfuzz_all_eval.sh preflight
+SUITES=aigis ORACLE_SUITE=fips scripts/pqcfuzz_all_eval.sh all
+
+# One lane at a time, or one job:
+SUITES=ntru scripts/pqcfuzz_all_eval.sh smoke
+SUITES=cross JOB_FILTER=cross_rsdp_5_fast scripts/pqcfuzz_all_eval.sh run
+```
+
+Commands are `build | preflight | smoke | run | report | all`; `run` uses
+`MAX_TOTAL_TIME` seconds per job and `smoke` uses `SMOKE_FUZZ_SECONDS`. Set
+`PQCFUZZ_INCLUDE_P2=1` to schedule the opt-in P2 oracles. `report` runs each
+lane's report and writes the aggregate `workspace/all/report/summary.json`
+(Aigis also writes `workspace/all/report/aigis_summary.md`). Failures stop the
+driver unless `ALL_CONTINUE_ON_ERROR=1` is set.
+
 ## Evaluation Runs
 
 One tmux campaign per supported liboqs version (`0.14.0`, `0.8.0`, `0.4.0`):
@@ -219,10 +246,18 @@ IDs, structured recipes with 32-bit offsets (reaching byte 74589 of
 `CROSS-RSDP-5-FAST`), honest oracles on the real adapter, and findings from a
 deliberately broken adapter.
 
+The optimized (AVX2) build from the same pinned round-2 submission is vendored
+at `projects/CROSS/avx2` (source-lock hashes recorded). Each of the 18
+parameter sets has a `*_cross_reference_vs_avx2` pair: the optimized overlay
+(`CROSS.c`, `merkle.c`, `seedtree.c`, 4-way Keccak) is compiled with `-mavx2`
+and the 13 entry points shared with the reference build are renamed `opt_*`
+with `objcopy --redefine-syms`, so both implementations link into one binary
+and `cross_cross_verify` exercises two builds. Provenance is labelled
+`same-source-reference-vs-avx2`.
+
 Limitations: the submission archive has no official KAT response files (fixtures
-are reference-derived); only the single pinned reference build is vendored, so
-`cross_cross_verify` is disabled rather than faked; and the P2 timing/fault lanes
-are opt-in. Reports never claim IND-CCA/EUF/sUF or quantum security.
+are reference-derived); the P2 timing/fault lanes are opt-in. Reports never
+claim IND-CCA/EUF/sUF or quantum security.
 
 ## SNOVA Workflow
 
@@ -271,6 +306,16 @@ the pinned `aes_c.c` and treats SNOVA_SHAKE as indexed `SHAKE128(seed ||
 LE64(i))`, not a continuous XOF. Accepted nonzero input padding nibbles are
 reported as byte-alias observations, never as EUF forgeries.
 
+Each parameter set/backend also has a `*_reference_vs_avx2` pair. The vendored
+plasma/AVX2 overlay is recompiled with `-mavx2 -DOPTIMISATION=1`; its kernel
+symbols are renamed `opt_*` (`objcopy --redefine-syms`) so both builds link
+into one binary and `snova_cross_verify` exercises both. Provenance is labelled
+`same-source-reference-vs-avx2`. The upstream `OPTIMISATION=2` (VTL) path was
+reproduced by this harness to perform an unaligned 32-byte `__m256i` access in
+`snova_plasma_avx2.h` during SSK signing (a memory-safety finding recorded in
+`src/config/source_locks/snova.json`), so the standing lane uses
+`OPTIMISATION=1`; the VTL crash is not silently masked as a target pass.
+
 ## SIKE/SIDH Workflow
 
 PQCFuzz fuzzes the pinned microsoft/PQCrypto-SIDH generic build vendored at
@@ -288,6 +333,16 @@ research only; no report claims IND-CCA, key-agreement security or quantum
 security. The SIKE re-encryption gate and fallback formula are checked against
 an independent harness SHAKE256 plus the pinned isogeny reference, and the
 official KAT responses are verified record-by-record.
+
+Each parameter set also has a `*_reference_vs_optimized` pair. The AMD64
+optimized build (`AMD64/fp_x64.c` + `fp_x64_asm.S`, MULX/ADX) is linked
+alongside the generic build in one binary: every defined optimized symbol is
+renamed with an `opt_` prefix (`objcopy --redefine-syms`) and the optimized
+adapters call the renamed entry points through a generated API header. This
+makes `sike_cross_exchange` and `sidh_cross_agreement` exercise two arithmetic
+backends of the same pinned source; provenance is labelled
+`same-source-reference-vs-optimized` and never reported as an independent
+reimplementation.
 
 ```bash
 # Validate the explicit pair file and materialize both families' jobs:
@@ -319,6 +374,88 @@ official SIKE KAT fixture, and detection by deliberately broken fake adapters
 `scripts/generate_sike_sidh_fixtures.py` regenerates the fixtures and their
 hashes. Compressed SIKE and the fault/timing lanes are opt-in P2 and are not
 built by default.
+
+## Falcon Workflow
+
+PQCFuzz fuzzes the pinned official Falcon implementation archive
+(`Falcon-impl-20211101`, archive SHA-256 in
+`src/config/source_locks/falcon.json`) against the v1.2 (01/10/2020)
+specification. The six encoding profiles
+(`FALCON-{512,1024}-{COMPRESSED,PADDED,CT}`) get AlgorithmIds 56-61 and oracle
+IDs 100-118 with a format-aware layout/mutator, an executor, a signed-message
+adapter, and an independent Python model using integer negacyclic convolutions
+(no target NTT/FFT).
+
+```bash
+# Validate the explicit pair file and materialize Falcon jobs:
+python3 src/pairing/validate_pair_alg.py --pair-alg src/config/pair_alg.falcon.json
+python3 src/jobs/generate_jobs.py --pair-alg src/config/pair_alg.falcon.json \
+  --algorithm-family FALCON --oracle-suite fips --jobs-dir workspace/falcon/jobs
+
+# Build the sanitizer fuzzers/replays, preflight every oracle, run a smoke
+# campaign, and write workspace/falcon/report/summary.{json,md}:
+scripts/pqcfuzz_falcon_eval.sh build
+scripts/pqcfuzz_falcon_eval.sh preflight
+scripts/pqcfuzz_falcon_eval.sh smoke
+scripts/pqcfuzz_falcon_eval.sh report
+```
+
+The pinned round-3 KAT response files are vendored under `projects/FALCON/kat`;
+the model lane reproduces their count=0 records. Compressed profiles pre-check
+the declared `0x39/0x3A` header and verify with `sig_type=0`, so both the exact
+compressed and the full zero-padded forms are accepted while partial padding
+and non-zero padding remain negative controls.
+
+The four compressed/padded profiles also have
+`*_falcon_reference_vs_pqclean` pairs. PQClean's clean falcon-512/1024 and
+falcon-padded-512/1024 wrappers are linked into the same binary (their symbols
+are namespaced, so no renaming is needed) and `falcon_cross_verify` exercises
+both builds. PQClean wraps the same Falcon core as the author reference, so
+the provenance is labelled `same-source-shared-core-pqclean` and never
+reported as an independent reimplementation. P2 fault/timing rows (117/118)
+are opt-in via `PQCFUZZ_INCLUDE_P2=1`; reports never claim IND-CCA, EUF/sUF or
+quantum security.
+
+## NTRU Workflow
+
+PQCFuzz fuzzes the pinned NTRU round-3 `Reference_Implementation`
+(NTRU-HPS-2048-509/677, NTRU-HPS-4096-821, NTRU-HRSS-701; AlgorithmIds 32-35)
+vendored at `projects/NTRU/reference` with the source archive SHA-256 recorded
+in `src/config/source_locks/ntru.json`. Oracle IDs 64-79 cover the SHA3-256
+implicit-rejection contract, the strict ciphertext-padding policy, PRF-key
+separation, the S3/Rq0 codecs and the DPKE membership model.
+
+```bash
+# Validate the explicit pair file and materialize NTRU jobs:
+python3 src/pairing/validate_pair_alg.py --pair-alg src/config/pair_alg.ntru.json
+python3 src/jobs/generate_jobs.py --pair-alg src/config/pair_alg.ntru.json \
+  --algorithm-family NTRU --oracle-suite fips --jobs-dir workspace/ntru/jobs
+
+# Build the sanitizer fuzzers/replays, preflight every oracle, run a smoke
+# campaign, and write workspace/ntru/report/summary.{json,md}:
+scripts/pqcfuzz_ntru_eval.sh build
+scripts/pqcfuzz_ntru_eval.sh preflight
+scripts/pqcfuzz_ntru_eval.sh smoke
+scripts/pqcfuzz_ntru_eval.sh report
+```
+
+The official count=0 KAT records (`PQCkemKAT_*.rsp`) are vendored under
+`projects/NTRU/kat` and reproduced by the model lane; the independent Python
+model implements its own integer polynomial arithmetic, HPS/HRSS lifts, codecs
+and SHA3-256, and is differentially checked against the pinned build through
+`tests/ntru_hook_cli.cc`. NTRU-HPS-4096-821 has no unused ciphertext bits, so
+its padding oracles are explicitly `NOT_APPLICABLE` rather than fabricated.
+P2 fault/timing rows (78/79) are opt-in via `PQCFUZZ_INCLUDE_P2=1`; reports
+never claim IND-CCA or quantum security.
+
+The optimized build of the same pinned round-3 submission is vendored under
+`projects/NTRU/optimized` (source-lock file hashes recorded). Each parameter
+set has a `*_ntru_reference_vs_optimized` pair whose left/right adapters are
+compiled from the two trees with disjoint `CRYPTO_NAMESPACE` prefixes and
+linked into one binary, so `ntru_cross_exchange` exercises a true
+reference-vs-optimized lineage. The provenance is labelled
+`same-source-reference-vs-optimized`, never reported as independent
+reimplementations.
 
 ## Notes
 

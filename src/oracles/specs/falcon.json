@@ -152,7 +152,7 @@
       "evidence_class": "NORMATIVE",
       "source_reference": "Falcon spec v1.2 §3.11.3-3.11.5 (PDF pp.46-50); vrfy.c header checks",
       "scope": {"api_layer": "external"},
-      "limitations": ["Header-inference mode (sig_type=0) is intentionally not the adapter contract; the profile verifies its declared format"],
+      "limitations": ["Compressed profiles pre-check the declared 0x39/0x3A header profile before verifying with sig_type=0, so both the exact compressed and the full zero-padded form are accepted exactly as the pinned reference does"],
       "controls": {
         "positive_control": "the unmodified header verifies",
         "negative_control": "the mutation record marks the header byte as changed"

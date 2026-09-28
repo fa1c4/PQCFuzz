@@ -90,6 +90,22 @@ std::vector<uint8_t> DeriveSeed(const std::vector<uint8_t> &seed, const std::str
   return out;
 }
 
+// Structured mutation recipe v1 attached by the fuzz corpus.  Returns false
+// when no recipe is present or the recipe is malformed; callers then keep their
+// deterministic default mutation so the oracle predicate stays well defined.
+bool DecodeCorpusRecipe(const std::vector<uint8_t> &bytes, SchemeMutation *out) {
+  if (bytes.empty()) {
+    return false;
+  }
+  std::string error;
+  return DecodeSchemeMutation(bytes, out, &error);
+}
+
+bool RecipeEffective(const std::vector<MutationRecord> &records) {
+  return std::any_of(records.begin(), records.end(),
+                     [](const MutationRecord &record) { return record.effective && !record.skipped; });
+}
+
 KEMKeyPair NtruKeygen(
     const pqcfuzz_kem_adapter *adapter,
     const std::string &label,
@@ -465,18 +481,33 @@ std::vector<OracleSubtestTrace> NtruCtPadding(const NtruOracleConfig &config, KE
   }
   bool all_ok = true;
   std::string failure;
-  for (size_t bit = 0; bit < config.params.tail_unused_bits; ++bit) {
+  std::vector<std::vector<uint8_t>> candidates;
+  SchemeMutation recipe;
+  if (DecodeCorpusRecipe(config.mutation, &recipe) &&
+      recipe.field == SchemeMutationField::kKemCiphertextPadding) {
     std::vector<uint8_t> candidate = enc.ct;
-    MutationRecord record = SetNtruCiphertextPaddingBit(config.params, bit, &candidate);
-    RecordMutationEffect({record}, trace);
-    if (!record.effective) {
-      continue;
+    std::vector<MutationRecord> records = MutateNtruCiphertext(config.params, config.mutation, &candidate);
+    RecordMutationEffect(records, trace);
+    if (RecipeEffective(records)) {
+      candidates.push_back(std::move(candidate));
     }
+  }
+  if (candidates.empty()) {
+    for (size_t bit = 0; bit < config.params.tail_unused_bits; ++bit) {
+      std::vector<uint8_t> candidate = enc.ct;
+      MutationRecord record = SetNtruCiphertextPaddingBit(config.params, bit, &candidate);
+      RecordMutationEffect({record}, trace);
+      if (record.effective) {
+        candidates.push_back(std::move(candidate));
+      }
+    }
+  }
+  for (const std::vector<uint8_t> &candidate : candidates) {
     KEMSharedSecret dec = NtruDecaps(config.left, "left", candidate, keypair.sk, &subtest);
     const std::string expected = ExpectedFallback(config.params, keypair.sk, candidate);
     if (dec.status != PQCFUZZ_OK || BytesToHex(dec.ss) != expected || dec.ss == enc.ss) {
       all_ok = false;
-      failure = "padding bit " + std::to_string(bit) + " did not produce the exact fallback secret";
+      failure = "padding mutation did not produce the exact fallback secret";
       break;
     }
   }
@@ -509,8 +540,19 @@ std::vector<OracleSubtestTrace> NtruImplicitRejectionExact(const NtruOracleConfi
     return subtests;
   }
   std::vector<uint8_t> invalid = enc.ct;
-  MutationRecord record = SetNtruCiphertextPaddingBit(config.params, 0, &invalid);
-  RecordMutationEffect({record}, trace);
+  SchemeMutation recipe;
+  bool recipe_used = false;
+  if (DecodeCorpusRecipe(config.mutation, &recipe) &&
+      recipe.field == SchemeMutationField::kKemCiphertextPadding) {
+    std::vector<MutationRecord> records = MutateNtruCiphertext(config.params, config.mutation, &invalid);
+    RecordMutationEffect(records, trace);
+    recipe_used = RecipeEffective(records);
+  }
+  if (!recipe_used) {
+    invalid = enc.ct;
+    MutationRecord record = SetNtruCiphertextPaddingBit(config.params, 0, &invalid);
+    RecordMutationEffect({record}, trace);
+  }
   const std::string expected = ExpectedFallback(config.params, keypair.sk, invalid);
   KEMSharedSecret dec = NtruDecaps(config.left, "left", invalid, keypair.sk, &shape);
   KEMSharedSecret dec2 = NtruDecaps(config.left, "left", invalid, keypair.sk, &shape);
@@ -547,13 +589,33 @@ std::vector<OracleSubtestTrace> NtruPrfKeySeparation(const NtruOracleConfig &con
     return subtests;
   }
   std::vector<uint8_t> invalid = enc.ct;
-  MutationRecord pad_record = SetNtruCiphertextPaddingBit(config.params, 0, &invalid);
-  RecordMutationEffect({pad_record}, trace);
+  SchemeMutation recipe;
+  bool recipe_used = false;
+  if (DecodeCorpusRecipe(config.mutation, &recipe) &&
+      recipe.field == SchemeMutationField::kKemCiphertextPadding) {
+    std::vector<MutationRecord> records = MutateNtruCiphertext(config.params, config.mutation, &invalid);
+    RecordMutationEffect(records, trace);
+    recipe_used = RecipeEffective(records);
+  }
+  if (!recipe_used) {
+    invalid = enc.ct;
+    MutationRecord pad_record = SetNtruCiphertextPaddingBit(config.params, 0, &invalid);
+    RecordMutationEffect({pad_record}, trace);
+  }
   KEMSharedSecret baseline = NtruDecaps(config.left, "left", invalid, keypair.sk, &subtest);
 
   std::vector<uint8_t> mutated_sk = keypair.sk;
-  MutationRecord prf_record = WriteNtruPrfKeyByte(config.params, 0, 0xA5, &mutated_sk);
-  RecordMutationEffect({prf_record}, trace);
+  bool sk_recipe_used = false;
+  if (DecodeCorpusRecipe(config.mutation, &recipe) &&
+      recipe.field == SchemeMutationField::kKemSecretKeyPrf) {
+    std::vector<MutationRecord> records = MutateNtruSecretKey(config.params, config.mutation, &mutated_sk);
+    RecordMutationEffect(records, trace);
+    sk_recipe_used = RecipeEffective(records);
+  }
+  if (!sk_recipe_used) {
+    MutationRecord prf_record = WriteNtruPrfKeyByte(config.params, 0, 0xA5, &mutated_sk);
+    RecordMutationEffect({prf_record}, trace);
+  }
   const std::string expected = ExpectedFallback(config.params, mutated_sk, invalid);
   KEMSharedSecret mutated = NtruDecaps(config.left, "left", invalid, mutated_sk, &subtest);
 
@@ -592,6 +654,20 @@ std::vector<OracleSubtestTrace> NtruSkMalformed(const NtruOracleConfig &config, 
   };
   std::vector<Candidate> candidates;
   const size_t full_groups = (config.params.n - 1) / 5;
+  {
+    SchemeMutation recipe;
+    if (DecodeCorpusRecipe(config.mutation, &recipe) &&
+        (recipe.field == SchemeMutationField::kKemSecretKeyS3 ||
+         recipe.field == SchemeMutationField::kKemSecretKey ||
+         recipe.field == SchemeMutationField::kKemSecretKeyPrf)) {
+      std::vector<uint8_t> sk = keypair.sk;
+      std::vector<MutationRecord> records = MutateNtruSecretKey(config.params, config.mutation, &sk);
+      RecordMutationEffect(records, trace);
+      if (RecipeEffective(records)) {
+        candidates.push_back({"corpus_recipe", std::move(sk)});
+      }
+    }
+  }
   {
     std::vector<uint8_t> sk = keypair.sk;
     MutationRecord record = CorruptNtruS3Group(config.params, 0, 0xF3, &sk);  // 243: complete group out of range

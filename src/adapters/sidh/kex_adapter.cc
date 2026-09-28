@@ -40,6 +40,12 @@ extern "C" {
 #define PQCFUZZ_SIDH_IMPLEMENTATION_ID "sidh_reference"
 #endif
 
+// See src/adapters/sike/kem_adapter.cc: generic and renamed-AMD64 builds of the
+// same parameter set coexist through per-build getter names.
+#ifndef PQCFUZZ_SIDH_ADAPTER_GETTER
+#define PQCFUZZ_SIDH_ADAPTER_GETTER pqcfuzz_get_sidh_kex_adapter
+#endif
+
 namespace {
 
 constexpr size_t kDerandCoins = 96;
@@ -115,13 +121,26 @@ const pqcfuzz_kex_adapter kAdapter = {
 
 }  // namespace
 
-extern "C" const pqcfuzz_kex_adapter *pqcfuzz_get_sidh_kex_adapter(const char *implementation_id) {
+#if defined(PQCFUZZ_SIDH_DELEGATE_OPTIMIZED)
+extern "C" const pqcfuzz_kex_adapter *pqcfuzz_get_sidh_optimized_kex_adapter(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_kex_adapter *PQCFUZZ_SIDH_ADAPTER_GETTER(const char *implementation_id) {
   if (implementation_id == nullptr) {
     return nullptr;
   }
   if (std::strcmp(kAdapter.implementation_id, implementation_id) == 0) {
     return &kAdapter;
   }
+#if defined(PQCFUZZ_SIDH_DELEGATE_OPTIMIZED)
+  if (pqcfuzz_get_sidh_optimized_kex_adapter != nullptr) {
+    const pqcfuzz_kex_adapter *optimized = pqcfuzz_get_sidh_optimized_kex_adapter(implementation_id);
+    if (optimized != nullptr) {
+      return optimized;
+    }
+  }
+#endif
   return nullptr;
 }
 

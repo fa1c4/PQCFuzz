@@ -104,12 +104,19 @@ def _run(binary: Path, args: list[str] | None = None) -> list[str]:
 def test_pair_alg_routing_and_job_generation() -> None:
     document = load_pair_alg(PAIR_ALG)
     pairs = enabled_pairs_for_family(document, "SNOVA")
-    assert len(pairs) == 22
+    # 22 SSK-vs-ESK pairs plus 22 reference-vs-AVX2 second-build pairs.
+    assert len(pairs) == 44
+    avx2_pairs = 0
     for pair in pairs:
         assert pair["primitive_type"] == "sig"
         assert pair["exchange_contract"] == {"public_key_exchange": True, "signature_exchange": True}
         assert pair["left"]["abi"]["sk_len"] == 48
-        assert pair["right"]["abi"]["sk_len"] > 48
+        if pair["provenance_relation"] == "same-source-reference-vs-avx2":
+            avx2_pairs += 1
+            assert pair["right"]["implementation_id"] == "snova_avx2_ssk"
+            assert pair["right"]["abi"]["sk_len"] == 48
+        else:
+            assert pair["right"]["abi"]["sk_len"] > 48
         oracles = writer.oracle_ids_for_pair(pair)
         assert "snova_local_sign_verify" in oracles
         assert "snova_cross_verify" in oracles
@@ -118,6 +125,7 @@ def test_pair_alg_routing_and_job_generation() -> None:
         subtests = writer.enabled_subtests_for_pair(pair)
         assert len(subtests) == len(oracles)
         assert all(entry["enabled"] for entry in subtests)
+    assert avx2_pairs == 22
     assert ORACLE_ENUM_BY_NAME["snova_kat"] == 140
     assert ORACLE_ENUM_BY_NAME["snova_timing_resources"] == 159
     assert ALGORITHM_BY_ENUM[96] == "SNOVA-R2-37-17-16-2-AES"

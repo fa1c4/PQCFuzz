@@ -21,6 +21,14 @@ extern "C" {
 #define PQCFUZZ_NTRU_IMPLEMENTATION_ID "ntru_reference"
 #endif
 
+// Second implementations of the same upstream (reference vs optimized) are
+// linked into one binary with distinct symbols; each translation unit exports
+// its own getter and the reference getter delegates to the optimized one when
+// that weak symbol is present.
+#ifndef PQCFUZZ_NTRU_ADAPTER_GETTER
+#define PQCFUZZ_NTRU_ADAPTER_GETTER pqcfuzz_get_ntru_kem_adapter
+#endif
+
 namespace {
 
 constexpr size_t kDerandCoins = 48;
@@ -80,13 +88,26 @@ const pqcfuzz_kem_adapter kAdapter = {
 
 }  // namespace
 
-extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_ntru_kem_adapter(const char *implementation_id) {
+#if defined(PQCFUZZ_NTRU_DELEGATE_OPTIMIZED)
+extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_ntru_optimized_adapter(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_kem_adapter *PQCFUZZ_NTRU_ADAPTER_GETTER(const char *implementation_id) {
   if (implementation_id == nullptr) {
     return nullptr;
   }
   if (std::strcmp(kAdapter.implementation_id, implementation_id) == 0) {
     return &kAdapter;
   }
+#if defined(PQCFUZZ_NTRU_DELEGATE_OPTIMIZED)
+  if (pqcfuzz_get_ntru_optimized_adapter != nullptr) {
+    const pqcfuzz_kem_adapter *optimized = pqcfuzz_get_ntru_optimized_adapter(implementation_id);
+    if (optimized != nullptr) {
+      return optimized;
+    }
+  }
+#endif
   return nullptr;
 }
 

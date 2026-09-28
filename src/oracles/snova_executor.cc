@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <initializer_list>
 #include <utility>
 #include <vector>
 
@@ -96,6 +97,31 @@ void RecordMutationEffect(const std::vector<MutationRecord> &records, KEMOracleT
   if (records.empty()) {
     trace->intervention_effective = false;
   }
+}
+
+// Structured mutation recipe v1 attached by the fuzz corpus.  Returns false
+// when no recipe is present or the recipe is malformed; callers then keep their
+// deterministic default mutation so the oracle predicate stays well defined.
+bool DecodeCorpusRecipe(const std::vector<uint8_t> &bytes, SchemeMutation *out) {
+  if (bytes.empty()) {
+    return false;
+  }
+  std::string error;
+  return DecodeSchemeMutation(bytes, out, &error);
+}
+
+bool RecipeFieldIn(const SchemeMutation &recipe, std::initializer_list<SchemeMutationField> fields) {
+  for (SchemeMutationField field : fields) {
+    if (recipe.field == field) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool RecipeEffective(const std::vector<MutationRecord> &records) {
+  return std::any_of(records.begin(), records.end(),
+                     [](const MutationRecord &record) { return record.effective && !record.skipped; });
 }
 
 std::vector<uint8_t> DeriveSeed(const std::vector<uint8_t> &seed, const std::string &label, size_t out_len) {
@@ -642,7 +668,12 @@ std::vector<OracleSubtestTrace> SnovaMessageSaltBinding(const SnovaOracleConfig 
     OracleSubtestTrace subtest = MakeSubtest("mutated_message_negative", config.oracle_id, "VERIFY_FALSE");
     subtest.calls = setup_trace.calls;
     std::vector<uint8_t> mutated_message = config.message;
-    if (mutated_message.empty()) {
+    SchemeMutation message_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &message_recipe) &&
+        message_recipe.field == SchemeMutationField::kMessage) {
+      std::vector<MutationRecord> records = MutateSnovaMessage(config.mutation, &mutated_message);
+      RecordMutationEffect(records, trace);
+    } else if (mutated_message.empty()) {
       mutated_message.push_back(0x01);
     } else {
       mutated_message[0] ^= 0x01;
@@ -663,6 +694,12 @@ std::vector<OracleSubtestTrace> SnovaMessageSaltBinding(const SnovaOracleConfig 
     plan.field = SchemeMutationField::kSnovaSignatureSalt;
     plan.index = 0;
     plan.payload = {0x01};
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+        RecipeFieldIn(corpus_recipe, {SchemeMutationField::kSnovaSignatureSalt, SchemeMutationField::kSignatureSalt,
+                                      SchemeMutationField::kSignature})) {
+      plan = corpus_recipe;
+    }
     std::vector<MutationRecord> records = MutateSnovaSignature(config.params, EncodeSchemeMutation(plan), &mutated);
     RecordMutationEffect(records, trace);
     const bool effective = std::any_of(records.begin(), records.end(),
@@ -741,6 +778,12 @@ std::vector<OracleSubtestTrace> SnovaPublicSeedBinding(const SnovaOracleConfig &
     plan.field = SchemeMutationField::kSnovaPublicKeySpublic;
     plan.index = 3;
     plan.payload = {0x40};
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+        RecipeFieldIn(corpus_recipe, {SchemeMutationField::kSnovaPublicKeySpublic, SchemeMutationField::kPublicKeySeed,
+                                      SchemeMutationField::kPublicKey})) {
+      plan = corpus_recipe;
+    }
     std::vector<MutationRecord> records = MutateSnovaPublicKey(config.params, EncodeSchemeMutation(plan), &mutated_pk);
     subtests.push_back(run_negative("spublic_mutation_negative", std::move(mutated_pk), records));
   }
@@ -751,6 +794,11 @@ std::vector<OracleSubtestTrace> SnovaPublicSeedBinding(const SnovaOracleConfig &
     plan.field = SchemeMutationField::kSnovaPublicKeyP22Nibble;
     plan.index = 0;
     plan.aux = 7;
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+        RecipeFieldIn(corpus_recipe, {SchemeMutationField::kSnovaPublicKeyP22Nibble, SchemeMutationField::kPublicKey})) {
+      plan = corpus_recipe;
+    }
     std::vector<MutationRecord> records = MutateSnovaPublicKey(config.params, EncodeSchemeMutation(plan), &mutated_pk);
     subtests.push_back(run_negative("p22_nibble_mutation_negative", std::move(mutated_pk), records));
   }
@@ -879,15 +927,23 @@ std::vector<OracleSubtestTrace> SnovaNibbleEncoding(const SnovaOracleConfig &con
     OracleSubtestTrace subtest = MakeSubtest("salt_byte_hashed_negative", config.oracle_id, "VERIFY_FALSE");
     subtest.calls = setup_trace.calls;
     std::vector<uint8_t> mutated = setup.signature.sig;
-    // The last signature byte is salt, never padding.
-    mutated[config.params.sig_max_len - 1] ^= 0x01;
-    MutationRecord record;
-    record.operation = "xor_byte";
-    record.target = "signature.salt_last_byte";
-    record.offset = config.params.sig_max_len - 1;
-    record.length = 1;
-    RecordMutationEffect(&record, setup.signature.sig, mutated);
-    trace->mutations.push_back(record);
+    SchemeMutation salt_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &salt_recipe) &&
+        RecipeFieldIn(salt_recipe, {SchemeMutationField::kSnovaSignatureSalt, SchemeMutationField::kSignatureSalt,
+                                    SchemeMutationField::kSignature})) {
+      std::vector<MutationRecord> records = MutateSnovaSignature(config.params, config.mutation, &mutated);
+      RecordMutationEffect(records, trace);
+    } else {
+      // The last signature byte is salt, never padding.
+      mutated[config.params.sig_max_len - 1] ^= 0x01;
+      MutationRecord record;
+      record.operation = "xor_byte";
+      record.target = "signature.salt_last_byte";
+      record.offset = config.params.sig_max_len - 1;
+      record.length = 1;
+      RecordMutationEffect(&record, setup.signature.sig, mutated);
+      trace->mutations.push_back(record);
+    }
     SIGVerifyResult verified = SnovaVerify(config.left, "left", mutated, config.message, setup.keypair.pk, &subtest);
     subtest.passed = RejectionLike(verified.status) || verified.status == PQCFUZZ_API_UNSUPPORTED;
     if (!subtest.passed) {
@@ -899,7 +955,15 @@ std::vector<OracleSubtestTrace> SnovaNibbleEncoding(const SnovaOracleConfig &con
     OracleSubtestTrace subtest = MakeSubtest("input_padding_alias_observation", config.oracle_id, "VERIFY_FALSE");
     subtest.calls = setup_trace.calls;
     std::vector<uint8_t> mutated = setup.signature.sig;
-    std::vector<MutationRecord> records = MutateSnovaSignaturePadding(config.params, 0x0F, &mutated);
+    uint8_t pad_value = 0x0F;
+    SchemeMutation pad_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &pad_recipe) && pad_recipe.field == SchemeMutationField::kSnovaSignatureNibble) {
+      pad_value = static_cast<uint8_t>(pad_recipe.aux & 0x0F);
+      if (pad_value == 0) {
+        pad_value = 0x0F;
+      }
+    }
+    std::vector<MutationRecord> records = MutateSnovaSignaturePadding(config.params, pad_value, &mutated);
     RecordMutationEffect(records, trace);
     SIGVerifyResult verified = SnovaVerify(config.left, "left", mutated, config.message, setup.keypair.pk, &subtest);
     subtest.passed = true;  // Recorded as an observation: accept or reject are both informative.
@@ -969,8 +1033,14 @@ std::vector<OracleSubtestTrace> SnovaPublicMap(const SnovaOracleConfig &config, 
     std::vector<uint8_t> mutated_sig;
     std::vector<uint8_t> mutated_map;
     size_t mutated_index = 0;
+    size_t probe_start = 0;
+    SchemeMutation probe_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &probe_recipe) &&
+        probe_recipe.field == SchemeMutationField::kSnovaSignatureNibble && nibbles > 0) {
+      probe_start = probe_recipe.index % nibbles;
+    }
     for (size_t attempt = 0; attempt < 32 && attempt < nibbles; ++attempt) {
-      const size_t index = attempt;
+      const size_t index = (probe_start + attempt) % nibbles;
       mutated_sig = setup.signature.sig;
       uint8_t current = 0;
       SnovaDecodeSignatureNibble(config.params, mutated_sig, index, &current);
@@ -1002,10 +1072,18 @@ std::vector<OracleSubtestTrace> SnovaPublicMap(const SnovaOracleConfig &config, 
   {
     std::vector<uint8_t> original_map = baseline_map;
     std::vector<uint8_t> mutated_pk = setup.keypair.pk;
+    size_t p22_index = 0;
+    uint8_t p22_delta = 0x01;
+    SchemeMutation p22_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &p22_recipe) &&
+        p22_recipe.field == SchemeMutationField::kSnovaPublicKeyP22Nibble) {
+      p22_index = p22_recipe.index;
+      p22_delta = static_cast<uint8_t>((p22_recipe.aux & 0x0F) | 0x01);
+    }
     uint8_t current = 0;
-    SnovaDecodeP22Nibble(config.params, mutated_pk, 0, &current);
+    SnovaDecodeP22Nibble(config.params, mutated_pk, p22_index, &current);
     std::vector<MutationRecord> records =
-        MutateSnovaP22Nibble(config.params, 0, static_cast<uint8_t>(current ^ 0x01), &mutated_pk);
+        MutateSnovaP22Nibble(config.params, p22_index, static_cast<uint8_t>(current ^ p22_delta), &mutated_pk);
     RecordMutationEffect(records, trace);
     OracleSubtestTrace subtest = MakeSubtest("mutated_p22_nibble_negative", config.oracle_id, "VERIFY_FALSE");
     subtest.calls = setup_trace.calls;

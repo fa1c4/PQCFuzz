@@ -156,6 +156,34 @@ def test_dpke_decrypt_and_membership_differential(hook_clis, algorithm):
 
 
 @pytest.mark.parametrize("algorithm", ALGORITHMS)
+def test_key_algebra_hook(hook_clis, algorithm):
+    profile = PROFILES[algorithm]
+    cli = hook_clis[algorithm]
+    keygen_seed = bytes((i * 7 + 11) & 0xFF for i in range(profile.sample_fg_bytes))
+    keypair = run_cli(cli, "owcpa_keypair", keygen_seed.hex())
+    pk = bytes.fromhex(keypair["pk"])
+    sk = bytes.fromhex(keypair["sk"])
+    sk = sk + bytes((i * 3 + 1) & 0xFF for i in range(profile.prf_key_bytes))
+
+    checks = nm.key_algebra(profile, pk, sk)
+    assert checks["f_fp_inverse_mod3"]
+    assert checks["h_f_three_g"]
+    assert checks["h_hq_inverse_mod_x_minus_1"]
+
+    corrupted_fp = bytearray(sk)
+    corrupted_fp[profile.b3] ^= 0x01
+    assert not nm.key_algebra(profile, pk, bytes(corrupted_fp))["f_fp_inverse_mod3"]
+
+    corrupted_hq = bytearray(sk)
+    corrupted_hq[2 * profile.b3 + 5] ^= 0x10
+    assert not nm.key_algebra(profile, pk, bytes(corrupted_hq))["h_hq_inverse_mod_x_minus_1"]
+
+    corrupted_f = bytearray(sk)
+    corrupted_f[2] ^= 0x01
+    assert not nm.key_algebra(profile, pk, bytes(corrupted_f))["h_f_three_g"]
+
+
+@pytest.mark.parametrize("algorithm", ALGORITHMS)
 def test_padding_and_prf_fallback_exact(hook_clis, algorithm):
     profile = PROFILES[algorithm]
     cli = hook_clis[algorithm]

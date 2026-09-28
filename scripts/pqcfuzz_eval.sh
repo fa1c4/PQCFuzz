@@ -50,6 +50,10 @@ With --full-test, two campaigns (metamorphic and fips) run concurrently per
 version. Pressing Ctrl+C in this orchestrator stops every tmux campaign session
 it started before exiting.
 
+To also run the Aigis (PQMagic) lane and the CROSS, Falcon, NTRU, SIKE/SIDH and
+SNOVA family lanes, use the master driver instead:
+  scripts/pqcfuzz_all_eval.sh all
+
 Outputs are written under:
   workspace/pqcfuzz_eval/
 EOF

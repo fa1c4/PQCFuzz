@@ -36,6 +36,13 @@ extern "C" {
 #define PQCFUZZ_SIKE_IMPLEMENTATION_ID "sike_reference"
 #endif
 
+// The generic and AMD64 builds of the same parameter set are linked into one
+// binary with renamed optimized symbols; each translation unit exports its own
+// getter and the reference getter delegates to the optimized one when present.
+#ifndef PQCFUZZ_SIKE_ADAPTER_GETTER
+#define PQCFUZZ_SIKE_ADAPTER_GETTER pqcfuzz_get_sike_kem_adapter
+#endif
+
 namespace {
 
 // Worst-case tape consumption of one keygen call (s prefix + sk3 scalar) is
@@ -100,13 +107,26 @@ const pqcfuzz_kem_adapter kAdapter = {
 
 }  // namespace
 
-extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_sike_kem_adapter(const char *implementation_id) {
+#if defined(PQCFUZZ_SIKE_DELEGATE_OPTIMIZED)
+extern "C" const pqcfuzz_kem_adapter *pqcfuzz_get_sike_optimized_kem_adapter(const char *implementation_id)
+    __attribute__((weak));
+#endif
+
+extern "C" const pqcfuzz_kem_adapter *PQCFUZZ_SIKE_ADAPTER_GETTER(const char *implementation_id) {
   if (implementation_id == nullptr) {
     return nullptr;
   }
   if (std::strcmp(kAdapter.implementation_id, implementation_id) == 0) {
     return &kAdapter;
   }
+#if defined(PQCFUZZ_SIKE_DELEGATE_OPTIMIZED)
+  if (pqcfuzz_get_sike_optimized_kem_adapter != nullptr) {
+    const pqcfuzz_kem_adapter *optimized = pqcfuzz_get_sike_optimized_kem_adapter(implementation_id);
+    if (optimized != nullptr) {
+      return optimized;
+    }
+  }
+#endif
   return nullptr;
 }
 

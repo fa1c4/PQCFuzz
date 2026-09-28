@@ -2,6 +2,10 @@
   "oracles": [
     {
       "oracle_id": "cross_kat",
+      "property_ids": [        "S03",
+        "X05",
+        "P14"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -25,6 +29,8 @@
     },
     {
       "oracle_id": "cross_local_sign_verify",
+      "property_ids": [        "S03"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -45,6 +51,9 @@
     },
     {
       "oracle_id": "cross_cross_verify",
+      "property_ids": [        "S03",
+        "X05"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -70,6 +79,10 @@
     },
     {
       "oracle_id": "cross_message_key_binding",
+      "property_ids": [        "S01",
+        "S04",
+        "S05"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -93,6 +106,55 @@
     },
     {
       "oracle_id": "cross_exact_lengths",
+      "claim_variants": [
+        {
+          "claim_id": "cross_exact_lengths.signature_length_policy",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "signature"
+            }
+          ],
+          "claim": "A signature of length 0, 1, L-1, L or L+1 must reach the real length-aware verify entry point, which accepts exactly the profile length L and rejects every other length without reading past the allocated buffer.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "CROSS round-2 spec \u00a72.2.2 (PDF pp.19-23) and \u00a74 Table 4 signature sizes; plans/specs/cross-round2-spec.pdf sha256 10ac1ef5",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "Public-key and secret-key lengths are adapter wrapper contracts and are reported under the adapter observation variant"
+          ],
+          "controls": {
+            "positive_control": "the exact profile length verifies",
+            "negative_control": "truncated, appended and off-by-one lengths are rejected"
+          }
+        },
+        {
+          "claim_id": "cross_exact_lengths.adapter_wrapper",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "adapter"
+            }
+          ],
+          "claim": "Length checking performed inside the adapter wrapper is recorded as an implementation observation: the wrapper return code and output length are saved, but a wrapper rejection does not prove the target rejected the input.",
+          "evidence_class": "IMPLEMENTATION_OBSERVED",
+          "source_reference": "PQCFuzz adapter length wrapper contract",
+          "scope": {
+            "api_layer": "adapter"
+          },
+          "limitations": [
+            "The C API has no observable input length parameter; short-buffer calls are not legal conformance tests"
+          ],
+          "controls": {
+            "positive_control": "the exact-length call enters the target",
+            "negative_control": "a wrapper-level length rejection is recorded with adapter_entered=false"
+          }
+        }
+      ],
+      "property_ids": [        "P10",
+        "P16"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -113,6 +175,9 @@
     },
     {
       "oracle_id": "cross_packed_field_range",
+      "property_ids": [        "P08",
+        "P11"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -133,6 +198,9 @@
     },
     {
       "oracle_id": "cross_vector_padding",
+      "property_ids": [        "P08",
+        "P09"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -153,6 +221,10 @@
     },
     {
       "oracle_id": "cross_challenge_sampling",
+      "property_ids": [        "H06",
+        "H07",
+        "P11"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -173,6 +245,9 @@
     },
     {
       "oracle_id": "cross_commitment_digests",
+      "property_ids": [        "S03",
+        "H06"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -193,6 +268,9 @@
     },
     {
       "oracle_id": "cross_domain_transcript",
+      "property_ids": [        "H06",
+        "H07"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["sign", "verify"],
@@ -216,6 +294,10 @@
     },
     {
       "oracle_id": "cross_seed_rebuild",
+      "property_ids": [        "P12",
+        "H06",
+        "X02"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["sign"],
@@ -236,6 +318,9 @@
     },
     {
       "oracle_id": "cross_merkle_proof",
+      "property_ids": [        "H06",
+        "P11"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["verify"],
@@ -256,6 +341,11 @@
     },
     {
       "oracle_id": "cross_path_proof_consumption",
+      "property_ids": [        "P08",
+        "P09",
+        "P10",
+        "X01"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["verify"],
@@ -279,6 +369,9 @@
     },
     {
       "oracle_id": "cross_key_algebra",
+      "property_ids": [        "P12",
+        "X05"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign"],
@@ -299,6 +392,10 @@
     },
     {
       "oracle_id": "cross_rng_replay",
+      "property_ids": [        "P13",
+        "P14",
+        "X09"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign"],
@@ -322,6 +419,56 @@
     },
     {
       "oracle_id": "cross_failure_resources",
+      "claim_variants": [
+        {
+          "claim_id": "cross_failure_resources.signature_api",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "signature"
+            }
+          ],
+          "claim": "Signature failure paths must follow the declared API contract for status, output length and canary state, and must not expose more than the documented output on rejection.",
+          "evidence_class": "NORMATIVE",
+          "source_reference": "CROSS round-2 spec \u00a72.2 (PDF pp.16-23); pinned signed-message API return-code contract",
+          "scope": {
+            "api_layer": "api"
+          },
+          "limitations": [
+            "Only the declared API contract is asserted; unspecified residual output is recorded as an observation"
+          ],
+          "controls": {
+            "positive_control": "an honest signature returns success with the exact length",
+            "negative_control": "a mutated signature returns the declared failure status with a poisoned length"
+          }
+        },
+        {
+          "claim_id": "cross_failure_resources.adapter_resources",
+          "conditions": [
+            {
+              "key": "format",
+              "value": "adapter"
+            }
+          ],
+          "claim": "Allocation, bad-length and RNG failure paths are hardening checks: the harness requires crash-free, bounded behaviour and records canary state, without changing the production retry policy.",
+          "evidence_class": "ENGINEERING_RECOMMENDATION",
+          "source_reference": "PQCFuzz hardening policy for failure and resource paths",
+          "scope": {
+            "api_layer": "adapter"
+          },
+          "limitations": [
+            "The CROSS specification does not mandate a unified allocator or retry budget"
+          ],
+          "controls": {
+            "positive_control": "the fault-free path returns success",
+            "negative_control": "the injected allocation/RNG failure is observed without a crash"
+          }
+        }
+      ],
+      "property_ids": [        "P16",
+        "X01",
+        "X04"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["keygen", "sign", "verify"],
@@ -342,6 +489,9 @@
     },
     {
       "oracle_id": "cross_parallel_arithmetic",
+      "property_ids": [        "H07",
+        "X05"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["sign", "verify"],
@@ -362,6 +512,9 @@
     },
     {
       "oracle_id": "cross_fault_seed_disclosure",
+      "property_ids": [        "P18",
+        "X02"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["sign"],
@@ -382,6 +535,9 @@
     },
     {
       "oracle_id": "cross_timing",
+      "property_ids": [        "P17",
+        "X02"
+      ],
       "algorithm_family": "CROSS",
       "primitive_type": "sig",
       "api_surface": ["sign", "verify"],

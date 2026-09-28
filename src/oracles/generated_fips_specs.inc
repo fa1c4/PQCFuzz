@@ -1391,7 +1391,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"fixture_required\":true,\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"S03", "X05", "P14"};
     spec.metadata.claim = "For a fixed RNG tape and message, the pinned reference build shall reproduce the recorded CROSS key and signature bytes and shall accept them.";
     spec.metadata.evidence_class = EvidenceClass::kReferenceDerived;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a77 (PDF p.47); Algorithm 1-3; plans/specs/cross-round2-spec.pdf sha256 10ac1ef5";
@@ -1416,7 +1416,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true,\"valid_lengths\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"S03"};
     spec.metadata.claim = "A CROSS signature produced by an honest signer shall verify under the matching public key for empty and binary messages.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithms 1-3 (PDF pp.16-23); \u00a74 Table 4 (PDF p.31)";
@@ -1441,7 +1441,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"pair_alg_exchange_contract_required\":[\"public_key_exchange\",\"signature_exchange\"]}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"S03", "X05"};
     spec.metadata.claim = "Two pinned CROSS builds of the same variant, category, corner, and revision exchanging keys and signatures shall cross-verify.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 and \u00a74 Table 4; Algorithm 3 verify contract";
@@ -1466,7 +1466,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"S01", "S04", "S05"};
     spec.metadata.claim = "A CROSS signature shall not verify for a message that differs from the signed message, nor under an independent honest public key.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithm 3 (PDF pp.21-23)";
@@ -1491,7 +1491,35 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P10", "P16"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "cross_exact_lengths.signature_length_policy";
+      variant.conditions.push_back({"format", "signature"});
+    variant.metadata.claim = "A signature of length 0, 1, L-1, L or L+1 must reach the real length-aware verify entry point, which accepts exactly the profile length L and rejects every other length without reading past the allocated buffer.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "CROSS round-2 spec \u00a72.2.2 (PDF pp.19-23) and \u00a74 Table 4 signature sizes; plans/specs/cross-round2-spec.pdf sha256 10ac1ef5";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"Public-key and secret-key lengths are adapter wrapper contracts and are reported under the adapter observation variant"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the exact profile length verifies";
+    variant.metadata.negative_control = "truncated, appended and off-by-one lengths are rejected";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "cross_exact_lengths.adapter_wrapper";
+      variant.conditions.push_back({"format", "adapter"});
+    variant.metadata.claim = "Length checking performed inside the adapter wrapper is recorded as an implementation observation: the wrapper return code and output length are saved, but a wrapper rejection does not prove the target rejected the input.";
+    variant.metadata.evidence_class = EvidenceClass::kImplementationObserved;
+    variant.metadata.source_reference = "PQCFuzz adapter length wrapper contract";
+    variant.metadata.scope_api_layer = "adapter";
+    variant.metadata.limitations = {"The C API has no observable input length parameter; short-buffer calls are not legal conformance tests"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the exact-length call enters the target";
+    variant.metadata.negative_control = "a wrapper-level length rejection is recorded with adapter_entered=false";
+      spec.claim_variants.push_back(std::move(variant));
+    }
     spec.metadata.claim = "The CROSS verifier shall require the exact CROSS_sig_t length and reject truncated or appended signature byte strings.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2.2 signature sizes (PDF p.23); \u00a75.4 packing (PDF pp.43-44); api.h CRYPTO_BYTES";
@@ -1516,7 +1544,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P08", "P11"};
     spec.metadata.claim = "Packed y, v, and vG coefficients outside Fp/Fz shall not be accepted as zero or silently reduced: decapsulation of every wire representation must be canonical.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 3 membership checks; \u00a75.4 packing (PDF pp.43-44); \u00a75.5 arithmetic (PDF p.45); pack_unpack.c unpack_fp_vec";
@@ -1541,7 +1569,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P08", "P09"};
     spec.metadata.claim = "Each densely packed vector is zero-padded to a byte boundary; a decoder shall reject non-zero unused padding bits rather than deriving the same value from two encodings.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.4 packing requires zero padding (PDF pp.43-44); pack_unpack.c unpack checks";
@@ -1566,7 +1594,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"H06", "H07", "P11"};
     spec.metadata.claim = "The fixed-weight challenge shall be derived from the digest by the specified sampler: chall1 entries are nonzero, chall2 has Hamming weight exactly w, and an independent model shall reproduce the same bit string.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.3 Table 3 (PDF pp.23-24); expand_digest_to_fixed_weight in csprng_hash.c";
@@ -1591,7 +1619,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"S03", "H06"};
     spec.metadata.claim = "Verification shall recompute both final digests and accept if and only if they match the committed roots; changing digest_cmt, digest_chall2, or any response shall reject.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2 Algorithm 3 lines 22-28 (PDF pp.22-23)";
@@ -1616,7 +1644,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"H06", "H07"};
     spec.metadata.claim = "Every Hash/CSPRNG call shall use the specified little-endian 16-bit role tag and digest length; the transcript model with the same tags shall reproduce the reference digests.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.1 domain separation (PDF pp.32-33) and \u00a72.2";
@@ -1641,7 +1669,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P12", "H06", "X02"};
     spec.metadata.claim = "RebuildLeaves(SeedPath(seed, salt, b), b, salt) shall recover exactly the published leaves, and the published node set shall equal the zero-challenge round leaves and never cover one-challenge rounds.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.2 SeedTree algorithms (PDF pp.34-42); Algorithms 5-10";
@@ -1666,7 +1694,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"H06", "P11"};
     spec.metadata.claim = "Changing an active Proof node, reordering active proof nodes, or corrupting an active Path seed shall make the recomputed root mismatch and verification fail.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.2 Merkle tree algorithms 11-16 (PDF pp.38-42)";
@@ -1691,7 +1719,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P08", "P09", "P10", "X01"};
     spec.metadata.claim = "Path and Proof consumption shall be decided by the challenge topology and shall match the recorded counts without out-of-bounds or duplicate consumption; unused fixed slots follow the pinned serializer contract.";
     spec.metadata.evidence_class = EvidenceClass::kImplementationObserved;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a72.2.2 bound and \u00a75.2 tree shape (PDF pp.34-42)";
@@ -1716,7 +1744,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P12", "X05"};
     spec.metadata.claim = "ExpandSK shall rederive Seedpk and the parity matrix, and the public syndrome shall equal e*H^T (RSDP) or eG*M mod z (RSDPG) under the specified row/column order.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 1 and Algorithm 4 (PDF pp.16-17); \u00a75.3-5.4 arithmetic";
@@ -1741,7 +1769,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"rng_injection_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P13", "P14", "X09"};
     spec.metadata.claim = "Key generation and signing shall consume the injected CSPRNG tape deterministically: the same tape reproduces identical bytes on the same build, and a fresh legal tape yields a verifying signature.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec Algorithm 1-2; csprng_hash.c platform_csprng_state; api.h CRYPTO_RANDOMBYTES";
@@ -1766,7 +1794,35 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"api_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P16", "X01", "X04"};
+    {
+      ClaimVariant variant;
+      variant.claim_id = "cross_failure_resources.signature_api";
+      variant.conditions.push_back({"format", "signature"});
+    variant.metadata.claim = "Signature failure paths must follow the declared API contract for status, output length and canary state, and must not expose more than the documented output on rejection.";
+    variant.metadata.evidence_class = EvidenceClass::kNormative;
+    variant.metadata.source_reference = "CROSS round-2 spec \u00a72.2 (PDF pp.16-23); pinned signed-message API return-code contract";
+    variant.metadata.scope_api_layer = "api";
+    variant.metadata.limitations = {"Only the declared API contract is asserted; unspecified residual output is recorded as an observation"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "an honest signature returns success with the exact length";
+    variant.metadata.negative_control = "a mutated signature returns the declared failure status with a poisoned length";
+      spec.claim_variants.push_back(std::move(variant));
+    }
+    {
+      ClaimVariant variant;
+      variant.claim_id = "cross_failure_resources.adapter_resources";
+      variant.conditions.push_back({"format", "adapter"});
+    variant.metadata.claim = "Allocation, bad-length and RNG failure paths are hardening checks: the harness requires crash-free, bounded behaviour and records canary state, without changing the production retry policy.";
+    variant.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
+    variant.metadata.source_reference = "PQCFuzz hardening policy for failure and resource paths";
+    variant.metadata.scope_api_layer = "adapter";
+    variant.metadata.limitations = {"The CROSS specification does not mandate a unified allocator or retry budget"};
+    variant.metadata.conditional_verdict = "";
+    variant.metadata.positive_control = "the fault-free path returns success";
+    variant.metadata.negative_control = "the injected allocation/RNG failure is observed without a crash";
+      spec.claim_variants.push_back(std::move(variant));
+    }
     spec.metadata.claim = "Failure paths shall report a consistent status and leave caller output length and buffers bounded by the sentinel/canary contract; parser and allocation budgets shall stay within the configured limits.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec API contract; harness common API contract \u00a71.4";
@@ -1791,7 +1847,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"same_algorithm\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"H07", "X05"};
     spec.metadata.claim = "Scalar and batch SHAKE calls shall agree for 1, 2, 3, and 4 lanes including short tail batches; Fp/Fz arithmetic shall agree with independent modular arithmetic on small-domain and boundary operands.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.3-5.5 (PDF pp.44-46); fips202.c and fp_arith.h";
@@ -1816,7 +1872,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"valid_signature_before_mutation\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P18", "X02"};
     spec.metadata.claim = "A fault that flips the flag tree or shifts a challenge bit shall not cause the same round to disclose both its seed and its zero-branch response; such a mutant must be detected by cross_seed_rebuild.";
     spec.metadata.evidence_class = EvidenceClass::kEngineeringRecommendation;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.6 fault-attack boundary (PDF pp.45-46)";
@@ -1841,7 +1897,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.precondition_json = "{\"timing_lane_available\":true}";
     spec.enabled_by_default = true;
     spec.requires_api = "";
-    spec.property_ids = {};
+    spec.property_ids = {"P17", "X02"};
     spec.metadata.claim = "The timing lane shall complete within the configured budget while comparing secret-dependent and public verification paths; no timing conclusion is drawn without the dedicated non-sanitized binary and multiple-comparison correction.";
     spec.metadata.evidence_class = EvidenceClass::kInference;
     spec.metadata.source_reference = "CROSS round-2 spec \u00a75.5-5.6 (PDF pp.45-46); harness common \u00a71.4";
@@ -2013,7 +2069,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "Falcon spec v1.2 \u00a73.11.3-3.11.5 (PDF pp.46-50); vrfy.c header checks";
     spec.metadata.scope_api_layer = "external";
-    spec.metadata.limitations = {"Header-inference mode (sig_type=0) is intentionally not the adapter contract; the profile verifies its declared format"};
+    spec.metadata.limitations = {"Compressed profiles pre-check the declared 0x39/0x3A header profile before verifying with sig_type=0, so both the exact compressed and the full zero-padded form are accepted exactly as the pinned reference does"};
     spec.metadata.conditional_verdict = "";
     spec.metadata.positive_control = "the unmodified header verifies";
     spec.metadata.negative_control = "the mutation record marks the header byte as changed";
@@ -3850,7 +3906,7 @@ static std::vector<OracleSpec> GeneratedFipsOracleSpecs() {
     spec.enabled_by_default = true;
     spec.requires_api = "";
     spec.property_ids = {"P12", "H06"};
-    spec.metadata.claim = "For l<=3 profiles the ABQ block is the fixed SHAKE256(\"SNOVA ABQ\") expansion and is identical across public seeds; l>3 profiles derive ABQ from the public seed.";
+    spec.metadata.claim = "For l<=3 profiles the ABQ block is the fixed SHAKE256(\"SNOVA_ABQ\") expansion and is identical across public seeds; l>3 profiles derive ABQ from the public seed.";
     spec.metadata.evidence_class = EvidenceClass::kNormative;
     spec.metadata.source_reference = "SNOVA round-2 spec p.23 fixed ABQ design; projects/SNOVA/reference/snova.c gen_ABQ; projects/SNOVA/reference/snova_kernel.h gen_A_B_Q_P; plans/specs/snova-round2-spec.pdf sha256 7266dc2a8de1cfcf34f6933e0d6c886b9b23affd19ac88a270bc54b1ea59ba6e";
     spec.metadata.scope_api_layer = "internal";

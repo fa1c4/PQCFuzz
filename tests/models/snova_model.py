@@ -480,7 +480,7 @@ def pk_expand(profile: SnovaProfile, public_seed: bytes) -> bytes:
 
 
 def _fixed_abq_blocks(profile: SnovaProfile) -> Dict[str, List[List[List[int]]]]:
-    """SHAKE256("SNOVA ABQ") A/B/Q repair used when FIXED_ABQ is active."""
+    """SHAKE256("SNOVA_ABQ") A/B/Q repair used when FIXED_ABQ is active."""
     l = profile.l
     m = profile.m_matrices
     sq = profile.sq_rank
@@ -884,6 +884,55 @@ def gauss_retry_loop(
 
 
 # ---------------------------------------------------------------------------
+# Deterministic mutants from plan section 6.4.
+# ---------------------------------------------------------------------------
+
+
+def target_hash_dropped_salt(profile: SnovaProfile, public_seed: bytes, digest: bytes, salt: bytes) -> bytes:
+    """Mutant: target hash omits the 16-byte salt."""
+    del salt
+    return hashlib.shake_256(public_seed + digest).digest(profile.hash_bytes)
+
+
+def target_hash_dropped_spublic(profile: SnovaProfile, public_seed: bytes, digest: bytes, salt: bytes) -> bytes:
+    """Mutant: target hash omits the public seed."""
+    del public_seed
+    return hashlib.shake_256(digest + salt).digest(profile.hash_bytes)
+
+
+def p12_p21_swap_p22(
+    profile: SnovaProfile,
+    t12: List[List[int]],
+    p21: List[List[int]],
+    f12: List[List[int]],
+) -> List[int]:
+    """Mutant: P21 and F12 are swapped inside the P22 relation."""
+    return gen_p22(profile, t12, f12, p21)
+
+
+def indexed_shake_constant_index(seed: bytes, out_len: int) -> bytes:
+    """Mutant: indexed SHAKE128 that never increments the LE64 block counter."""
+    out = bytearray()
+    while len(out) < out_len:
+        hasher = hashlib.shake_128()
+        hasher.update(seed)
+        hasher.update((0).to_bytes(8, "little"))
+        out.extend(hasher.digest(SHAKE_RATE))
+    return bytes(out[:out_len])
+
+
+def gauss_unverified_solution(
+    matrix: Sequence[Sequence[int]],
+    rhs: Sequence[int],
+) -> Optional[List[int]]:
+    """Mutant: returns the last elimination column without checking A*x=b."""
+    solution = gauss_solve_gf16(matrix, rhs)
+    if solution is not None:
+        return solution
+    return [value for value in rhs] + [0] * (len(matrix) - len(rhs))
+
+
+# ---------------------------------------------------------------------------
 # Deterministic mutant catalogue used by the model tests.
 # ---------------------------------------------------------------------------
 MUTANTS = (
@@ -937,7 +986,12 @@ __all__ = [
     "gf16_add",
     "gf16_inv",
     "gf16_mul",
+    "gauss_unverified_solution",
+    "indexed_shake_constant_index",
     "integer_mod16_mul",
+    "p12_p21_swap_p22",
+    "target_hash_dropped_salt",
+    "target_hash_dropped_spublic",
     "load_profiles",
     "mat_add",
     "mat_det",

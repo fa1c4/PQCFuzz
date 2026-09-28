@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <initializer_list>
 #include <vector>
 
 #include "adapters/rng_control.h"
@@ -11,6 +12,7 @@
 #include "mutators/digest.h"
 #include "mutators/scheme_mutation.h"
 #include "oracles/oracle_result.h"
+#include "oracles/scheme_claims.h"
 
 #ifndef PQCFUZZ_CROSS_MODEL_LANE
 #define PQCFUZZ_CROSS_MODEL_LANE 1
@@ -206,6 +208,26 @@ void RecordMutationEffect(const std::vector<MutationRecord> &records, KEMOracleT
   }
 }
 
+// Structured mutation recipe v1 attached by the fuzz corpus.  Returns false
+// when no recipe is present or the recipe is malformed; callers then keep
+// their deterministic default mutation so the oracle predicate stays defined.
+bool DecodeCorpusRecipe(const std::vector<uint8_t> &bytes, SchemeMutation *out) {
+  if (bytes.empty()) {
+    return false;
+  }
+  std::string error;
+  return DecodeSchemeMutation(bytes, out, &error);
+}
+
+bool RecipeFieldIn(const SchemeMutation &recipe, std::initializer_list<SchemeMutationField> fields) {
+  for (SchemeMutationField field : fields) {
+    if (recipe.field == field) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Runs the negative verification gate shared by most CROSS mutation oracles.
 OracleSubtestTrace RunMutationNegative(
     const CrossOracleConfig &config,
@@ -338,6 +360,11 @@ std::vector<OracleSubtestTrace> CrossMessageKeyBinding(const CrossOracleConfig &
   recipe.field = SchemeMutationField::kMessage;
   recipe.index = 0;
   recipe.aux = 0;
+  SchemeMutation corpus_recipe;
+  if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+      corpus_recipe.field == SchemeMutationField::kMessage) {
+    recipe = corpus_recipe;
+  }
   auto records = MutateCrossMessage(EncodeSchemeMutation(recipe), &mutated_message);
   RecordMutationEffect(records, trace);
   const bool effective = std::any_of(records.begin(), records.end(), [](const MutationRecord &record) {
@@ -438,7 +465,16 @@ std::vector<OracleSubtestTrace> CrossPackedFieldRange(const CrossOracleConfig &c
       return subtest;
     }
     std::vector<uint8_t> mutated = signature.sig;
-    auto records = MutateCrossPackedCoefficient(config.params, is_y, 0, 0, &mutated);
+    size_t round = 0;
+    size_t coefficient = 0;
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+        ((is_y && corpus_recipe.field == SchemeMutationField::kSignatureY) ||
+         (!is_y && corpus_recipe.field == SchemeMutationField::kSignatureV))) {
+      round = corpus_recipe.aux;
+      coefficient = corpus_recipe.index;
+    }
+    auto records = MutateCrossPackedCoefficient(config.params, is_y, round, coefficient, &mutated);
     return RunMutationNegative(config, id, "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT", mutated,
                                keypair.pk, records, "out-of-domain wire coefficient was accepted", trace);
   };
@@ -468,7 +504,16 @@ std::vector<OracleSubtestTrace> CrossVectorPadding(const CrossOracleConfig &conf
       return subtest;
     }
     std::vector<uint8_t> mutated = signature.sig;
-    auto records = MutateCrossPaddingBit(config.params, is_y, 0, 0, &mutated);
+    size_t round = 0;
+    size_t padding_index = 0;
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) &&
+        ((is_y && corpus_recipe.field == SchemeMutationField::kSignatureY) ||
+         (!is_y && corpus_recipe.field == SchemeMutationField::kSignatureV))) {
+      round = corpus_recipe.aux;
+      padding_index = corpus_recipe.index;
+    }
+    auto records = MutateCrossPaddingBit(config.params, is_y, round, padding_index, &mutated);
     return RunMutationNegative(config, id, "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT", mutated,
                                keypair.pk, records, "unused padding bit was accepted", trace);
   };
@@ -498,6 +543,10 @@ std::vector<OracleSubtestTrace> CrossChallengeSampling(const CrossOracleConfig &
     recipe.field = field;
     recipe.index = 0;
     recipe.payload = {0x01};
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) && corpus_recipe.field == field) {
+      recipe = corpus_recipe;
+    }
     std::vector<uint8_t> mutated = signature.sig;
     auto records = MutateCrossSignature(config.params, EncodeSchemeMutation(recipe), &mutated);
     return RunMutationNegative(config, id, "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT", mutated,
@@ -531,6 +580,10 @@ std::vector<OracleSubtestTrace> CrossCommitmentDigests(const CrossOracleConfig &
     recipe.field = field;
     recipe.index = 0;
     recipe.payload = {0x01};
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) && corpus_recipe.field == field) {
+      recipe = corpus_recipe;
+    }
     std::vector<uint8_t> mutated = signature.sig;
     auto records = MutateCrossSignature(config.params, EncodeSchemeMutation(recipe), &mutated);
     return RunMutationNegative(config, id, "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT", mutated,
@@ -563,6 +616,10 @@ std::vector<OracleSubtestTrace> CrossMerkleProof(const CrossOracleConfig &config
     recipe.field = field;
     recipe.index = 0;
     recipe.payload = {0x01};
+    SchemeMutation corpus_recipe;
+    if (DecodeCorpusRecipe(config.mutation, &corpus_recipe) && corpus_recipe.field == field) {
+      recipe = corpus_recipe;
+    }
     std::vector<uint8_t> mutated = signature.sig;
     auto records = MutateCrossSignature(config.params, EncodeSchemeMutation(recipe), &mutated);
     return RunMutationNegative(config, id, "VERIFY_FALSE_OR_DECODE_REJECT_OR_API_INVALID_INPUT", mutated,
@@ -750,8 +807,25 @@ void SetCrossTraceReachability(KEMOracleTrace *trace) {
       !trace->relation_not_applicable && trace->baseline_target_entered && trace->mutated_target_entered;
 }
 
+// Length policy is the API contract when the real length-aware verify entry
+// point decodes the signature; adapter-wrapper checks stay implementation
+// observations.  The shared claim resolver maps both to the CROSS spec's
+// conditional evidence classes.
+std::string CrossSubtestFormat(const std::string &subtest_id) {
+  if (subtest_id.find("signature") != std::string::npos || subtest_id.find("length") != std::string::npos) {
+    return "signature";
+  }
+  return "adapter";
+}
+
+std::vector<std::pair<std::string, std::string>> ClaimAttributes(const CrossOracleConfig &config,
+                                                                 const std::string &subtest_id) {
+  return {{"variant", config.params.variant}, {"format", CrossSubtestFormat(subtest_id)}};
+}
+
 OracleFindingTrace MakeFinding(
-    const std::string &oracle_id,
+    const CrossOracleConfig &config,
+    const std::string &subtest_id,
     const std::string &finding_class,
     const std::string &finding_subclass,
     const std::string &summary,
@@ -761,25 +835,37 @@ OracleFindingTrace MakeFinding(
   finding.finding_subclass = finding_subclass;
   finding.summary = summary;
   finding.evidence_kind = evidence_kind;
-  const FindingClassification classification = ClassifyFinding(oracle_id, evidence_kind, finding_class);
+  ResolvedClaim resolved;
+  std::string error;
+  if (!ResolveSchemeClaim(config.oracle_id, config.algorithm, subtest_id, ClaimAttributes(config, subtest_id), &resolved,
+                          &error)) {
+    finding.verdict = Verdict::kHarnessError;
+    finding.evidence_class = EvidenceClass::kInference;
+    finding.claim = "claim variant resolution failed: " + error;
+    finding.source_reference = "harness claim resolver";
+    return finding;
+  }
+  const FindingClassification classification = ClassifyFindingResolved(resolved, evidence_kind, finding_class);
   finding.verdict = classification.verdict;
   finding.evidence_class = classification.evidence_class;
   finding.conditional_verdict = classification.conditional_verdict;
   finding.claim = classification.claim;
+  finding.claim_id = classification.claim_id;
   finding.source_reference = classification.source_reference;
   finding.limitations = classification.limitations;
   return finding;
 }
 
-void AddCrossFindingsForFailures(KEMOracleTrace *trace) {
+void AddCrossFindingsForFailures(const CrossOracleConfig &config, KEMOracleTrace *trace) {
   for (const auto &subtest : trace->subtests) {
     for (const auto &call : subtest.calls) {
       if (call.status == PQCFUZZ_CRASH) {
         trace->findings.push_back(
-            MakeFinding(trace->oracle_id, "memory_safety", "", "adapter call crashed", EvidenceKind::kProcess));
+            MakeFinding(config, subtest.subtest_id, "memory_safety", "", "adapter call crashed",
+                        EvidenceKind::kProcess));
       } else if (call.status == PQCFUZZ_TIMEOUT) {
         trace->findings.push_back(
-            MakeFinding(trace->oracle_id, "timeout", "", "adapter call timed out", EvidenceKind::kProcess));
+            MakeFinding(config, subtest.subtest_id, "timeout", "", "adapter call timed out", EvidenceKind::kProcess));
       }
     }
     if (subtest.passed || subtest.not_applicable) {
@@ -791,15 +877,16 @@ void AddCrossFindingsForFailures(KEMOracleTrace *trace) {
         subtest.expected_relation.find("DIFFERENT") != std::string::npos;
     const std::string finding_class = negative_expectation ? "potential_crypto_vuln" : "confirmed_semantic_bug";
     std::string finding_subclass = subtest.subtest_id;
-    if (trace->oracle_id == "cross_exact_lengths" && subtest.subtest_id == "appended_signature_negative") {
+    if (config.oracle_id == "cross_exact_lengths" && subtest.subtest_id == "appended_signature_negative") {
       finding_subclass = "appended_signature_bytes_accepted";
-    } else if (trace->oracle_id == "cross_vector_padding") {
+    } else if (config.oracle_id == "cross_vector_padding") {
       finding_subclass = "unused_padding_bits_accepted";
-    } else if (trace->oracle_id == "cross_packed_field_range") {
+    } else if (config.oracle_id == "cross_packed_field_range") {
       finding_subclass = "out_of_domain_wire_coefficient_accepted";
     }
     trace->findings.push_back(
-        MakeFinding(trace->oracle_id, finding_class, finding_subclass, subtest.note, EvidenceKind::kSemantic));
+        MakeFinding(config, subtest.subtest_id, finding_class, finding_subclass, subtest.note,
+                    EvidenceKind::kSemantic));
   }
 }
 
@@ -918,7 +1005,10 @@ KEMOracleTrace ExecuteCrossOracle(const CrossOracleConfig &config) {
     }
   }
   SetCrossTraceReachability(&trace);
-  AddCrossFindingsForFailures(&trace);
+  AddCrossFindingsForFailures(config, &trace);
+  if (!trace.findings.empty()) {
+    trace.claim_id = trace.findings.front().claim_id;
+  }
   if (!trace.mutations.empty()) {
     trace.mutation_target = trace.mutations.front().target;
   }

@@ -46,7 +46,8 @@ ALGORITHMS = [name for name in util.PARAMS if name.startswith("SIDH-")]
 def test_pair_alg_routing_and_job_generation():
     document = load_pair_alg(PAIR_ALG)
     pairs = [pair for pair in document["pairs"] if pair["status"] == "enabled" and pair["algorithm_family"] == "SIDH"]
-    assert len(pairs) == 4
+    # Four same-source pairs plus the four generic-vs-AMD64 optimized pairs.
+    assert len(pairs) == 8
     assert {pair["algorithm"] for pair in pairs} == set(ALGORITHMS)
     for pair in pairs:
         assert pair["primitive_type"] == "kex"
@@ -58,6 +59,11 @@ def test_pair_alg_routing_and_job_generation():
         subtests = {entry["oracle_id"]: entry for entry in enabled_subtests_for_pair(pair)}
         assert subtests["sidh_cross_agreement"]["enabled"] is True
         assert "sike_sidh_timing" not in subtests
+
+    cross_pairs = [pair for pair in pairs if pair["provenance_relation"] == "same-source-reference-vs-optimized"]
+    assert len(cross_pairs) == 4
+    for pair in cross_pairs:
+        assert pair["right"]["implementation_id"].startswith("sidh_optimized_")
 
     assert ORACLE_ENUM_BY_NAME["sidh_agreement"] == 91
     assert ORACLE_ENUM_BY_NAME["sidh_resources_rng"] == 98

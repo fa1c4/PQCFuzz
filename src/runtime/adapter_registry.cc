@@ -16,28 +16,58 @@
 #include "adapters/sike/kem_adapter.h"
 #include "adapters/snova/sig_adapter.h"
 
+// Each campaign binary links only the adapters it builds.  The other family
+// getters stay undefined and resolve to null instead of breaking the link, so
+// the registry can keep one routing table for every lane.
+#if defined(__GNUC__) || defined(__clang__)
+#define PQCFUZZ_WEAK_GETTER(return_type, name) \
+  extern "C" __attribute__((weak)) const return_type *name(const char *)
+#else
+#define PQCFUZZ_WEAK_GETTER(return_type, name) extern "C" const return_type *name(const char *)
+#endif
+
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_liboqs_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_pqclean_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_pqmagic_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_pqclean_reference_kem_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_ntru_kem_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kem_adapter, pqcfuzz_get_sike_kem_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_kex_adapter, pqcfuzz_get_sidh_kex_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_liboqs_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_pqclean_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_pqmagic_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_pqclean_reference_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_cross_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_falcon_sig_adapter);
+PQCFUZZ_WEAK_GETTER(pqcfuzz_sig_adapter, pqcfuzz_get_snova_sig_adapter);
+
+#undef PQCFUZZ_WEAK_GETTER
+
 namespace pqcfuzz {
 
 const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
     const std::string &project_id,
     const std::string &implementation_id) {
+  const char *id = implementation_id.c_str();
   if (project_id == "liboqs" || project_id == "liboqs_self_reference") {
-    return pqcfuzz_get_liboqs_adapter(implementation_id.c_str());
+    return pqcfuzz_get_liboqs_adapter != nullptr ? pqcfuzz_get_liboqs_adapter(id) : nullptr;
   }
   if (project_id == "pqclean") {
-    return pqcfuzz_get_pqclean_adapter(implementation_id.c_str());
+    return pqcfuzz_get_pqclean_adapter != nullptr ? pqcfuzz_get_pqclean_adapter(id) : nullptr;
   }
   if (project_id == "pqmagic") {
-    return pqcfuzz_get_pqmagic_adapter(implementation_id.c_str());
+    return pqcfuzz_get_pqmagic_adapter != nullptr ? pqcfuzz_get_pqmagic_adapter(id) : nullptr;
   }
   if (project_id == "pqclean_reference") {
-    return pqcfuzz_get_pqclean_reference_kem_adapter(implementation_id.c_str());
+    return &pqcfuzz_get_pqclean_reference_kem_adapter != nullptr
+               ? pqcfuzz_get_pqclean_reference_kem_adapter(id)
+               : nullptr;
   }
   if (project_id == "ntru") {
-    return pqcfuzz_get_ntru_kem_adapter(implementation_id.c_str());
+    return pqcfuzz_get_ntru_kem_adapter != nullptr ? pqcfuzz_get_ntru_kem_adapter(id) : nullptr;
   }
   if (project_id == "sike") {
-    return pqcfuzz_get_sike_kem_adapter(implementation_id.c_str());
+    return pqcfuzz_get_sike_kem_adapter != nullptr ? pqcfuzz_get_sike_kem_adapter(id) : nullptr;
   }
   return nullptr;
 }
@@ -45,8 +75,9 @@ const pqcfuzz_kem_adapter *GetKemAdapterByProjectAndId(
 const pqcfuzz_kex_adapter *GetKexAdapterByProjectAndId(
     const std::string &project_id,
     const std::string &implementation_id) {
+  const char *id = implementation_id.c_str();
   if (project_id == "sidh") {
-    return pqcfuzz_get_sidh_kex_adapter(implementation_id.c_str());
+    return pqcfuzz_get_sidh_kex_adapter != nullptr ? pqcfuzz_get_sidh_kex_adapter(id) : nullptr;
   }
   return nullptr;
 }
@@ -54,26 +85,29 @@ const pqcfuzz_kex_adapter *GetKexAdapterByProjectAndId(
 const pqcfuzz_sig_adapter *GetSigAdapterByProjectAndId(
     const std::string &project_id,
     const std::string &implementation_id) {
+  const char *id = implementation_id.c_str();
   if (project_id == "liboqs" || project_id == "liboqs_self_reference") {
-    return pqcfuzz_get_liboqs_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_liboqs_sig_adapter != nullptr ? pqcfuzz_get_liboqs_sig_adapter(id) : nullptr;
   }
   if (project_id == "pqclean") {
-    return pqcfuzz_get_pqclean_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_pqclean_sig_adapter != nullptr ? pqcfuzz_get_pqclean_sig_adapter(id) : nullptr;
   }
   if (project_id == "pqmagic") {
-    return pqcfuzz_get_pqmagic_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_pqmagic_sig_adapter != nullptr ? pqcfuzz_get_pqmagic_sig_adapter(id) : nullptr;
   }
   if (project_id == "pqclean_reference") {
-    return pqcfuzz_get_pqclean_reference_sig_adapter(implementation_id.c_str());
+    return &pqcfuzz_get_pqclean_reference_sig_adapter != nullptr
+               ? pqcfuzz_get_pqclean_reference_sig_adapter(id)
+               : nullptr;
   }
   if (project_id == "cross") {
-    return pqcfuzz_get_cross_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_cross_sig_adapter != nullptr ? pqcfuzz_get_cross_sig_adapter(id) : nullptr;
   }
   if (project_id == "falcon") {
-    return pqcfuzz_get_falcon_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_falcon_sig_adapter != nullptr ? pqcfuzz_get_falcon_sig_adapter(id) : nullptr;
   }
   if (project_id == "snova") {
-    return pqcfuzz_get_snova_sig_adapter(implementation_id.c_str());
+    return pqcfuzz_get_snova_sig_adapter != nullptr ? pqcfuzz_get_snova_sig_adapter(id) : nullptr;
   }
   return nullptr;
 }

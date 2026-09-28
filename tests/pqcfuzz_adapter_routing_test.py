@@ -40,6 +40,7 @@ def test_adapter_routing_requires_algorithm_identity_and_abi(tmp_path: Path) -> 
             "src/adapters/ntru/kem_adapter.cc",
             "src/adapters/sike/kem_adapter.cc",
             "src/adapters/sidh/kex_adapter.cc",
+            "src/adapters/snova/sig_adapter.cc",
             "src/runtime/adapter_registry.cc",
             "src/adapters/liboqs/kem_adapter.cc", "src/adapters/liboqs/sig_adapter.cc",
             "src/adapters/pqclean/kem_adapter.cc", "src/adapters/pqclean/sig_adapter.cc",

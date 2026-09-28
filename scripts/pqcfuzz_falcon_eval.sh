@@ -142,6 +142,9 @@ src/mutators/aigis_enc_mutator.cc
 src/mutators/aigis_sig_layout.cc
 src/mutators/aigis_sig_mutator.cc
 src/mutators/scheme_mutation.cc
+src/mutators/snova_layout.cc
+src/mutators/snova_mutator.cc
+src/mutators/sha3.cc
 src/mutators/cross_layout.cc
 src/mutators/cross_mutator.cc
 src/mutators/falcon_layout.cc
@@ -159,10 +162,18 @@ src/oracles/oracle_result.cc
 src/oracles/scheme_claims.cc
 src/oracles/oracle_executor.cc
 src/oracles/cross_executor.cc
+src/oracles/snova_public_map.cc
+src/oracles/snova_executor.cc
 src/oracles/falcon_executor.cc
+src/mutators/ntru_layout.cc
+src/mutators/ntru_mutator.cc
+src/oracles/ntru_executor.cc
+src/adapters/ntru/kem_adapter.cc
+src/adapters/ntru/reference_adapter.cc
 src/oracles/metamorphic_observation.cc
 src/oracles/metamorphic_spec.cc
 src/oracles/metamorphic_executor.cc
+src/adapters/snova/sig_adapter.cc
 src/runtime/adapter_registry.cc
 src/adapters/sike/kem_adapter.cc
 src/adapters/sidh/kex_adapter.cc
@@ -221,6 +232,7 @@ build_falcon_objects() {
   mkdir -p "$ADAPTER_OBJ_DIR"
   local status=0
   "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc -I"$FALCON_SRC" -DPQCFUZZ_HAVE_FALCON \
+    -DPQCFUZZ_FALCON_DELEGATE_PQCLEAN \
     -c src/adapters/falcon/sig_adapter.cc -o "$ADAPTER_OBJ_DIR/sig_adapter.o" &
   "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc -I"$FALCON_SRC" -DPQCFUZZ_HAVE_FALCON \
     -c src/adapters/falcon/signed_message_adapter.cc -o "$ADAPTER_OBJ_DIR/signed_message_adapter.o" &
@@ -232,14 +244,109 @@ build_falcon_objects() {
   : > "$ADAPTER_OBJ_DIR/.complete"
 }
 
+PQCLEAN_ROOT="${PQCLEAN_ROOT:-third_party/PQClean}"
+
+# Maps a harness algorithm to its PQClean clean scheme and symbol prefix.
+pqclean_scheme_for_algorithm() {
+  case "$1" in
+    FALCON-512-COMPRESSED) echo "falcon-512|PQCLEAN_FALCON512_CLEAN|falcon_pqclean_512" ;;
+    FALCON-1024-COMPRESSED) echo "falcon-1024|PQCLEAN_FALCON1024_CLEAN|falcon_pqclean_1024" ;;
+    FALCON-512-PADDED) echo "falcon-padded-512|PQCLEAN_FALCONPADDED512_CLEAN|falcon_pqclean_padded_512" ;;
+    FALCON-1024-PADDED) echo "falcon-padded-1024|PQCLEAN_FALCONPADDED1024_CLEAN|falcon_pqclean_padded_1024" ;;
+    *) echo "" ;;
+  esac
+}
+
+pqclean_object_dir() {
+  echo "${BUILD_DIR}/falcon-pqclean-obj/$1"
+}
+
+pqclean_adapter_dir() {
+  echo "${BUILD_DIR}/falcon-pqclean-adapter/$1"
+}
+
+build_pqclean_objects() {
+  local scheme="$1"
+  local src="$PQCLEAN_ROOT/crypto_sign/$scheme/clean"
+  local obj_dir
+  obj_dir=$(pqclean_object_dir "$scheme")
+  if [ -f "$obj_dir/.complete" ]; then
+    return 0
+  fi
+  if [ ! -f "$src/pqclean.c" ]; then
+    echo "[falcon] missing PQClean scheme $scheme; the pqclean lane is unavailable" >&2
+    return 1
+  fi
+  mkdir -p "$obj_dir"
+  local status=0 name pids=() pid
+  for name in codec common fft fpr keygen pqclean rng sign vrfy; do
+    "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -I"$src" -I"$PQCLEAN_ROOT/common" \
+      -c "$src/$name.c" -o "$obj_dir/$name.o" &
+    pids+=("$!")
+  done
+  "$CC_BIN" -std=c11 $SANITIZER_BUILD_CFLAGS -I"$src" -I"$PQCLEAN_ROOT/common" \
+    -c "$PQCLEAN_ROOT/common/fips202.c" -o "$obj_dir/pqclean_fips202.o" &
+  pids+=("$!")
+  for pid in "${pids[@]}"; do
+    wait "$pid" || status=1
+  done
+  if [ "$status" -ne 0 ]; then
+    echo "[falcon] PQClean object build failed for $scheme" >&2
+    rm -f "$obj_dir/.complete"
+    return 1
+  fi
+  : > "$obj_dir/.complete"
+}
+
+build_pqclean_adapter() {
+  local algorithm="$1" scheme="$2" prefix="$3" implementation_id="$4"
+  local src="$PQCLEAN_ROOT/crypto_sign/$scheme/clean"
+  local obj_dir
+  obj_dir=$(pqclean_adapter_dir "$scheme")
+  if [ -f "$obj_dir/.complete" ]; then
+    return 0
+  fi
+  mkdir -p "$obj_dir"
+  "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc \
+    -I"$src" -I"$PQCLEAN_ROOT/common" \
+    -DPQCFUZZ_HAVE_FALCON_PQCLEAN \
+    '-DPQCFUZZ_FALCON_PQCLEAN_API_HEADER="api.h"' \
+    "-DPQCFUZZ_FALCON_PQCLEAN_KEYPAIR=${prefix}_crypto_sign_keypair" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_SIGN=${prefix}_crypto_sign_signature" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_VERIFY=${prefix}_crypto_sign_verify" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_PUBLICKEYBYTES=${prefix}_CRYPTO_PUBLICKEYBYTES" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_SECRETKEYBYTES=${prefix}_CRYPTO_SECRETKEYBYTES" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_BYTES=${prefix}_CRYPTO_BYTES" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_ALGORITHM=\"$algorithm\"" \
+    "-DPQCFUZZ_FALCON_PQCLEAN_IMPLEMENTATION_ID=\"$implementation_id\"" \
+    -c src/adapters/falcon/pqclean_adapter.cc -o "$obj_dir/pqclean_adapter.o" || return 1
+  : > "$obj_dir/.complete"
+}
+
 build_job() {
   local job_file="$1"
-  local job_id algorithm algorithm_enum left_impl
+  local job_id algorithm algorithm_enum left_impl right_impl
   job_id=$(job_id_of "$job_file")
   algorithm=$(job_field "$job_file" 'j["algorithm"]')
   left_impl=$(left_implementation_id "$job_file")
+  right_impl=$(job_field "$job_file" 'j["pair"]["right"]["implementation_id"]')
   algorithm_enum=$(algorithm_enum_for_job "$job_file")
   build_falcon_objects
+  local pqclean_objects=()
+  if [[ "$left_impl" == *pqclean* || "$right_impl" == *pqclean* ]]; then
+    local scheme_mapping scheme prefix implementation_id obj
+    scheme_mapping=$(pqclean_scheme_for_algorithm "$algorithm")
+    if [ -z "$scheme_mapping" ]; then
+      echo "[falcon] no PQClean scheme for $algorithm" >&2
+      return 1
+    fi
+    IFS='|' read -r scheme prefix implementation_id <<< "$scheme_mapping"
+    build_pqclean_objects "$scheme" || return 1
+    build_pqclean_adapter "$algorithm" "$scheme" "$prefix" "$implementation_id" || return 1
+    for obj in "$(pqclean_object_dir "$scheme")"/*.o "$(pqclean_adapter_dir "$scheme")"/*.o; do
+      pqclean_objects+=("$obj")
+    done
+  fi
   local out_bin="$BUILD_DIR/$job_id/pqcfuzz_$job_id"
   local replay_bin="$BUILD_DIR/$job_id/replay_oracle"
   mkdir -p "$BUILD_DIR/$job_id"
@@ -263,11 +370,11 @@ build_job() {
     -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_impl\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"falcon\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$left_impl\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_impl\"" \
     -DPQCFUZZ_PUBLIC_KEY_EXCHANGE="$pk_exchange" \
     -DPQCFUZZ_SIGNATURE_EXCHANGE="$sig_exchange" \
     src/fuzzers/sig_pair_fuzzer.cc \
-    "$COMMON_ARCHIVE" "$REF_OBJ_DIR"/*.o "$ADAPTER_OBJ_DIR"/*.o \
+    "$COMMON_ARCHIVE" "$REF_OBJ_DIR"/*.o "$ADAPTER_OBJ_DIR"/*.o "${pqclean_objects[@]}" \
     -lm -o "$out_bin"
 
   "$CXX_BIN" -std=c++17 $SANITIZER_BUILD_CFLAGS -Isrc -I"$FALCON_SRC" -DPQCFUZZ_HAVE_FALCON \
@@ -277,9 +384,9 @@ build_job() {
     -DPQCFUZZ_EXPECTED_IMPLEMENTATION_ID="\"$left_impl\"" \
     -DPQCFUZZ_EXPECTED_ALGORITHM="\"$algorithm\"" \
     -DPQCFUZZ_RIGHT_PROJECT_ID="\"falcon\"" \
-    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$left_impl\"" \
+    -DPQCFUZZ_RIGHT_IMPLEMENTATION_ID="\"$right_impl\"" \
     src/replay/replay_oracle.cc \
-    "$COMMON_ARCHIVE" "$REF_OBJ_DIR"/*.o "$ADAPTER_OBJ_DIR"/*.o \
+    "$COMMON_ARCHIVE" "$REF_OBJ_DIR"/*.o "$ADAPTER_OBJ_DIR"/*.o "${pqclean_objects[@]}" \
     -lm -o "$replay_bin"
 
   manifests_dir
@@ -568,6 +675,9 @@ smoke_job() {
   local corpus_dir="$RUNS_DIR/$job_id/corpus"
   local job_count
   job_count=$(job_files | wc -l)
+  if [ "$job_count" -lt 1 ]; then
+    job_count=1
+  fi
   per_job_seconds=$(( SMOKE_FUZZ_SECONDS / job_count ))
   if [ "$per_job_seconds" -lt 1 ]; then
     per_job_seconds=1
