@@ -16,6 +16,8 @@
 #include "mutators/ntru_layout.h"
 #include "mutators/sike_layout.h"
 #include "mutators/slh_dsa_layout.h"
+#include "mutators/snova_layout.h"
+#include "adapters/snova/sig_adapter.h"
 #include "oracles/cross_executor.h"
 #include "oracles/falcon_executor.h"
 #include "oracles/metamorphic_executor.h"
@@ -23,9 +25,14 @@
 #include "oracles/oracle_executor.h"
 #include "oracles/sidh_executor.h"
 #include "oracles/sike_executor.h"
+#include "oracles/snova_executor.h"
 #include "runtime/adapter_registry.h"
 #include "runtime/exit_codes.h"
 #include "runtime/replay_args.h"
+
+#ifndef PQCFUZZ_EXPECTED_SK_LEN
+#define PQCFUZZ_EXPECTED_SK_LEN 0
+#endif
 
 namespace {
 
@@ -95,14 +102,16 @@ int main(int argc, char **argv) {
     pqcfuzz::AigisSigParams aigis_sig_params{};
     pqcfuzz::CrossParams cross_params{};
     pqcfuzz::FalconParams falcon_params{};
+    pqcfuzz::SnovaParams snova_params{};
     const bool is_mldsa = pqcfuzz::GetMlDsaParams(args.algorithm, &dsa_params);
     const bool is_aigis = pqcfuzz::GetAigisSigParams(args.algorithm, &aigis_sig_params);
     const bool is_cross = pqcfuzz::GetCrossParams(args.algorithm, &cross_params);
     const bool is_falcon = pqcfuzz::GetFalconParams(args.algorithm, &falcon_params);
+    const bool is_snova = pqcfuzz::GetSnovaParams(args.algorithm, &snova_params);
     if (is_aigis) {
       dsa_params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
                     aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
-    } else if (!is_mldsa && !is_cross && !is_falcon) {
+    } else if (!is_mldsa && !is_cross && !is_falcon && !is_snova) {
       std::cerr << "unsupported signature algorithm (SLH-DSA is not dispatched): " << args.algorithm << "\n";
       return pqcfuzz::kExitInvalidInputOrConfig;
     }
@@ -119,6 +128,11 @@ int main(int argc, char **argv) {
       expected_pk_len = falcon_params.pk_len;
       expected_sk_len = falcon_params.sk_len;
       expected_sig_max_len = falcon_params.sig_max_len;
+    } else if (is_snova) {
+      expected_pk_len = snova_params.pk_len;
+      expected_sk_len = PQCFUZZ_EXPECTED_SK_LEN != 0 ? static_cast<size_t>(PQCFUZZ_EXPECTED_SK_LEN)
+                                                     : snova_params.ssk_len;
+      expected_sig_max_len = snova_params.sig_max_len;
     }
     pqcfuzz::AdapterRoutingExpectation expected{
         args.left_project_id, args.left_implementation_id, args.algorithm,
@@ -147,6 +161,27 @@ int main(int argc, char **argv) {
       config.message = DefaultMessage(envelope.msg);
       config.mutation = envelope.mutation;
       trace = pqcfuzz::ExecuteCrossOracle(config);
+    } else if (is_snova) {
+      if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
+        std::cerr << "SNOVA has no metamorphic oracle suite\n";
+        return pqcfuzz::kExitInvalidInputOrConfig;
+      }
+      pqcfuzz::SnovaOracleConfig config;
+      config.job_id = args.job_id;
+      config.pair_id = args.pair_id;
+      config.algorithm = args.algorithm;
+      config.oracle_id = args.oracle_id;
+      config.params = snova_params;
+      config.left = target;
+      config.left_api = pqcfuzz_get_snova_api(args.left_implementation_id.c_str());
+      config.right = pqcfuzz::GetSigAdapterByProjectAndId(args.right_project_id, args.right_implementation_id);
+      config.right_api = pqcfuzz_get_snova_api(args.right_implementation_id.c_str());
+      config.public_key_exchange = args.public_key_exchange;
+      config.signature_exchange = args.signature_exchange;
+      config.seed = envelope.seed;
+      config.message = DefaultMessage(envelope.msg);
+      config.mutation = envelope.mutation;
+      trace = pqcfuzz::ExecuteSnovaOracle(config);
     } else if (is_falcon) {
       if (args.oracle_suite == pqcfuzz::OracleSuite::kMetamorphic) {
         std::cerr << "Falcon has no metamorphic oracle suite\n";

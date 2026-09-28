@@ -74,6 +74,30 @@ enum class AlgorithmId : uint8_t {
   kCrossRsdpg5Fast = 79,
   kCrossRsdpg5Balanced = 80,
   kCrossRsdpg5Small = 81,
+  // SNOVA round-2 parameter sets, AES public expansion first then SHAKE per
+  // parameter row (AlgorithmId 96-117).
+  kSnovaR2_37_17_2Aes = 96,
+  kSnovaR2_37_17_2Shake = 97,
+  kSnovaR2_25_8_3Aes = 98,
+  kSnovaR2_25_8_3Shake = 99,
+  kSnovaR2_24_5_4Aes = 100,
+  kSnovaR2_24_5_4Shake = 101,
+  kSnovaR2_56_25_2Aes = 102,
+  kSnovaR2_56_25_2Shake = 103,
+  kSnovaR2_49_11_3Aes = 104,
+  kSnovaR2_49_11_3Shake = 105,
+  kSnovaR2_37_8_4Aes = 106,
+  kSnovaR2_37_8_4Shake = 107,
+  kSnovaR2_24_5_5Aes = 108,
+  kSnovaR2_24_5_5Shake = 109,
+  kSnovaR2_75_33_2Aes = 110,
+  kSnovaR2_75_33_2Shake = 111,
+  kSnovaR2_66_15_3Aes = 112,
+  kSnovaR2_66_15_3Shake = 113,
+  kSnovaR2_60_10_4Aes = 114,
+  kSnovaR2_60_10_4Shake = 115,
+  kSnovaR2_29_6_5Aes = 116,
+  kSnovaR2_29_6_5Shake = 117,
 };
 
 enum class OracleId : uint8_t {
@@ -215,6 +239,27 @@ enum class OracleId : uint8_t {
   kCrossParallelArithmetic = 136,
   kCrossFaultSeedDisclosure = 137,
   kCrossTiming = 138,
+  // SNOVA oracles 140-159.
+  kSnovaKat = 140,
+  kSnovaLocalSignVerify = 141,
+  kSnovaCrossVerify = 142,
+  kSnovaMessageSaltBinding = 143,
+  kSnovaPublicSeedBinding = 144,
+  kSnovaExactLengths = 145,
+  kSnovaNibbleEncoding = 146,
+  kSnovaGf16Arithmetic = 147,
+  kSnovaPublicMap = 148,
+  kSnovaKeyAlignment = 149,
+  kSnovaRound2Terms = 150,
+  kSnovaPublicExpansion = 151,
+  kSnovaFixedAbq = 152,
+  kSnovaSskEskEquivalence = 153,
+  kSnovaGaussRetry = 154,
+  kSnovaRngReplay = 155,
+  kSnovaMalformedKeyState = 156,
+  kSnovaBackendProfileGate = 157,
+  kSnovaFaultChecks = 158,
+  kSnovaTimingResources = 159,
 };
 
 struct Envelope {

@@ -91,6 +91,29 @@ bool IsKnownAlgorithmId(AlgorithmId algorithm) {
     case AlgorithmId::kCrossRsdpg5Balanced:
     case AlgorithmId::kCrossRsdpg5Small:
       return true;
+    case AlgorithmId::kSnovaR2_37_17_2Aes:
+    case AlgorithmId::kSnovaR2_37_17_2Shake:
+    case AlgorithmId::kSnovaR2_25_8_3Aes:
+    case AlgorithmId::kSnovaR2_25_8_3Shake:
+    case AlgorithmId::kSnovaR2_24_5_4Aes:
+    case AlgorithmId::kSnovaR2_24_5_4Shake:
+    case AlgorithmId::kSnovaR2_56_25_2Aes:
+    case AlgorithmId::kSnovaR2_56_25_2Shake:
+    case AlgorithmId::kSnovaR2_49_11_3Aes:
+    case AlgorithmId::kSnovaR2_49_11_3Shake:
+    case AlgorithmId::kSnovaR2_37_8_4Aes:
+    case AlgorithmId::kSnovaR2_37_8_4Shake:
+    case AlgorithmId::kSnovaR2_24_5_5Aes:
+    case AlgorithmId::kSnovaR2_24_5_5Shake:
+    case AlgorithmId::kSnovaR2_75_33_2Aes:
+    case AlgorithmId::kSnovaR2_75_33_2Shake:
+    case AlgorithmId::kSnovaR2_66_15_3Aes:
+    case AlgorithmId::kSnovaR2_66_15_3Shake:
+    case AlgorithmId::kSnovaR2_60_10_4Aes:
+    case AlgorithmId::kSnovaR2_60_10_4Shake:
+    case AlgorithmId::kSnovaR2_29_6_5Aes:
+    case AlgorithmId::kSnovaR2_29_6_5Shake:
+      return true;
     case AlgorithmId::kUnknown:
       return false;
   }
@@ -219,6 +242,27 @@ bool IsKnownOracleId(OracleId oracle_id) {
     case OracleId::kCrossParallelArithmetic:
     case OracleId::kCrossFaultSeedDisclosure:
     case OracleId::kCrossTiming:
+      return true;
+    case OracleId::kSnovaKat:
+    case OracleId::kSnovaLocalSignVerify:
+    case OracleId::kSnovaCrossVerify:
+    case OracleId::kSnovaMessageSaltBinding:
+    case OracleId::kSnovaPublicSeedBinding:
+    case OracleId::kSnovaExactLengths:
+    case OracleId::kSnovaNibbleEncoding:
+    case OracleId::kSnovaGf16Arithmetic:
+    case OracleId::kSnovaPublicMap:
+    case OracleId::kSnovaKeyAlignment:
+    case OracleId::kSnovaRound2Terms:
+    case OracleId::kSnovaPublicExpansion:
+    case OracleId::kSnovaFixedAbq:
+    case OracleId::kSnovaSskEskEquivalence:
+    case OracleId::kSnovaGaussRetry:
+    case OracleId::kSnovaRngReplay:
+    case OracleId::kSnovaMalformedKeyState:
+    case OracleId::kSnovaBackendProfileGate:
+    case OracleId::kSnovaFaultChecks:
+    case OracleId::kSnovaTimingResources:
       return true;
     case OracleId::kSikeKat:
     case OracleId::kSikeLocalRoundtrip:
@@ -373,6 +417,50 @@ const char *AlgorithmName(AlgorithmId algorithm) {
       return "CROSS-RSDPG-5-BALANCED";
     case AlgorithmId::kCrossRsdpg5Small:
       return "CROSS-RSDPG-5-SMALL";
+    case AlgorithmId::kSnovaR2_37_17_2Aes:
+      return "SNOVA-R2-37-17-16-2-AES";
+    case AlgorithmId::kSnovaR2_37_17_2Shake:
+      return "SNOVA-R2-37-17-16-2-SHAKE";
+    case AlgorithmId::kSnovaR2_25_8_3Aes:
+      return "SNOVA-R2-25-8-16-3-AES";
+    case AlgorithmId::kSnovaR2_25_8_3Shake:
+      return "SNOVA-R2-25-8-16-3-SHAKE";
+    case AlgorithmId::kSnovaR2_24_5_4Aes:
+      return "SNOVA-R2-24-5-16-4-AES";
+    case AlgorithmId::kSnovaR2_24_5_4Shake:
+      return "SNOVA-R2-24-5-16-4-SHAKE";
+    case AlgorithmId::kSnovaR2_56_25_2Aes:
+      return "SNOVA-R2-56-25-16-2-AES";
+    case AlgorithmId::kSnovaR2_56_25_2Shake:
+      return "SNOVA-R2-56-25-16-2-SHAKE";
+    case AlgorithmId::kSnovaR2_49_11_3Aes:
+      return "SNOVA-R2-49-11-16-3-AES";
+    case AlgorithmId::kSnovaR2_49_11_3Shake:
+      return "SNOVA-R2-49-11-16-3-SHAKE";
+    case AlgorithmId::kSnovaR2_37_8_4Aes:
+      return "SNOVA-R2-37-8-16-4-AES";
+    case AlgorithmId::kSnovaR2_37_8_4Shake:
+      return "SNOVA-R2-37-8-16-4-SHAKE";
+    case AlgorithmId::kSnovaR2_24_5_5Aes:
+      return "SNOVA-R2-24-5-16-5-AES";
+    case AlgorithmId::kSnovaR2_24_5_5Shake:
+      return "SNOVA-R2-24-5-16-5-SHAKE";
+    case AlgorithmId::kSnovaR2_75_33_2Aes:
+      return "SNOVA-R2-75-33-16-2-AES";
+    case AlgorithmId::kSnovaR2_75_33_2Shake:
+      return "SNOVA-R2-75-33-16-2-SHAKE";
+    case AlgorithmId::kSnovaR2_66_15_3Aes:
+      return "SNOVA-R2-66-15-16-3-AES";
+    case AlgorithmId::kSnovaR2_66_15_3Shake:
+      return "SNOVA-R2-66-15-16-3-SHAKE";
+    case AlgorithmId::kSnovaR2_60_10_4Aes:
+      return "SNOVA-R2-60-10-16-4-AES";
+    case AlgorithmId::kSnovaR2_60_10_4Shake:
+      return "SNOVA-R2-60-10-16-4-SHAKE";
+    case AlgorithmId::kSnovaR2_29_6_5Aes:
+      return "SNOVA-R2-29-6-16-5-AES";
+    case AlgorithmId::kSnovaR2_29_6_5Shake:
+      return "SNOVA-R2-29-6-16-5-SHAKE";
     case AlgorithmId::kUnknown:
       return "UNKNOWN";
   }
@@ -655,6 +743,46 @@ const char *OracleName(OracleId oracle_id) {
       return "cross_fault_seed_disclosure";
     case OracleId::kCrossTiming:
       return "cross_timing";
+    case OracleId::kSnovaKat:
+      return "snova_kat";
+    case OracleId::kSnovaLocalSignVerify:
+      return "snova_local_sign_verify";
+    case OracleId::kSnovaCrossVerify:
+      return "snova_cross_verify";
+    case OracleId::kSnovaMessageSaltBinding:
+      return "snova_message_salt_binding";
+    case OracleId::kSnovaPublicSeedBinding:
+      return "snova_public_seed_binding";
+    case OracleId::kSnovaExactLengths:
+      return "snova_exact_lengths";
+    case OracleId::kSnovaNibbleEncoding:
+      return "snova_nibble_encoding";
+    case OracleId::kSnovaGf16Arithmetic:
+      return "snova_gf16_arithmetic";
+    case OracleId::kSnovaPublicMap:
+      return "snova_public_map";
+    case OracleId::kSnovaKeyAlignment:
+      return "snova_key_alignment";
+    case OracleId::kSnovaRound2Terms:
+      return "snova_round2_terms";
+    case OracleId::kSnovaPublicExpansion:
+      return "snova_public_expansion";
+    case OracleId::kSnovaFixedAbq:
+      return "snova_fixed_abq";
+    case OracleId::kSnovaSskEskEquivalence:
+      return "snova_ssk_esk_equivalence";
+    case OracleId::kSnovaGaussRetry:
+      return "snova_gauss_retry";
+    case OracleId::kSnovaRngReplay:
+      return "snova_rng_replay";
+    case OracleId::kSnovaMalformedKeyState:
+      return "snova_malformed_key_state";
+    case OracleId::kSnovaBackendProfileGate:
+      return "snova_backend_profile_gate";
+    case OracleId::kSnovaFaultChecks:
+      return "snova_fault_checks";
+    case OracleId::kSnovaTimingResources:
+      return "snova_timing_resources";
     case OracleId::kUnknown:
       return "unknown";
   }
@@ -844,6 +972,72 @@ AlgorithmId AlgorithmIdFromName(const std::string &name) {
   }
   if (name == "CROSS-RSDPG-5-SMALL") {
     return AlgorithmId::kCrossRsdpg5Small;
+  }
+  if (name == "SNOVA-R2-37-17-16-2-AES") {
+    return AlgorithmId::kSnovaR2_37_17_2Aes;
+  }
+  if (name == "SNOVA-R2-37-17-16-2-SHAKE") {
+    return AlgorithmId::kSnovaR2_37_17_2Shake;
+  }
+  if (name == "SNOVA-R2-25-8-16-3-AES") {
+    return AlgorithmId::kSnovaR2_25_8_3Aes;
+  }
+  if (name == "SNOVA-R2-25-8-16-3-SHAKE") {
+    return AlgorithmId::kSnovaR2_25_8_3Shake;
+  }
+  if (name == "SNOVA-R2-24-5-16-4-AES") {
+    return AlgorithmId::kSnovaR2_24_5_4Aes;
+  }
+  if (name == "SNOVA-R2-24-5-16-4-SHAKE") {
+    return AlgorithmId::kSnovaR2_24_5_4Shake;
+  }
+  if (name == "SNOVA-R2-56-25-16-2-AES") {
+    return AlgorithmId::kSnovaR2_56_25_2Aes;
+  }
+  if (name == "SNOVA-R2-56-25-16-2-SHAKE") {
+    return AlgorithmId::kSnovaR2_56_25_2Shake;
+  }
+  if (name == "SNOVA-R2-49-11-16-3-AES") {
+    return AlgorithmId::kSnovaR2_49_11_3Aes;
+  }
+  if (name == "SNOVA-R2-49-11-16-3-SHAKE") {
+    return AlgorithmId::kSnovaR2_49_11_3Shake;
+  }
+  if (name == "SNOVA-R2-37-8-16-4-AES") {
+    return AlgorithmId::kSnovaR2_37_8_4Aes;
+  }
+  if (name == "SNOVA-R2-37-8-16-4-SHAKE") {
+    return AlgorithmId::kSnovaR2_37_8_4Shake;
+  }
+  if (name == "SNOVA-R2-24-5-16-5-AES") {
+    return AlgorithmId::kSnovaR2_24_5_5Aes;
+  }
+  if (name == "SNOVA-R2-24-5-16-5-SHAKE") {
+    return AlgorithmId::kSnovaR2_24_5_5Shake;
+  }
+  if (name == "SNOVA-R2-75-33-16-2-AES") {
+    return AlgorithmId::kSnovaR2_75_33_2Aes;
+  }
+  if (name == "SNOVA-R2-75-33-16-2-SHAKE") {
+    return AlgorithmId::kSnovaR2_75_33_2Shake;
+  }
+  if (name == "SNOVA-R2-66-15-16-3-AES") {
+    return AlgorithmId::kSnovaR2_66_15_3Aes;
+  }
+  if (name == "SNOVA-R2-66-15-16-3-SHAKE") {
+    return AlgorithmId::kSnovaR2_66_15_3Shake;
+  }
+  if (name == "SNOVA-R2-60-10-16-4-AES") {
+    return AlgorithmId::kSnovaR2_60_10_4Aes;
+  }
+  if (name == "SNOVA-R2-60-10-16-4-SHAKE") {
+    return AlgorithmId::kSnovaR2_60_10_4Shake;
+  }
+  if (name == "SNOVA-R2-29-6-16-5-AES") {
+    return AlgorithmId::kSnovaR2_29_6_5Aes;
+  }
+  if (name == "SNOVA-R2-29-6-16-5-SHAKE") {
+    return AlgorithmId::kSnovaR2_29_6_5Shake;
   }
   return AlgorithmId::kUnknown;
 }
@@ -1259,6 +1453,66 @@ OracleId OracleIdFromName(const std::string &name) {
   }
   if (name == "cross_timing") {
     return OracleId::kCrossTiming;
+  }
+  if (name == "snova_kat") {
+    return OracleId::kSnovaKat;
+  }
+  if (name == "snova_local_sign_verify") {
+    return OracleId::kSnovaLocalSignVerify;
+  }
+  if (name == "snova_cross_verify") {
+    return OracleId::kSnovaCrossVerify;
+  }
+  if (name == "snova_message_salt_binding") {
+    return OracleId::kSnovaMessageSaltBinding;
+  }
+  if (name == "snova_public_seed_binding") {
+    return OracleId::kSnovaPublicSeedBinding;
+  }
+  if (name == "snova_exact_lengths") {
+    return OracleId::kSnovaExactLengths;
+  }
+  if (name == "snova_nibble_encoding") {
+    return OracleId::kSnovaNibbleEncoding;
+  }
+  if (name == "snova_gf16_arithmetic") {
+    return OracleId::kSnovaGf16Arithmetic;
+  }
+  if (name == "snova_public_map") {
+    return OracleId::kSnovaPublicMap;
+  }
+  if (name == "snova_key_alignment") {
+    return OracleId::kSnovaKeyAlignment;
+  }
+  if (name == "snova_round2_terms") {
+    return OracleId::kSnovaRound2Terms;
+  }
+  if (name == "snova_public_expansion") {
+    return OracleId::kSnovaPublicExpansion;
+  }
+  if (name == "snova_fixed_abq") {
+    return OracleId::kSnovaFixedAbq;
+  }
+  if (name == "snova_ssk_esk_equivalence") {
+    return OracleId::kSnovaSskEskEquivalence;
+  }
+  if (name == "snova_gauss_retry") {
+    return OracleId::kSnovaGaussRetry;
+  }
+  if (name == "snova_rng_replay") {
+    return OracleId::kSnovaRngReplay;
+  }
+  if (name == "snova_malformed_key_state") {
+    return OracleId::kSnovaMalformedKeyState;
+  }
+  if (name == "snova_backend_profile_gate") {
+    return OracleId::kSnovaBackendProfileGate;
+  }
+  if (name == "snova_fault_checks") {
+    return OracleId::kSnovaFaultChecks;
+  }
+  if (name == "snova_timing_resources") {
+    return OracleId::kSnovaTimingResources;
   }
   return OracleId::kUnknown;
 }

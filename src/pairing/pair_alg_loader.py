@@ -91,6 +91,25 @@ _PROFILE_ALGORITHM_FIELDS = (
     "api_header",
     "kat_response",
     "kat_sk_field",
+    # SNOVA family fields.  sk_len_variants lets the pair file declare the
+    # seed (SSK, 48 bytes) and expanded (ESK) private-key storage formats while
+    # keeping one public/signature algorithm identity.
+    "snova_v",
+    "snova_o",
+    "snova_l",
+    "backend",
+    "pk_expand_shake",
+    "fixed_abq",
+    "n_matrices",
+    "m_matrix",
+    "alpha_terms",
+    "sq_rank",
+    "sk_len_variants",
+    "signature_data_bytes",
+    "public_seed_bytes",
+    "private_seed_bytes",
+    "hash_nibbles",
+    "hash_bytes",
 )
 
 

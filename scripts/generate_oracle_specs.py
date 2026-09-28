@@ -35,6 +35,7 @@ FIPS_FILES = [
     "ntru.json",
     "sike.json",
     "sidh.json",
+    "snova.json",
 ]
 METAMORPHIC_FILES = [
     "metamorphic_kem.json",

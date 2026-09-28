@@ -155,3 +155,19 @@ same envelope/oracle pipeline:
   keygen draw from seed-derived deterministic tapes, so recorded findings
   replay bit-identically. Hedged *signing* randomness is only controlled by
   the `*_badrng` oracles; deterministic signers (Aigis-Sig) replay fully.
+
+## SNOVA support
+
+SNOVA round-2 (`src/config/scheme_profiles/snova.json`, AlgorithmIds 96-117,
+oracle IDs 140-159) has its own layout/mutator
+(`src/mutators/snova_layout.*`, `snova_mutator.*`), adapter
+(`src/adapters/snova/sig_adapter.*`, registering both SSK and ESK storage
+formats from one object), executor (`src/oracles/snova_executor.*`), envelope
+and structured-recipe fields (42-48) and an independent GF16/public-map model
+(`tests/models/snova_model.py`). Oracle claims follow the SNOVA round-2
+submission specification (`plans/specs/snova-round2-spec.pdf`), not FIPS
+203/204/205. `scripts/pqcfuzz_snova_eval.sh` drives
+`build | preflight | smoke | run | report` under `workspace/snova/`, and
+`tests/snova_oracles_test.py` + `tests/snova_model_test.py` cover routing, the
+official KAT subset, honest target runs, fake-adapter detection and the model
+differential lanes. The P2 fault/timing lanes are opt-in.

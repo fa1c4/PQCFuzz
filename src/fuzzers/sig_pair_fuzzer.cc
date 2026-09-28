@@ -11,10 +11,13 @@
 #include "mutators/falcon_layout.h"
 #include "mutators/ml_dsa_layout.h"
 #include "mutators/slh_dsa_layout.h"
+#include "mutators/snova_layout.h"
+#include "adapters/snova/sig_adapter.h"
 #include "oracles/cross_executor.h"
 #include "oracles/falcon_executor.h"
 #include "oracles/metamorphic_executor.h"
 #include "oracles/oracle_executor.h"
+#include "oracles/snova_executor.h"
 #include "runtime/adapter_registry.h"
 #include "triage/finding_writer.h"
 #include "triage/oracle_coverage.h"
@@ -79,6 +82,12 @@
 #define PQCFUZZ_PUBLIC_KEY_EXCHANGE 1
 #endif
 
+// Left-side private-key length for families whose ABI depends on the storage
+// format (SNOVA SSK=48 / ESK=profile-dependent). Zero means profile default.
+#ifndef PQCFUZZ_EXPECTED_SK_LEN
+#define PQCFUZZ_EXPECTED_SK_LEN 0
+#endif
+
 namespace {
 
 std::string ReadConfigText() {
@@ -115,13 +124,15 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   pqcfuzz::AigisSigParams aigis_sig_params{};
   pqcfuzz::CrossParams cross_params{};
   pqcfuzz::FalconParams falcon_params{};
+  pqcfuzz::SnovaParams snova_params{};
   const bool is_falcon = pqcfuzz::GetFalconParams(expected_algorithm, &falcon_params);
   const bool is_cross = pqcfuzz::GetCrossParams(expected_algorithm, &cross_params);
   const bool is_aigis = pqcfuzz::GetAigisSigParams(expected_algorithm, &aigis_sig_params);
+  const bool is_snova = pqcfuzz::GetSnovaParams(expected_algorithm, &snova_params);
   if (is_aigis) {
     params = {aigis_sig_params.algorithm, aigis_sig_params.pk_len,
               aigis_sig_params.sk_len, aigis_sig_params.sig_max_len};
-  } else if (!is_cross && !is_falcon && !pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
+  } else if (!is_cross && !is_falcon && !is_snova && !pqcfuzz::GetMlDsaParams(expected_algorithm, &params)) {
     return 0;
   }
   static const pqcfuzz_sig_adapter *const target =
@@ -138,6 +149,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     expected_pk_len = falcon_params.pk_len;
     expected_sk_len = falcon_params.sk_len;
     expected_sig_max_len = falcon_params.sig_max_len;
+  } else if (is_snova) {
+    expected_pk_len = snova_params.pk_len;
+    expected_sk_len = PQCFUZZ_EXPECTED_SK_LEN != 0 ? static_cast<size_t>(PQCFUZZ_EXPECTED_SK_LEN)
+                                                   : snova_params.ssk_len;
+    expected_sig_max_len = snova_params.sig_max_len;
   }
   const pqcfuzz::AdapterRoutingExpectation expected_routing{
       PQCFUZZ_LEFT_PROJECT_ID, PQCFUZZ_EXPECTED_IMPLEMENTATION_ID, expected_algorithm,
@@ -146,7 +162,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
-  if ((is_cross || is_falcon) && std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
+  if ((is_cross || is_falcon || is_snova) && std::string(PQCFUZZ_ORACLE_SUITE) == "metamorphic") {
     pqcfuzz::RecordRoutingRejected(PQCFUZZ_RESULT_DIR);
     return 0;
   }
@@ -180,6 +196,23 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     config.message = envelope.msg.empty() ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'} : envelope.msg;
     config.mutation = envelope.mutation;
     trace = pqcfuzz::ExecuteCrossOracle(config);
+  } else if (is_snova) {
+    pqcfuzz::SnovaOracleConfig config;
+    config.job_id = PQCFUZZ_JOB_ID;
+    config.pair_id = PQCFUZZ_PAIR_ID;
+    config.algorithm = expected_algorithm;
+    config.oracle_id = pqcfuzz::OracleName(envelope.oracle_id);
+    config.params = snova_params;
+    config.left = target;
+    config.left_api = pqcfuzz_get_snova_api(PQCFUZZ_EXPECTED_IMPLEMENTATION_ID);
+    config.right = pqcfuzz::GetSigAdapterByProjectAndId(PQCFUZZ_RIGHT_PROJECT_ID, PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
+    config.right_api = pqcfuzz_get_snova_api(PQCFUZZ_RIGHT_IMPLEMENTATION_ID);
+    config.public_key_exchange = PQCFUZZ_PUBLIC_KEY_EXCHANGE != 0;
+    config.signature_exchange = PQCFUZZ_SIGNATURE_EXCHANGE != 0;
+    config.seed = envelope.seed;
+    config.message = envelope.msg.empty() ? std::vector<uint8_t>{'P', 'Q', 'C', 'F', 'u', 'z', 'z'} : envelope.msg;
+    config.mutation = envelope.mutation;
+    trace = pqcfuzz::ExecuteSnovaOracle(config);
   } else if (is_falcon) {
     pqcfuzz::FalconOracleConfig config;
     config.job_id = PQCFUZZ_JOB_ID;

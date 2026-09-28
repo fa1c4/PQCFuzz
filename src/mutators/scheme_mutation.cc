@@ -143,6 +143,20 @@ const char *SchemeMutationFieldName(SchemeMutationField field) {
       return "sidh.secret_key.scalar_b";
     case SchemeMutationField::kSidhPeerPublicKey:
       return "sidh.peer_public_key";
+    case SchemeMutationField::kSnovaSignatureNibble:
+      return "snova.signature.nibble";
+    case SchemeMutationField::kSnovaSignatureSalt:
+      return "snova.signature.salt";
+    case SchemeMutationField::kSnovaPublicKeySpublic:
+      return "snova.public_key.spublic";
+    case SchemeMutationField::kSnovaPublicKeyP22Nibble:
+      return "snova.public_key.p22_nibble";
+    case SchemeMutationField::kSnovaPrivateKeyPkSeed:
+      return "snova.private_key.pk_seed";
+    case SchemeMutationField::kSnovaPrivateKeySkSeed:
+      return "snova.private_key.sk_seed";
+    case SchemeMutationField::kSnovaPrivateKeyExpandedByte:
+      return "snova.private_key.expanded_byte";
   }
   return "unknown";
 }

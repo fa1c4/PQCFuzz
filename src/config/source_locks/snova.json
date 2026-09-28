@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "family": "SNOVA",
+  "spec": {
+    "path": "plans/specs/snova-round2-spec.pdf",
+    "sha256": "7266dc2a8de1cfcf34f6933e0d6c886b9b23affd19ac88a270bc54b1ea59ba6e",
+    "revision": "SNOVA round 2, version 2.0 (January 25, 2025)",
+    "pdf_pages": 67,
+    "pdf_page_offset": 0
+  },
+  "sources": [
+    {
+      "name": "pqclab-snova-round2",
+      "url": "https://github.com/PQCLAB-SNOVA/SNOVA",
+      "commit": "13182903755ade177e02d1fea77f0bd2e1e1a280",
+      "commit_subject": "NIST Round2 version (2025-02-16)",
+      "archive_url": "https://github.com/PQCLAB-SNOVA/SNOVA/archive/13182903755ade177e02d1fea77f0bd2e1e1a280.tar.gz",
+      "archive_sha256": "d9621703ea7580e9be9376d2f0866c210ceb269b981aba8ffd8756e97cba699b",
+      "version": "round-2 reference implementation",
+      "license": "MIT",
+      "vendored_path": "projects/SNOVA/reference",
+      "build_model": "reference path only: -D OPTIMISATION=0 -D FIXED_ABQ=2; one translation-unit set per parameter set/backend/sk format",
+      "vendored_files": [
+        "api.h",
+        "snova.h",
+        "snova.c",
+        "snova_kernel.h",
+        "sign.c",
+        "deriv_params.h",
+        "params.h",
+        "gf16.h",
+        "gf16_init.h",
+        "gf16_matrix.h",
+        "gf16_matrix_inline.h",
+        "ct_functions.c",
+        "ct_functions.h",
+        "util/util.h",
+        "shake/KeccakHash.c",
+        "shake/KeccakHash.h",
+        "shake/KeccakP-1600-opt64.c",
+        "shake/KeccakSponge.c",
+        "shake/SimpleFIPS202.c",
+        "shake/snova_shake.h",
+        "shake/snova_shake_ref.c",
+        "aes/aes_c.c",
+        "aes/aes_local.h",
+        "aes/aes_ops.h",
+        "aes/aes.h",
+        "aes/snova_aes.c",
+        "aes/snova_aes.h",
+        "nistkat/rng.c",
+        "nistkat/rng.h",
+        "nistkat/PQCgenKAT_sign.c"
+      ],
+      "file_sha256": {
+        "snova.c": "c37eae91b908933528ed8532ed38ef7098b103cd717378ffd5db395a6a5673ec",
+        "snova_kernel.h": "4a8adb94661c95ee5ca13ac4de01debf8023f7f95713be05acf84223a9267f1a",
+        "deriv_params.h": "85c93a713c7b8747b17702c2fedd9dbbb007f7a98c4bdeeb2ae9308595236168",
+        "sign.c": "87be6b5d4d92a3012f5f14a52b14a362188cfcbfe751399c6370797b4878b18d",
+        "shake/snova_shake_ref.c": "cb3e24f48bca0964d0a913364011b1ac1f8cdc6baa248a57370916cfacbb7110",
+        "aes/snova_aes.c": "c932cae8b40199ebaabd9c002a0c885f9926345905b3c2f2713c6ecb8d498998"
+      },
+      "status": "vendored",
+      "notes": [
+        "The pinned HEAD of pqclab-snova/SNOVA is round 3; this lock deliberately stays on the round-2 commit that matches plans/specs/snova-round2-spec.pdf",
+        "Only the reference path is built; snova_plasma/optimised/AVX2 code is vendored but not linked, so cross-implementation oracles compare SSK/ESK storage formats rather than distinct implementations",
+        "The pinned round-2 source regenerates the official SNOVA_KAT count=0 responses byte-for-byte for the inspected profile"
+      ]
+    },
+    {
+      "name": "pqclab-snova-kat-round2",
+      "url": "https://github.com/PQCLAB-SNOVA/SNOVA_KAT",
+      "commit": "a1bf39dc59c14a3348c27d66aa5197fc22041a56",
+      "archive_url": "https://github.com/PQCLAB-SNOVA/SNOVA_KAT/archive/a1bf39dc59c14a3348c27d66aa5197fc22041a56.tar.gz",
+      "archive_sha256": "0e9ba2d8f4aa3f4dcf03327df96130af120e7ce9d04b6607ae4e7f097d946178",
+      "version": "round-2 KAT responses",
+      "license": "MIT",
+      "vendored_path": "",
+      "status": "not-vendored",
+      "notes": [
+        "Official response files are ~20 MB each; scripts/generate_snova_fixtures.py extracts the count=0 record for all 44 parameter-set/backend/sk-format combinations into tests/fixtures/snova/kat_reference.json",
+        "The 75/33/2 responses are gzip-compressed in the upstream repository and are hashed in compressed form"
+      ]
+    }
+  ],
+  "spec_interpretations": [
+    {
+      "location": "p.25 vectorization example",
+      "issue": "the expanded listing appears to omit some matrix elements",
+      "resolution": "the model uses all l^2 row-major entries and checks them against equations (1.1)/(1.2) on p.26"
+    },
+    {
+      "location": "Algorithm 10 p.27 and Algorithm 11 p.28",
+      "issue": "using l^2+l-1 as a ti/tj loop bound would run past an l^2 x l^2 coefficient matrix",
+      "resolution": "the alpha term count is l^2+l; the model derives 0<=ti,tj<l^2 from the p.26 matrix equation and the linear-system dimension"
+    },
+    {
+      "location": "Algorithm 11 p.28 target vector range",
+      "issue": "the printed row count adds an extra +l",
+      "resolution": "the row count follows the m*l^2 equations of the coefficient system"
+    },
+    {
+      "location": "p.29 signature vector and Algorithm 13 p.30",
+      "issue": "the signature should carry n=v+o matrices rather than m, and i' must be computed inside each (i,alpha) term",
+      "resolution": "the model follows the pinned source: n signature matrices, i'=(i+alpha)%m inside the term loop, alpha in [0,l^2+l)"
+    },
+    {
+      "location": "Algorithm 5 p.22 ABQ expansion",
+      "issue": "the prose/formula uses Ai,alpha while the expanded pseudocode omits some i indices",
+      "resolution": "the expansion order is locked to the pinned round-2 source/KAT rather than guessed; source file/line locations are recorded in this lock"
+    },
+    {
+      "location": "p.23 fixed ABQ seed",
+      "issue": "the plan and one PDF reading use the 9-byte string \"SNOVA ABQ\" (with a space)",
+      "resolution": "the pinned round-2 source calls gen_ABQ(\"SNOVA_ABQ\") with an underscore; the source regenerates the official KAT, so the underscore string is authoritative for the fixed-ABQ model"
+    }
+  ],
+  "kat": {
+    "status": "official_kat_fixture",
+    "official_kat_available": true,
+    "fixture_path": "tests/fixtures/snova/kat_reference.json",
+    "fixture_sha256": "14c0108669155d870b140fedc3c6d7b56e72d6562751692f9aa75844a81c1d72",
+    "extraction_script": "scripts/generate_snova_fixtures.py",
+    "source_repository": "https://github.com/PQCLAB-SNOVA/SNOVA_KAT",
+    "source_commit": "a1bf39dc59c14a3348c27d66aa5197fc22041a56",
+    "record": "count=0 for all 11 parameter sets x {AES,SHAKE} x {SSK,ESK}",
+    "notes": [
+      "The fixture is regenerable with a checkout of the pinned KAT commit; every response-file SHA-256 is embedded in the fixture",
+      "The 75/33/2 SHAKE-ESK and AES-ESK source responses are stored gzip-compressed upstream and hashed in that form"
+    ]
+  }
+}

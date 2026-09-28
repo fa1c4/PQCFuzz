@@ -29,9 +29,10 @@ differential fuzzing for:
 - SLH-DSA-SHA2-256f
 - SLH-DSA-SHAKE-256f
 
-A second active scope adds the Aigis (PQMagic) and CROSS families; see the
-Aigis and CROSS workflow sections below. CROSS test claims cite the CROSS
-round-2 submission specification, not FIPS 203/204/205.
+A second active scope adds the Aigis (PQMagic), CROSS, NTRU, Falcon, SIKE/SIDH
+and SNOVA families; see their workflow sections below. CROSS and SNOVA test
+claims cite the corresponding round-2 submission specifications, not FIPS
+203/204/205.
 
 The active path uses externally supplied implementation-pair metadata. It does
 not infer whether projects share provenance or are independently maintained.
@@ -222,6 +223,53 @@ Limitations: the submission archive has no official KAT response files (fixtures
 are reference-derived); only the single pinned reference build is vendored, so
 `cross_cross_verify` is disabled rather than faked; and the P2 timing/fault lanes
 are opt-in. Reports never claim IND-CCA/EUF/sUF or quantum security.
+
+## SNOVA Workflow
+
+PQCFuzz fuzzes the pinned SNOVA round-2 reference implementation vendored at
+`projects/SNOVA/reference` (commit `13182903…`, archive SHA-256 in
+`src/config/source_locks/snova.json`; the upstream HEAD is round 3 and is
+deliberately not followed). The 11 parameter sets × {AES, SHAKE} public-key
+expansion backends get AlgorithmIds 96-117, oracle IDs 140-159, a dedicated
+layout/mutator/executor and an independent Python model. SSK (48-byte seed) and
+ESK (expanded) private-key storage formats are both registered from one adapter
+object, so an SSK-vs-ESK pair exercises the storage-format equivalence oracles
+without exchanging private-key buffers.
+
+```bash
+# Validate the explicit pair file and materialize SNOVA jobs:
+python3 src/pairing/validate_pair_alg.py --pair-alg src/config/pair_alg.snova.json
+python3 src/jobs/generate_jobs.py --pair-alg src/config/pair_alg.snova.json \
+  --algorithm-family SNOVA --oracle-suite fips --jobs-dir workspace/snova/jobs
+
+# Build the sanitizer fuzzers/replays, preflight every oracle, run a smoke
+# campaign, and write workspace/snova/report/summary.{json,md}:
+scripts/pqcfuzz_snova_eval.sh build
+scripts/pqcfuzz_snova_eval.sh preflight
+scripts/pqcfuzz_snova_eval.sh smoke
+scripts/pqcfuzz_snova_eval.sh report
+
+# Longer campaign (per-job seconds):
+MAX_TOTAL_TIME=3600 scripts/pqcfuzz_snova_eval.sh run
+```
+
+The pinned source regenerates the official `PQCLAB-SNOVA/SNOVA_KAT` round-2
+count=0 responses byte-for-byte; `tests/fixtures/snova/kat_reference.json`
+records the seed/message/public key/signed message (expanded secret keys are
+bound by SHA-256) and is regenerable with
+`python3 scripts/generate_snova_fixtures.py --kat-root <SNOVA_KAT checkout>`.
+The independent model (`tests/models/snova_model.py`) covers GF16
+`x^4+x+1` arithmetic, the nibble codecs, AES-128-CTR and indexed-SHAKE128
+expansion (including the fixed `SHAKE256("SNOVA_ABQ")` block for l≤3), the
+round-2 T/F/P relations, the full l²+l public map and a GF16 Gaussian solver,
+and is differentially checked against the real adapter for the (24,5,4) and
+fixed-ABQ profiles. P2 fault/timing lanes are opt-in; reports never claim
+IND-CCA, EUF-CMA, sUF or quantum security.
+
+The `snova_public_expansion` model lane locks the AES counter convention to
+the pinned `aes_c.c` and treats SNOVA_SHAKE as indexed `SHAKE128(seed ||
+LE64(i))`, not a continuous XOF. Accepted nonzero input padding nibbles are
+reported as byte-alias observations, never as EUF forgeries.
 
 ## SIKE/SIDH Workflow
 

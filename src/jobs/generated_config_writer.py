@@ -146,6 +146,49 @@ def cross_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
     return subtests
 
 
+def oracle_ids_for_snova() -> list[str]:
+    # Default (P0/P1) SNOVA oracles.  The P2 fault and timing lanes are opt-in
+    # only and stay out of the default schedule.
+    return [
+        "snova_kat",
+        "snova_local_sign_verify",
+        "snova_cross_verify",
+        "snova_message_salt_binding",
+        "snova_public_seed_binding",
+        "snova_exact_lengths",
+        "snova_nibble_encoding",
+        "snova_gf16_arithmetic",
+        "snova_public_map",
+        "snova_key_alignment",
+        "snova_round2_terms",
+        "snova_public_expansion",
+        "snova_fixed_abq",
+        "snova_ssk_esk_equivalence",
+        "snova_gauss_retry",
+        "snova_rng_replay",
+        "snova_malformed_key_state",
+        "snova_backend_profile_gate",
+    ]
+
+
+def snova_enabled_subtests(pair: dict[str, Any]) -> list[dict[str, Any]]:
+    contract = pair["exchange_contract"]
+    cross_verify_enabled = contract["public_key_exchange"] and contract["signature_exchange"]
+    subtests: list[dict[str, Any]] = []
+    for oracle_id in oracle_ids_for_snova():
+        entry: dict[str, Any] = {
+            "subtest_id": oracle_id,
+            "oracle_id": oracle_id,
+            "required_exchange": [],
+            "enabled": True,
+        }
+        if oracle_id == "snova_cross_verify":
+            entry["required_exchange"] = ["public_key_exchange", "signature_exchange"]
+            entry["enabled"] = cross_verify_enabled
+        subtests.append(entry)
+    return subtests
+
+
 def oracle_ids_for_falcon() -> list[str]:
     # Default (P0/P1) Falcon oracles.  The P2 fault and timing lanes are
     # opt-in only and stay out of the default schedule.
@@ -305,6 +348,8 @@ def oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
         return oracle_ids_for_falcon()
     if family == "CROSS":
         return oracle_ids_for_cross()
+    if family == "SNOVA":
+        return oracle_ids_for_snova()
     if family == "AIGIS-ENC":
         return oracle_ids_for_aigis_enc()
     if family == "AIGIS-SIG":
@@ -330,6 +375,8 @@ def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
         return "src/oracles/specs/falcon.json"
     if family == "CROSS":
         return "src/oracles/specs/cross.json"
+    if family == "SNOVA":
+        return "src/oracles/specs/snova.json"
     if family == "AIGIS-ENC":
         return "src/oracles/specs/aigis_enc.json"
     if family == "AIGIS-SIG":
@@ -344,8 +391,8 @@ def oracle_spec_for_pair(pair: dict[str, Any]) -> str:
 
 
 def metamorphic_oracle_ids_for_pair(pair: dict[str, Any]) -> list[str]:
-    if pair["algorithm_family"] in ("SIKE", "SIDH"):
-        raise ValueError("SIKE/SIDH have no metamorphic oracle suite")
+    if pair["algorithm_family"] in ("SIKE", "SIDH", "SNOVA", "CROSS", "FALCON", "NTRU"):
+        raise ValueError(f"{pair['algorithm_family']} has no metamorphic oracle suite")
     if pair["algorithm_family"] == "SLH-DSA":
         raise ValueError("SLH-DSA jobs are disabled until a supported adapter is available")
     if pair["primitive_type"] == "kem":
@@ -488,6 +535,26 @@ ORACLE_ENUM_BY_NAME = {
     "cross_parallel_arithmetic": 136,
     "cross_fault_seed_disclosure": 137,
     "cross_timing": 138,
+    "snova_kat": 140,
+    "snova_local_sign_verify": 141,
+    "snova_cross_verify": 142,
+    "snova_message_salt_binding": 143,
+    "snova_public_seed_binding": 144,
+    "snova_exact_lengths": 145,
+    "snova_nibble_encoding": 146,
+    "snova_gf16_arithmetic": 147,
+    "snova_public_map": 148,
+    "snova_key_alignment": 149,
+    "snova_round2_terms": 150,
+    "snova_public_expansion": 151,
+    "snova_fixed_abq": 152,
+    "snova_ssk_esk_equivalence": 153,
+    "snova_gauss_retry": 154,
+    "snova_rng_replay": 155,
+    "snova_malformed_key_state": 156,
+    "snova_backend_profile_gate": 157,
+    "snova_fault_checks": 158,
+    "snova_timing_resources": 159,
 }
 
 SECURITY_TIER_ORACLES = {"kem_decaps_c", "sig_verify_m", "sig_verify_sig", "sig_verify_pk"}
@@ -631,6 +698,8 @@ def enabled_subtests_for_pair(pair: dict[str, Any]) -> list[dict[str, Any]]:
         return falcon_enabled_subtests(pair)
     if family == "CROSS":
         return cross_enabled_subtests(pair)
+    if family == "SNOVA":
+        return snova_enabled_subtests(pair)
     if family == "AIGIS-ENC":
         return kem_enabled_subtests(pair["exchange_contract"], "aigisenc")
     if family == "ML-KEM":

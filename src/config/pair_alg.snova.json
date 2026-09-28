@@ -1,0 +1,1259 @@
+{
+  "version": 1,
+  "pairs": [
+    {
+      "pair_id": "snova_r2_37_17_2_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-37-17-16-2-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 9842,
+          "sk_len": 48,
+          "sig_max_len": 124
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 9842,
+          "sk_len": 91440,
+          "sig_max_len": 124
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_37_17_2_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-37-17-16-2-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 9842,
+          "sk_len": 48,
+          "sig_max_len": 124
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 9842,
+          "sk_len": 91440,
+          "sig_max_len": 124
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_25_8_3_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-25-8-16-3-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2320,
+          "sk_len": 48,
+          "sig_max_len": 165
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2320,
+          "sk_len": 39576,
+          "sig_max_len": 165
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_25_8_3_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-25-8-16-3-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2320,
+          "sk_len": 48,
+          "sig_max_len": 165
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2320,
+          "sk_len": 39576,
+          "sig_max_len": 165
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_24_5_4_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-24-5-16-4-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1016,
+          "sk_len": 48,
+          "sig_max_len": 248
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1016,
+          "sk_len": 36848,
+          "sig_max_len": 248
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_24_5_4_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-24-5-16-4-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1016,
+          "sk_len": 48,
+          "sig_max_len": 248
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1016,
+          "sk_len": 36848,
+          "sig_max_len": 248
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_56_25_2_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-56-25-16-2-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 31266,
+          "sk_len": 48,
+          "sig_max_len": 178
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 31266,
+          "sk_len": 300848,
+          "sig_max_len": 178
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_56_25_2_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-56-25-16-2-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 31266,
+          "sk_len": 48,
+          "sig_max_len": 178
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 31266,
+          "sk_len": 300848,
+          "sig_max_len": 178
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_49_11_3_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-49-11-16-3-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 6006,
+          "sk_len": 48,
+          "sig_max_len": 286
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 6006,
+          "sk_len": 177060,
+          "sig_max_len": 286
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_49_11_3_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-49-11-16-3-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 6006,
+          "sk_len": 48,
+          "sig_max_len": 286
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 6006,
+          "sk_len": 177060,
+          "sig_max_len": 286
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_37_8_4_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-37-8-16-4-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 4112,
+          "sk_len": 48,
+          "sig_max_len": 376
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 4112,
+          "sk_len": 133040,
+          "sig_max_len": 376
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_37_8_4_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-37-8-16-4-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 4112,
+          "sk_len": 48,
+          "sig_max_len": 376
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 4112,
+          "sk_len": 133040,
+          "sig_max_len": 376
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_24_5_5_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-24-5-16-5-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1579,
+          "sk_len": 48,
+          "sig_max_len": 379
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1579,
+          "sk_len": 60048,
+          "sig_max_len": 379
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_24_5_5_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-24-5-16-5-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1579,
+          "sk_len": 48,
+          "sig_max_len": 379
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 1579,
+          "sk_len": 60048,
+          "sig_max_len": 379
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_75_33_2_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-75-33-16-2-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 71890,
+          "sk_len": 48,
+          "sig_max_len": 232
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 71890,
+          "sk_len": 704532,
+          "sig_max_len": 232
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_75_33_2_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-75-33-16-2-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 71890,
+          "sk_len": 48,
+          "sig_max_len": 232
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 71890,
+          "sk_len": 704532,
+          "sig_max_len": 232
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_66_15_3_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-66-15-16-3-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 15204,
+          "sk_len": 48,
+          "sig_max_len": 381
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 15204,
+          "sk_len": 435423,
+          "sig_max_len": 381
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_66_15_3_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-66-15-16-3-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 15204,
+          "sk_len": 48,
+          "sig_max_len": 381
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 15204,
+          "sk_len": 435423,
+          "sig_max_len": 381
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_60_10_4_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-60-10-16-4-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 8016,
+          "sk_len": 48,
+          "sig_max_len": 576
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 8016,
+          "sk_len": 395248,
+          "sig_max_len": 576
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_60_10_4_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-60-10-16-4-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 8016,
+          "sk_len": 48,
+          "sig_max_len": 576
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 8016,
+          "sk_len": 395248,
+          "sig_max_len": 576
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_29_6_5_aes_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-29-6-16-5-AES",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2716,
+          "sk_len": 48,
+          "sig_max_len": 454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2716,
+          "sk_len": 100398,
+          "sig_max_len": 454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    },
+    {
+      "pair_id": "snova_r2_29_6_5_shake_ssk_vs_esk",
+      "algorithm": "SNOVA-R2-29-6-16-5-SHAKE",
+      "primitive_type": "sig",
+      "left": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_ssk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2716,
+          "sk_len": 48,
+          "sig_max_len": 454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "right": {
+        "project_id": "snova",
+        "project_name": "SNOVA round-2 reference implementation",
+        "implementation_id": "snova_reference_esk",
+        "api_names": {
+          "keygen": "crypto_sign_keypair",
+          "sign": "crypto_sign",
+          "verify": "crypto_sign_open",
+          "sign_seeded": "sign_digest_ssk/sign_digest_esk with explicit salt"
+        },
+        "reference_version": "nist-round2-13182903755ade177e02d1fea77f0bd2e1e1a280",
+        "abi": {
+          "pk_len": 2716,
+          "sk_len": 100398,
+          "sig_max_len": 454
+        },
+        "capabilities": {
+          "supports_context": false,
+          "supports_seeded_sign": true,
+          "supports_deterministic_sign": false,
+          "supports_signed_message": false
+        }
+      },
+      "exchange_contract": {
+        "public_key_exchange": true,
+        "signature_exchange": true
+      },
+      "provenance_relation": "same-source-ssk-vs-esk",
+      "status": "enabled"
+    }
+  ]
+}

@@ -75,11 +75,21 @@ enum class SchemeMutationField : uint8_t {
   kSidhSecretKeyScalarA = 39,
   kSidhSecretKeyScalarB = 40,
   kSidhPeerPublicKey = 41,
+  // SNOVA fields (append-only).  The signature is a stream of GF16 nibbles, so
+  // the matrix field selects a nibble index and uses kSetCoefficient with aux
+  // as the replacement value.
+  kSnovaSignatureNibble = 42,
+  kSnovaSignatureSalt = 43,
+  kSnovaPublicKeySpublic = 44,
+  kSnovaPublicKeyP22Nibble = 45,
+  kSnovaPrivateKeyPkSeed = 46,
+  kSnovaPrivateKeySkSeed = 47,
+  kSnovaPrivateKeyExpandedByte = 48,
 };
 
 // Last registered field value; used by the decoder's whitelist so appending a
 // new family cannot accidentally accept an imaginary enum byte.
-constexpr uint8_t kLastSchemeMutationField = 41;
+constexpr uint8_t kLastSchemeMutationField = 48;
 
 struct SchemeMutation {
   SchemeMutationOp op = SchemeMutationOp::kNone;
