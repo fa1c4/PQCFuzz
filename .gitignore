@@ -17,6 +17,8 @@ __pycache__/
 # Local upstream project checkouts
 projects/*
 !projects/download_pqlibs.sh
+!projects/download_ngcc_targets.sh
+!projects/ngcc_targets.json
 !projects/.gitkeep
 
 # PQCFuzz runtime workspace artifacts
@@ -33,7 +35,12 @@ leak-*
 oom-*
 timeout-*
 
-plans/
 results/
 third_party/
 configs/
+
+# Registered target declarations and the checked-in demo fixture
+!configs/
+!configs/targets.json
+!third_party/
+third_party/*

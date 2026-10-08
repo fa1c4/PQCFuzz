@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "target": "demo-stream-hash",
+  "algorithm": "DEMO-HASH",
+  "primitive": "hash",
+  "parameter_set": "sha256-demo",
+  "api": "stream",
+  "profiles": [
+    "healthy",
+    "injected"
+  ],
+  "source_digest": "d108f4e6ba99e181c2bdd48356bce6d7d2f901f69031ce42159d9340a46e8912",
+  "spec_sha256": "cd8adf7b610aee705131cceeac7336f5ec1e1f7554a26209c4ce118bf5f64452",
+  "adapter": "implement/adapter.py",
+  "capabilities": {
+    "streaming": true,
+    "rng_control": false,
+    "fault_injection": true,
+    "intermediate_state": false,
+    "decapsulation_failure": false
+  },
+  "oracles": [
+    {
+      "id": "DH-STREAM-01",
+      "version": 1,
+      "claim": "S1",
+      "property": "H07",
+      "property_version": 1,
+      "pattern": "P4",
+      "pattern_version": 1,
+      "design": "design/DEMO-HASH/stream/DH-STREAM-01.md",
+      "oracle": "implement/oracle.py",
+      "mutator": "implement/mutator/chunk_split.py",
+      "required_capabilities": [
+        "streaming"
+      ],
+      "applicable_primitives": [
+        "hash"
+      ]
+    }
+  ]
+}

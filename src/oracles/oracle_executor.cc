@@ -2337,9 +2337,16 @@ KEMOracleTrace ExecuteKemOracle(const OracleExecutorConfig &config) {
   } else if (config.oracle_id == rng_failure_oracle) {
     auto subtests = KemRngFailureOracle(config, config.oracle_id);
     trace.subtests.insert(trace.subtests.end(), subtests.begin(), subtests.end());
-  } else {
+  } else if (config.oracle_id == local_oracle) {
     trace.subtests.push_back(LocalRoundtrip("left_keygen_left_encaps_left_decaps", local_oracle, "left", config.left));
     trace.subtests.push_back(LocalRoundtrip("right_keygen_right_encaps_right_decaps", local_oracle, "right", config.right));
+  } else {
+    trace.diagnostic_event = "harness_error: unknown oracle id: " + config.oracle_id;
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
   }
 
   AddFindingsForFailures(&trace);
@@ -2468,11 +2475,18 @@ KEMOracleTrace ExecuteSigOracle(const SigOracleExecutorConfig &config) {
   } else if (std::string(traits->name) == "ML-DSA" && config.oracle_id == oid_oracle) {
     trace.subtests.push_back(
         SigNegative(config, "oid_field_mutation_sanity", config.oracle_id, *traits, params, &trace.mutations, false, false, false, true));
-  } else {
+  } else if (config.oracle_id == local_oracle) {
     trace.subtests.push_back(SigLocalSignVerify(
         "left_keygen_left_sign_left_verify", local_trace_oracle, "left", config.left, config.message, config.context));
     trace.subtests.push_back(SigLocalSignVerify(
         "right_keygen_right_sign_right_verify", local_trace_oracle, "right", config.right, config.message, config.context));
+  } else {
+    trace.diagnostic_event = "harness_error: unknown oracle id: " + config.oracle_id;
+    trace.diagnostics.push_back({"harness_error", "executor", trace.diagnostic_event});
+    trace.relation_evaluable = false;
+    trace.intervention_supported = false;
+    trace.intervention_effective = false;
+    return trace;
   }
 
   for (const auto &mutation : trace.mutations) {

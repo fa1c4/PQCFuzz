@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate C++ oracle-record tables from the JSON oracle specs.
 
-The JSON files under src/oracles/specs/ are the source of truth for oracle
+For legacy built-in targets, JSON files under src/oracles/specs/ are inputs for oracle
 claims, evidence classes, source references, limitations, and execution
 metadata.  This script materializes them into checked-in C++ include files so
-the runtime does not need a JSON dependency.
+the legacy runtime does not need a JSON dependency. New target oracle
+packages are generated under oracles/<target-name>/ as specified by the
+architecture.
 
 Usage:
     python3 scripts/generate_oracle_specs.py            # write generated files

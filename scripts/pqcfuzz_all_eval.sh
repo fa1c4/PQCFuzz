@@ -356,6 +356,35 @@ main() {
       exit 0
       ;;
   esac
+  if [ "$command" = "targets" ]; then
+    local target_command="${1:-run}"
+    if [ "$#" -gt 0 ]; then shift; fi
+    case "$target_command" in
+      list|preflight|smoke|run|all) ;;
+      *) die "unknown target command '$target_command'" ;;
+    esac
+    local python_bin="${PQCFUZZ_PYTHON:-python}"
+    if [ "$target_command" = "list" ]; then
+      exec "$python_bin" scripts/pqcfuzz_target.py list "$@"
+    fi
+    local arg has_target=0
+    for arg in "$@"; do
+      case "$arg" in --target|--target=*) has_target=1 ;; esac
+    done
+    if [ "$has_target" -eq 1 ]; then
+      exec "$python_bin" scripts/pqcfuzz_target.py "$target_command" "$@"
+    fi
+    local registrations
+    registrations=$("$python_bin" scripts/pqcfuzz_target.py list --expanded) || die "target registry cannot be read"
+    [ -n "$registrations" ] || die "no registered target profiles"
+    local target algorithm api profile status=0
+    while IFS=$'\t' read -r target algorithm api profile; do
+      profile="${profile%$'\r'}"
+      "$python_bin" scripts/pqcfuzz_target.py "$target_command" \
+        --target "$target" --algorithm "$algorithm" --api "$api" --profile "$profile" "$@" || status=1
+    done <<< "$registrations"
+    exit "$status"
+  fi
   command_is_valid "$command" || die "unknown command '$command' (use build|preflight|smoke|run|report|all)"
   parse_suites "${1:-}"
 

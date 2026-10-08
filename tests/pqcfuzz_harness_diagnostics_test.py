@@ -76,6 +76,20 @@ int main() {
   auto sig_trace = pqcfuzz::ExecuteSigOracle(sig);
   if (sig_trace.diagnostics.empty() || sig_trace.diagnostics[0].code != "harness_error") return 3;
   if (pqcfuzz::FinalizeDisposition(sig_trace) != pqcfuzz::OracleDisposition::kHarnessError) return 4;
+
+  kem.oracle_id = "unknown_kem_oracle";
+  kem.right = &kKem;
+  auto unknown_kem = pqcfuzz::ExecuteKemOracle(kem);
+  if (!unknown_kem.subtests.empty() || !unknown_kem.findings.empty()) return 5;
+  if (unknown_kem.diagnostics.empty() || unknown_kem.diagnostics[0].code != "harness_error") return 6;
+  if (pqcfuzz::FinalizeDisposition(unknown_kem) != pqcfuzz::OracleDisposition::kHarnessError) return 7;
+
+  sig.oracle_id = "unknown_sig_oracle";
+  sig.right = &kSig;
+  auto unknown_sig = pqcfuzz::ExecuteSigOracle(sig);
+  if (!unknown_sig.subtests.empty() || !unknown_sig.findings.empty()) return 8;
+  if (unknown_sig.diagnostics.empty() || unknown_sig.diagnostics[0].code != "harness_error") return 9;
+  if (pqcfuzz::FinalizeDisposition(unknown_sig) != pqcfuzz::OracleDisposition::kHarnessError) return 10;
   return 0;
 }
 """

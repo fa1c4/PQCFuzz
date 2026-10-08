@@ -1,0 +1,21 @@
+# PQCFuzz actuality: observed implementation
+
+Observed on 2026-10-08 after the first design-alignment slice. This file records behavior found in the working tree; it is not a source of truth for desired behavior. Claims here should be rechecked after implementation changes.
+
+- The active implementation is under `src/`. Existing families include FIPS 203/204/205 paths and Aigis, CROSS, Falcon, NTRU, SIKE/SIDH and SNOVA. Evidence: root `README.md` and `src/README.md`.
+- `src/oracles/specs/*.json` supplies oracle claim/evidence metadata; `scripts/generate_oracle_specs.py` generates checked-in C++ tables and supports `--check`. `src/README.md` now describes JSON as the machine-readable oracle record format governed by the design and cited specification. Before this alignment, it called JSON the source of truth.
+- C++ execution and trace serialization live principally in `src/oracles/oracle_executor.cc` and `src/oracles/metamorphic_executor.cc`. `KEMOracleTrace` currently defaults to oracle semantics version 5; trace fields include reachability, effective intervention, observations, findings and controls. Evidence: `src/oracles/oracle_executor.h`.
+- `ExecuteKemOracle` and `ExecuteSigOracle` now dispatch local roundtrip/sign-verify only for the matching local oracle ID. An unrecognized ID returns a `harness_error` diagnostic with no oracle subtests. Before the first design-alignment slice, both functions used a final `else` that could run the local path for an unknown ID; the change is recorded in `history/2026-10-08.md`.
+- `src/replay/replay_one.py` checks envelope/job routing, executes a native replay binary, compares an optional expected trace, validates target reachability/intervention evidence and writes a finding with validation state. `src/reporting/write_report.py` aggregates validated findings and places invalidated artifacts in diagnostics.
+- Current job and adapter routing includes family-specific declarations in `src/jobs/`, `src/pairing/` and `src/runtime/adapter_registry.cc`. Existing evaluation uses `scripts/pqcfuzz_all_eval.sh` plus family-specific scripts. This observation does not imply the future plugin protocol is implemented.
+- `tests/` contains native C++ harness tests launched by pytest, plus replay, reporting, schema, false-positive and oracle-control tests. The native tests conventionally require `clang++` or `CXX`; this Windows host currently exposes Python but no `clang++`/`g++` command.
+- The repository now tracks `plans/` and still ignores `third_party/` in `.gitignore`. The SOP implementation plan is at `plans/pqcfuzz_sop.md`.
+
+## Registered target package implementation (observed 2026-10-08)
+
+- Seven linked module documents are now expanded; eight retired module documents were removed from `designs/`. The historical Python/C++ directories under `src/jobs`, `src/replay`, `src/triage` and related names still have callers in legacy scripts/tests and remain compatibility code.
+- `src/runtime/target_package.py` validates `configs/targets.json` and target manifests, exact IDs/versions, digests, spec status, source path containment, capability/primitive selection and budgets. `src/runtime/target_worker.py` executes copied adapter/oracle/mutator code in a run-scoped subprocess. `scripts/pqcfuzz_target.py` and the `targets` branch of `scripts/pqcfuzz_all_eval.sh` are the new entry points; legacy suite commands remain.
+- The checked-in `demo-stream-hash` fixture has a draft spec, target package, two profiles and H07/P4 relation. On this host, six healthy campaign iterations passed and the injected profile produced two candidate counterexamples. Each run snapshots source, package, spec, config, active catalogs, inputs, traces and report with hashes; `replay_status` stays `not_run`.
+- The new runtime currently supports public test inputs only. It blocks profiles requiring protected sensitive evidence or finite CPU/memory limits on Windows. It sets per-run working/temp/cache paths and stops subprocess trees on timeout, but it is not an OS security sandbox against malicious third-party code. Retention expiry is recorded but deletion needs a separate audited implementation.
+- Existing native C++/pytest suites were not run on this host because pytest and a native compiler are absent. The local hash demo is an infrastructure check, not validation of a PQC target.
+

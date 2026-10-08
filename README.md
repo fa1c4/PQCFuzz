@@ -1,5 +1,44 @@
 # PQCFuzz
 
+## Registered target package path
+
+New targets use the seven-module design tree and the Agent SOP. The checked-in `demo-stream-hash` package is a **local infrastructure fixture**, not a PQC claim. It demonstrates extraction provenance, active H07/P4 mapping, structured mutation, adapter reachability, smoke controls and candidate-only evidence.
+
+```bash
+python scripts/pqcfuzz_target.py list
+python scripts/pqcfuzz_target.py preflight --target demo-stream-hash --algorithm DEMO-HASH --api stream --profile healthy
+python scripts/pqcfuzz_target.py run --target demo-stream-hash --algorithm DEMO-HASH --api stream --profile injected
+bash scripts/pqcfuzz_all_eval.sh targets run --target demo-stream-hash --profile healthy
+bash scripts/pqcfuzz_all_eval.sh targets run
+python scripts/pqcfuzz_target.py verify --run "workspace/demo-stream-hash/runs/<run-id>"
+```
+
+The last command discovers every configured API/profile. New runs write to `workspace/<target>/runs/<run-id>/`, including a source/package/spec/config snapshot, trace, report and file hashes. A new target is authored in `oracles/<target>/` and registered in `configs/targets.json`; the legacy fixed suite commands of `pqcfuzz_all_eval.sh` still work.
+
+
+## NGCC 候选材料下载
+
+`projects/download_ngcc_targets.sh` 使用固定的 [119 项清单](projects/ngcc_targets.json)，默认下载全部候选的官方提交 ZIP、完整解压树及提交规范 PDF 到 `third_party/<candidate-id>/`。这些是第一轮候选提案材料，不是已颁布的国标。每个目录的 `download.json` 记录官方 ZIP 哈希、PDF 来源与哈希、源码树哈希及可能存在的嵌套归档。
+
+```bash
+bash projects/download_ngcc_targets.sh --dry-run
+bash projects/download_ngcc_targets.sh --target kem-29
+bash projects/download_ngcc_targets.sh --verify-only --target kem-29
+bash projects/download_ngcc_targets.sh --jobs 2
+```
+
+脚本需要 Python 3.10+、访问 NICCS 与 GitHub raw 的 HTTPS 网络；`sign-09` 的内嵌 RAR 源码还需要 `bsdtar`。本次已下载并复验 119/119 项：原始 ZIP 合计 5,994,444,545 字节，解压源码合计 10,773,117,921 字节。`sign-09` 的两份 RAR 源码展开在 `source/_nested/`；`sign-29` 的固定镜像 PDF 与官方 ZIP 不一致，故选用官方 ZIP 内的算法规范 PDF，收据保留差异信息。文件不会自动覆盖；若现有目录的收据或哈希不匹配，脚本会失败并列出候选 ID。
+
+
+## Design authority
+
+The human-facing design tree starts at [designs/architecture.md](designs/architecture.md)
+and is refined by [module designs](designs/). [designs/actuality.md](designs/actuality.md)
+records observed implementation behavior only. Codex reads the repository guidance
+in [AGENTS.md](AGENTS.md); target onboarding follows
+[agent/pqc_sop.md](agent/pqc_sop.md). Implementation plans live in
+[plans/](plans/) and changes are recorded in [history/](history/).
+
 PQCFuzz is a framework for post-quantum crypto differential fuzzing. The active
 FIPS 203/204/205 implementation lives under:
 

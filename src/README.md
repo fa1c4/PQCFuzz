@@ -26,9 +26,12 @@ python3 src/jobs/generate_jobs.py \
 
 ## Oracle records and verdicts
 
-`src/oracles/specs/*.json` is the source of truth for every oracle record
-(claim, evidence class, source reference, scope, limitations, controls, and
-execution metadata). `scripts/generate_oracle_specs.py` materializes the
+For legacy built-in targets, `src/oracles/specs/*.json` supplies machine-readable
+oracle records. New target packages are generated under `oracles/<target-name>/`;
+their design and implementation artifacts are the canonical new-target oracle
+deliverable under `designs/architecture.md` and the cited target specification. Each record contains
+a claim, evidence class, source reference, scope, limitations, controls, and
+execution metadata. `scripts/generate_oracle_specs.py` materializes the
 checked-in `generated_*_specs.inc` tables; run it without arguments after
 editing a spec, or with `--check` in CI.
 

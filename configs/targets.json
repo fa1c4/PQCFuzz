@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "targets": [
+    {
+      "target": "demo-stream-hash",
+      "algorithm": "DEMO-HASH",
+      "primitive": "hash",
+      "source": "third_party/demo-stream-hash/source",
+      "source_digest": "d108f4e6ba99e181c2bdd48356bce6d7d2f901f69031ce42159d9340a46e8912",
+      "specification": "oracles/spec/demo-stream-hash-DEMO-HASH.md",
+      "apis": [
+        {
+          "name": "stream",
+          "parameter_set": "sha256-demo",
+          "profiles": [
+            {
+              "id": "healthy",
+              "build": [],
+              "dependencies": [
+                "python"
+              ],
+              "timeout_seconds": 5,
+              "cpu_seconds": null,
+              "memory_mb": null,
+              "disk_mb": 32,
+              "iterations": 6,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 7,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "injected_fault": false
+              }
+            },
+            {
+              "id": "injected",
+              "build": [],
+              "dependencies": [
+                "python"
+              ],
+              "timeout_seconds": 5,
+              "cpu_seconds": null,
+              "memory_mb": null,
+              "disk_mb": 32,
+              "iterations": 6,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 7,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "injected_fault": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
