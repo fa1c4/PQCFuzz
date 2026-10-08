@@ -23,53 +23,64 @@ build_runner() {
   fi
   mkdir -p "$build_dir"
   local cxx_bin="${CXX:-$(command -v clang++ || command -v c++)}"
-  "$cxx_bin" -std=c++17 -O2 -g -Isrc -DPQCFUZZ_HAVE_PQCLEAN_REFERENCE \
-    src/replay/kat_oracle.cc \
-    src/oracles/kat_executor.cc \
-    src/adapters/status.cc \
-    src/adapters/reference/reference_adapter.cc \
-    src/adapters/reference/pqclean_randombytes_override.cc \
-    src/adapters/rng_control.cc \
-    src/adapters/liboqs/rng_control.cc \
-    src/adapters/liboqs/kem_adapter.cc \
-    src/adapters/liboqs/sig_adapter.cc \
-    src/adapters/pqclean/kem_adapter.cc \
-    src/adapters/pqclean/sig_adapter.cc \
-    src/adapters/pqmagic/kem_adapter.cc \
-    src/adapters/pqmagic/sig_adapter.cc \
-    src/adapters/randombytes_override.cc \
-    src/mutators/envelope.cc \
-    src/mutators/maul.cc \
-    src/mutators/ml_kem_layout.cc \
-    src/mutators/ml_kem_mutator.cc \
-    src/mutators/ml_dsa_layout.cc \
-    src/mutators/ml_dsa_mutator.cc \
-    src/mutators/slh_dsa_layout.cc \
-    src/mutators/slh_dsa_mutator.cc \
-    src/mutators/aigis_enc_layout.cc \
-    src/mutators/aigis_enc_mutator.cc \
-    src/mutators/aigis_sig_layout.cc \
-    src/mutators/aigis_sig_mutator.cc \
+  local sources=(
+    src/replay/kat_oracle.cc
+    src/oracles/kat_executor.cc
+    src/adapters/status.cc
+    src/adapters/reference/reference_adapter.cc
+    src/adapters/reference/pqclean_randombytes_override.cc
+    src/adapters/rng_control.cc
+    src/adapters/liboqs/rng_control.cc
+    src/adapters/liboqs/kem_adapter.cc
+    src/adapters/liboqs/sig_adapter.cc
+    src/adapters/pqclean/kem_adapter.cc
+    src/adapters/pqclean/sig_adapter.cc
+    src/adapters/pqmagic/kem_adapter.cc
+    src/adapters/pqmagic/sig_adapter.cc
+    src/adapters/randombytes_override.cc
+    src/mutators/envelope.cc
+    src/mutators/maul.cc
+    src/mutators/ml_kem_layout.cc
+    src/mutators/ml_kem_mutator.cc
+    src/mutators/ml_dsa_layout.cc
+    src/mutators/ml_dsa_mutator.cc
+    src/mutators/slh_dsa_layout.cc
+    src/mutators/slh_dsa_mutator.cc
+    src/mutators/aigis_enc_layout.cc
+    src/mutators/aigis_enc_mutator.cc
+    src/mutators/aigis_sig_layout.cc
+    src/mutators/aigis_sig_mutator.cc
+    src/mutators/scheme_mutation.cc
+    src/mutators/sha3.cc
+    src/mutators/cross_layout.cc
+    src/mutators/cross_mutator.cc
+    src/mutators/falcon_layout.cc
+    src/mutators/falcon_mutator.cc
     src/mutators/sike_layout.cc
     src/mutators/sike_mutator.cc
     src/oracles/sike_executor.cc
     src/adapters/sike/reference_adapter.cc
     src/oracles/sidh_executor.cc
-    src/oracles/expected_relation.cc \
-    src/oracles/oracle_spec.cc \
-    src/oracles/oracle_spec_loader.cc \
-    src/oracles/oracle_record.cc \
-    src/oracles/oracle_result.cc \
-    src/oracles/oracle_executor.cc \
-    src/oracles/metamorphic_observation.cc \
-    src/oracles/metamorphic_spec.cc \
-    src/oracles/metamorphic_executor.cc \
+    src/oracles/expected_relation.cc
+    src/oracles/oracle_spec.cc
+    src/oracles/oracle_spec_loader.cc
+    src/oracles/oracle_record.cc
+    src/oracles/oracle_result.cc
+    src/oracles/oracle_executor.cc
+    src/oracles/scheme_claims.cc
+    src/oracles/cross_executor.cc
+    src/oracles/metamorphic_observation.cc
+    src/oracles/metamorphic_spec.cc
+    src/oracles/metamorphic_executor.cc
     src/adapters/cross/cross_adapter.cc
-    src/runtime/adapter_registry.cc \
+    src/runtime/adapter_registry.cc
     src/adapters/sike/kem_adapter.cc
     src/adapters/sidh/kex_adapter.cc
-    src/triage/finding_writer.cc \
-    src/triage/oracle_coverage.cc \
+    src/triage/finding_writer.cc
+    src/triage/oracle_coverage.cc
+  )
+  "$cxx_bin" -std=c++17 -O2 -g -Isrc -DPQCFUZZ_HAVE_PQCLEAN_REFERENCE \
+    "${sources[@]}" \
     "$reference_archive" \
     -o "$build_dir/kat_oracle"
   echo "built $build_dir/kat_oracle"

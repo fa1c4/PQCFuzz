@@ -7,8 +7,8 @@ FIPS 203/204/205 implementation lives under:
 /src
 ```
 
-The current active scope is ML-KEM, ML-DSA, and SLH-DSA external-API
-differential fuzzing for:
+The current active scope is ML-KEM, ML-DSA, and SLH-DSA external-API testing
+for:
 
 - ML-KEM-512
 - ML-KEM-768
@@ -28,6 +28,15 @@ differential fuzzing for:
 - SLH-DSA-SHAKE-256s
 - SLH-DSA-SHA2-256f
 - SLH-DSA-SHAKE-256f
+
+ML-KEM and ML-DSA run in the liboqs differential lane
+(`scripts/pqcfuzz_eval.sh`) and in the KAT lane
+(`scripts/pqcfuzz_kat_eval.sh`). The 12 SLH-DSA parameter sets run in the KAT
+lane (`fips205_kat_keygen`); their liboqs differential targets are deliberately
+not built because the pinned liboqs releases ship round-3 SPHINCS+ simple, not
+FIPS 205 SLH-DSA. `generate_jobs.py` therefore materializes zero SLH-DSA
+differential jobs and the liboqs summary records SLH-DSA under
+`skipped_families` with `skipped_family_reasons`.
 
 A second active scope adds the Aigis (PQMagic), CROSS, NTRU, Falcon, SIKE/SIDH
 and SNOVA families; see their workflow sections below. CROSS and SNOVA test
@@ -62,12 +71,14 @@ python3 src/jobs/generate_jobs.py \
   --algorithm-family ML-DSA
 ```
 
-Generate SLH-DSA jobs:
+SLH-DSA differential jobs are intentionally not materialized (the pinned
+liboqs releases ship round-3 SPHINCS+ simple, not FIPS 205 SLH-DSA). Run the
+SLH-DSA KAT lane instead:
 
 ```bash
-python3 src/jobs/generate_jobs.py \
-  --pair-alg src/config/pair_alg.default.json \
-  --algorithm-family SLH-DSA
+scripts/pqcfuzz_kat_eval.sh build
+scripts/pqcfuzz_kat_eval.sh run ML-KEM-512 ML-KEM-768 ML-KEM-1024 \
+  SLH-DSA-SHA2-128s SLH-DSA-SHAKE-128s
 ```
 
 Replay one structured seed:
@@ -99,11 +110,35 @@ SUITES=cross JOB_FILTER=cross_rsdp_5_fast scripts/pqcfuzz_all_eval.sh run
 ```
 
 Commands are `build | preflight | smoke | run | report | all`; `run` uses
-`MAX_TOTAL_TIME` seconds per job and `smoke` uses `SMOKE_FUZZ_SECONDS`. Set
-`PQCFUZZ_INCLUDE_P2=1` to schedule the opt-in P2 oracles. `report` runs each
-lane's report and writes the aggregate `workspace/all/report/summary.json`
-(Aigis also writes `workspace/all/report/aigis_summary.md`). Failures stop the
-driver unless `ALL_CONTINUE_ON_ERROR=1` is set.
+`MAX_TOTAL_TIME` seconds per job and `smoke` uses `SMOKE_FUZZ_SECONDS`. All
+selected lanes run **concurrently** by default (liboqs already starts one tmux
+campaign per version); each lane has its own workspace root and per-lane log at
+`workspace/all/logs/<step>-<lane>.log`. For the liboqs lane, `build` runs
+`pqcfuzz_eval.sh --preflight-only` (build + seeded corpus), and the following
+`preflight` step reuses that completed result unless
+`LIBOQS_REUSE_PREFLIGHT=0`. Cap concurrent lanes with `ALL_JOBS=N`,
+or serialize with `ALL_PARALLEL=0`. Set `PQCFUZZ_INCLUDE_P2=1` to schedule the
+opt-in P2 oracles. `report` runs each lane's report and writes the aggregate
+`workspace/all/report/summary.json` (Aigis also writes
+`workspace/all/report/aigis_summary.md`). A step with failures stops the driver
+before the next step unless `ALL_CONTINUE_ON_ERROR=1` is set.
+
+## KAT Lane
+
+`scripts/pqcfuzz_kat_eval.sh` builds one `kat_oracle` runner against the pinned
+PQClean reference adapters and validates official NIST ACVP/FIPS KAT responses,
+writing coverage and findings through the standard pipeline under
+`workspace/results/kat/`.
+
+```bash
+scripts/pqcfuzz_kat_eval.sh build
+scripts/pqcfuzz_kat_eval.sh run ML-KEM-512 ML-KEM-768 ML-KEM-1024
+scripts/pqcfuzz_kat_eval.sh run SLH-DSA-SHA2-128s SLH-DSA-SHAKE-128s   # fips205_kat_keygen
+scripts/pqcfuzz_kat_eval.sh all
+```
+
+It covers the ML-KEM (`fips203_kat_*`) and SLH-DSA (`fips205_kat_keygen`)
+families; ML-DSA lives in the liboqs differential lane.
 
 ## Evaluation Runs
 

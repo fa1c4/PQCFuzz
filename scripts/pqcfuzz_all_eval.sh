@@ -29,6 +29,9 @@
 #   SESSION_PREFIX=<name>       tmux session prefix for the liboqs campaigns
 #   OUTPUT_ROOT=workspace/pqcfuzz_eval  liboqs output root
 #   ALL_ROOT=workspace/all      aggregate output root
+#   ALL_PARALLEL=1              run selected lanes concurrently (default on)
+#   ALL_JOBS=N                  max lanes started per batch, 0 = all at once
+#   ALL_CONTINUE_ON_ERROR=1     continue after a step with failures
 set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -48,6 +51,8 @@ LIBOQS_ORACLE_SET="${LIBOQS_ORACLE_SET:-all}"
 SESSION_PREFIX="${SESSION_PREFIX:-pqcfuzz-all}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-workspace/pqcfuzz_eval}"
 ALL_ROOT="${ALL_ROOT:-workspace/all}"
+ALL_PARALLEL="${ALL_PARALLEL:-1}"
+ALL_JOBS="${ALL_JOBS:-0}"
 
 usage() {
   awk '/^set -euo/{exit} NR > 1 {sub(/^# ?/, ""); print}' "$0"
@@ -96,8 +101,37 @@ run_liboqs_suite() {
   local command="$1"
   local duration
   case "$command" in
-    build|preflight)
-      echo "[all] liboqs: ${command} (build + seeded oracle corpus via --preflight-only)"
+    build)
+      echo "[all] liboqs: build (build + seeded oracle corpus via --preflight-only)"
+      bash scripts/pqcfuzz_eval.sh \
+        --preflight-only \
+        --versions "$VERSIONS" \
+        --oracle-suite "$LIBOQS_ORACLE_SUITE" \
+        --oracle-set "$LIBOQS_ORACLE_SET" \
+        --session-prefix "${SESSION_PREFIX}-liboqs" \
+        --output-root "$OUTPUT_ROOT"
+      ;;
+    preflight)
+      # --preflight-only already validates every target; in the 'all' flow the
+      # build step just did that, so reuse it unless explicitly forced.
+      if [ "${LIBOQS_REUSE_PREFLIGHT:-1}" = "1" ] && [ -f "$OUTPUT_ROOT/summary.json" ] && python3 - "$OUTPUT_ROOT/summary.json" <<'PY'
+import json
+import sys
+
+try:
+    payload = json.load(open(sys.argv[1], encoding="utf-8"))
+except (OSError, json.JSONDecodeError):
+    raise SystemExit(1)
+campaigns = payload.get("campaigns", [])
+if campaigns and all(campaign.get("final_status") == 0 for campaign in campaigns):
+    raise SystemExit(0)
+raise SystemExit(1)
+PY
+      then
+        echo "[all] liboqs: reusing completed preflight under $OUTPUT_ROOT (set LIBOQS_REUSE_PREFLIGHT=0 to force)"
+        return 0
+      fi
+      echo "[all] liboqs: preflight (build + seeded oracle corpus via --preflight-only)"
       bash scripts/pqcfuzz_eval.sh \
         --preflight-only \
         --versions "$VERSIONS" \
@@ -270,6 +304,49 @@ command_is_valid() {
   esac
 }
 
+run_suite_step() {
+  local suite="$1" step="$2"
+  case "$suite" in
+    liboqs) run_liboqs_suite "$step" ;;
+    aigis) run_aigis_suite "$step" ;;
+    *) run_family_suite "$suite" "$step" ;;
+  esac
+}
+
+# Every selected lane runs concurrently (liboqs already runs one tmux campaign
+# per version).  ALL_JOBS>0 caps how many lanes start per batch; each lane has
+# its own workspace root, so lanes never share mutable state.
+run_step_parallel() {
+  local step="$1"
+  mkdir -p "$ALL_ROOT/logs"
+  local maxjobs="$ALL_JOBS"
+  if ! [[ "$maxjobs" =~ ^[0-9]+$ ]] || [ "$maxjobs" -le 0 ]; then
+    maxjobs="${#PARSED_SUITES[@]}"
+  fi
+  local failures=0 i=0
+  while [ "$i" -lt "${#PARSED_SUITES[@]}" ]; do
+    local -a batch_suites=() batch_pids=()
+    local j suite log
+    for ((j = 0; j < maxjobs && i < ${#PARSED_SUITES[@]}; j++, i++)); do
+      suite="${PARSED_SUITES[$i]}"
+      log="$ALL_ROOT/logs/${step}-${suite}.log"
+      ( run_suite_step "$suite" "$step" ) >"$log" 2>&1 &
+      batch_suites+=("$suite")
+      batch_pids+=("$!")
+    done
+    for ((j = 0; j < ${#batch_pids[@]}; j++)); do
+      if wait "${batch_pids[$j]}"; then
+        echo "[all] ${batch_suites[$j]} ${step}: ok (log: $ALL_ROOT/logs/${step}-${batch_suites[$j]}.log)"
+      else
+        local rc=$?
+        echo "[all] ${batch_suites[$j]} ${step}: FAILED rc=${rc} (log: $ALL_ROOT/logs/${step}-${batch_suites[$j]}.log)" >&2
+        failures=1
+      fi
+    done
+  done
+  return "$failures"
+}
+
 main() {
   local command="${1:-all}"
   shift 2>/dev/null || true
@@ -288,26 +365,37 @@ main() {
     *) steps=("$command") ;;
   esac
 
-  local step suite status=0
+  local step status=0
   for step in "${steps[@]}"; do
-    for suite in "${PARSED_SUITES[@]}"; do
+    local step_status=0
+    if [ "$ALL_PARALLEL" = "1" ] && [ "${#PARSED_SUITES[@]}" -gt 1 ]; then
       set +e
-      case "$suite" in
-        liboqs) run_liboqs_suite "$step" ;;
-        aigis) run_aigis_suite "$step" ;;
-        *) run_family_suite "$suite" "$step" ;;
-      esac
-      local rc=$?
+      run_step_parallel "$step"
+      step_status=$?
       set -e
-      if [ "$rc" -ne 0 ]; then
-        echo "[all] ${suite} ${step} failed with status ${rc}" >&2
-        status=1
-        if [ "${ALL_CONTINUE_ON_ERROR:-0}" != "1" ]; then
-          echo "[all] stopping (set ALL_CONTINUE_ON_ERROR=1 to continue)" >&2
-          exit "$status"
+    else
+      local suite
+      for suite in "${PARSED_SUITES[@]}"; do
+        set +e
+        run_suite_step "$suite" "$step"
+        local rc=$?
+        set -e
+        if [ "$rc" -ne 0 ]; then
+          echo "[all] ${suite} ${step} failed with status ${rc}" >&2
+          step_status=1
         fi
+      done
+    fi
+    if [ "$step_status" -ne 0 ]; then
+      status=1
+      if [ "${ALL_CONTINUE_ON_ERROR:-0}" != "1" ]; then
+        if [ "$step" = "report" ]; then
+          write_aggregate_report
+        fi
+        echo "[all] step '${step}' had failures; stopping (set ALL_CONTINUE_ON_ERROR=1 to continue)" >&2
+        exit "$status"
       fi
-    done
+    fi
     if [ "$step" = "report" ]; then
       write_aggregate_report
     fi

@@ -447,6 +447,7 @@ RSS_MB="${RSS_MB:-2048}"
 FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="${FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE:-0.95}"
 PREFLIGHT_ONLY="${PREFLIGHT_ONLY:-0}"
 SKIPPED_FAMILIES_JSON='["SLH-DSA"]'
+SKIPPED_FAMILY_REASONS_JSON='{"SLH-DSA":"the pinned liboqs releases ship round-3 SPHINCS+ simple, not FIPS 205 SLH-DSA; use scripts/pqcfuzz_kat_eval.sh for the SLH-DSA KAT lane, and keep differential claims to ML-KEM/ML-DSA"}'
 
 has_sanitizer() {
   local sanitizer="$1"
@@ -520,6 +521,7 @@ write_status() {
   EVAL_PREFLIGHT_ONLY="$PREFLIGHT_ONLY" \
   EVAL_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE="$FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE" \
   EVAL_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
+  EVAL_SKIPPED_FAMILY_REASONS_JSON="$SKIPPED_FAMILY_REASONS_JSON" \
   python3 - <<'PY'
 import json
 import os
@@ -580,6 +582,7 @@ doc.update({
     "preflight_only": os.environ["EVAL_PREFLIGHT_ONLY"] == "1",
     "fuzz_effectiveness_min_evaluable_rate": float(os.environ["EVAL_FUZZ_EFFECTIVENESS_MIN_EVALUABLE_RATE"]),
     "skipped_families": json.loads(os.environ["EVAL_SKIPPED_FAMILIES_JSON"]),
+    "skipped_family_reasons": json.loads(os.environ["EVAL_SKIPPED_FAMILY_REASONS_JSON"]),
 })
 if os.environ["EVAL_ENDED_AT"]:
     doc["ended_at"] = os.environ["EVAL_ENDED_AT"]
@@ -1232,6 +1235,7 @@ write_run_summary() {
   RUN_LEAK_CHECK="$LEAK_CHECK" \
   RUN_RESULT_DIR="$result_dir" \
   RUN_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
+  RUN_SKIPPED_FAMILY_REASONS_JSON="$SKIPPED_FAMILY_REASONS_JSON" \
   python3 - <<'PY'
 import json
 import os
@@ -1395,6 +1399,7 @@ doc = {
     "sanitizer_finding_count": len(sanitizer_findings),
     "sanitizer_findings": sanitizer_findings,
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
+    "skipped_family_reasons": json.loads(os.environ["RUN_SKIPPED_FAMILY_REASONS_JSON"]),
     "skipped": False,
 }
 with open(path, "w", encoding="utf-8") as f:
@@ -1644,6 +1649,7 @@ write_skip_summary() {
   RUN_VERSION="$VERSION" \
   RUN_RELATION_MODE="$RELATION_MODE" \
   RUN_SKIPPED_FAMILIES_JSON="$SKIPPED_FAMILIES_JSON" \
+  RUN_SKIPPED_FAMILY_REASONS_JSON="$SKIPPED_FAMILY_REASONS_JSON" \
   python3 - <<'PY'
 import json
 import os
@@ -1664,6 +1670,7 @@ doc = {
     "corpus_dir": os.environ["RUN_CORPUS_DIR"],
     "relation_mode": os.environ["RUN_RELATION_MODE"],
     "skipped_families": json.loads(os.environ["RUN_SKIPPED_FAMILIES_JSON"]),
+    "skipped_family_reasons": json.loads(os.environ["RUN_SKIPPED_FAMILY_REASONS_JSON"]),
     "skipped": True,
     "skip_reason": os.environ["RUN_SKIP_REASON"],
     "preflight_coverage_state": "not-applicable",
@@ -1840,8 +1847,24 @@ build_pqcfuzz() {
     src/mutators/aigis_enc_mutator.cc
     src/mutators/aigis_sig_layout.cc
     src/mutators/aigis_sig_mutator.cc
+    src/mutators/scheme_mutation.cc
+    src/mutators/sha3.cc
+    src/mutators/cross_layout.cc
+    src/mutators/cross_mutator.cc
+    src/mutators/falcon_layout.cc
+    src/mutators/falcon_mutator.cc
+    src/mutators/ntru_layout.cc
+    src/mutators/ntru_mutator.cc
+    src/mutators/snova_layout.cc
+    src/mutators/snova_mutator.cc
     src/mutators/sike_layout.cc
     src/mutators/sike_mutator.cc
+    src/oracles/scheme_claims.cc
+    src/oracles/cross_executor.cc
+    src/oracles/falcon_executor.cc
+    src/oracles/ntru_executor.cc
+    src/oracles/snova_public_map.cc
+    src/oracles/snova_executor.cc
     src/oracles/sike_executor.cc
     src/adapters/sike/reference_adapter.cc
     src/oracles/sidh_executor.cc
@@ -1855,6 +1878,7 @@ build_pqcfuzz() {
     src/oracles/metamorphic_spec.cc
     src/oracles/metamorphic_executor.cc
     src/adapters/cross/cross_adapter.cc
+    src/adapters/snova/sig_adapter.cc
     src/runtime/adapter_registry.cc
     src/adapters/sike/kem_adapter.cc
     src/adapters/sidh/kex_adapter.cc
