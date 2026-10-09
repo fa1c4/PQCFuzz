@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "target": "hash-11",
+  "algorithm": "Garnet",
+  "primitive": "hash",
+  "source_digest": "f043bbc1935c347a717fa0295058b990ff68f28a927931006f2f3bd9ca5ba2e9",
+  "spec_sha256": "fcf895621e52af8a7a56a514b6118eb3ad93e04c2d57ce90181f4195be06cbb4",
+  "instances": [
+    {
+      "parameter_set": "Garnet_512_Cap1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "Garnet512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Garnet/CryptHash/Garnet512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

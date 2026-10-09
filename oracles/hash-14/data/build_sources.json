@@ -1,0 +1,11 @@
+{
+  "instance": "laurus_512",
+  "reference": [
+    "Laurus/Implementations/Reference_Implementation/Laurus-512/CryptHash_AlgorithmInstance.c",
+    "Laurus/Implementations/Reference_Implementation/Laurus-512/laurus_512.c"
+  ],
+  "optimized": [],
+  "backends": [
+    "reference"
+  ]
+}

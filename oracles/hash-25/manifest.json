@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "target": "hash-25",
+  "algorithm": "TaiChi",
+  "primitive": "hash",
+  "source_digest": "547aa059d8cc328edac9f68546b48ba040ecb52ff4f9865c83ea204d4d73f0dd",
+  "spec_sha256": "9b1fb24f93c13e65040c3a925df73c57ebca5e2606012f18b66c8f9cdfc592ec",
+  "instances": [
+    {
+      "parameter_set": "TaiChi-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TaiChi512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/TaiChi/CryptHash/TaiChi512-DIFF-01.md",
+          "oracle": "implement/diff_oracle.py",
+          "mutator": "implement/mutator/diff.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "TaiChi512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TaiChi/CryptHash/TaiChi512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "ADKEX-128": {
+    "kat": "Test_Vectors/KAT_KEX_ADKEX-128.txt",
+    "kat_sha256": "96faa56746d153206e12f3796bfdc6f24e3721d59f72d93f078a617d2b97df3d",
+    "passes": 2,
+    "implementation_dir": "Implementations/Reference_Implementation/ADKEX-128",
+    "records": [
+      {
+        "Count": 0,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "e8b39f976b2ae96505121251dbedc822dabf6b094833b29b1b09eba71f65cc5c"
+      },
+      {
+        "Count": 1,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "9a012315b3e48643c1d56f96838e9b160f7e00dc6c6bc06e59548670bc8964c1"
+      },
+      {
+        "Count": 2,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "2fd41145a433abca100a85dc3def1120a3a04d24cfd43ac8d61b0abc2404e2d6"
+      },
+      {
+        "Count": 3,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "cc49515357b1c7363dad2e06a02c6d66948117233bfc71f68439463e47a1adb4"
+      },
+      {
+        "Count": 4,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "3a321f124ca3a9d4813a4056bf1ac5ca269fb1109a705670162c8dbc81f84fda"
+      },
+      {
+        "Count": 5,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "2fa65ff7e86d8d096cd43dff7d41b96da44c3aa834ca08917c3ae00097229178"
+      },
+      {
+        "Count": 6,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "52e2923fdd3be8a4fcf881dce6924302a3a76c749df6cc3c63f65467e700e4a9"
+      },
+      {
+        "Count": 7,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "d1e73d88b9d6ed321a0c74cc4f38067e434bef4a8121ff16a1e914a873363b11"
+      },
+      {
+        "Count": 8,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "c91b6588c363431551993e117da28e042f1fb55d3dde97f02923bb993ba2e470"
+      },
+      {
+        "Count": 9,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "db9e7ae4d72127c90f6b1c360419d60e1ff54d5393b887dc73a83406f966cb05"
+      }
+    ]
+  },
+  "ADKEX-256": {
+    "kat": "Test_Vectors/KAT_KEX_ADKEX-256.txt",
+    "kat_sha256": "f382145642d9e4453d3cef87091fcaee75800e1ff065407cb0daf3d7f402c6cd",
+    "passes": 2,
+    "implementation_dir": "Implementations/Reference_Implementation/ADKEX-256",
+    "records": [
+      {
+        "Count": 0,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "900e7f4dbe0f4fe3b78b01e1a36aaf14851b7ffddeb6700dadcb8503f63b705c"
+      },
+      {
+        "Count": 1,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "605971c5fb24f2ab0e14a69b730cd64db3d728a14d2331ae5425b73135b0cee2"
+      },
+      {
+        "Count": 2,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "2638e22537e7d8be6f6cbf154aa865a53b7dda80b0b381eb4843422a501714d7"
+      },
+      {
+        "Count": 3,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "5ad31462713cee9e523d462b4308bf0d747d00a8333f4134e55c1fcc9bcd5fef"
+      },
+      {
+        "Count": 4,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "ae06b4da68645c61b169a003add6df03366efb54da8b46faae4e571c812a093a"
+      },
+      {
+        "Count": 5,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "129cb15b32d123920a8b6014239c17f6c59fc74ec4a6f23e0be2497418673a1d"
+      },
+      {
+        "Count": 6,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "58b4b90623e61fce9152e750a54539e8cf959b1f14e84e8651ff683ecc6b6036"
+      },
+      {
+        "Count": 7,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "0ca49aa3709272bcd0c9a1c6ca07d184d46e4c4e3af4878f4ee27cf077ec67f0"
+      },
+      {
+        "Count": 8,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "cfbcccc0715f40c952cb0168350523e9459a861a4ce790eb9fd1f831174634f2"
+      },
+      {
+        "Count": 9,
+        "Pass_Num": 2,
+        "SS_Len": 32,
+        "expected_ss": "3072048468c6be4c153a211ef2866e4b6e07c0c88f8671aa6cea9b37b46d9d43"
+      }
+    ]
+  },
+  "ADKEX-512": {
+    "kat": "Test_Vectors/KAT_KEX_ADKEX-512.txt",
+    "kat_sha256": "95eda58014c5d2e9aed00eb61e6e237be90e67b2913f1e3401d1fc3cbceb312a",
+    "passes": 2,
+    "implementation_dir": "Implementations/Reference_Implementation/ADKEX-512",
+    "records": [
+      {
+        "Count": 0,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "0108811c2cc14b07576b46f9df9c9baadae4ae63332a64af138bed00866f0b646e947d4c0849f313765931d7caaff80a6be44be93d1aebd5a22e2c7c6e9d74d8"
+      },
+      {
+        "Count": 1,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "3498dc204756cd218224d3ca5c1a4426c37ce1425e137abd802f2103f13545a3682e8eced1a808f6a94d90364c8d864182bd5b3ac186ff494495475df57120a5"
+      },
+      {
+        "Count": 2,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "218a8ca30f5c640f277226d04d55cd01f2c83cd2d508e26347d79bb7124f55fce31ef323f6fc526f825cce572b01dca935e0d163972860eb8ca08a6b06784851"
+      },
+      {
+        "Count": 3,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "b6299de2eccfba72fa2989c663b6498aa1aa02f15e2a0407b18fb1d57be19359781bc9c67e74daad3e3c638c87d67bdacc9dd29c15cf3e4df2ab9a94fe9b19f4"
+      },
+      {
+        "Count": 4,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "7b757135872cb465974ba4563ee0d392f19ce3bc4baf3dbee73b48ec7e56aa018fe6ccf683aa9c86f161357f2ec876c01219ce3986445d5217be493f599173bd"
+      },
+      {
+        "Count": 5,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "ec16ed3af87ee6c7b1bfaa062cad1c07a0b793320c204694f839607905e643063decdd97f41f42260c206e50c7619c3a744f1cc15a4a8f1ff077de50c5003e4e"
+      },
+      {
+        "Count": 6,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "8f2e6ad4aae10ace0f9bb80b0f7720e102704775a8be506eef2f282655f15b9a8c4ccd1388e57977ab2df56ff887317872c4ceb4d608ad2b0f460abcc47046df"
+      },
+      {
+        "Count": 7,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "bea92101934c7a9744ed669c266e88f8787b340dccf96c83f0b7cf0be834208d2fd961b6cf097bd954963c9221944076480d0924378f9477085be3dac32ea066"
+      },
+      {
+        "Count": 8,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "81e0ab7193cbc9515421aaa40348bd5b79450a0ce1780df07c7e189bf481e051a1e517b2ad189abde2577a48e684a1e0d13f0f2940f15d7d68862dd50e010bf5"
+      },
+      {
+        "Count": 9,
+        "Pass_Num": 2,
+        "SS_Len": 64,
+        "expected_ss": "0f217511f62a08b396f82994e118a377cfd643fcca3f36f849fd24d30c402d7cbfa3ebb5b71b97b87adcaf40afa0e24c73bfb6354ca71e417680cbe559b65cba"
+      }
+    ]
+  }
+}

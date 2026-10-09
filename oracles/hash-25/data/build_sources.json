@@ -1,0 +1,9 @@
+{
+  "instance": "TaiChi-512",
+  "reference": [
+    "TaiChi/Implementations/Reference_Implementation/TaiChi-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "TaiChi/Implementations/Optimized_Implementation/TaiChi-512-op-per/CryptHash_AlgorithmInstance.c"
+  ]
+}

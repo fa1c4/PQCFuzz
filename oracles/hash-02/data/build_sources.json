@@ -1,0 +1,11 @@
+{
+  "instance": "AXIS-512",
+  "reference": [
+    "AXIS/Implementations/Reference_Implementation/AXIS-512/CryptHash_AlgorithmInstance.c",
+    "AXIS/Implementations/Reference_Implementation/AXIS-512/axis_core.c"
+  ],
+  "optimized": [
+    "AXIS/Implementations/Optimized_Implementation/AXIS-512/CryptHash_AlgorithmInstance.c",
+    "AXIS/Implementations/Optimized_Implementation/AXIS-512/axis_core.c"
+  ]
+}

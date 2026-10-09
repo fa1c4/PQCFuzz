@@ -1,0 +1,9 @@
+{
+  "instance": "CHAMP-512",
+  "reference": [
+    "CHAMP/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/CHAMP-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "CHAMP/Implementations and Test_Vectors/API_CryptHash/Implementations/Optimized_Implementation/CHAMP-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "target": "hash-19",
+  "algorithm": "MoFang",
+  "primitive": "hash",
+  "source_digest": "76323d30f5f0859bea6f917567f2d05393f6575257158d5c2cc42844c366ec19",
+  "spec_sha256": "3773d0c5ccd558da454b83e7b9eec1e65989fe2e3be8597c3dfd192c3b49a191",
+  "instances": [
+    {
+      "parameter_set": "MoFang_512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "MoFang512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/MoFang/CryptHash/MoFang512-DIFF-01.md",
+          "oracle": "implement/diff_oracle.py",
+          "mutator": "implement/mutator/diff.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "MoFang512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/MoFang/CryptHash/MoFang512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

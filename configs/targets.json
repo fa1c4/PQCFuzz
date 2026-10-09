@@ -891,6 +891,1877 @@
           ]
         }
       ]
+    },
+    {
+      "target": "hash-02",
+      "algorithm": "AXIS",
+      "primitive": "hash",
+      "source": "third_party/hash-02/source",
+      "source_digest": "74a75b1b73470d1a76ad56a3b6f60d496d461febec5947ca5f09a26ea2f89e30",
+      "specification": "oracles/spec/hash-02-AXIS.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "AXIS-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 2512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "AXIS-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-04",
+      "algorithm": "CHAMP",
+      "primitive": "hash",
+      "source": "third_party/hash-04/source",
+      "source_digest": "f8b2d7e5de33360fe72713a3d23fbcefc6e70ae917d28a88d8f26e19458edb21",
+      "specification": "oracles/spec/hash-04-CHAMP.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "CHAMP-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 4512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "CHAMP-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-07",
+      "algorithm": "Dragon",
+      "primitive": "hash",
+      "source": "third_party/hash-07/source",
+      "source_digest": "99229052452e211f316d453514dd4a336d6300f5470577b4e43f88ffaa38b2a5",
+      "specification": "oracles/spec/hash-07-Dragon.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Dragon-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 512,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 7512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Dragon-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-09",
+      "algorithm": "Eijen",
+      "primitive": "hash",
+      "source": "third_party/hash-09/source",
+      "source_digest": "090fd624a5439064555d3640ee935821cba9ea1b798ba70666d3696eaf99a486",
+      "specification": "oracles/spec/hash-09-Eijen.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Eijen-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 9512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Eijen-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-12",
+      "algorithm": "Iphe",
+      "primitive": "hash",
+      "source": "third_party/hash-12/source",
+      "source_digest": "f595fbb8cc190036ca76ca3e22602f0f4b9f3843e803b462840ca6043c1f2969",
+      "specification": "oracles/spec/hash-12-Iphe.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Iphe-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 12512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Iphe-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-13",
+      "algorithm": "JuziHash",
+      "primitive": "hash",
+      "source": "third_party/hash-13/source",
+      "source_digest": "039916a21db84b8df9981b13716e10610663bcf07e0161ef77a828e242b10b80",
+      "specification": "oracles/spec/hash-13-JuziHash.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "JuziHash-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 13512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "JuziHash-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-17",
+      "algorithm": "MasterCube",
+      "primitive": "hash",
+      "source": "third_party/hash-17/source",
+      "source_digest": "0198b80f2c280ae85223f6b60a617f39b7a9a40a5dd195bbd39eeb82a15634ea",
+      "specification": "oracles/spec/hash-17-MasterCube.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "MasterCube-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 17512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "MasterCube-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-21",
+      "algorithm": "Neulaser",
+      "primitive": "hash",
+      "source": "third_party/hash-21/source",
+      "source_digest": "d4d56d11e7729f4198f896a436846ae0e28772a3ca78fc5b3c0b96f944b257f1",
+      "specification": "oracles/spec/hash-21-Neulaser.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Neulaser-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 21512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Neulaser-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-24",
+      "algorithm": "QSH",
+      "primitive": "hash",
+      "source": "third_party/hash-24/source",
+      "source_digest": "4fd5bcd2bceb7745ebe43568cfdc13645aaec7e8db6e9947333773eaa8ab4f82",
+      "specification": "oracles/spec/hash-24-QSH.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "QSH-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 24512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "QSH-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-25",
+      "algorithm": "TaiChi",
+      "primitive": "hash",
+      "source": "third_party/hash-25/source",
+      "source_digest": "547aa059d8cc328edac9f68546b48ba040ecb52ff4f9865c83ea204d4d73f0dd",
+      "specification": "oracles/spec/hash-25-TaiChi.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "TaiChi-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 25512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "TaiChi-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-33",
+      "algorithm": "Thunder",
+      "primitive": "hash",
+      "source": "third_party/hash-33/source",
+      "source_digest": "1487f10a48121b250d6320d0c4b7e8628e1d8e716b33fcc0f93ece5ce379ed89",
+      "specification": "oracles/spec/hash-33-Thunder.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Thunder-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 512,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Thunder-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-01",
+      "algorithm": "AFS-TrEDM",
+      "primitive": "hash",
+      "source": "third_party/hash-01/source",
+      "source_digest": "662c16fed66079fae51f975b7aa46e207e475278ec4e2808a7a1626f108f0945",
+      "specification": "oracles/spec/hash-01-AFS-TrEDM.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "AFS-TrEDM-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 157,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 1512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "AFS-TrEDM-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-06",
+      "algorithm": "Cuishen",
+      "primitive": "hash",
+      "source": "third_party/hash-06/source",
+      "source_digest": "5608ba9aac7ef64fe6a7b3495219fc70fa3215f5afae4263d83dd84e9ef2dbc8",
+      "specification": "oracles/spec/hash-06-Cuishen.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Cuishen-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 164,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 6512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Cuishen-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-08",
+      "algorithm": "Duet",
+      "primitive": "hash",
+      "source": "third_party/hash-08/source",
+      "source_digest": "d7980d98d29bfcde4525625b6fd3a78d206d64e45bba19e2fe242122f4f25cbd",
+      "specification": "oracles/spec/hash-08-Duet.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Duet-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 155,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 8512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Duet-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-26",
+      "algorithm": "CHIME",
+      "primitive": "hash",
+      "source": "third_party/hash-26/source",
+      "source_digest": "6a9e9f1d7432185271236c7b9576a22ff5b6c4948655eaf867e0f7c61bcb2f95",
+      "specification": "oracles/spec/hash-26-CHIME.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "CHIME-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 138,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 26512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "CHIME-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-35",
+      "algorithm": "Wish",
+      "primitive": "hash",
+      "source": "third_party/hash-35/source",
+      "source_digest": "aaeadf2dc3fed716a7e9a917d57d208e6816344df4df7d3137459e184e8b86d8",
+      "specification": "oracles/spec/hash-35-Wish.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Wish512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 139,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 35512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Wish512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-10",
+      "algorithm": "FEILIAN",
+      "primitive": "hash",
+      "source": "third_party/hash-10/source",
+      "source_digest": "b4eebbfea01a396a752506e998a0701c2080cdbe63d2394b4700242f1009add3",
+      "specification": "oracles/spec/hash-10-FEILIAN.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "FEILIAN512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 177,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 10512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "FEILIAN512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-18",
+      "algorithm": "MEGASCON",
+      "primitive": "hash",
+      "source": "third_party/hash-18/source",
+      "source_digest": "e9a704c1c4fc39f5c3d16e77c116a43042a6582daaa65df3c69e0b1ccba9467a",
+      "specification": "oracles/spec/hash-18-MEGASCON.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "MEGASCON-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 161,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 18512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "MEGASCON-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-19",
+      "algorithm": "MoFang",
+      "primitive": "hash",
+      "source": "third_party/hash-19/source",
+      "source_digest": "76323d30f5f0859bea6f917567f2d05393f6575257158d5c2cc42844c366ec19",
+      "specification": "oracles/spec/hash-19-MoFang.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "MoFang_512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 147,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 19512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "MoFang_512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-20",
+      "algorithm": "MOZI",
+      "primitive": "hash",
+      "source": "third_party/hash-20/source",
+      "source_digest": "ff063e83c4ad48cfbc1e559c1d0e97bf2b0c8ac4d0eb1ec01abeb8c117fb04e5",
+      "specification": "oracles/spec/hash-20-MOZI.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "MOZI-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 184,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 20512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "MOZI-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-27",
+      "algorithm": "Vedak",
+      "primitive": "hash",
+      "source": "third_party/hash-27/source",
+      "source_digest": "75b62697ed3708a665cce719b0fc213aa47e2a9c77922be82c03de836495865a",
+      "specification": "oracles/spec/hash-27-Vedak.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Vedak-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 148,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 27512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Vedak-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-30",
+      "algorithm": "ZC-DM",
+      "primitive": "hash",
+      "source": "third_party/hash-30/source",
+      "source_digest": "45cfd2b096ba75ed582ec48156d74d410ecf93fb9f46e2de5780786338246ddc",
+      "specification": "oracles/spec/hash-30-ZC-DM.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "ZC-DM-1280-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 153,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 30512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ZC-DM-1280-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-31",
+      "algorithm": "ZC-DMC",
+      "primitive": "hash",
+      "source": "third_party/hash-31/source",
+      "source_digest": "13ddcc1314f0f0fad8c245d73262e8bb88c5fc99782a8edc7ef149298303a247",
+      "specification": "oracles/spec/hash-31-ZC-DMC.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "ZC-DMC-1280-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 153,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 31512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ZC-DMC-1280-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-32",
+      "algorithm": "ZC-EDMC",
+      "primitive": "hash",
+      "source": "third_party/hash-32/source",
+      "source_digest": "ac099f785acf815e71d0a8f0236c6026ff58172310767f2dd1f49f8491e70179",
+      "specification": "oracles/spec/hash-32-ZC-EDMC.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "ZC-EDMC-1280-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 153,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 32512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ZC-EDMC-1280-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-05",
+      "algorithm": "uHash",
+      "primitive": "hash",
+      "source": "third_party/hash-05/source",
+      "source_digest": "928e536fc96eabd2ab052ef2d35be5bae569f2f0f231780b7ec178498774d910",
+      "specification": "oracles/spec/hash-05-uHash.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "uHash-512",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 168,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 5512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "uHash-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-14",
+      "algorithm": "Laurus",
+      "primitive": "hash",
+      "source": "third_party/hash-14/source",
+      "source_digest": "30fde56f556b4921e20ec32f6c83bc5e8d9b23f89f4082f5cacc92d6acbe6572",
+      "specification": "oracles/spec/hash-14-Laurus.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "laurus_512",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 188,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 14512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "laurus_512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-11",
+      "algorithm": "Garnet",
+      "primitive": "hash",
+      "source": "third_party/hash-11/source",
+      "source_digest": "f043bbc1935c347a717fa0295058b990ff68f28a927931006f2f3bd9ca5ba2e9",
+      "specification": "oracles/spec/hash-11-Garnet.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Garnet_512_Cap1024",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 176,
+              "iterations": 18,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 11512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Garnet_512_Cap1024",
+                "digest_bits": 512
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-22",
+      "algorithm": "Pavelor",
+      "primitive": "hash",
+      "source": "third_party/hash-22/source",
+      "source_digest": "e273037bc8cbed81bd9812982c94c00f5c0ff8bc32b31f5d16fc433ec7dce2ef",
+      "specification": "oracles/spec/hash-22-Pavelor.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Pavelor-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-aes",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Pavelor-512"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 373,
+              "iterations": 24,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 22512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Pavelor-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "Pavelor-768",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-aes",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Pavelor-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 373,
+              "iterations": 24,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 22768,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Pavelor-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "Pavelor-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-aes",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Pavelor-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 90,
+              "cpu_seconds": 90,
+              "memory_mb": 1024,
+              "disk_mb": 373,
+              "iterations": 24,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 23024,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Pavelor-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "sign-33",
+      "algorithm": "VDOO",
+      "primitive": "signature",
+      "source": "third_party/sign-33/source",
+      "source_digest": "779727a3bac2b4783260ef485899a406291c062340d63b49216c0d6a5733bfc0",
+      "specification": "oracles/spec/sign-33-VDOO.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "VDOO-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "VDOO-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1218,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "VDOO-128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "sig_verify",
+          "parameter_set": "VDOO-256",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "VDOO-256"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1218,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33514,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "VDOO-256"
+              }
+            }
+          ]
+        },
+        {
+          "name": "sig_verify",
+          "parameter_set": "VDOO-512",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "VDOO-512"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1218,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33509,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "VDOO-512"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-17",
+      "algorithm": "HEP-QC",
+      "primitive": "kem",
+      "source": "third_party/kem-17/source",
+      "source_digest": "34e59ad664bc6a68da3af7288b6c84519fa0a68372544e4d96095cdc797d0654",
+      "specification": "oracles/spec/kem-17-HEP-QC.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "hep-qc-1",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "hep-qc-1"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1602,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33668,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "hep-qc-1"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kem_dec",
+          "parameter_set": "hep-qc-3",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "hep-qc-3"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1602,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33670,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "hep-qc-3"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kem_dec",
+          "parameter_set": "hep-qc-5",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "hep-qc-5"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1602,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33672,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "hep-qc-5"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kem_dec",
+          "parameter_set": "hep-qc-7",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "hep-qc-7"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 1602,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33674,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "hep-qc-7"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kex-01",
+      "algorithm": "ADKEX",
+      "primitive": "kex",
+      "source": "third_party/kex-01/source",
+      "source_digest": "a3062aa4b414eff6f319c661037cdf9331ff8479dfc348130aeb37cbc3c144e7",
+      "specification": "oracles/spec/kex-01-ADKEX.md",
+      "apis": [
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "ADKEX-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "ADKEX-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 274,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100129,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ADKEX-128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "ADKEX-256",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "ADKEX-256"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 274,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100257,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ADKEX-256"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "ADKEX-512",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "ADKEX-512"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 274,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100513,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "ADKEX-512"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kex-04",
+      "algorithm": "DKEX",
+      "primitive": "kex",
+      "source": "third_party/kex-04/source",
+      "source_digest": "cd43c760f309c9f4f2eb9dec6034d784edc0d84c9e48e697003754b207f2b70d",
+      "specification": "oracles/spec/kex-04-DKEX.md",
+      "apis": [
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "DKEX-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "DKEX-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 279,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100132,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "DKEX-128"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "DKEX-256",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "DKEX-256"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 279,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100260,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "DKEX-256"
+              }
+            }
+          ]
+        },
+        {
+          "name": "kex_derive_ss_a+b",
+          "parameter_set": "DKEX-512",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "DKEX-512"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 2048,
+              "disk_mb": 279,
+              "iterations": 10,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 100516,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "DKEX-512"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

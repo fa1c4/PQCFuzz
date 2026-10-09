@@ -1,0 +1,9 @@
+{
+  "instance": "Iphe-512",
+  "reference": [
+    "Iphe/Implementations/Reference_Implementation/Iphe-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Iphe/Implementations/Optimized_Implementation/Iphe-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

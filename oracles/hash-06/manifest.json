@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "target": "hash-06",
+  "algorithm": "Cuishen",
+  "primitive": "hash",
+  "source_digest": "5608ba9aac7ef64fe6a7b3495219fc70fa3215f5afae4263d83dd84e9ef2dbc8",
+  "spec_sha256": "ab993eb7b4a729fd230ccdf9fa290f8c64295a9a3e162708efbab6f079126e47",
+  "instances": [
+    {
+      "parameter_set": "Cuishen-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "Cuishen512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Cuishen/CryptHash/Cuishen512-DIFF-01.md",
+          "oracle": "implement/diff_oracle.py",
+          "mutator": "implement/mutator/diff.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "Cuishen512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Cuishen/CryptHash/Cuishen512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

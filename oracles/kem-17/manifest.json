@@ -1,0 +1,258 @@
+{
+  "schema_version": 2,
+  "target": "kem-17",
+  "algorithm": "HEP-QC",
+  "primitive": "kem",
+  "source_digest": "34e59ad664bc6a68da3af7288b6c84519fa0a68372544e4d96095cdc797d0654",
+  "spec_sha256": "05545ec1cb3e5baa1b14bbd17eb40d06a0647feeb20ee3c02029b770bc00f7b1",
+  "instances": [
+    {
+      "parameter_set": "hep-qc-1",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "seeded_prng": true,
+        "honest_roundtrip": true
+      },
+      "oracles": [
+        {
+          "id": "HEPQC1-KAT-01",
+          "version": 1,
+          "claim": "HEPQC1-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC1-KAT-01.md",
+          "oracle": "implement/kat_hepqc1_oracle.py",
+          "mutator": "implement/mutator/kat_hepqc1.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        },
+        {
+          "id": "HEPQC1-ROUNDTRIP-01",
+          "version": 1,
+          "claim": "HEPQC1-R",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC1-ROUNDTRIP-01.md",
+          "oracle": "implement/roundtrip_1_oracle.py",
+          "mutator": "implement/mutator/roundtrip_1.py",
+          "required_capabilities": [
+            "indexed_public_vector",
+            "seeded_prng",
+            "honest_roundtrip",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "hep-qc-3",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "seeded_prng": true,
+        "honest_roundtrip": true
+      },
+      "oracles": [
+        {
+          "id": "HEPQC3-KAT-01",
+          "version": 1,
+          "claim": "HEPQC3-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC3-KAT-01.md",
+          "oracle": "implement/kat_hepqc3_oracle.py",
+          "mutator": "implement/mutator/kat_hepqc3.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        },
+        {
+          "id": "HEPQC3-ROUNDTRIP-01",
+          "version": 1,
+          "claim": "HEPQC3-R",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC3-ROUNDTRIP-01.md",
+          "oracle": "implement/roundtrip_3_oracle.py",
+          "mutator": "implement/mutator/roundtrip_3.py",
+          "required_capabilities": [
+            "indexed_public_vector",
+            "seeded_prng",
+            "honest_roundtrip",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "hep-qc-5",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "seeded_prng": true,
+        "honest_roundtrip": true
+      },
+      "oracles": [
+        {
+          "id": "HEPQC5-KAT-01",
+          "version": 1,
+          "claim": "HEPQC5-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC5-KAT-01.md",
+          "oracle": "implement/kat_hepqc5_oracle.py",
+          "mutator": "implement/mutator/kat_hepqc5.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        },
+        {
+          "id": "HEPQC5-ROUNDTRIP-01",
+          "version": 1,
+          "claim": "HEPQC5-R",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC5-ROUNDTRIP-01.md",
+          "oracle": "implement/roundtrip_5_oracle.py",
+          "mutator": "implement/mutator/roundtrip_5.py",
+          "required_capabilities": [
+            "indexed_public_vector",
+            "seeded_prng",
+            "honest_roundtrip",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "hep-qc-7",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "seeded_prng": true,
+        "honest_roundtrip": true
+      },
+      "oracles": [
+        {
+          "id": "HEPQC7-KAT-01",
+          "version": 1,
+          "claim": "HEPQC7-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC7-KAT-01.md",
+          "oracle": "implement/kat_hepqc7_oracle.py",
+          "mutator": "implement/mutator/kat_hepqc7.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        },
+        {
+          "id": "HEPQC7-ROUNDTRIP-01",
+          "version": 1,
+          "claim": "HEPQC7-R",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HEP-QC/kem_dec/HEPQC7-ROUNDTRIP-01.md",
+          "oracle": "implement/roundtrip_7_oracle.py",
+          "mutator": "implement/mutator/roundtrip_7.py",
+          "required_capabilities": [
+            "indexed_public_vector",
+            "seeded_prng",
+            "honest_roundtrip",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    }
+  ]
+}

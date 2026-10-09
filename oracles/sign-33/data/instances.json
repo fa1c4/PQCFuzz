@@ -1,0 +1,257 @@
+{
+  "VDOO-128": {
+    "kat": "Test_Vectors/KAT_SIG_VDOO-128.txt",
+    "sources": [
+      "Implementation/Reference_Implementation/vdoo_128/auxfunc.c",
+      "Implementation/Reference_Implementation/vdoo_128/blas_comm.c",
+      "Implementation/Reference_Implementation/vdoo_128/drng.c",
+      "Implementation/Reference_Implementation/vdoo_128/parallel_matrix_op.c",
+      "Implementation/Reference_Implementation/vdoo_128/rng.c",
+      "Implementation/Reference_Implementation/vdoo_128/utils.c",
+      "Implementation/Reference_Implementation/vdoo_128/api.c",
+      "Implementation/Reference_Implementation/vdoo_128/SIG_AlgorithmInstance.c",
+      "Implementation/Reference_Implementation/vdoo_128/vdoo_keypair.c",
+      "Implementation/Reference_Implementation/vdoo_128/vdoo_sign.c",
+      "Implementation/Reference_Implementation/vdoo_128/vdoo_verif.c"
+    ],
+    "includes": [
+      "Implementation/Reference_Implementation/vdoo_128"
+    ],
+    "flags": [
+      "-DVDOO_128"
+    ],
+    "kat_sha256": "661ed1a59e7936beaf74d3efb029b25cc72ee6aab4299f53b08b2479fe850469",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 1,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 2,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 3,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 4,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 5,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 6,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 7,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 8,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      },
+      {
+        "Count": 9,
+        "PK_Len": 330855,
+        "SK_Len": 342790,
+        "Sn_Len": 85
+      }
+    ]
+  },
+  "VDOO-256": {
+    "kat": "Test_Vectors/KAT_SIG_VDOO-256.txt",
+    "sources": [
+      "Implementation/Reference_Implementation/vdoo_256/auxfunc.c",
+      "Implementation/Reference_Implementation/vdoo_256/blas_comm.c",
+      "Implementation/Reference_Implementation/vdoo_256/drng.c",
+      "Implementation/Reference_Implementation/vdoo_256/parallel_matrix_op.c",
+      "Implementation/Reference_Implementation/vdoo_256/rng.c",
+      "Implementation/Reference_Implementation/vdoo_256/utils.c",
+      "Implementation/Reference_Implementation/vdoo_256/api.c",
+      "Implementation/Reference_Implementation/vdoo_256/SIG_AlgorithmInstance.c",
+      "Implementation/Reference_Implementation/vdoo_256/vdoo_keypair.c",
+      "Implementation/Reference_Implementation/vdoo_256/vdoo_sign.c",
+      "Implementation/Reference_Implementation/vdoo_256/vdoo_verif.c"
+    ],
+    "includes": [
+      "Implementation/Reference_Implementation/vdoo_256"
+    ],
+    "flags": [
+      "-DVDOO_256"
+    ],
+    "kat_sha256": "50b581be5fe415906c38be3041c320d46322ddac1b42e515db4332238ea0eb43",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 1,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 2,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 3,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 4,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 5,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 6,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 7,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 8,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      },
+      {
+        "Count": 9,
+        "PK_Len": 4289250,
+        "SK_Len": 4388307,
+        "Sn_Len": 316
+      }
+    ]
+  },
+  "VDOO-512": {
+    "kat": "Test_Vectors/KAT_SIG_VDOO-512.txt",
+    "sources": [
+      "Implementation/Reference_Implementation/vdoo_512/auxfunc.c",
+      "Implementation/Reference_Implementation/vdoo_512/blas_comm.c",
+      "Implementation/Reference_Implementation/vdoo_512/drng.c",
+      "Implementation/Reference_Implementation/vdoo_512/parallel_matrix_op.c",
+      "Implementation/Reference_Implementation/vdoo_512/rng.c",
+      "Implementation/Reference_Implementation/vdoo_512/utils.c",
+      "Implementation/Reference_Implementation/vdoo_512/api.c",
+      "Implementation/Reference_Implementation/vdoo_512/SIG_AlgorithmInstance.c",
+      "Implementation/Reference_Implementation/vdoo_512/vdoo_keypair.c",
+      "Implementation/Reference_Implementation/vdoo_512/vdoo_sign.c",
+      "Implementation/Reference_Implementation/vdoo_512/vdoo_verif.c"
+    ],
+    "includes": [
+      "Implementation/Reference_Implementation/vdoo_512"
+    ],
+    "flags": [
+      "-DVDOO_512"
+    ],
+    "kat_sha256": "f6c600292058fc42755492d4d655e68db4c091443c40dce37ac04cec630ae0bf",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 1,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 2,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 3,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 4,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 5,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 6,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 7,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 8,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      },
+      {
+        "Count": 9,
+        "PK_Len": 20229300,
+        "SK_Len": 20474382,
+        "Sn_Len": 471
+      }
+    ]
+  }
+}

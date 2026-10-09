@@ -1,0 +1,9 @@
+{
+  "instance": "Cuishen-512",
+  "reference": [
+    "Cuishen/Implementations/Reference_Implementation/Cuishen-512/CryptHash_Cuishen-512.c"
+  ],
+  "optimized": [
+    "Cuishen/Implementations/Optimized_Implementation/Cuishen-512/CryptHash_Cuishen-512_x86.S"
+  ]
+}

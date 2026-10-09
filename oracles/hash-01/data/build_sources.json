@@ -1,0 +1,17 @@
+{
+  "instance": "AFS-TrEDM-512",
+  "reference": [
+    "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-512/CryptHash_AlgorithmInstance.c",
+    "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-512/afs_lmds1600_s6.c",
+    "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-512/afs_p1600.c",
+    "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-512/afs_sbox64.c",
+    "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-512/afs_tredm.c"
+  ],
+  "optimized": [
+    "AFS-TrEDM/Implementations/Optimized_Implementation/AFS-TrEDM-512/CryptHash_AlgorithmInstance.c",
+    "AFS-TrEDM/Implementations/Optimized_Implementation/AFS-TrEDM-512/afs_sbox64.c",
+    "AFS-TrEDM/Implementations/Optimized_Implementation/common/s6/afs_lmds1600_s6_opt64.c",
+    "AFS-TrEDM/Implementations/Optimized_Implementation/AFS-TrEDM-512/afs_p1600_avx2.c",
+    "AFS-TrEDM/Implementations/Optimized_Implementation/AFS-TrEDM-512/afs_tredm.c"
+  ]
+}

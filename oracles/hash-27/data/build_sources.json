@@ -1,0 +1,9 @@
+{
+  "instance": "Vedak-512",
+  "reference": [
+    "Vedak/Implementations/Reference_Implementation/Vedak-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Vedak/Implementations/Optimized_Implementation/Vedak-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

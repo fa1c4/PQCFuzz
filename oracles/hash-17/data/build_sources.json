@@ -1,0 +1,11 @@
+{
+  "instance": "MasterCube-512",
+  "reference": [
+    "MasterCube/Implementations/Reference_Implementation/MasterCube-512/CryptHash_AlgorithmInstance.c",
+    "MasterCube/Implementations/Reference_Implementation/MasterCube-512/MasterCube-512.c"
+  ],
+  "optimized": [
+    "MasterCube/Implementations/Additional_Implementation/MasterCube-512/X86/Resource_Optimized_Implementation/CryptHash_AlgorithmInstance.c",
+    "MasterCube/Implementations/Additional_Implementation/MasterCube-512/X86/Resource_Optimized_Implementation/MasterCube-512.c"
+  ]
+}

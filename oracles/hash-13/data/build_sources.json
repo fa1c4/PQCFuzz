@@ -1,0 +1,9 @@
+{
+  "instance": "JuziHash-512",
+  "reference": [
+    "Juzi/Implementations/Implementation/Reference_Implementation/JuziHash-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Juzi/Implementations/Implementation/Optimized_Implementation/JuziHash-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

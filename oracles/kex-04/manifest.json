@@ -1,0 +1,133 @@
+{
+  "schema_version": 2,
+  "target": "kex-04",
+  "algorithm": "DKEX",
+  "primitive": "kex",
+  "source_digest": "cd43c760f309c9f4f2eb9dec6034d784edc0d84c9e48e697003754b207f2b70d",
+  "spec_sha256": "7dfb75e8b4d762ade7fe4e46e043c0a1c3d5eacc4723cdaa74428eb233d156fc",
+  "instances": [
+    {
+      "parameter_set": "DKEX-128",
+      "api": "kex_derive_ss_a+b",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "dual_role_derivation": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DKEX128-ROLE-01",
+          "version": 1,
+          "claim": "DKEX128-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/DKEX/kex_derive_ss_a+b/DKEX128-ROLE-01.md",
+          "oracle": "implement/role_128_oracle.py",
+          "mutator": "implement/mutator/role_128.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "dual_role_derivation",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kex"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "DKEX-256",
+      "api": "kex_derive_ss_a+b",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "dual_role_derivation": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DKEX256-ROLE-01",
+          "version": 1,
+          "claim": "DKEX256-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/DKEX/kex_derive_ss_a+b/DKEX256-ROLE-01.md",
+          "oracle": "implement/role_256_oracle.py",
+          "mutator": "implement/mutator/role_256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "dual_role_derivation",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kex"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "DKEX-512",
+      "api": "kex_derive_ss_a+b",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "dual_role_derivation": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DKEX512-ROLE-01",
+          "version": 1,
+          "claim": "DKEX512-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/DKEX/kex_derive_ss_a+b/DKEX512-ROLE-01.md",
+          "oracle": "implement/role_512_oracle.py",
+          "mutator": "implement/mutator/role_512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "dual_role_derivation",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kex"
+          ]
+        }
+      ]
+    }
+  ]
+}

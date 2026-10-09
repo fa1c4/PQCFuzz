@@ -1,0 +1,9 @@
+{
+  "instance": "MoFang_512",
+  "reference": [
+    "MoFang/Implementations/Reference_Implementation/MoFang-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "MoFang/Implementations/Optimized_Implementation/MoFang-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

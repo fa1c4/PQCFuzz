@@ -1,0 +1,12 @@
+{
+  "instance": "MOZI-512",
+  "reference": [
+    "Mozi/Implementations/Reference_Implementation/MOZI-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Mozi/Implementations/Optimized_Implementation/MOZI-512/CryptHash_AlgorithmInstance_fast.cpp"
+  ],
+  "compilers": {
+    "optimized": "g++"
+  }
+}

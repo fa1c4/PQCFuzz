@@ -1,0 +1,11 @@
+{
+  "instance": "Wish512",
+  "reference": [
+    "Wish/Implementations/Reference_Implementation/Wish512_reference/CryptHash_AlgorithmInstance.c",
+    "Wish/Implementations/Reference_Implementation/Wish512_reference/wish.c"
+  ],
+  "optimized": [
+    "Wish/Implementations/Optimized_Implementation/Wish512_x86_performance_optimized/CryptHash_AlgorithmInstance.c",
+    "Wish/Implementations/Optimized_Implementation/Wish512_x86_performance_optimized/wish.c"
+  ]
+}

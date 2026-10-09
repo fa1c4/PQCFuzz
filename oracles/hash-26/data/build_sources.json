@@ -1,0 +1,12 @@
+{
+  "instance": "CHIME-512",
+  "reference": [
+    "CHIME/Implementations/Reference_Implementation/CHIME-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "CHIME/Implementations/Optimized_Implementation/CHIME-512/CryptHash_AlgorithmInstance.c",
+    "CHIME/Implementations/Optimized_Implementation/CHIME-512/P.cpp",
+    "CHIME/Implementations/Optimized_Implementation/CHIME-512/chime512.cpp",
+    "CHIME/Implementations/Optimized_Implementation/CHIME-512/sha512.cpp"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "instance": "MEGASCON-512",
+  "reference": [
+    "Megascon/Implementations/Reference_Implementation/MEGASCON-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Megascon/Implementations/Optimized_Implementation/MEGASCON-512/CryptHash_AlgorithmInstance_fast.cpp"
+  ],
+  "compilers": {
+    "optimized": "g++"
+  }
+}

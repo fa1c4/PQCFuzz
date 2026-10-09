@@ -1,0 +1,9 @@
+{
+  "instance": "Dragon-512",
+  "reference": [
+    "Dragon/Implementations and Test_vector/Dragon-x86/Implementations/Reference_Implementation/Dragon-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Dragon/Implementations and Test_vector/Dragon-x86/Implementations/Optimized_Implementation/Dragon-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

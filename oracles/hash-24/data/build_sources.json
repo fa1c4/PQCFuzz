@@ -1,0 +1,9 @@
+{
+  "instance": "QSH-512",
+  "reference": [
+    "QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "QSH/Implementations/03_Implementations/2_Optimized_Implementation/QSH-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

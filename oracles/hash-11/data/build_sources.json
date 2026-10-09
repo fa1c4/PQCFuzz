@@ -1,0 +1,13 @@
+{
+  "instance": "Garnet_512_Cap1024",
+  "reference": [
+    "Garnet/Implementations/API_CryptHash/Implementations/Reference_Implementation/Garnet/CryptHash_Garnet.c",
+    "Garnet/Implementations/API_CryptHash/Implementations/Reference_Implementation/Garnet/Garnet_512.c",
+    "Garnet/Implementations/API_CryptHash/Implementations/Reference_Implementation/Garnet/Garnet_768.c",
+    "Garnet/Implementations/API_CryptHash/Implementations/Reference_Implementation/Garnet/Garnet_1024.c"
+  ],
+  "optimized": [],
+  "backends": [
+    "reference"
+  ]
+}

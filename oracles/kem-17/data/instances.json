@@ -1,0 +1,450 @@
+{
+  "hep-qc-1": {
+    "kat": "Test_Vectors/hep-qc-1/KAT_KEM_AlgorithmInstance.txt",
+    "sources": [
+      "Implementations/Implementations/common/code.c",
+      "Implementations/Implementations/common/crypto_memset.c",
+      "Implementations/Implementations/common/fft.c",
+      "Implementations/Implementations/common/gf.c",
+      "Implementations/Implementations/common/gf2x.c",
+      "Implementations/Implementations/common/parsing.c",
+      "Implementations/Implementations/common/reed_muller.c",
+      "Implementations/Implementations/common/reed_solomon.c",
+      "Implementations/Implementations/common/symmetric.c",
+      "Implementations/Implementations/common/vector.c",
+      "Implementations/Implementations/ref/KEM_HEP_QC.c",
+      "Implementations/Implementations/ref/PKE_HEP_QC.c",
+      "Implementations/Lib/drng/drng.c",
+      "Implementations/Lib/auxfunc/auxfunc.c",
+      "Implementations/Tests/kats/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Implementations/common",
+      "Implementations/Implementations/common/hep-qc-1",
+      "Implementations/Implementations/ref",
+      "Implementations/Implementations/ref/hep-qc-1",
+      "Implementations/Lib/drng",
+      "Implementations/Lib/auxfunc"
+    ],
+    "flags": [],
+    "kat_sha256": "6a84260e1bf7a1633e830e1556a8f0fe56b8ea4232769589594f555535dd769c",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "0c4ba52179caa9b1b2a4d3d8326cefd09805bced7a139fa216fed49800fc2a31"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "f2b4f92a1927570b22d9c0301fc34687ec3c2e8248b84f0428e81549b5a836b8"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "d7b186a8174a6071aa5cb93ab4ef711c20ecdea71a8ef1744563aa95610e83d6"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "08b6bfbbf842f14d575299efc1bc61ac855faa044cb943d2884abd0989d01023"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "8e2614f2e888328683ac22872620ba90c763125c04de4236b07765a2149977a6"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "7f8f907b95b0cabc0a75570f9ad9b0a072ca4974187e0c55ff1559eb0d376d30"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "45165d5e72628354a77ffbbfbcbdc0c65eadde70e4bfad3ceea45b9875e6cc81"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "a7d4beba577b4ceb6b3c891ec8d2f22f04d3131db12cd012310228f6c3705119"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "72c0fd9db456278b0a848e6d0728b6a4df63b78a9441e915b9fd3be727cb9717"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 285889,
+        "SK_Len": 285969,
+        "CT_Len": 4433,
+        "SS_Len": 32,
+        "expected_ss": "e7ca081ede8817feb53c0585b886383cf12a6eecdd477ca5065f3e50b4c6f12a"
+      }
+    ]
+  },
+  "hep-qc-3": {
+    "kat": "Test_Vectors/hep-qc-3/KAT_KEM_AlgorithmInstance.txt",
+    "sources": [
+      "Implementations/Implementations/common/code.c",
+      "Implementations/Implementations/common/crypto_memset.c",
+      "Implementations/Implementations/common/fft.c",
+      "Implementations/Implementations/common/gf.c",
+      "Implementations/Implementations/common/gf2x.c",
+      "Implementations/Implementations/common/parsing.c",
+      "Implementations/Implementations/common/reed_muller.c",
+      "Implementations/Implementations/common/reed_solomon.c",
+      "Implementations/Implementations/common/symmetric.c",
+      "Implementations/Implementations/common/vector.c",
+      "Implementations/Implementations/ref/KEM_HEP_QC.c",
+      "Implementations/Implementations/ref/PKE_HEP_QC.c",
+      "Implementations/Lib/drng/drng.c",
+      "Implementations/Lib/auxfunc/auxfunc.c",
+      "Implementations/Tests/kats/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Implementations/common",
+      "Implementations/Implementations/common/hep-qc-3",
+      "Implementations/Implementations/ref",
+      "Implementations/Implementations/ref/hep-qc-3",
+      "Implementations/Lib/drng",
+      "Implementations/Lib/auxfunc"
+    ],
+    "flags": [],
+    "kat_sha256": "c6a328b7a52ef3b3d435b4134a8c186c5f630fbd5bbd7af68891fe1ef9c8583c",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "b9ba1358c06ca22d26a5f80effa7a266f91b33b540f4dfa393ce9c2570df42e2"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "0cbde14c787152e1488c36126358b17c85e7707a9f3be712db71cbeb5de25ead"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "75eb76390c9ab0cc05040eff92d9447e1f90084e627346fc6d23f3490ca87ba7"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "e7c8e1b8b747c294ec9b862149e6d204d541dc91b65e37d04bd3d752ed43deb8"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "603e1d853c2e75aa4dbe15d24533aa764efacae2ec2548bb0decac4ee772f062"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "f5025a278ac5cb01d8624eb4130d41635b331d334fa659ff47325a2c4b926a17"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "c6a374c6dcb01894d3056c9fdaa9206a0ca8ffdd1d2ffd3b30251f28401bde81"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "4e69f5842348a616ddf03a676247c26ea9580a2e1a176cf61f15d568b3d44c6d"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "c0d2bfcbafda7f804805086c0f32e14503a66b400606f412d5d6f77a115a46fb"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 866210,
+        "SK_Len": 866298,
+        "CT_Len": 8978,
+        "SS_Len": 32,
+        "expected_ss": "b4f39b0e117b1ecb6e8b102338eebdbacc6d06ab94471e094662ebff6946b3af"
+      }
+    ]
+  },
+  "hep-qc-5": {
+    "kat": "Test_Vectors/hep-qc-5/KAT_KEM_AlgorithmInstance.txt",
+    "sources": [
+      "Implementations/Implementations/common/code.c",
+      "Implementations/Implementations/common/crypto_memset.c",
+      "Implementations/Implementations/common/fft.c",
+      "Implementations/Implementations/common/gf.c",
+      "Implementations/Implementations/common/gf2x.c",
+      "Implementations/Implementations/common/parsing.c",
+      "Implementations/Implementations/common/reed_muller.c",
+      "Implementations/Implementations/common/reed_solomon.c",
+      "Implementations/Implementations/common/symmetric.c",
+      "Implementations/Implementations/common/vector.c",
+      "Implementations/Implementations/ref/KEM_HEP_QC.c",
+      "Implementations/Implementations/ref/PKE_HEP_QC.c",
+      "Implementations/Lib/drng/drng.c",
+      "Implementations/Lib/auxfunc/auxfunc.c",
+      "Implementations/Tests/kats/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Implementations/common",
+      "Implementations/Implementations/common/hep-qc-5",
+      "Implementations/Implementations/ref",
+      "Implementations/Implementations/ref/hep-qc-5",
+      "Implementations/Lib/drng",
+      "Implementations/Lib/auxfunc"
+    ],
+    "flags": [],
+    "kat_sha256": "93dd8f9012e614dfda669b68e0ea54a6c51dc3dde31da0ac55b730ed171a17ca",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "4e8196adc9f78f6cbf6d5edde5897f2e53fc269771fdb3f5d6e703b1d18f2915"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "112a9d0587e45a05e8708102b2bfbf7022a2568450427b7b079518f6d7437a25"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "eea76164603c9e626bf940795399efc028263315e61a004aab5291ae50111ab0"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "c79c1a33a407195bda711c40143b5bb2e75f7e0d34410541a44f1747459d8da6"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "1a3adb4c603c83f69999153cf400a3d104501ca2d7f98f244c323adbdeaa09b0"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "61886aa3841b9e4a6f439a6dbb5e3ce5cdb9c82e3b1372b3c409de6c86f590bb"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "41d59a7e60a8a8537c983dc9e8ea6aab31785fe428ceb64e8aa60499ede2f55c"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "4eff66b34471f4851a5ade2e4dac2edede0d60086a1cec56c4a47f4479172813"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "c919db21cb674734aef8f0983d7ff060e4b2101c1e1433eed967bbf5f76f7d51"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1852485,
+        "SK_Len": 1852581,
+        "CT_Len": 14421,
+        "SS_Len": 32,
+        "expected_ss": "631e8589bb0ebd75b9f600ba7b449be944ca94a4814afa15343ca87dc596bc1f"
+      }
+    ]
+  },
+  "hep-qc-7": {
+    "kat": "Test_Vectors/hep-qc-7/KAT_KEM_AlgorithmInstance.txt",
+    "sources": [
+      "Implementations/Implementations/common/code.c",
+      "Implementations/Implementations/common/crypto_memset.c",
+      "Implementations/Implementations/common/fft.c",
+      "Implementations/Implementations/common/gf.c",
+      "Implementations/Implementations/common/gf2x.c",
+      "Implementations/Implementations/common/parsing.c",
+      "Implementations/Implementations/common/reed_muller.c",
+      "Implementations/Implementations/common/reed_solomon.c",
+      "Implementations/Implementations/common/symmetric.c",
+      "Implementations/Implementations/common/vector.c",
+      "Implementations/Implementations/ref/KEM_HEP_QC.c",
+      "Implementations/Implementations/ref/PKE_HEP_QC.c",
+      "Implementations/Lib/drng/drng.c",
+      "Implementations/Lib/auxfunc/auxfunc.c",
+      "Implementations/Tests/kats/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Implementations/common",
+      "Implementations/Implementations/common/hep-qc-7",
+      "Implementations/Implementations/ref",
+      "Implementations/Implementations/ref/hep-qc-7",
+      "Implementations/Lib/drng",
+      "Implementations/Lib/auxfunc"
+    ],
+    "flags": [],
+    "kat_sha256": "089c1388bc7feb08c123ff3c9260410776f31dd090ceb69857b00b3a5b546841",
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "026d4bc5f975249613c59bb08ba6208503b19fab7ee63b2b0e935d5114002b1e"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "2d8cae786eb362df94cb74ea05b81e75e75d73eda06aa2a5f7a64676b5dd247d"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "eb8e0831480631a0545e131aac1a37a580ee1eda201bc0e2dfa4a1cd46315b7b"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "8d562b66b39743eb9f8a9563173068c29b11f4033be0a940be2c8ba947ea7ce1"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "e1a7345526d0cbbb575b2657d9801acb606bdc0535a5b76fc9e258cc42196ab5"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "7d6313cf3bb331fab4757b07664ff0ad44cf7c04c5663155df87e87efabef795"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "dd3e8bbb1ca8536a5096ad98068e897803596a913135dda907f5da56261a31cc"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "e601958c835d58a54571f9b0548bea04bcc8be6235d4159b48794956bbba0040"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "e3dd8b4661644ca64cd5d8b06d61b09319ae776c01abb5c6934ee2903149c12d"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 12644449,
+        "SK_Len": 12644577,
+        "CT_Len": 49297,
+        "SS_Len": 32,
+        "expected_ss": "dfb2eab4c0ac13008ec858245ca9e82bad68612277822b20bdd0134ca475a8c3"
+      }
+    ]
+  }
+}

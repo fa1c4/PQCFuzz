@@ -1,0 +1,9 @@
+{
+  "instance": "Duet-512",
+  "reference": [
+    "Duet/Implementations/Reference_Implementation/Duet-512/CryptHash_Duet-512.c"
+  ],
+  "optimized": [
+    "Duet/Implementations/Optimized_Implementation/Duet-512/CryptHash_Duet-512-c-avx2.c"
+  ]
+}

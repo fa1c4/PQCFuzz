@@ -1,0 +1,9 @@
+{
+  "instance": "Neulaser-512",
+  "reference": [
+    "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Optimized_Implementation/Neulaser-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

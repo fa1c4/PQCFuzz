@@ -1,0 +1,11 @@
+{
+  "instance": "Eijen-512",
+  "reference": [
+    "Eijen/Implementations/Reference_Implementation/Eijen-512/CryptHash_AlgorithmInstance.c",
+    "Eijen/Implementations/Reference_Implementation/Eijen-512/eijen_ref.c"
+  ],
+  "optimized": [
+    "Eijen/Implementations/Optimized_Implementation/Eijen-512/CryptHash_AlgorithmInstance.c",
+    "Eijen/Implementations/Optimized_Implementation/Eijen-512/eijen_avx2.c"
+  ]
+}

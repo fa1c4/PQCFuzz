@@ -1,0 +1,9 @@
+{
+  "instance": "FEILIAN512",
+  "reference": [
+    "FEILIAN/Implementations/Reference_Implementation/FEILIAN512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "FEILIAN/Implementations/Optimized_Implementation/FEILIAN_SIMD512/CryptHash_AlgorithmInstance.c"
+  ]
+}

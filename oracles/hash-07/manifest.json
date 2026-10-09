@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "target": "hash-07",
+  "algorithm": "Dragon",
+  "primitive": "hash",
+  "source_digest": "99229052452e211f316d453514dd4a336d6300f5470577b4e43f88ffaa38b2a5",
+  "spec_sha256": "2ad6a0f1b6d016c2a2606262b8a6a9b8bb542f9dbaa72160fbb8f12c889abf95",
+  "instances": [
+    {
+      "parameter_set": "Dragon-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "Dragon512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/Dragon512-DIFF-01.md",
+          "oracle": "implement/diff_oracle.py",
+          "mutator": "implement/mutator/diff.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "Dragon512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/Dragon512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

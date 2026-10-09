@@ -1,0 +1,14 @@
+{
+  "instance": "ZC-EDMC-1280-512",
+  "reference": [
+    "ZC-EDMC/Implementations/Implementations/Reference_Implementation/ZC-EDMC-1280-512/CryptHash_AlgorithmInstance.c",
+    "ZC-EDMC/Implementations/lib/low/ZuD-1280/plain/ZuD1280-plain.c"
+  ],
+  "optimized": [
+    "ZC-EDMC/Implementations/Implementations/Optimized_Implementation/ZC-EDMC-1280-512/CryptHash_AlgorithmInstance.c",
+    "ZC-EDMC/Implementations/lib/low/ZuD-1280/AVX2/ZuD1280-AVX2.c"
+  ],
+  "include_dirs": [
+    "ZC-EDMC/Implementations/lib/common"
+  ]
+}

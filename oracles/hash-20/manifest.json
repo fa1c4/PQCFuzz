@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "target": "hash-20",
+  "algorithm": "MOZI",
+  "primitive": "hash",
+  "source_digest": "ff063e83c4ad48cfbc1e559c1d0e97bf2b0c8ac4d0eb1ec01abeb8c117fb04e5",
+  "spec_sha256": "367738241961cb55ab4e95ce972404f1edc590399068e06d5dd27a1aea900088",
+  "instances": [
+    {
+      "parameter_set": "MOZI-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "MOZI512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/MOZI/CryptHash/MOZI512-DIFF-01.md",
+          "oracle": "implement/diff_oracle.py",
+          "mutator": "implement/mutator/diff.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "MOZI512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/MOZI/CryptHash/MOZI512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

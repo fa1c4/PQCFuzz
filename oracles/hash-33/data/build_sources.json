@@ -1,0 +1,9 @@
+{
+  "instance": "Thunder-512",
+  "reference": [
+    "Thunder/Implementations and Test_vector/Thunder-X86/Implementations/Reference_Implementation/Thunder-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [
+    "Thunder/Implementations and Test_vector/Thunder-X86/Implementations/Optimized_Implementation/Thunder-512/CryptHash_AlgorithmInstance.c"
+  ]
+}

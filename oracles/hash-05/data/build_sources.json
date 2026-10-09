@@ -1,0 +1,10 @@
+{
+  "instance": "uHash-512",
+  "reference": [
+    "uHash/Implementations/3 实现代码/Implementations/Reference_Implementation/uHash-512/CryptHash_AlgorithmInstance.c"
+  ],
+  "optimized": [],
+  "backends": [
+    "reference"
+  ]
+}
