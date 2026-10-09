@@ -4,7 +4,7 @@ Parent: [architecture.md](architecture.md). Implements DES-01, DES-02, DES-03, D
 
 ## Package and design record
 
-`oracles/<target>/manifest.json` pins schema version, source/spec digests, algorithm/API/profile/parameter identity, adapter path and capability declaration. Each oracle record pins an active property ID/version, active pattern ID/version, exact spec claim ID, design path, executable oracle path, paired mutator path and required capabilities and applicable primitive list. The design at `design/<algorithm>/<api>/<oracle-id>.md` states source locator, preconditions, valid baseline, structured intervention, expected relation, observables, positive and negative controls, fault control, scope/limits, and exact verdict predicate. A generic pattern alone cannot register.
+`oracles/<target>/manifest.json` pins schema version, source/spec digests, algorithm identity and exact instance identities. Schema v2 contains `instances[]` keyed by `(parameter_set, api)`; each instance pins its profiles, adapter path, capability declaration and oracle records. Each oracle record pins an active property ID/version, active pattern ID/version, exact spec claim ID, design path, executable oracle path, paired mutator path and required capabilities and applicable primitive list. A reused implementation path does not merge claim scope across instances. Schema-v1 manifests retain their original single-instance interpretation. The design at `design/<algorithm>/<api>/<oracle-id>.md` states source locator, preconditions, valid baseline, structured intervention, expected relation, observables, positive and negative controls, fault control, scope/limits, and exact verdict predicate. A generic pattern alone cannot register.
 
 ## Executable protocol and verdict
 

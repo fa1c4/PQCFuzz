@@ -1,0 +1,244 @@
+{
+  "schema_version": 2,
+  "target": "hash-16",
+  "algorithm": "LLH",
+  "primitive": "hash",
+  "source_digest": "2006b0145398d127995faead9689fee67c95bd465de9b303b03400b35f2ef0b9",
+  "spec_sha256": "f248b5ee9369df0b8de290e074ebac8269e4dd6a70ca5daacd368676f932d7fa",
+  "instances": [
+    {
+      "parameter_set": "LLH-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt-avx2"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "dual_backend": true,
+        "bit_input": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "submitted_kat": true
+      },
+      "oracles": [
+        {
+          "id": "LLH512-DIFF-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH512-DIFF-01.md",
+          "oracle": "implement/oracle.py",
+          "mutator": "implement/mutator/backend_switch.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LLH512-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH512-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat_pair.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "LLH-256",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt-avx2"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": true,
+        "core_wrapper_comparison": false,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LLH256-DIFF-01",
+          "version": 1,
+          "claim": "LLH256-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH256-DIFF-01.md",
+          "oracle": "implement/variant_diff_256_oracle.py",
+          "mutator": "implement/mutator/variant_diff_256.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LLH256-KAT-01",
+          "version": 1,
+          "claim": "LLH256-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH256-KAT-01.md",
+          "oracle": "implement/variant_kat_256_oracle.py",
+          "mutator": "implement/mutator/variant_kat_256.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "LLH-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt-avx2"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": true,
+        "core_wrapper_comparison": false,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LLH768-DIFF-01",
+          "version": 1,
+          "claim": "LLH768-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH768-DIFF-01.md",
+          "oracle": "implement/variant_diff_768_oracle.py",
+          "mutator": "implement/mutator/variant_diff_768.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LLH768-KAT-01",
+          "version": 1,
+          "claim": "LLH768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH768-KAT-01.md",
+          "oracle": "implement/variant_kat_768_oracle.py",
+          "mutator": "implement/mutator/variant_kat_768.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "LLH-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-ref-opt-avx2"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": true,
+        "core_wrapper_comparison": false,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LLH1024-DIFF-01",
+          "version": 1,
+          "claim": "LLH1024-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH1024-DIFF-01.md",
+          "oracle": "implement/variant_diff_1024_oracle.py",
+          "mutator": "implement/mutator/variant_diff_1024.py",
+          "required_capabilities": [
+            "dual_backend",
+            "bit_input"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LLH1024-KAT-01",
+          "version": 1,
+          "claim": "LLH1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/LLH/CryptHash/LLH1024-KAT-01.md",
+          "oracle": "implement/variant_kat_1024_oracle.py",
+          "mutator": "implement/mutator/variant_kat_1024.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

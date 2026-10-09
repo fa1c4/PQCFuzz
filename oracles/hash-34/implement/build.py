@@ -1,0 +1,33 @@
+"""Build the archived WChain-V1-512 CryptHash backends in one isolated run."""
+import pathlib
+import subprocess
+import sys
+
+
+def main():
+    if len(sys.argv) != 3:
+        raise SystemExit("usage: build.py SOURCE_ROOT RUN_ROOT")
+    source = pathlib.Path(sys.argv[1]).resolve()
+    run = pathlib.Path(sys.argv[2]).resolve()
+    if source != run / "source" or sys.byteorder != "little":
+        raise SystemExit("build requires run-local source and little-endian host")
+    output_dir = run / "build"
+    output_dir.mkdir(exist_ok=True)
+    root = source / 'WChain/Implementations and Test_Vectors/Implementations'
+    for backend, tree in (("reference", "Reference_Implementation"),
+                          ("optimized", "Optimized_Implementation")):
+        instance = root / tree / 'WChain-V1-512'
+        implementation = instance / "CryptHash_AlgorithmInstance.c"
+        if not implementation.is_file():
+            raise SystemExit("missing submitted source: " + str(implementation))
+        sources = [implementation]
+        sources.append(instance / "wchain_c.c")
+        output = output_dir / ("wchainv1512-" + backend + ".so")
+        command = ["gcc", "-std=c11", "-O2", "-fPIC", "-shared", "-Wl,-z,defs"]
+        command.extend(["-o", str(output), *(str(path) for path in sources)])
+        subprocess.run(command, check=True)
+        print(backend + " built from " + str(implementation.relative_to(source)), flush=True)
+
+
+if __name__ == "__main__":
+    main()

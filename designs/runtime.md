@@ -6,7 +6,7 @@ Runtime alone performs dynamic discovery, validation, build, smoke, campaign exe
 
 ## Registration and stages
 
-Read `configs/targets.json` and `oracles/<target>/manifest.json`; validate versions, IDs, paths, hashes, spec front matter, active knowledge versions, API/profile identity and capabilities. Selection is explicit or uniquely determined. Stage order is `preflight → build → smoke → run → candidate report`. A changed source/spec/config/package digest invalidates smoke eligibility. A run is never overwritten. Stage outcomes are `ready`, `blocked`, `needs_input` or `failed` with a diagnostic; evaluation classes are `pass`, `counterexample_candidate`, `inconclusive`, `not_applicable`, `unsupported` and `harness_error`.
+Read `configs/targets.json` and `oracles/<target>/manifest.json`; validate versions, IDs, paths, hashes, spec front matter, active knowledge versions, full `(algorithm, parameter set, API, profile)` identity and capabilities. Schema-v2 target packages enumerate instances; `--parameter-set` is required when the remaining selection is ambiguous. Schema-v1 demo packages and already retained run artifacts keep their previous interpretation. Selection is explicit or uniquely determined. Stage order is `preflight → build → smoke → run → candidate report`. A changed source/spec/config/package digest invalidates smoke eligibility. A run is never overwritten. Stage outcomes are `ready`, `blocked`, `needs_input` or `failed` with a diagnostic; evaluation classes are `pass`, `counterexample_candidate`, `inconclusive`, `not_applicable`, `unsupported` and `harness_error`.
 
 ## Isolation and invocation
 
@@ -18,7 +18,7 @@ Smoke executes a real healthy baseline and effective mutation, negative ineffect
 
 ## Campaign and scripts
 
-The new target entry is `scripts/pqcfuzz_target.py`. `scripts/pqcfuzz_eval_<target>.sh` is a thin wrapper. `scripts/pqcfuzz_all_eval.sh targets ...` derives registered targets from config/manifest rather than a hard-coded target list; the old suite syntax stays under its compatibility path. Parameters select target/algorithm/API/profile/oracle, iteration budget and seed. Unknown and ambiguous IDs are errors. Runtime calls the paired structured mutator, adapter and oracle per iteration.
+The new target entry is `scripts/pqcfuzz_target.py`. `scripts/pqcfuzz_eval_<target>.sh` is a thin wrapper. `scripts/pqcfuzz_all_eval.sh targets ...` derives registered targets from config/manifest rather than a hard-coded target list; the old suite syntax stays under its compatibility path. Parameters select target/algorithm/parameter-set/API/profile/oracle, iteration budget and seed. Unknown and ambiguous IDs are errors. Runtime calls the paired structured mutator, adapter and oracle per iteration.
 
 ## Evidence and reporting
 

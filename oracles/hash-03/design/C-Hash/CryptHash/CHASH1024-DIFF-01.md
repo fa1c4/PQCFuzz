@@ -1,0 +1,19 @@
+# CHASH1024-DIFF-01: C-Hash-1024 P3 source-pinned relation
+
+- Claim: `CHASH1024-D` in the draft extraction; source locator: PDF pp. 5–6 §1.1 and p. 14 §1.4.
+- Property: X05 version 1, exact algorithm identity and interoperability.
+- Pattern: P3 version 1, cross-path differential.
+- Extraction status: draft (`unverified_spec`); failures remain candidate-only.
+- Scope: `C-Hash-1024` `1024`-bit `CryptHash` profile and the two submitted paths `reference`/`optimized`.
+- Preconditions: Canonical MSB-first bitstring storage, exact requested output length, successful target calls and pinned source identity. KAT expectations require exact source path, SHA-256 and row index.
+- Baseline: A valid public message with `1024`-bit output on `reference` or a selected KAT path.
+- Intervention: switch `reference` to `optimized` with message and output length fixed; the paired structured mutator records changed fields and effectiveness.
+- Expected relation: identical 1024-bit outputs from `reference` and `optimized` for one bitstring, also equal to a pinned KAT digest when present.
+- Observable: Actual target reachability, status, output length, digest bytes.
+- Positive control: Selected submitted 512-bit message row (P3), or the 512/513-bit distinct rows (P1), passes through real submitted code.
+- Negative control: Identical structured inputs, or the same KAT row twice, set `effective=false` and yield `inconclusive`.
+- Fault control: Flip one bit of an observed digest after a real call; the predicate must reject it in smoke only.
+- Required capabilities: `bit_input`, `submitted_kat` for P1 and `dual_backend` or `core_wrapper_comparison` for P3.
+- Predicate: Check exact instance and provenance, both successful calls and output lengths; compare the observed digest(s) to the expected relation. A mismatch becomes `counterexample_candidate` only.
+- Paired mutator: `implement/mutator/variant_diff_1024.py`.
+- Limitations: Submitted paths and KATs are not independent specification witnesses. A finite campaign cannot prove collision, preimage or other computational security claims.

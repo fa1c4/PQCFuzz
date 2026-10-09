@@ -1,0 +1,274 @@
+{
+  "schema_version": 2,
+  "target": "hash-15",
+  "algorithm": "Litchi",
+  "primitive": "hash",
+  "source_digest": "6bab82bda853334a6f628430e6309cd360997f966f5a5f08768da0be3bda5b41",
+  "spec_sha256": "cdfee9408267b1259036f44a51f506d92eb48345dc395c2765b361b8eb7bdd65",
+  "instances": [
+    {
+      "parameter_set": "Litchi-XOF",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-core-wrapper"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "core_wrapper_comparison": true,
+        "output_canary": true,
+        "bit_input": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "submitted_kat": true,
+        "variable_output": true
+      },
+      "oracles": [
+        {
+          "id": "LITCHI-XOF-BOUND-01",
+          "version": 1,
+          "claim": "S1",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI-XOF-BOUND-01.md",
+          "oracle": "implement/oracle.py",
+          "mutator": "implement/mutator/output_request.py",
+          "required_capabilities": [
+            "core_wrapper_comparison",
+            "output_canary",
+            "bit_input"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LITCHIXOF-KAT-01",
+          "version": 1,
+          "claim": "S2",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHIXOF-KAT-01.md",
+          "oracle": "implement/kat_oracle.py",
+          "mutator": "implement/mutator/kat_pair.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LITCHI-XOF-PREFIX-01",
+          "version": 1,
+          "claim": "S3",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P4",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI-XOF-PREFIX-01.md",
+          "oracle": "implement/xof_prefix_oracle.py",
+          "mutator": "implement/mutator/xof_prefix.py",
+          "required_capabilities": [
+            "bit_input",
+            "variable_output",
+            "submitted_kat"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Litchi-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-core-wrapper"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": false,
+        "core_wrapper_comparison": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LITCHI512-DIFF-01",
+          "version": 1,
+          "claim": "LITCHI512-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI512-DIFF-01.md",
+          "oracle": "implement/variant_diff_512_oracle.py",
+          "mutator": "implement/mutator/variant_diff_512.py",
+          "required_capabilities": [
+            "core_wrapper_comparison",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LITCHI512-KAT-01",
+          "version": 1,
+          "claim": "LITCHI512-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI512-KAT-01.md",
+          "oracle": "implement/variant_kat_512_oracle.py",
+          "mutator": "implement/mutator/variant_kat_512.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Litchi-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-core-wrapper"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": false,
+        "core_wrapper_comparison": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LITCHI768-DIFF-01",
+          "version": 1,
+          "claim": "LITCHI768-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI768-DIFF-01.md",
+          "oracle": "implement/variant_diff_768_oracle.py",
+          "mutator": "implement/mutator/variant_diff_768.py",
+          "required_capabilities": [
+            "core_wrapper_comparison",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LITCHI768-KAT-01",
+          "version": 1,
+          "claim": "LITCHI768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI768-KAT-01.md",
+          "oracle": "implement/variant_kat_768_oracle.py",
+          "mutator": "implement/mutator/variant_kat_768.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Litchi-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-core-wrapper"
+      ],
+      "adapter": "implement/variant_adapter.py",
+      "capabilities": {
+        "bit_input": true,
+        "submitted_kat": true,
+        "dual_backend": false,
+        "core_wrapper_comparison": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "LITCHI1024-DIFF-01",
+          "version": 1,
+          "claim": "LITCHI1024-D",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P3",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI1024-DIFF-01.md",
+          "oracle": "implement/variant_diff_1024_oracle.py",
+          "mutator": "implement/mutator/variant_diff_1024.py",
+          "required_capabilities": [
+            "core_wrapper_comparison",
+            "bit_input",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        },
+        {
+          "id": "LITCHI1024-KAT-01",
+          "version": 1,
+          "claim": "LITCHI1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Litchi/CryptHash/LITCHI1024-KAT-01.md",
+          "oracle": "implement/variant_kat_1024_oracle.py",
+          "mutator": "implement/mutator/variant_kat_1024.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    }
+  ]
+}

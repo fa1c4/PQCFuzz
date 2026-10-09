@@ -38,6 +38,7 @@ timeout-*
 results/
 third_party/
 configs/
+plans/
 
 # Registered target declarations and the checked-in demo fixture
 !configs/

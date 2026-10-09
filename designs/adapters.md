@@ -8,7 +8,7 @@ Each target package contains an explicit `implement/adapter.py`. Its manifest de
 
 ## Invocation protocol
 
-The isolated worker calls `invoke(structured_input, source_root, profile) -> observation`. An observation includes `reached`, `status`, `output`, `output_length` and optional public diagnostics. Target exceptions, crashes or timeout remain harness/process observations, not semantic success. Inputs and outputs are JSON values, with binary values encoded as lowercase hex and lengths checked by the adapter. The adapter rejects malformed input before a target call and marks reachability false. It may not claim independent-reference status solely because a second wrapper exists.
+The isolated worker calls `invoke(structured_input, source_root, profile) -> observation`. In a multi-instance target, `profile` carries the exact selected parameter set and the adapter rejects cross-instance digest lengths and dispatch before claiming target reachability. An observation includes `reached`, `status`, `output`, `output_length` and optional public diagnostics. Target exceptions, crashes or timeout remain harness/process observations, not semantic success. Inputs and outputs are JSON values, with binary values encoded as lowercase hex and lengths checked by the adapter. The adapter rejects malformed input before a target call and marks reachability false. It may not claim independent-reference status solely because a second wrapper exists.
 
 ## Capability and controls
 

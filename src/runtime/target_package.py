@@ -91,7 +91,7 @@ def validate(args):
             "missing or linked configs/targets.json")
     config = json.loads(config_path.read_text(encoding="utf-8"))
     object_keys(config, ("schema_version", "targets"), "registry")
-    require(config["schema_version"] == 1, "unknown registry schema")
+    require(config["schema_version"] in (1, 2), "unknown registry schema")
     require(isinstance(config["targets"], list), "targets must be array")
     names = [(x.get("target"), x.get("algorithm")) for x in config["targets"]]
     require(len(names) == len(set(names)), "duplicate target/algorithm")
@@ -124,10 +124,15 @@ def validate(args):
     require(sha(document) == fields["document_sha256"], "original specification digest mismatch")
     claim_ids = re.findall(r"(?m)^###?\s+([A-Za-z0-9._-]+)\s+[—:-]", spec_text)
     require(claim_ids and len(claim_ids) == len(set(claim_ids)), "missing or duplicate spec claim IDs")
-    api_names = [x.get("name") for x in target["apis"]]
-    require(len(api_names) == len(set(api_names)), "duplicate API")
-    apis = [x for x in target["apis"] if args.api in (None, x.get("name"))]
-    require(len(apis) == 1, "unknown or ambiguous API")
+    api_keys = [(x.get("name"), x.get("parameter_set")) for x in target["apis"]]
+    require(len(api_keys) == len(set(api_keys)), "duplicate API/parameter set")
+    if config["schema_version"] == 1:
+        api_names = [x.get("name") for x in target["apis"]]
+        require(len(api_names) == len(set(api_names)), "duplicate API")
+    parameter_set = getattr(args, "parameter_set", None)
+    apis = [x for x in target["apis"] if args.api in (None, x.get("name"))
+            and parameter_set in (None, x.get("parameter_set"))]
+    require(len(apis) == 1, "unknown or ambiguous API/parameter set")
     api = apis[0]
     object_keys(api, ("name", "parameter_set", "profiles"), "API")
     profile_names = [x.get("id") for x in api["profiles"]]
@@ -143,6 +148,9 @@ def validate(args):
         require(isinstance(profile[key], int) and profile[key] > 0, "invalid " + key)
     require(profile["seed_policy"] == "fixed" and isinstance(profile["seed"], int), "unsupported seed policy")
     require(isinstance(profile["options"], dict), "profile options must be object")
+    if "parameter_set" in profile["options"]:
+        require(profile["options"].get("parameter_set") == api["parameter_set"],
+                "profile parameter set mismatch")
     require(profile["concurrency"] == 1, "parallel isolation not implemented for this profile")
     require(profile["sensitive_inputs"] is False and profile["access_policy"] == "public_test_only",
             "sensitive evidence access policy cannot be enforced on this host")
@@ -164,9 +172,28 @@ def validate(args):
     require(not any(p.is_symlink() for p in manifest_path.parent.rglob("*")),
             "package symlink is not isolated")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    object_keys(manifest, ("schema_version", "target", "algorithm", "primitive", "parameter_set", "api",
-                           "profiles", "source_digest", "spec_sha256", "adapter", "capabilities", "oracles"), "manifest")
-    require(manifest["schema_version"] == 1, "unknown manifest schema")
+    if manifest.get("schema_version") == 1:
+        object_keys(manifest, ("schema_version", "target", "algorithm", "primitive", "parameter_set", "api",
+                               "profiles", "source_digest", "spec_sha256", "adapter", "capabilities", "oracles"), "manifest")
+    elif manifest.get("schema_version") == 2:
+        require(profile["options"].get("parameter_set") == api["parameter_set"],
+                "v2 profile parameter set missing or mismatched")
+        object_keys(manifest, ("schema_version", "target", "algorithm", "primitive",
+                               "source_digest", "spec_sha256", "instances"), "manifest")
+        instances = manifest["instances"]
+        require(isinstance(instances, list) and instances, "manifest instances missing")
+        instance_keys = [(x.get("api"), x.get("parameter_set")) for x in instances]
+        require(len(instance_keys) == len(set(instance_keys)), "duplicate manifest instance")
+        matched = [x for x in instances if x.get("api") == api["name"]
+                   and x.get("parameter_set") == api["parameter_set"]]
+        require(len(matched) == 1, "unregistered API/parameter set")
+        instance = matched[0]
+        object_keys(instance, ("parameter_set", "api", "profiles", "adapter",
+                               "capabilities", "oracles"), "manifest instance")
+        manifest = {**{key: value for key, value in manifest.items() if key != "instances"},
+                    **instance}
+    else:
+        raise ConfigError("unknown manifest schema")
     for key, expected in (("target", target["target"]), ("algorithm", target["algorithm"]),
                           ("primitive", target["primitive"]), ("parameter_set", api["parameter_set"]),
                           ("api", api["name"]), ("source_digest", target["source_digest"]),
@@ -175,7 +202,8 @@ def validate(args):
     require(profile["id"] in manifest["profiles"], "profile not registered")
     package = manifest_path.parent
     adapter = inside(manifest["adapter"], package)
-    require(adapter.is_file() and adapter.relative_to(package).as_posix() == "implement/adapter.py",
+    require(adapter.is_file() and adapter.relative_to(package).parts[0] == "implement"
+            and adapter.suffix == ".py",
             "adapter path violates package contract")
     require(isinstance(manifest["capabilities"], dict), "invalid capabilities")
     props = catalog_ids(ROOT / "knowledge/property/security_property.md", r"^\|\s*([A-Z][0-9]{2})\s*\|")
@@ -373,7 +401,8 @@ def run(args, selected):
                 "property": item["property"], "pattern": item["pattern"],
                 "spec_snapshot": "snapshots/spec.md", "trace_path": "trace.json",
                 "replay_status": "not_run"}
-    report = {"target": target["target"], "algorithm": target["algorithm"], "api": api["name"],
+    report = {"target": target["target"], "algorithm": target["algorithm"],
+              "parameter_set": api["parameter_set"], "api": api["name"],
               "profile": profile["id"], "evidence_class": evidence, "stage": stage, "counts": counts,
               "candidates": [candidate_record(i, t) for i, t in enumerate(trace)
                              if t.get("mode") == "campaign" and t.get("verdict") == "counterexample_candidate"],
@@ -443,6 +472,7 @@ def main():
     parser.add_argument("--run")
     parser.add_argument("--target")
     parser.add_argument("--algorithm")
+    parser.add_argument("--parameter-set")
     parser.add_argument("--api")
     parser.add_argument("--profile")
     parser.add_argument("--oracle")
@@ -461,13 +491,15 @@ def main():
                 for target in config["targets"]:
                     for api in target["apis"]:
                         for profile in api["profiles"]:
-                            print("\t".join((target["target"], target["algorithm"], api["name"], profile["id"])))
+                            print("\t".join((target["target"], target["algorithm"], api["parameter_set"],
+                                             api["name"], profile["id"])))
             else:
                 print(json.dumps([{"target": t["target"], "algorithm": t["algorithm"]} for t in config["targets"]]))
             return 0
         selected = validate(args)
         if args.command == "preflight":
             print(json.dumps({"stage": "ready", "target": selected[1]["target"],
+                              "parameter_set": selected[2]["parameter_set"],
                               "oracles": [x[0]["id"] for x in selected[-1]]}))
             return 0
         return run(args, selected)

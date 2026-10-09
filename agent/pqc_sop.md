@@ -54,7 +54,22 @@ Runtime stores every campaign input, mutation, harness detail, trace, observatio
 The workflow is complete for one target only when the spec extraction is status-labeled, source and target identities are fixed, every registered oracle cites an active property and pattern, its paired mutator and adapter pass controls and smoke, the target package and config validate, the runtime entry can select it, and the run artifact path is documented. If the new runtime is not yet implemented, report that concrete implementation gap rather than claiming end-to-end completion.
 
 
-## Executable target package protocol (schema 1)
+## Executable multi-instance protocol (schema 2)
+
+For one submitted target exposing several parameter sets under the same API
+name, use registry schema 2 and one target-package manifest with `instances[]`.
+Each instance has an exact `(algorithm, parameter_set, api)` identity, its own
+profiles, capabilities, adapter and claim-linked oracle records. Repeating a
+real API name across parameter sets is valid; repeating the full tuple is not.
+Specify `--parameter-set <exact-name>` for preflight, smoke and campaign when
+selection would otherwise be ambiguous. The profile options must pin the same
+parameter set, and adapters reject cross-instance output lengths before
+claiming reachability. Historical schema-1 packages and run artifacts remain
+readable with their original meaning. Submitted KAT files and alternative
+implementations need explicit provenance, and any internal function-coverage
+measurement must be reported separately from SOP verdict counts.
+
+## Executable target package protocol (schema 1 compatibility)
 
 For the current Python plugin protocol, use [the checked-in demo manifest](../oracles/demo-stream-hash/manifest.json) as a structural example. The source tree lives under `third_party/<target>/source/`. The extraction front matter needs `status`, `target`, `algorithm`, `source_path`, `source_sha256`, `document_path`, `document_sha256`, `source_version` and `extract_version`; a verified extraction also needs reviewer/date. Claim headings use stable IDs such as `## S1 — ...`.
 

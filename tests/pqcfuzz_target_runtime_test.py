@@ -21,6 +21,36 @@ def command(*args):
 
 
 class TargetRuntimeAcceptance(unittest.TestCase):
+    def test_multi_instance_requires_exact_parameter_set(self):
+        ambiguous = command("preflight", "--target", "hash-23", "--algorithm", "QILIN",
+                            "--api", "CryptHash", "--profile", "gcc-ref-opt")
+        self.assertEqual(ambiguous.returncode, 2)
+        self.assertIn("ambiguous API/parameter set", ambiguous.stderr)
+        selected = command("preflight", "--target", "hash-23", "--algorithm", "QILIN",
+                           "--parameter-set", "QILIN-768", "--api", "CryptHash",
+                           "--profile", "gcc-ref-opt")
+        self.assertEqual(selected.returncode, 0, selected.stderr)
+        self.assertEqual(json.loads(selected.stdout)["parameter_set"], "QILIN-768")
+
+    def test_cross_instance_profile_rejected(self):
+        args = type("Args", (), {"target": "hash-23", "algorithm": "QILIN",
+                "parameter_set": "QILIN-768", "api": "CryptHash", "profile": "gcc-ref-opt",
+                "oracle": None, "iterations": None})()
+        original = Path.read_text
+        config_path = ROOT / "configs/targets.json"
+        def modified(path, *a, **kw):
+            content = original(path, *a, **kw)
+            if Path(path) == config_path:
+                data = json.loads(content)
+                target = next(x for x in data["targets"] if x["target"] == "hash-23")
+                api = next(x for x in target["apis"] if x["parameter_set"] == "QILIN-768")
+                api["profiles"][0]["options"]["parameter_set"] = "QILIN-512"
+                return json.dumps(data)
+            return content
+        with patch.object(Path, "read_text", modified):
+            with self.assertRaisesRegex(runtime.ConfigError, "profile parameter set mismatch"):
+                runtime.validate(args)
+
     def test_unknown_oracle_fails_closed(self):
         result = command("preflight", "--target", "demo-stream-hash", "--algorithm",
                          "DEMO-HASH", "--api", "stream", "--profile", "healthy",

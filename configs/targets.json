@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "targets": [
     {
       "target": "demo-stream-hash",
@@ -53,6 +53,839 @@
               "access_policy": "public_test_only",
               "options": {
                 "injected_fault": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-23",
+      "algorithm": "QILIN",
+      "primitive": "hash",
+      "source": "third_party/hash-23/source",
+      "source_digest": "369b3ba92203c64692df2788e43d339a4237536e7d86af97bd8bc93f4ffaba32",
+      "specification": "oracles/spec/hash-23-QILIN.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "QILIN-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 30,
+              "cpu_seconds": 30,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "QILIN-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "QILIN-768",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "QILIN-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 30,
+              "cpu_seconds": 30,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "QILIN-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "QILIN-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "QILIN-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 30,
+              "cpu_seconds": 30,
+              "memory_mb": 1024,
+              "disk_mb": 128,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230512,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "QILIN-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-03",
+      "algorithm": "C-Hash",
+      "primitive": "hash",
+      "source": "third_party/hash-03/source",
+      "source_digest": "89bbed92fb655567e5ff9c82ce06392f2ad7c23a168adafeaf8f33d5e6be36b8",
+      "specification": "oracles/spec/hash-03-C-Hash.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "C-Hash-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230003,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "C-Hash-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "C-Hash-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "C-Hash-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230003,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "C-Hash-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-16",
+      "algorithm": "LLH",
+      "primitive": "hash",
+      "source": "third_party/hash-16/source",
+      "source_digest": "2006b0145398d127995faead9689fee67c95bd465de9b303b03400b35f2ef0b9",
+      "specification": "oracles/spec/hash-16-LLH.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "LLH-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230016,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "LLH-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "LLH-256",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "LLH-256"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230016,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "LLH-256",
+                "digest_bits": 256
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "LLH-768",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "LLH-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230016,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "LLH-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "LLH-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "LLH-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230016,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "LLH-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-28",
+      "algorithm": "XRH-1",
+      "primitive": "hash",
+      "source": "third_party/hash-28/source",
+      "source_digest": "f4cb8888b79e075fa93f5569a5a39faf8cf0013e623aff06beacfe4af28b628e",
+      "specification": "oracles/spec/hash-28-XRH-1.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-1-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230028,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-1-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-1-768",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "XRH-1-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230028,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-1-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-1-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "XRH-1-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230028,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-1-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-29",
+      "algorithm": "XRH-2",
+      "primitive": "hash",
+      "source": "third_party/hash-29/source",
+      "source_digest": "34c6e9844bf713db121849b035e35ca33254a7449441b993c5102996c9603111",
+      "specification": "oracles/spec/hash-29-XRH-2.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-2-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230029,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-2-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-2-768",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "XRH-2-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230029,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-2-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "XRH-2-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt-avx2",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "XRH-2-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230029,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "XRH-2-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-34",
+      "algorithm": "WChain",
+      "primitive": "hash",
+      "source": "third_party/hash-34/source",
+      "source_digest": "02eb17cab1d15c69a4f02e2af97b71e976572628c0e105c9cffd968cbc77a222",
+      "specification": "oracles/spec/hash-34-WChain.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "WChain-V1-512",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230034,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "WChain-V1-512"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "WChain-V2-1024",
+          "profiles": [
+            {
+              "id": "gcc-ref-opt",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "WChain-V2-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230034,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "WChain-V2-1024",
+                "digest_bits": 1024
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "hash-15",
+      "algorithm": "Litchi",
+      "primitive": "hash",
+      "source": "third_party/hash-15/source",
+      "source_digest": "6bab82bda853334a6f628430e6309cd360997f966f5a5f08768da0be3bda5b41",
+      "specification": "oracles/spec/hash-15-Litchi.md",
+      "apis": [
+        {
+          "name": "CryptHash",
+          "parameter_set": "Litchi-XOF",
+          "profiles": [
+            {
+              "id": "gcc-core-wrapper",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230015,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Litchi-XOF"
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "Litchi-512",
+          "profiles": [
+            {
+              "id": "gcc-core-wrapper",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Litchi-512"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230015,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Litchi-512",
+                "digest_bits": 512
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "Litchi-768",
+          "profiles": [
+            {
+              "id": "gcc-core-wrapper",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Litchi-768"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230015,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Litchi-768",
+                "digest_bits": 768
+              }
+            }
+          ]
+        },
+        {
+          "name": "CryptHash",
+          "parameter_set": "Litchi-1024",
+          "profiles": [
+            {
+              "id": "gcc-core-wrapper",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/variant_build.py",
+                  "{source}",
+                  "{run}",
+                  "Litchi-1024"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 60,
+              "cpu_seconds": 60,
+              "memory_mb": 1024,
+              "disk_mb": 160,
+              "iterations": 32,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 230015,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Litchi-1024",
+                "digest_bits": 1024
               }
             }
           ]
