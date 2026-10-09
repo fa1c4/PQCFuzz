@@ -1,0 +1,102 @@
+{
+  "HQC-128": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_KEM_HQC-128.txt",
+    "kat_sha256": "66a0fe8816a982506b0d799c43fcdd18d0434fc54b12fc1e2cc50c0603af8bfc",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/code_layer.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128/nss_hqc_core.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HQC-128"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "9378183a3bb1a32b1c5cf6c30073e9c15bc7934ee73908211ea66997c666551f"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "4367c6fb7751035edb0f8cf3d38d2079e2c12de7bd114c9abce25f2e5602b6ad"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "fc67509fd61f902f5eb1613b94789ebccfa82e54e7fefd3660bbd8a3ed02f78a"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "383a74e4ab749a87d0318869c32bdcd9a9edfd321df0e94ac030940f81e71664"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "99581ab22e21735a002727da9afb39d266f2ae87aaf80b38b4865a9c5d3c4a7e"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "112495236a7ad6308052aad4ad5d40f5d310635882f9a54aff0f53c4df2ef39f"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "553c9a46fd992368b997a63b203a8741e2a76008226f8532a5e049ad88a3cfaa"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "802e4cbfd4f4d4f41936a90d3ad147f00d6fd1449c497be59b99473ade0709cd"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "962a1212a5628e9b60c5292d554cb967fedd897f5a659be27cbfecb0bef323f9"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3713,
+        "SK_Len": 3777,
+        "CT_Len": 5185,
+        "SS_Len": 32,
+        "expected_ss": "732816113e6433462a4f73b20736643ad3393f1a49bac5701ffc5438819f89db"
+      }
+    ]
+  }
+}

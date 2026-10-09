@@ -1,0 +1,83 @@
+{
+  "TSUOV_128": {
+    "kat": "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Test_Vector/KAT_SIG_TSUOV_128.txt",
+    "kat_sha256": "f880573499a298ace2e834a9ea21be65e8aca4e9cd2543d48b273140618cd34c",
+    "sources": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/Fql.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/KAT_SIG.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/SIG_AlgorithmInstance.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/auxfunc.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/drng.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/mgf.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128/tsuov_core.c"
+    ],
+    "includes": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_128"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 1,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 2,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 3,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 4,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 5,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 6,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 7,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 8,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      },
+      {
+        "Count": 9,
+        "PK_Len": 779,
+        "SK_Len": 32,
+        "Sn_Len": 896
+      }
+    ]
+  }
+}

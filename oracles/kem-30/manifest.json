@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "target": "kem-30",
+  "algorithm": "PolarLAC",
+  "primitive": "kem",
+  "source_digest": "9d6d76b5ba96cb24266eef517d2fac3acc64b2f808187529a2210838e9cb6801",
+  "spec_sha256": "d023482f2b408d39969d2108004ce7f6f1bac89b7c36060632386c5ad0baa350",
+  "instances": [
+    {
+      "parameter_set": "POLARLAC-128",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARLAC128-KAT-01",
+          "version": 1,
+          "claim": "POLARLAC128-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/PolarLAC/kem_dec/POLARLAC128-KAT-01.md",
+          "oracle": "implement/kat_polarlac128_oracle.py",
+          "mutator": "implement/mutator/kat_polarlac128.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    }
+  ]
+}

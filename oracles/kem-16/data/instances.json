@@ -1,0 +1,119 @@
+{
+  "HARE-128": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_KEM_HARE-128-kr.txt",
+    "kat_sha256": "fbb71eee548f838976461c754e4b4d6e3dcb8e22d480ad81f9df00baada38f7f",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-128/kr/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/code.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/crypto_memset.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/fft.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/kem.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/parameter_contract.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/symmetric_api_pkc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/compression_kr.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf2x.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/hqc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/parsing.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_muller.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_solomon.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/vector.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-128/kr",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref"
+    ],
+    "flags": [
+      "-march=native",
+      "-DHARE_BACKEND_KR",
+      "-DHARE_SYMMETRIC_MODE_B"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "80db50afc56c3f91a90cad23d5389f62"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "f92dd8e7facfdc2766cb855a53165669"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "1b1b958e3f1c8e0a7d80314b1c131405"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "6f6f9337c2613ba607abafbe8c054cb8"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "cab4883195ec9d9ee60769cfbb419a03"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "fe4536f02bdb86182fd1f1b1069af3ee"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "2d1d434f3877c36cf47a968eff8221fc"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "b74ffb61fd9aabfe08e4db67f9f8eda1"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "890490aacb2b85210a85287b76bf03f6"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2629,
+        "SK_Len": 2677,
+        "CT_Len": 4688,
+        "SS_Len": 16,
+        "expected_ss": "27663b4a36103cabc11ad3f51860b048"
+      }
+    ]
+  }
+}

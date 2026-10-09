@@ -1,0 +1,105 @@
+{
+  "NTRE-128": {
+    "kat": "Implementations/Reference_Implementation/NTRE-128/output/KAT_KEM_NTRE-128.txt",
+    "kat_sha256": "65cab746a920cf829732bdb6e2c9f2a9caf198d3fa676a48c85f03f897a87af7",
+    "sources": [
+      "Implementations/Reference_Implementation/NTRE-128/KAT_KEM.c",
+      "Implementations/Reference_Implementation/NTRE-128/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/NTRE-128/auxfunc.c",
+      "Implementations/Reference_Implementation/NTRE-128/drng.c",
+      "Implementations/Reference_Implementation/NTRE-128/src/ntt.c",
+      "Implementations/Reference_Implementation/NTRE-128/src/poly.c",
+      "Implementations/Reference_Implementation/NTRE-128/src/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/NTRE-128",
+      "Implementations/Reference_Implementation/NTRE-128/src",
+      "Implementations/Reference_Implementation/NTRE-128/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "e054afd7896aaa2a3222f8dc03456e72f9e7868ab4f347f080f76afc4ba2654c68d84ffa05ce4f94adbc4a5886f7bcf7f043d527008bfd10d6a55cc88b5a2e2f"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "d4356b12fdaf5e752ed0339abc42667b8cb003f423a345cc238322622920906ef003a553336c0d210e36841b6c084cb4d7810079eb3d2473c4fb765c7e583953"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "2b787c69c554404884617b42cffe383c2055d9931db032d32f6519ab42db817a1baa2408eb48308ed0fa1c4f5a2e004f8e1213648218c9069aca5d158fc01b17"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "4928587e651a1cf0db8605a9bd95fa3b4534c777d058531a5affd6d30ae7033e4a617929b72c527010900d9c24baa261116c46b3ef0eb8490523114b15b14ebd"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "81e081f544ec1168c28026ab7f8cc22ead2222948aa81b5af07dc4df4382cdfa1d7fb78410b47b663949c2c376dc4cf70e202b73be2422b332949ba15c168006"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "9ccc0222b22fa214365ced72510e3ba7d5569a1eaf3156791823f798aa0b028486b42b3ea604c7a56475bfcb1e5463d43c8c86811e458c1e0947faaf9b72a6fd"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "12acd39b7417e6f1820091f41ef53e06c2803f3c999235e896aa0515985a8b69b5847cef491586f68191f1d9e51850e613e0e0501fcf807eccd28d6de7946089"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "367f52d7316a741a386c7a3f1601364be5b33a66f962e335a2789f22a5eaa427981ae18c7cb1d76aed12efe6fc33fef0116b3c51f4633ac6ce8603bdc9e8a827"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "f68cc697e31ffc61ad981f93e900adab9dede0f12a5d7f4b490a62992c0d99592f58ea4f5d3f033e839168f575e152c2e8d4dd0458b05bd527754c51003652ee"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 972,
+        "SK_Len": 1976,
+        "CT_Len": 972,
+        "SS_Len": 64,
+        "expected_ss": "a6c50ca8d29e51cea3f3b95b9dc874c6b3b2930dc8d37da09850ad7e09aabdd5f10660d0496835dff8092bf89d3577c01bbe50987b2f2a40bc67c46ddddca0e9"
+      }
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "Facto-DSA-128": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_SIG_Facto-DSA-128.txt",
+    "kat_sha256": "d80c26116d6f0940ad57993af12a4932983bddf052afa07606840db8a73f95a5",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-128/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-128/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-128/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-128/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-128"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 1,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 2,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 3,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 4,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 5,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 6,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 7,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 8,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      },
+      {
+        "Count": 9,
+        "PK_Len": 40040,
+        "SK_Len": 3094,
+        "Sn_Len": 40
+      }
+    ]
+  }
+}

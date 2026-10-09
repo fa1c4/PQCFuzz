@@ -1,0 +1,88 @@
+{
+  "OPSsig-128": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/reference/OPSsig-128/KAT_SIG_OPSsig-128-reference.txt",
+    "kat_sha256": "6eb659eb80e779a9ec58498fe14b70c9299e3b626d2d0fab4a0ce144cf466b79",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/mult.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/packing.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/rounding.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128/sign.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-128"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2560,
+        "SK_Len": 3840,
+        "Sn_Len": 4349
+      }
+    ]
+  }
+}

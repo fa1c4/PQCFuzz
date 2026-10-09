@@ -1,0 +1,112 @@
+{
+  "Amoeba-576": {
+    "kat": "Test_Vectors/KAT_KEM_Amoeba128.txt",
+    "kat_sha256": "b1960b65ca0d4b7cc3f0f5f568a70de405da2f3b48a6e33c813697ec1a319dd6",
+    "sources": [
+      "Implementations/Reference_Implementation/Amoeba-576/src/KAT/KAT_KEM.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/api/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/ccakem.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/cpapke.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/hamming.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/ntt_2s3t.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/poly.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/randombytes.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend/zetas.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/symmetric/auxfunc.c",
+      "Implementations/Reference_Implementation/Amoeba-576/src/symmetric/drng.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Amoeba-576/src/KAT",
+      "Implementations/Reference_Implementation/Amoeba-576/src/api",
+      "Implementations/Reference_Implementation/Amoeba-576/src/backend",
+      "Implementations/Reference_Implementation/Amoeba-576/src/symmetric",
+      "Implementations/Reference_Implementation/Amoeba-576/src/tests"
+    ],
+    "flags": [
+      "-march=native",
+      "-Dinline=static inline"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "165858cfa4c1938dd68dd4088f2af874daf0388f64b8f91d6b8962a26d630d5ba1b90a11a5b478aae63bc971989b4ea7d3efe786d189c4890e5df522e393161c"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "96ceb20e9e9fee750e1c22e2f1b37a4ec7935447206a2fd5460629581d1e56daa73d2d3d63cebd3bc7177c8ef79075ba6e620df933080c540c2c40cd86dd9c32"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "9b65d1336f1fff0afc97f48e4d67c6190980ff57c848acb0bac7bd9639b837aed23592fa34dc98225cb9d357e88a86d050d7b996346b5bcefe7ed449ede93dd4"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "df4f95a92b7e4a7aecdc4e75f68f2ab6c7d2572c13957a4e9ff63789e6abfdd3a02e65f5007655476c84d158beb244a72b0b19d9f4d99f20619e9922512cc97e"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "aa5bad5b28012118330e5559cb0cbb0c5e5e768c0a3d641558c8022405cac2fe9d9ff2fc573c87db414dd6ebf19da80d0c6e0e47098e549c3e5dcaf1b73bb27d"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "87d7d0d5682ee3e15c7f929d9dba59031e63b7b18b11987bc6fa8f24cae5298358666e5fb4ec78cd47dca9c1a8270330ec61bf11f54d35db027cf15acbd2b6d2"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "b7d09bc939334996b4423570baef3ee0c47bc3710b4cbef2ba5df15512fc6b125be53cfcce473d2af533782c35d67f2fc5f42df2a8f8e11132d8238282babb67"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "4334088c61794dc640a2b06f7969b1a8f9f7e19d6bc4a7221ccf9f7a8a366556aacdb31cc7515ee747e448f9451cb70eba64db5dc73b7ad4d31844950c76a3e4"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "62f3a9dd0f7e7bd55a8d5cb5977976f159874ab1bbf0a7dcf699cd99dd3c34ffe5f3bf800db18d32f716c4fd75d85d37fd33bbfb75290e5dea9dba63f376aa69"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 784,
+        "SK_Len": 1712,
+        "CT_Len": 1047,
+        "SS_Len": 64,
+        "expected_ss": "da7dd0b439137730d2b2a585b6895495593249649b2da1c4b785e98add11dbc1df46e8943a082768e00b43a6e5427c528a79c0d10e25be3194fee6d3f2509f53"
+      }
+    ]
+  }
+}

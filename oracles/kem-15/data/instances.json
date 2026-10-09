@@ -1,0 +1,110 @@
+{
+  "FLIT128": {
+    "kat": "Test_Vectors/KAT_KEM_FLIT128_REF.txt",
+    "kat_sha256": "a772deebcc67af946d60d9ebab8014318879617de619692bd59650196b578e69",
+    "sources": [
+      "Implementations/Reference_Implementation/FLIT128/KAT_KEM.c",
+      "Implementations/Reference_Implementation/FLIT128/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/FLIT128/auxfunc.c",
+      "Implementations/Reference_Implementation/FLIT128/decode.c",
+      "Implementations/Reference_Implementation/FLIT128/drng.c",
+      "Implementations/Reference_Implementation/FLIT128/indcpa.c",
+      "Implementations/Reference_Implementation/FLIT128/kem.c",
+      "Implementations/Reference_Implementation/FLIT128/ntt.c",
+      "Implementations/Reference_Implementation/FLIT128/packing.c",
+      "Implementations/Reference_Implementation/FLIT128/poly.c",
+      "Implementations/Reference_Implementation/FLIT128/reduce.c",
+      "Implementations/Reference_Implementation/FLIT128/test/cpucycles.c",
+      "Implementations/Reference_Implementation/FLIT128/verify.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/FLIT128",
+      "Implementations/Reference_Implementation/FLIT128/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "e609493a99270bc1ab7a9a2217ae1b11e5bf8735924a0081fc8f10b374095970"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "ab728a528eb0b4dd10bf7fa6217fc86785d482575a02792c7be484e73010b42d"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "30f720b217facfbacce2d376ff4e450901b1a26263db51aef270104d9d6bf0bc"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "6d5e0a409e02c2c56dde9a5fc591528806333f6669c182dcfb12d383eb189bf5"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "cf4cf83bdd58186a394292be064e6b411f1adad6a34fe9844fe32488942bb959"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "b1cfd1bf5672b29e595fa6519d6208dd6a4df7a06a3bcc3ffb43496d1bdd0c6c"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "77740e054210bc70cbd2ea223c65dc570d22caf749c0056957b9df461669e7df"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "5fad41b75701a7e2bc5ca27808681879e532413d22dbff0bf1d004fbebf162bb"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "d586f861504800b6fd25d5d19b60128a09320df720739c7e846426cc4882efbb"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 615,
+        "SK_Len": 1351,
+        "CT_Len": 512,
+        "SS_Len": 32,
+        "expected_ss": "56892c33be4038aed689f41220298d1863b7b2ca72bfe21f0ae2a2d4e95a7a4e"
+      }
+    ]
+  }
+}

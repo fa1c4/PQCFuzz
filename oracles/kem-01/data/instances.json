@@ -1,0 +1,121 @@
+{
+  "Aigis-Enc+-I": {
+    "kat": "Test_Vectors/KAT_KEM_Aigis-enc1.txt",
+    "kat_sha256": "e15e2b2ad808be3c13a43897971117ea4d2b616aba1f7caa16cd76b844db45fb",
+    "sources": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/cbd.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/fips202.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/poly.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/speed_test/cpucycles.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/reduce.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/precomp.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/ntt.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/polyvec.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/owcpa.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kem.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/verify.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/hashkdf.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/gen_a.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/speed_test/speed_print.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test/auxfunc.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test/drng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/pack.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test/rng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-I",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/kat_test",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/keccak4x",
+      "Implementations/Reference_Implementation/Aigis-Enc+-I/speed_test"
+    ],
+    "flags": [
+      "-march=native",
+      "-DPARAMS=1",
+      "-DUSE_NICCS_API"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "e315e0875e827174cbb3751704de5622"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "7320af2336c320c8f0bfb7589d4645b5"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "c86c438da46b18b6fd81fffcd3fa53ef"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "b21531ea6c98a5935bef0386b9643fcf"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "de5cd9caf3abe494ae0ac4334c248700"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "d7f78b4abd8f41d19a93aba368dd91a0"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "0f933feb94ad2121c6eafa8cd25fd775"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "c4b737d8b5cbc4a90a6dbeeb34944fd0"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "9e4b763dc1a57be1d2f27dda8f95c853"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 656,
+        "SK_Len": 1456,
+        "CT_Len": 896,
+        "SS_Len": 16,
+        "expected_ss": "d5886ab5fd8f8248b128b5ce146ae47b"
+      }
+    ]
+  }
+}

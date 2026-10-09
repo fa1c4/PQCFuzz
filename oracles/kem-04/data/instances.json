@@ -1,0 +1,124 @@
+{
+  "bag_piglet128": {
+    "kat": "Test_Vectors/KAT_KEM_bag_piglet_128.txt",
+    "kat_sha256": "f3c715a2a06d6a7b467fcccd766c47a7de08fa11cac1a61f1642a7cbe4fb5ece",
+    "sources": [
+      "Implementations/Reference_Implementation/bag_piglet128/lib/api_pkc/auxfunc.c",
+      "Implementations/Reference_Implementation/bag_piglet128/lib/api_pkc/drng.c",
+      "Implementations/Reference_Implementation/bag_piglet128/lib/randombytes/randombytes.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/aes256ctr.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/augabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/ccakem.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/ccapke.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/gabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/parsing.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/q_polynomial.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common/tools.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/ffi/ffi_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/ffi/ffi_field.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/ffi/ffi_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/kat/KAT_KEM.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/kat/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc/rbc_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc/rbc_poly.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc/rbc_qre.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc/rbc_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc/rbc_vspace.c",
+      "Implementations/Reference_Implementation/bag_piglet128/src/scheme/bag_piglet.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/bag_piglet128/lib/api_pkc",
+      "Implementations/Reference_Implementation/bag_piglet128/lib/randombytes",
+      "Implementations/Reference_Implementation/bag_piglet128/src/common",
+      "Implementations/Reference_Implementation/bag_piglet128/src/ffi",
+      "Implementations/Reference_Implementation/bag_piglet128/src/kat",
+      "Implementations/Reference_Implementation/bag_piglet128/src/rbc",
+      "Implementations/Reference_Implementation/bag_piglet128/src/scheme"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "b099dd385281499e85aefe0cdcec70de"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "849fb40dd88f87a9ba1b1baf5a117bff"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "40d502617510c0ec10d10676ad7f8677"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "1dbdaa9d166e7c5e1616d76ed82f70c4"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "d4875c496eb5c1bdecb1ef7af818dad8"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "355ddb993b7e8572cddc5b56c3cf53d1"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "8038fab944d6c8dce5d7f2905825e678"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "04755fe275e1b98e64d5a19f79af8002"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "448bc0537e6694fa40c770ebbf100bfa"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 522,
+        "SK_Len": 16,
+        "CT_Len": 1027,
+        "SS_Len": 16,
+        "expected_ss": "cd05a9a8ba252756cc791381cbec2896"
+      }
+    ]
+  }
+}

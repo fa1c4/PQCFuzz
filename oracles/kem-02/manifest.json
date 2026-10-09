@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "target": "kem-02",
+  "algorithm": "Amoeba",
+  "primitive": "kem",
+  "source_digest": "51d29d04a85e9b4dd0c34b4b69c49ba7b51dcfe5e2f83b84b2f41a0007b5476e",
+  "spec_sha256": "077a3088898b6561d8f8a258e42bb9f0f88fa18cbfba07ea0fdf02b623b745b9",
+  "instances": [
+    {
+      "parameter_set": "Amoeba-576",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AMOEBA576-KAT-01",
+          "version": 1,
+          "claim": "AMOEBA576-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Amoeba/kem_dec/AMOEBA576-KAT-01.md",
+          "oracle": "implement/kat_amoeba576_oracle.py",
+          "mutator": "implement/mutator/kat_amoeba576.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "PolarKEM-128": {
+    "kat": "Submission_Package/Test_Vectors/KAT_KEM_PolarKEM-128.txt",
+    "kat_sha256": "00515e6bfc08e039fa170ba5b099ae7d11f3e287c1f8993f67a9e11eba52954b",
+    "sources": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/KAT_KEM.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/KEM_AlgorithmInstance.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/auxfunc.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/drng.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/polarkem_core.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/polarkem_ct.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/polarkem_pack.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128/polarkem_polar.c"
+    ],
+    "includes": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-128"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "54df27e8d6d46f186f1516e9f82f77d3"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "fa0db91d825a316859bedb7e595319c5"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "1fea7116b235591dd115e24ffff7d1d3"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "29e45f35ae9720102ad4d2231ea17618"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "998fdfa76befaa41b364dc64a67b3a5d"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "ca69b52ee3cc03908ab4b5a1631e9202"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "d49c815927be3a8266b4b3accc5a4471"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "e679cf938cd9d87420785b7bbcbcb9b1"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "a1108f1955ad6454ecaed27e24e55d63"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1024,
+        "SK_Len": 2048,
+        "CT_Len": 768,
+        "SS_Len": 16,
+        "expected_ss": "01b0c626f6800ed163ba1c8a0ed27394"
+      }
+    ]
+  }
+}

@@ -2762,6 +2762,788 @@
           ]
         }
       ]
+    },
+    {
+      "target": "sign-01",
+      "algorithm": "Aigis-Sig+",
+      "primitive": "signature",
+      "source": "third_party/sign-01/source",
+      "source_digest": "60ef88020ca59d3d4eb29e57ba96787ea25e621fc796d222363456eedbebeef9",
+      "specification": "oracles/spec/sign-01-Aigis-Sig+.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "Aigis-Sig+-I",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "Aigis-Sig+-I"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 311,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33990,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Aigis-Sig+-I"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "sign-10",
+      "algorithm": "Facto-DSA",
+      "primitive": "signature",
+      "source": "third_party/sign-10/source",
+      "source_digest": "450bad2020675b19d478c4f51d04988359dd414bc827860620ebca595776a82f",
+      "specification": "oracles/spec/sign-10-Facto-DSA.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "Facto-DSA-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "Facto-DSA-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 273,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33954,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Facto-DSA-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "sign-17",
+      "algorithm": "OPS Digital Signature Algorithm",
+      "primitive": "signature",
+      "source": "third_party/sign-17/source",
+      "source_digest": "3fe57e1c750c03f843a39740bc596615017cf20b8d06b1ccd08a68c898fc4291",
+      "specification": "oracles/spec/sign-17-OPS Digital Signature Algorithm.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "OPSsig-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "OPSsig-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 263,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33765,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "OPSsig-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "sign-23",
+      "algorithm": "Shuttle",
+      "primitive": "signature",
+      "source": "third_party/sign-23/source",
+      "source_digest": "2eecc9fd1797f6084634abbd027dacc5a1f2ba29d5abf5cb6bf3b203c2f686d5",
+      "specification": "oracles/spec/sign-23-Shuttle.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "SHUTTLE-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "SHUTTLE-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 270,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33753,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "SHUTTLE-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "sign-31",
+      "algorithm": "TSUOV",
+      "primitive": "signature",
+      "source": "third_party/sign-31/source",
+      "source_digest": "c970311c547b4ce2436dd4d7f6e3d25da99439299574b30d94bc40fd75bd9c58",
+      "specification": "oracles/spec/sign-31-TSUOV.md",
+      "apis": [
+        {
+          "name": "sig_verify",
+          "parameter_set": "TSUOV_128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "TSUOV_128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 264,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33667,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "TSUOV_128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-01",
+      "algorithm": "Aigis-Enc+",
+      "primitive": "kem",
+      "source": "third_party/kem-01/source",
+      "source_digest": "fab1491992307c011506625c7f4e9dfb45a98a01c41a4504ee8ab1ae7926fa22",
+      "specification": "oracles/spec/kem-01-Aigis-Enc+.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "Aigis-Enc+-I",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "Aigis-Enc+-I"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 287,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33977,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Aigis-Enc+-I"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-02",
+      "algorithm": "Amoeba",
+      "primitive": "kem",
+      "source": "third_party/kem-02/source",
+      "source_digest": "51d29d04a85e9b4dd0c34b4b69c49ba7b51dcfe5e2f83b84b2f41a0007b5476e",
+      "specification": "oracles/spec/kem-02-Amoeba.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "Amoeba-576",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "Amoeba-576"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 263,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33788,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Amoeba-576"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-04",
+      "algorithm": "BAG-Piglet",
+      "primitive": "kem",
+      "source": "third_party/kem-04/source",
+      "source_digest": "c4a4949a092b6da97f15dc65b05fc72005b8234059510108adaad3198c951ec0",
+      "specification": "oracles/spec/kem-04-BAG-Piglet.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "bag_piglet128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "bag_piglet128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 270,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 34193,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "bag_piglet128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-15",
+      "algorithm": "FLIT",
+      "primitive": "kem",
+      "source": "third_party/kem-15/source",
+      "source_digest": "9afc9032807ce52433d0b4fe80cfe8bd33d5a07184b6c7447728065996b58ccc",
+      "specification": "oracles/spec/kem-15-FLIT.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "FLIT128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "FLIT128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 265,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33458,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "FLIT128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-16",
+      "algorithm": "HARE",
+      "primitive": "kem",
+      "source": "third_party/kem-16/source",
+      "source_digest": "c83cf0c04fc2df7b98858b1dafb22e1020285803ce78d604de3ffff2a5fcea40",
+      "specification": "oracles/spec/kem-16-HARE.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "HARE-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "HARE-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 274,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33488,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "HARE-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-19",
+      "algorithm": "Lore",
+      "primitive": "kem",
+      "source": "third_party/kem-19/source",
+      "source_digest": "565433f6d9d78a50d894453bf0f8bc04d26148cbcc247614ae3f52960ab7563e",
+      "specification": "oracles/spec/kem-19-Lore.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "Lore-L1",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "Lore-L1"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 271,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33572,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "Lore-L1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-26",
+      "algorithm": "NSS-HQC",
+      "primitive": "kem",
+      "source": "third_party/kem-26/source",
+      "source_digest": "9f2ad59844277d847497d956a1025f8eed4011ee15f59a325fb7e9c4fd47f806",
+      "specification": "oracles/spec/kem-26-NSS-HQC.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "HQC-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "HQC-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 266,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33420,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "HQC-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-27",
+      "algorithm": "NTRE Key Encapsulation Mechanism",
+      "primitive": "kem",
+      "source": "third_party/kem-27/source",
+      "source_digest": "a4084c8a7b95556fb35b7052c4ad4b43191b0ffcbb7b8d5d862133d932df886b",
+      "specification": "oracles/spec/kem-27-NTRE Key Encapsulation Mechanism.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "NTRE-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "NTRE-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 270,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33513,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "NTRE-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-28",
+      "algorithm": "OAEP-NTRU",
+      "primitive": "kem",
+      "source": "third_party/kem-28/source",
+      "source_digest": "545aedbcde743760adb7522a5e8eeca1d40ed4b35c98a713d251831285b92bbd",
+      "specification": "oracles/spec/kem-28-OAEP-NTRU.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "OAEP-NTRU-648",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "OAEP-NTRU-648"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 265,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33874,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "OAEP-NTRU-648"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-29",
+      "algorithm": "Polar-KEM",
+      "primitive": "kem",
+      "source": "third_party/kem-29/source",
+      "source_digest": "077191d44b3a7d68df44015cd668e514e9c82389f00f9883f0d8db11c9df5aa9",
+      "specification": "oracles/spec/kem-29-Polar-KEM.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "PolarKEM-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "PolarKEM-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 258,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33931,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "PolarKEM-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-30",
+      "algorithm": "PolarLAC",
+      "primitive": "kem",
+      "source": "third_party/kem-30/source",
+      "source_digest": "9d6d76b5ba96cb24266eef517d2fac3acc64b2f808187529a2210838e9cb6801",
+      "specification": "oracles/spec/kem-30-PolarLAC.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "POLARLAC-128",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "POLARLAC-128"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 276,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33790,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "POLARLAC-128"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": "kem-36",
+      "algorithm": "TRIKE",
+      "primitive": "kem",
+      "source": "third_party/kem-36/source",
+      "source_digest": "ee111e7d665b2f18f6355c6215aba684b0467ad3c50faabb48fa498a96726868",
+      "specification": "oracles/spec/kem-36-TRIKE.md",
+      "apis": [
+        {
+          "name": "kem_dec",
+          "parameter_set": "TRIKE-2",
+          "profiles": [
+            {
+              "id": "gcc-reference",
+              "build": [
+                [
+                  "python3",
+                  "{run}/package/implement/build.py",
+                  "{source}",
+                  "{run}",
+                  "TRIKE-2"
+                ]
+              ],
+              "dependencies": [
+                "python",
+                "gcc"
+              ],
+              "timeout_seconds": 180,
+              "cpu_seconds": 180,
+              "memory_mb": 4096,
+              "disk_mb": 265,
+              "iterations": 8,
+              "concurrency": 1,
+              "seed_policy": "fixed",
+              "seed": 33478,
+              "retention_days": 30,
+              "sensitive_inputs": false,
+              "access_policy": "public_test_only",
+              "options": {
+                "parameter_set": "TRIKE-2"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

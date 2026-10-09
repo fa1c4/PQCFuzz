@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "target": "sign-23",
+  "algorithm": "Shuttle",
+  "primitive": "signature",
+  "source_digest": "2eecc9fd1797f6084634abbd027dacc5a1f2ba29d5abf5cb6bf3b203c2f686d5",
+  "spec_sha256": "e899f64bac7f5e6d0e93a36ceb5416823e14cb261d48407675bd5ae2ae4b8161",
+  "instances": [
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-KAT-01",
+          "version": 1,
+          "claim": "SHUTTLE128-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_verify/SHUTTLE128-KAT-01.md",
+          "oracle": "implement/kat_shuttle128_oracle.py",
+          "mutator": "implement/mutator/kat_shuttle128.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    }
+  ]
+}

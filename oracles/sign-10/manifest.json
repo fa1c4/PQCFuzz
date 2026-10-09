@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "target": "sign-10",
+  "algorithm": "Facto-DSA",
+  "primitive": "signature",
+  "source_digest": "450bad2020675b19d478c4f51d04988359dd414bc827860620ebca595776a82f",
+  "spec_sha256": "8ebe2d2d5eddd523670d2694fe20e21b34ce16ea496edb63c34e6bbab5fee3d8",
+  "instances": [
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-KAT-01",
+          "version": 1,
+          "claim": "FACTODSA128-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_verify/FACTODSA128-KAT-01.md",
+          "oracle": "implement/kat_factodsa128_oracle.py",
+          "mutator": "implement/mutator/kat_factodsa128.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import shlex
 import tempfile
 from pathlib import Path
 
@@ -175,7 +176,10 @@ def invoke(structured_input, source_root, profile):
             return invalid("KAT length mismatch")
         lib.sig_get_pk_len_bytes.restype = ctypes.c_ulonglong
         lib.sig_get_sn_len_bytes.restype = ctypes.c_ulonglong
-        if pklen != lib.sig_get_pk_len_bytes() or snlen != lib.sig_get_sn_len_bytes():
+        maximum_snlen = lib.sig_get_sn_len_bytes()
+        variable_snlen = config[instance].get("variable_signature_length", False)
+        if pklen != lib.sig_get_pk_len_bytes() or snlen > maximum_snlen or \\
+                (not variable_snlen and snlen != maximum_snlen):
             return invalid("submitted length getter mismatch")
         fn = lib.sig_verify
         fn.argtypes = (ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p,
@@ -345,7 +349,7 @@ at {settings['locator']}. Original PDF and archived source are authoritative.
 - Class: correctness context from the PDF and submitted-vector observation; the latter is not independent normative truth.
 - Scope: `{instance}` `{settings['api']}` on the ten exact public submitted records, with API lengths and status.
 - Claim: A valid submitted record is accepted by verification.
-''' if target == "sign-33" else f'''
+''' if settings["primitive"] == "signature" else f'''
 ## {claim} — {instance} submitted valid-vector consistency
 
 - Source locator: {settings['locator']}; `{cfg['kat']}`, SHA-256 `{cfg['kat_sha256']}`.
@@ -366,23 +370,23 @@ at {settings['locator']}. Original PDF and archived source are authoritative.
 - Scope/preconditions: `{instance}` `{settings['api']}`, exact indexed public submitted KAT, archived source/KAT SHA and declared output/status semantics.
 - Baseline: A valid indexed submitted record (index 0 in smoke).
 - Intervention: Switch to a different valid record (index 1 in smoke) while retaining instance and API; paired mutator records index change.
-- Expected relation: {'Both records are accepted by sig_verify.' if target == 'sign-33' else 'Both records decapsulate to their own archived shared secrets.'}
+- Expected relation: {'Both records are accepted by sig_verify.' if settings['primitive'] == 'signature' else 'Both records decapsulate to their own archived shared secrets.'}
 - Observables: Actual API reachability, status, output/length, parameter set and output canary for KEM.
 - Positive control: Two distinct valid records pass through the real target API.
 - Negative control: Repeating one record is ineffective and becomes `inconclusive`.
 - Fault control: Change the observed acceptance/secret after a real call; the predicate must reject it.
-- Required capabilities: submitted_kat, indexed_public_vector{', output_canary' if target == 'kem-17' else ''}.
+- Required capabilities: submitted_kat, indexed_public_vector{', output_canary' if settings['primitive'] == 'kem' else ''}.
 - Predicate: Require exact provenance/scope, successful reachable calls and expected status/secret on each indexed record; failure is candidate-only.
 - Paired mutator: `implement/mutator/kat_{tag.lower()}.py`.
 - Limitations: Same-lineage submitted vectors, no negative-input or full-function coverage, no finite security proof.
 ''')
         write(package / f"implement/mutator/kat_{tag.lower()}.py",
               MUTATOR.replace("__INSTANCE__", instance).replace("__OPERATION__",
-              "verify" if target == "sign-33" else "decapsulate"))
+              "verify" if settings["primitive"] == "signature" else "decapsulate"))
         write(package / f"implement/kat_{tag.lower()}_oracle.py",
               ORACLE.replace("__INSTANCE__", instance).replace("__PRIMITIVE__", settings["primitive"]))
         caps = {"submitted_kat": True, "indexed_public_vector": True,
-                "output_canary": target == "kem-17", "rng_control": False,
+                "output_canary": settings["primitive"] == "kem", "rng_control": False,
                 "fault_injection": False, "intermediate_state": False,
                 "decapsulation_failure": False}
         entries.append({"parameter_set": instance, "api": settings["api"],
@@ -395,7 +399,7 @@ at {settings['locator']}. Original PDF and archived source are authoritative.
                                      "oracle": f"implement/kat_{tag.lower()}_oracle.py",
                                      "mutator": f"implement/mutator/kat_{tag.lower()}.py",
                                      "required_capabilities": ["submitted_kat", "indexed_public_vector"] +
-                                                              (["output_canary"] if target == "kem-17" else []),
+                                                              (["output_canary"] if settings["primitive"] == "kem" else []),
                                      "applicable_primitives": [settings["primitive"]]}]})
         profile = {"id": "gcc-reference",
                    "build": [["python3", "{run}/package/implement/build.py", "{source}", "{run}", instance]],
@@ -426,8 +430,8 @@ at {settings['locator']}. Original PDF and archived source are authoritative.
     write(wrapper, '#!/usr/bin/env bash\nset -euo pipefail\n'
           'repo_root=$(cd "$(dirname "$0")/.." && pwd)\n'
           f'exec "${{PQCFUZZ_PYTHON:-python3}}" "$repo_root/scripts/pqcfuzz_target.py" '
-          f'"${{1:-run}}" --target {target} --algorithm {settings["algorithm"]} '
-          f'--parameter-set {first} --api {settings["api"]} --profile gcc-reference "${{@:2}}"\n')
+          f'"${{1:-run}}" --target {shlex.quote(target)} --algorithm {shlex.quote(settings["algorithm"])} '
+          f'--parameter-set {shlex.quote(first)} --api {shlex.quote(settings["api"])} --profile gcc-reference "${{@:2}}"\n')
     wrapper.chmod(0o755)
 
 

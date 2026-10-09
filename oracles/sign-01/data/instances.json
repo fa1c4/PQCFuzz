@@ -1,0 +1,95 @@
+{
+  "Aigis-Sig+-I": {
+    "kat": "Test_Vectors/KAT_SIG_Aigis-sig1.txt",
+    "kat_sha256": "5e29fe8057c7193b86567f9ee8ff20998bccb165648931e0b5a9154487b867ef",
+    "sources": [
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/sign.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/polyvec.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/packing.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/poly.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/reduce.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/ntt.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/rounding.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/fips202.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/hashkdf.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/auxfunc.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/SIG_AlgorithmInstance.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/drng.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/pspm.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/rng.c",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/KAT_SIG.c"
+    ],
+    "includes": [
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I",
+      "Implementations/Implementations/Reference_Implementation/Aigis-Sig+-I/ippcpsm3"
+    ],
+    "flags": [
+      "-march=native",
+      "-DPARAMS=1",
+      "-DUSE_ICCS"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2009
+      },
+      {
+        "Count": 1,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2003
+      },
+      {
+        "Count": 2,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2002
+      },
+      {
+        "Count": 3,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2009
+      },
+      {
+        "Count": 4,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2002
+      },
+      {
+        "Count": 5,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 1998
+      },
+      {
+        "Count": 6,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2008
+      },
+      {
+        "Count": 7,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2003
+      },
+      {
+        "Count": 8,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 2008
+      },
+      {
+        "Count": 9,
+        "PK_Len": 928,
+        "SK_Len": 2800,
+        "Sn_Len": 1993
+      }
+    ],
+    "variable_signature_length": true
+  }
+}

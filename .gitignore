@@ -46,3 +46,4 @@ plans/
 !third_party/
 third_party/*
 /configs/set_api_key.sh
+results/

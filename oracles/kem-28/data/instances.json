@@ -1,0 +1,103 @@
+{
+  "OAEP-NTRU-648": {
+    "kat": "Test_Vectors/KAT_KEM_OAEP-NTRU-648.txt",
+    "kat_sha256": "b4733e7c232600120eafc607e2aa04402111d8e9cc9279965ed5cf429321740d",
+    "sources": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/KAT_KEM.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/auxfunc.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/drng.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/ntt.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/poly.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-648/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-648"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "007ab45857d016665bfd55b34bf86bb00e9c19303f9c63c9452a7cc75f6dd5e9"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "4e2ebcba28d76f0f22ec9d0e3e8dd62a1afdde4c5abb29ac809ea4f9ca83b8a6"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "0d6bb77955eb23e7fb00fe13a8d3424ebf2364ed880c225ae8bc713c5329e4e9"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "90dc3c8dc1ad049e0626088341babdd3aff2837ea5e4887ea16bf1ac172223b9"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "2982705d6cf0eed81009f47d890a66ec8b3fb67c285601db94f1555f6c52e936"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "a2859e8c5561a9b9ee7c6f50507836aeeac1af8d9eef93558fdcc9511bee2177"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "a23ced37fa63f2b026f46793fa9877d5d4328173b0497574e2f962a3d0ba00ce"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "5a373162f96afa15db0cfd78af3cf56de5965a9379ff51e6e023dd38afe5d037"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "aeee00d26d4aaf03a46096cf8b3c104a78ad9c21af763c02d70586aca4e938db"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1053,
+        "SK_Len": 2138,
+        "CT_Len": 1085,
+        "SS_Len": 32,
+        "expected_ss": "f2372ca67b4a3ff31d9a5109b2faf97d0a12a53d88fcbf26133cb7822f689b53"
+      }
+    ]
+  }
+}

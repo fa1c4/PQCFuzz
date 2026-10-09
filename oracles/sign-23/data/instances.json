@@ -1,0 +1,98 @@
+{
+  "SHUTTLE-128": {
+    "kat": "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Test_Vectors/KAT_SIG_SHUTTLE-128.txt",
+    "kat_sha256": "2c3a69e9a24315af747bae07309a7c4ad02fd29808461f9198aad29a6e0a60b3",
+    "sources": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/KAT_SIG.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/SIG_AlgorithmInstance.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/approx_exp.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/approx_log.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/auxfunc.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/drng.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/fips202.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/irs.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/ntt/q15361n256/ntt_ref.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/packing.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/poly.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/poly_ntt.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/polyvec.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/rans.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/reduce.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/rounding.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/sampler.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/sampler_u.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/sign.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/symmetric.c"
+    ],
+    "includes": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/ntt/q15361n256",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-128/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1264,
+        "SK_Len": 2288,
+        "Sn_Len": 1183
+      }
+    ]
+  }
+}
