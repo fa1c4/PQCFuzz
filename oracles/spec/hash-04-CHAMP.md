@@ -35,3 +35,13 @@ discussion is on PDF p. 4; the exact source and PDF files are authoritative.
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## CHAMP1024-K — CHAMP-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 4; `CHAMP/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/CHAMP-1024/CryptHash_AlgorithmInstance.h` SHA-256 `0b3181b842b82713fea38e2ac42c72e22da65178e3e544de80c1ac7dfa08e94d`; `CHAMP/Implementations and Test_Vectors/API_CryptHash/Test_Vectors/KAT_2_12_CHAMP-1024.txt` SHA-256 `7609a32270418bac434daade83837177fbf01984099f9262b18a15a361690d5f`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `CHAMP-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

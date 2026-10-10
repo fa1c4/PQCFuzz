@@ -93,6 +93,236 @@
         "SK_Len": 2288,
         "Sn_Len": 1183
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "SHUTTLE-256": {
+    "kat": "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Test_Vectors/KAT_SIG_SHUTTLE-256.txt",
+    "kat_sha256": "02b98170db3ec301a019249545bbee9bb2d23a9717cd1bec0bf26724dcc20984",
+    "sources": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/KAT_SIG.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/SIG_AlgorithmInstance.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/approx_exp.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/approx_log.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/auxfunc.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/drng.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/fips202.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/irs.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/ntt/q61441n512/ntt_ref.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/packing.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/poly.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/poly_ntt.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/polyvec.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/rans.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/reduce.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/rounding.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/sampler.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/sampler_u.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/sign.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/symmetric.c"
+    ],
+    "includes": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/ntt/q61441n512",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-256/test"
+    ],
+    "flags": [
+      "-march=native",
+      "-DSHUTTLE_MODE=256"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1952,
+        "SK_Len": 3680,
+        "Sn_Len": 2417
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "SHUTTLE-512": {
+    "kat": "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Test_Vectors/KAT_SIG_SHUTTLE-512.txt",
+    "kat_sha256": "58db9d94375d91b9a941134b5b06a32d430f7866636c081a81725fdfac66a3bb",
+    "sources": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/KAT_SIG.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/SIG_AlgorithmInstance.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/approx_exp.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/approx_log.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/auxfunc.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/drng.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/fips202.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/irs.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/ntt/q59393n1024/ntt_ref.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/packing.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/poly.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/poly_ntt.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/polyvec.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/rans.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/reduce.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/rounding.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/sampler.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/sampler_u.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/sign.c",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/symmetric.c"
+    ],
+    "includes": [
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/ntt/q59393n1024",
+      "Implementation codes and test vectors/Shuttle 算法实现源代码及测试向量/Implementations/Reference_Implementation/SHUTTLE-512/test"
+    ],
+    "flags": [
+      "-march=native",
+      "-DSHUTTLE_MODE=512"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3648,
+        "SK_Len": 7104,
+        "Sn_Len": 5001
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

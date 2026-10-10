@@ -75,6 +75,205 @@
         "SK_Len": 3094,
         "Sn_Len": 40
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Facto-DSA-256": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_SIG_Facto-DSA-256.txt",
+    "kat_sha256": "7863c23b59af62b695a0e574209404c75720ab4da41781d5ecb404bb4128a836",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-256/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-256/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-256/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-256/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-256"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 1,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 2,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 3,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 4,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 5,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 6,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 7,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 8,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      },
+      {
+        "Count": 9,
+        "PK_Len": 456960,
+        "SK_Len": 11662,
+        "Sn_Len": 68
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Facto-DSA-512": {
+    "kat": "generator/output/KAT_SIG_Facto-DSA-512.txt",
+    "kat_sha256": "192bca21b8e1f83c5a3e31b051eb662853c72709576737daf637e210d58ee5e3",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "kat_origin": "build",
+    "kat_generator_sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Facto-DSA-512/drng.c"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 1,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 2,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 3,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 4,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 5,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 6,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 7,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 8,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      },
+      {
+        "Count": 9,
+        "PK_Len": 5674240,
+        "SK_Len": 61922,
+        "Sn_Len": 128
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

@@ -35,3 +35,23 @@ discussion is on PDF p. 4; the exact source and PDF files are authoritative.
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## IPHE1024-K — Iphe-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 4; `Iphe/Implementations/Reference_Implementation/Iphe-1024/CryptHash_AlgorithmInstance.h` SHA-256 `948d42ebff121dc79a1bdc83d5d12ef1f53f99b83ea7b44537ec5ecba48d5c10`; `Iphe/Test_Vectors/KAT_2_12_Iphe-1024.txt` SHA-256 `a451150e557a015ff5c183912141ae94b0239f9205e9c1fa3b996870c546b7d5`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Iphe-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## IPHE768-K — Iphe-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 4; `Iphe/Implementations/Reference_Implementation/Iphe-768/CryptHash_AlgorithmInstance.h` SHA-256 `9daacbb3aca1e0773e0ad2cfad100429105d36b2e3d42f591d75c0e81a0ac067`; `Iphe/Test_Vectors/KAT_2_12_Iphe-768.txt` SHA-256 `722e09ec85dba2125998f926a42d3d9fc5d2f4750bc06c5720332863e1e04f23`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Iphe-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

@@ -4,7 +4,7 @@
   "algorithm": "Aigis-Sig+",
   "primitive": "signature",
   "source_digest": "60ef88020ca59d3d4eb29e57ba96787ea25e621fc796d222363456eedbebeef9",
-  "spec_sha256": "4782046177a6699c6cf05d7dfc39a2f8b1091b19cecdaf883bd7ca4261a962a1",
+  "spec_sha256": "83164ce41ee4fc7e94f29600a90343abf1d4e092ec3562f5615e9f03b7dec142",
   "instances": [
     {
       "parameter_set": "Aigis-Sig+-I",
@@ -37,6 +37,709 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-I",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGI-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGI-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_pk_len_bytes/AIGISSIGI-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigi-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigi-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-I",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGI-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGI-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sk_len_bytes/AIGISSIGI-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigi-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigi-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-I",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGI-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGI-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sn_len_bytes/AIGISSIGI-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigi-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigi-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-I",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGI-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGI-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_keygen/AIGISSIGI-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/aigissigi-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigi-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-I",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGI-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGI-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_sign/AIGISSIGI-SIGSIGN-P2-01.md",
+          "oracle": "implement/aigissigi-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigi-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-KAT-01",
+          "version": 1,
+          "claim": "AIGISSIGII-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_verify/AIGISSIGII-KAT-01.md",
+          "oracle": "implement/kat_aigissigii_oracle.py",
+          "mutator": "implement/mutator/kat_aigissigii.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-KAT-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_verify/AIGISSIGIII-KAT-01.md",
+          "oracle": "implement/kat_aigissigiii_oracle.py",
+          "mutator": "implement/mutator/kat_aigissigiii.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGII-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_pk_len_bytes/AIGISSIGII-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigii-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigii-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGII-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sk_len_bytes/AIGISSIGII-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigii-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigii-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGII-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sn_len_bytes/AIGISSIGII-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigii-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigii-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGII-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_keygen/AIGISSIGII-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/aigissigii-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigii-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-II",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGII-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGII-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_sign/AIGISSIGII-SIGSIGN-P2-01.md",
+          "oracle": "implement/aigissigii-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigii-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_pk_len_bytes/AIGISSIGIII-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigiii-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigiii-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sk_len_bytes/AIGISSIGIII-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigiii-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigiii-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_get_sn_len_bytes/AIGISSIGIII-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/aigissigiii-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigissigiii-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_keygen/AIGISSIGIII-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/aigissigiii-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigiii-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Sig+-III",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISSIGIII-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "AIGISSIGIII-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Sig+/sig_sign/AIGISSIGIII-SIGSIGN-P2-01.md",
+          "oracle": "implement/aigissigiii-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigissigiii-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
           ],
           "applicable_primitives": [
             "signature"

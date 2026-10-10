@@ -4,7 +4,7 @@
   "algorithm": "Cuishen",
   "primitive": "hash",
   "source_digest": "5608ba9aac7ef64fe6a7b3495219fc70fa3215f5afae4263d83dd84e9ef2dbc8",
-  "spec_sha256": "ab993eb7b4a729fd230ccdf9fa290f8c64295a9a3e162708efbab6f079126e47",
+  "spec_sha256": "3edf0977e5b4a5ebfbce4d027f14d936577749feb82599b67bf054de24179886",
   "instances": [
     {
       "parameter_set": "Cuishen-512",
@@ -55,6 +55,86 @@
           "design": "design/Cuishen/CryptHash/Cuishen512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Cuishen-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "CUISHEN1024-KAT-01",
+          "version": 1,
+          "claim": "CUISHEN1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Cuishen/CryptHash/CUISHEN1024-KAT-01.md",
+          "oracle": "implement/cuishen1024_kat_oracle.py",
+          "mutator": "implement/mutator/cuishen1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Cuishen-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "CUISHEN768-KAT-01",
+          "version": 1,
+          "claim": "CUISHEN768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Cuishen/CryptHash/CUISHEN768-KAT-01.md",
+          "oracle": "implement/cuishen768_kat_oracle.py",
+          "mutator": "implement/mutator/cuishen768_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

@@ -4,7 +4,7 @@
   "algorithm": "TRIKE",
   "primitive": "kem",
   "source_digest": "ee111e7d665b2f18f6355c6215aba684b0467ad3c50faabb48fa498a96726868",
-  "spec_sha256": "e10d91710443a0ebde64603644c5440d8a570773bba5f62e92a0d54770368037",
+  "spec_sha256": "9a676d5ceff5efab220d6b88c66a1390412acec2c77ecbb6bcd21555d2099780",
   "instances": [
     {
       "parameter_set": "TRIKE-2",
@@ -37,6 +37,1123 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMENC-P2-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_enc/TRIKE2-KEMENC-P2-01.md",
+          "oracle": "implement/trike2-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ct_len_bytes/TRIKE2-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/trike2-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_pk_len_bytes/TRIKE2-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/trike2-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_sk_len_bytes/TRIKE2-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/trike2-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ss_len_bytes/TRIKE2-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/trike2-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-2",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE2-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TRIKE2-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_keygen/TRIKE2-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/trike2-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike2-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KAT-01",
+          "version": 1,
+          "claim": "TRIKE5-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_dec/TRIKE5-KAT-01.md",
+          "oracle": "implement/kat_trike5_oracle.py",
+          "mutator": "implement/mutator/kat_trike5.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KAT-01",
+          "version": 1,
+          "claim": "TRIKE7-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_dec/TRIKE7-KAT-01.md",
+          "oracle": "implement/kat_trike7_oracle.py",
+          "mutator": "implement/mutator/kat_trike7.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KAT-01",
+          "version": 1,
+          "claim": "TRIKE9-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_dec/TRIKE9-KAT-01.md",
+          "oracle": "implement/kat_trike9_oracle.py",
+          "mutator": "implement/mutator/kat_trike9.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMENC-P2-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_enc/TRIKE5-KEMENC-P2-01.md",
+          "oracle": "implement/trike5-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ct_len_bytes/TRIKE5-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/trike5-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_pk_len_bytes/TRIKE5-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/trike5-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_sk_len_bytes/TRIKE5-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/trike5-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ss_len_bytes/TRIKE5-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/trike5-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-5",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE5-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TRIKE5-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_keygen/TRIKE5-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/trike5-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike5-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMENC-P2-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_enc/TRIKE7-KEMENC-P2-01.md",
+          "oracle": "implement/trike7-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ct_len_bytes/TRIKE7-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/trike7-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_pk_len_bytes/TRIKE7-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/trike7-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_sk_len_bytes/TRIKE7-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/trike7-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ss_len_bytes/TRIKE7-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/trike7-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-7",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE7-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TRIKE7-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_keygen/TRIKE7-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/trike7-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike7-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMENC-P2-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_enc/TRIKE9-KEMENC-P2-01.md",
+          "oracle": "implement/trike9-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ct_len_bytes/TRIKE9-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/trike9-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_pk_len_bytes/TRIKE9-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/trike9-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_sk_len_bytes/TRIKE9-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/trike9-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_get_ss_len_bytes/TRIKE9-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/trike9-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TRIKE-9",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TRIKE9-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TRIKE9-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TRIKE/kem_keygen/TRIKE9-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/trike9-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/trike9-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

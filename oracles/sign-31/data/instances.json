@@ -78,6 +78,206 @@
         "SK_Len": 32,
         "Sn_Len": 896
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "TSUOV_256": {
+    "kat": "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Test_Vector/KAT_SIG_TSUOV_256.txt",
+    "kat_sha256": "21651f608d47524782f6728d34de20d80823a2e45bee67a4f327d6481bd54dec",
+    "sources": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/Fql.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/KAT_SIG.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/SIG_AlgorithmInstance.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/auxfunc.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/drng.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/mgf.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256/tsuov_core.c"
+    ],
+    "includes": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_256"
+    ],
+    "flags": [
+      "-march=native",
+      "-DTSUOV_VARIANT=256"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2170,
+        "SK_Len": 64,
+        "Sn_Len": 2412
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "TSUOV_512": {
+    "kat": "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Test_Vector/KAT_SIG_TSUOV_512.txt",
+    "kat_sha256": "bac1cf750e1900bc72d283ab7c0ecb6991303464b258546a9adfb1f9f7fd9f6e",
+    "sources": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/Fql.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/KAT_SIG.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/SIG_AlgorithmInstance.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/auxfunc.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/drng.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/mgf.c",
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512/tsuov_core.c"
+    ],
+    "includes": [
+      "Implementations/Digital_Signature-TSUOV-x86-Reference_Implementation/API_PKC/Implementations/Reference_Implementation/TSUOV_512"
+    ],
+    "flags": [
+      "-march=native",
+      "-DTSUOV_VARIANT=512"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 1,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 2,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 3,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 4,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 5,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 6,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 7,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 8,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      },
+      {
+        "Count": 9,
+        "PK_Len": 21319,
+        "SK_Len": 128,
+        "Sn_Len": 2939
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

@@ -1,0 +1,12 @@
+{
+  "JuziHash-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Juzi/Implementations/Implementation/Reference_Implementation/JuziHash-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Juzi/Implementations/Implementation/Reference_Implementation/JuziHash-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "7a2b5af6b24c700263f3f0ad811bb3bf2a11b159e10fc3b607b23e5f1046bafa",
+    "kat": "Juzi/Test_Vectors/KAT_2_12_JuziHash-1024.txt",
+    "kat_sha256": "b2984c25da27d0601e5d705ce5ff75cfc3822a7dbc295b343cc593dada0a8e03"
+  }
+}

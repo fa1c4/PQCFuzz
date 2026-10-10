@@ -1,0 +1,22 @@
+{
+  "QSH-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "a097690597487687887a70c35ef0f6792ab25ddd1559930974909d7cdf20dbd6",
+    "kat": "QSH/Test_Vectors/04_TestVectors/KAT_2_12_QSH-1024.txt",
+    "kat_sha256": "9b06048bcd5b0ef7996200f5ccf4dcdf17385f21624bf9fde1d36d1a28b7da40"
+  },
+  "QSH-768": {
+    "digest_bits": 768,
+    "sources": [
+      "QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "67a8aae8c91ed673514d40d5b03d57c1d2cb6648f26d88b0b38cd2cf6741b63d",
+    "kat": "QSH/Test_Vectors/04_TestVectors/KAT_2_12_QSH-768.txt",
+    "kat_sha256": "e1c609cc4d63cf5e94eb372a1ab00ddf11461f34d12bc3260b5f86e701e9f835"
+  }
+}

@@ -35,3 +35,23 @@ discussion is on PDF pp. 4–5, 15; the exact source and PDF files are authorita
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## QSH1024-K — QSH-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4–5, 15; `QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-1024/CryptHash_AlgorithmInstance.h` SHA-256 `a097690597487687887a70c35ef0f6792ab25ddd1559930974909d7cdf20dbd6`; `QSH/Test_Vectors/04_TestVectors/KAT_2_12_QSH-1024.txt` SHA-256 `9b06048bcd5b0ef7996200f5ccf4dcdf17385f21624bf9fde1d36d1a28b7da40`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `QSH-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## QSH768-K — QSH-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4–5, 15; `QSH/Implementations/03_Implementations/1_Reference_Implementation/QSH-768/CryptHash_AlgorithmInstance.h` SHA-256 `67a8aae8c91ed673514d40d5b03d57c1d2cb6648f26d88b0b38cd2cf6741b63d`; `QSH/Test_Vectors/04_TestVectors/KAT_2_12_QSH-768.txt` SHA-256 `e1c609cc4d63cf5e94eb372a1ab00ddf11461f34d12bc3260b5f86e701e9f835`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `QSH-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

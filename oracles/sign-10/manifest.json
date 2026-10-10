@@ -4,7 +4,7 @@
   "algorithm": "Facto-DSA",
   "primitive": "signature",
   "source_digest": "450bad2020675b19d478c4f51d04988359dd414bc827860620ebca595776a82f",
-  "spec_sha256": "8ebe2d2d5eddd523670d2694fe20e21b34ce16ea496edb63c34e6bbab5fee3d8",
+  "spec_sha256": "2dddff9dc4ff8876bffba06d0d41c9381b1d724d80fd4713e22629f23ba61265",
   "instances": [
     {
       "parameter_set": "Facto-DSA-128",
@@ -37,6 +37,715 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA128-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_pk_len_bytes/FACTODSA128-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa128-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa128-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA128-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sk_len_bytes/FACTODSA128-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa128-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa128-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA128-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sn_len_bytes/FACTODSA128-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa128-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa128-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA128-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_keygen/FACTODSA128-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/factodsa128-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa128-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-128",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA128-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA128-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_sign/FACTODSA128-SIGSIGN-P2-01.md",
+          "oracle": "implement/factodsa128-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa128-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-KAT-01",
+          "version": 1,
+          "claim": "FACTODSA256-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_verify/FACTODSA256-KAT-01.md",
+          "oracle": "implement/kat_factodsa256_oracle.py",
+          "mutator": "implement/mutator/kat_factodsa256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA256-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_pk_len_bytes/FACTODSA256-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa256-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa256-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA256-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sk_len_bytes/FACTODSA256-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa256-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa256-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA256-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sn_len_bytes/FACTODSA256-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa256-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa256-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA256-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_keygen/FACTODSA256-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/factodsa256-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa256-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-256",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA256-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA256-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_sign/FACTODSA256-SIGSIGN-P2-01.md",
+          "oracle": "implement/factodsa256-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa256-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-KAT-01",
+          "version": 1,
+          "claim": "FACTODSA512-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_verify/FACTODSA512-KAT-01.md",
+          "oracle": "implement/kat_factodsa512_oracle.py",
+          "mutator": "implement/mutator/kat_factodsa512.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA512-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_pk_len_bytes/FACTODSA512-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa512-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa512-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA512-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sk_len_bytes/FACTODSA512-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa512-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa512-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "FACTODSA512-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_get_sn_len_bytes/FACTODSA512-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/factodsa512-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/factodsa512-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA512-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_keygen/FACTODSA512-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/factodsa512-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa512-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Facto-DSA-512",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": false,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false,
+        "generated_kat": true
+      },
+      "oracles": [
+        {
+          "id": "FACTODSA512-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "FACTODSA512-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Facto-DSA/sig_sign/FACTODSA512-SIGSIGN-P2-01.md",
+          "oracle": "implement/factodsa512-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/factodsa512-sigsign-p2-01.py",
+          "required_capabilities": [
+            "generated_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
           ],
           "applicable_primitives": [
             "signature"

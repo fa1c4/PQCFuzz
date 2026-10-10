@@ -1,0 +1,24 @@
+{
+  "MasterCube-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "MasterCube/Implementations/Reference_Implementation/MasterCube-1024/CryptHash_AlgorithmInstance.c",
+      "MasterCube/Implementations/Reference_Implementation/MasterCube-1024/MasterCube-1024.c"
+    ],
+    "header": "MasterCube/Implementations/Reference_Implementation/MasterCube-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "4c76ed50c0b5fb4b1175487b8fdee4e704861f1bf4da5057f083f2ecfb568f18",
+    "kat": "MasterCube/Test_Vectors/KAT_2_12_MasterCube-1024.txt",
+    "kat_sha256": "20c32d208cbdc05776af95fdf22c805a105fffa6b2ada30b34d7a38271f99d13"
+  },
+  "MasterCube-768": {
+    "digest_bits": 768,
+    "sources": [
+      "MasterCube/Implementations/Reference_Implementation/MasterCube-768/CryptHash_AlgorithmInstance.c",
+      "MasterCube/Implementations/Reference_Implementation/MasterCube-768/MasterCube-768.c"
+    ],
+    "header": "MasterCube/Implementations/Reference_Implementation/MasterCube-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "a8bcecc518bf6252c46fd3572cd0d01e06a8bbc56400bbd38bce46734dcb8cef",
+    "kat": "MasterCube/Test_Vectors/KAT_2_12_MasterCube-768.txt",
+    "kat_sha256": "80e1704ce024cdafe368f539306341bffa345524343a8a19a96c097126824471"
+  }
+}

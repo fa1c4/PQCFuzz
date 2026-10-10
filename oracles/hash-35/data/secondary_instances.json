@@ -1,0 +1,13 @@
+{
+  "Wish1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Wish/Implementations/Reference_Implementation/Wish1024_reference/CryptHash_AlgorithmInstance.c",
+      "Wish/Implementations/Reference_Implementation/Wish1024_reference/wish.c"
+    ],
+    "header": "Wish/Implementations/Reference_Implementation/Wish1024_reference/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "21229b8c17554f71fd1b044d601ef605baf278122f4a8fde5873a1ab57721528",
+    "kat": "Wish/Test_Vectors/Test_Vector/Wish1024/KAT_2_12_Wish1024.txt",
+    "kat_sha256": "33ea939b4b699cc1e49b54cfed2173d1db3c454f230704dcb817dff278b7326c"
+  }
+}

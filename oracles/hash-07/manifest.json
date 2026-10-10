@@ -4,7 +4,7 @@
   "algorithm": "Dragon",
   "primitive": "hash",
   "source_digest": "99229052452e211f316d453514dd4a336d6300f5470577b4e43f88ffaa38b2a5",
-  "spec_sha256": "2ad6a0f1b6d016c2a2606262b8a6a9b8bb542f9dbaa72160fbb8f12c889abf95",
+  "spec_sha256": "b57af780c72aeff3d549db07577cc459f21c1610002c32285a82212bd44985aa",
   "instances": [
     {
       "parameter_set": "Dragon-512",
@@ -55,6 +55,206 @@
           "design": "design/Dragon/CryptHash/Dragon512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Dragon-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DRAGON1024-KAT-01",
+          "version": 1,
+          "claim": "DRAGON1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/DRAGON1024-KAT-01.md",
+          "oracle": "implement/dragon1024_kat_oracle.py",
+          "mutator": "implement/mutator/dragon1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Dragon-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DRAGON768-KAT-01",
+          "version": 1,
+          "claim": "DRAGON768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/DRAGON768-KAT-01.md",
+          "oracle": "implement/dragon768_kat_oracle.py",
+          "mutator": "implement/mutator/dragon768_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Dragon-XOF-256",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DRAGONXOF256-KAT-01",
+          "version": 1,
+          "claim": "DRAGONXOF256-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/DRAGONXOF256-KAT-01.md",
+          "oracle": "implement/dragonxof256_kat_oracle.py",
+          "mutator": "implement/mutator/dragonxof256_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Dragon-XOF-384",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DRAGONXOF384-KAT-01",
+          "version": 1,
+          "claim": "DRAGONXOF384-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/DRAGONXOF384-KAT-01.md",
+          "oracle": "implement/dragonxof384_kat_oracle.py",
+          "mutator": "implement/mutator/dragonxof384_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Dragon-XOF-512",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DRAGONXOF512-KAT-01",
+          "version": 1,
+          "claim": "DRAGONXOF512-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Dragon/CryptHash/DRAGONXOF512-KAT-01.md",
+          "oracle": "implement/dragonxof512_kat_oracle.py",
+          "mutator": "implement/mutator/dragonxof512_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

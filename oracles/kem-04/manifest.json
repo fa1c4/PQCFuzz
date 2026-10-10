@@ -4,7 +4,7 @@
   "algorithm": "BAG-Piglet",
   "primitive": "kem",
   "source_digest": "c4a4949a092b6da97f15dc65b05fc72005b8234059510108adaad3198c951ec0",
-  "spec_sha256": "299451bcd419efe05ac78d26892684e6e2f7de92c86048b531d435b5cd22d011",
+  "spec_sha256": "9194cbd9cfccdfe420a556fb83de583d2ad1d49e5398afabda7c5fb4cc1ca0a6",
   "instances": [
     {
       "parameter_set": "bag_piglet128",
@@ -37,6 +37,1123 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMENC-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_enc/BAGPIGLET128-KEMENC-P2-01.md",
+          "oracle": "implement/bagpiglet128-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ct_len_bytes/BAGPIGLET128-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet128-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_pk_len_bytes/BAGPIGLET128-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet128-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_sk_len_bytes/BAGPIGLET128-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet128-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ss_len_bytes/BAGPIGLET128-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet128-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet128",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET128-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET128-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_keygen/BAGPIGLET128-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/bagpiglet128-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet128-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KAT-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_dec/BAGPIGLET256-KAT-01.md",
+          "oracle": "implement/kat_bagpiglet256_oracle.py",
+          "mutator": "implement/mutator/kat_bagpiglet256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KAT-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_dec/BAGPIGLET384-KAT-01.md",
+          "oracle": "implement/kat_bagpiglet384_oracle.py",
+          "mutator": "implement/mutator/kat_bagpiglet384.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KAT-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_dec/BAGPIGLET512-KAT-01.md",
+          "oracle": "implement/kat_bagpiglet512_oracle.py",
+          "mutator": "implement/mutator/kat_bagpiglet512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMENC-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_enc/BAGPIGLET256-KEMENC-P2-01.md",
+          "oracle": "implement/bagpiglet256-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ct_len_bytes/BAGPIGLET256-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet256-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_pk_len_bytes/BAGPIGLET256-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet256-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_sk_len_bytes/BAGPIGLET256-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet256-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ss_len_bytes/BAGPIGLET256-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet256-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet256",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET256-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET256-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_keygen/BAGPIGLET256-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/bagpiglet256-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet256-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMENC-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_enc/BAGPIGLET384-KEMENC-P2-01.md",
+          "oracle": "implement/bagpiglet384-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ct_len_bytes/BAGPIGLET384-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet384-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_pk_len_bytes/BAGPIGLET384-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet384-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_sk_len_bytes/BAGPIGLET384-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet384-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ss_len_bytes/BAGPIGLET384-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet384-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet384",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET384-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET384-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_keygen/BAGPIGLET384-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/bagpiglet384-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet384-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMENC-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_enc/BAGPIGLET512-KEMENC-P2-01.md",
+          "oracle": "implement/bagpiglet512-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ct_len_bytes/BAGPIGLET512-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet512-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_pk_len_bytes/BAGPIGLET512-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet512-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_sk_len_bytes/BAGPIGLET512-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet512-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_get_ss_len_bytes/BAGPIGLET512-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/bagpiglet512-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "bag_piglet512",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "BAGPIGLET512-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "BAGPIGLET512-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/BAG-Piglet/kem_keygen/BAGPIGLET512-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/bagpiglet512-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/bagpiglet512-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

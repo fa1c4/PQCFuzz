@@ -4,7 +4,7 @@
   "algorithm": "TSUOV",
   "primitive": "signature",
   "source_digest": "c970311c547b4ce2436dd4d7f6e3d25da99439299574b30d94bc40fd75bd9c58",
-  "spec_sha256": "76837b9a8cb51758220ff8f33624edd5090edc5b7131209c9ca8d20855200b7a",
+  "spec_sha256": "0eb7821f52b9a3743906447e49695fb7b1e057294adb52cb0e137e88523a937a",
   "instances": [
     {
       "parameter_set": "TSUOV_128",
@@ -37,6 +37,709 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_128",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV128-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV128-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_pk_len_bytes/TSUOV128-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov128-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov128-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_128",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV128-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV128-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sk_len_bytes/TSUOV128-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov128-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov128-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_128",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV128-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV128-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sn_len_bytes/TSUOV128-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov128-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov128-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_128",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV128-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TSUOV128-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_keygen/TSUOV128-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/tsuov128-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov128-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_128",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV128-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "TSUOV128-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_sign/TSUOV128-SIGSIGN-P2-01.md",
+          "oracle": "implement/tsuov128-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov128-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-KAT-01",
+          "version": 1,
+          "claim": "TSUOV256-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_verify/TSUOV256-KAT-01.md",
+          "oracle": "implement/kat_tsuov256_oracle.py",
+          "mutator": "implement/mutator/kat_tsuov256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-KAT-01",
+          "version": 1,
+          "claim": "TSUOV512-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_verify/TSUOV512-KAT-01.md",
+          "oracle": "implement/kat_tsuov512_oracle.py",
+          "mutator": "implement/mutator/kat_tsuov512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV256-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_pk_len_bytes/TSUOV256-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov256-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov256-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV256-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sk_len_bytes/TSUOV256-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov256-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov256-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV256-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sn_len_bytes/TSUOV256-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov256-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov256-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TSUOV256-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_keygen/TSUOV256-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/tsuov256-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov256-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_256",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV256-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "TSUOV256-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_sign/TSUOV256-SIGSIGN-P2-01.md",
+          "oracle": "implement/tsuov256-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov256-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV512-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_pk_len_bytes/TSUOV512-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov512-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov512-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV512-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sk_len_bytes/TSUOV512-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov512-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov512-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "TSUOV512-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_get_sn_len_bytes/TSUOV512-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/tsuov512-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/tsuov512-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "TSUOV512-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_keygen/TSUOV512-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/tsuov512-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov512-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "TSUOV_512",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "TSUOV512-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "TSUOV512-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/TSUOV/sig_sign/TSUOV512-SIGSIGN-P2-01.md",
+          "oracle": "implement/tsuov512-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/tsuov512-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
           ],
           "applicable_primitives": [
             "signature"

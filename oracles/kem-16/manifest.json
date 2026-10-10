@@ -4,7 +4,7 @@
   "algorithm": "HARE",
   "primitive": "kem",
   "source_digest": "c83cf0c04fc2df7b98858b1dafb22e1020285803ce78d604de3ffff2a5fcea40",
-  "spec_sha256": "3f912c20610cce53f1e1f0f9386b3784e1eddc621d44be8b72b69c78799e30a3",
+  "spec_sha256": "84e8bffd87da6566c2c3878bb1f23c5aa8d0887d6898d62c96111169eca6048c",
   "instances": [
     {
       "parameter_set": "HARE-128",
@@ -37,6 +37,1123 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMENC-P2-01",
+          "version": 1,
+          "claim": "HARE128-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_enc/HARE128-KEMENC-P2-01.md",
+          "oracle": "implement/hare128-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE128-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ct_len_bytes/HARE128-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/hare128-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE128-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_pk_len_bytes/HARE128-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/hare128-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE128-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_sk_len_bytes/HARE128-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/hare128-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE128-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ss_len_bytes/HARE128-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/hare128-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-128",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE128-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "HARE128-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_keygen/HARE128-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/hare128-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare128-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KAT-01",
+          "version": 1,
+          "claim": "HARE256-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_dec/HARE256-KAT-01.md",
+          "oracle": "implement/kat_hare256_oracle.py",
+          "mutator": "implement/mutator/kat_hare256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KAT-01",
+          "version": 1,
+          "claim": "HARE384-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_dec/HARE384-KAT-01.md",
+          "oracle": "implement/kat_hare384_oracle.py",
+          "mutator": "implement/mutator/kat_hare384.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KAT-01",
+          "version": 1,
+          "claim": "HARE512-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_dec/HARE512-KAT-01.md",
+          "oracle": "implement/kat_hare512_oracle.py",
+          "mutator": "implement/mutator/kat_hare512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMENC-P2-01",
+          "version": 1,
+          "claim": "HARE256-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_enc/HARE256-KEMENC-P2-01.md",
+          "oracle": "implement/hare256-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE256-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ct_len_bytes/HARE256-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/hare256-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE256-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_pk_len_bytes/HARE256-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/hare256-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE256-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_sk_len_bytes/HARE256-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/hare256-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE256-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ss_len_bytes/HARE256-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/hare256-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-256",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE256-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "HARE256-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_keygen/HARE256-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/hare256-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare256-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMENC-P2-01",
+          "version": 1,
+          "claim": "HARE384-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_enc/HARE384-KEMENC-P2-01.md",
+          "oracle": "implement/hare384-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE384-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ct_len_bytes/HARE384-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/hare384-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE384-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_pk_len_bytes/HARE384-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/hare384-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE384-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_sk_len_bytes/HARE384-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/hare384-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE384-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ss_len_bytes/HARE384-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/hare384-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-384",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE384-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "HARE384-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_keygen/HARE384-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/hare384-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare384-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMENC-P2-01",
+          "version": 1,
+          "claim": "HARE512-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_enc/HARE512-KEMENC-P2-01.md",
+          "oracle": "implement/hare512-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE512-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ct_len_bytes/HARE512-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/hare512-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE512-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_pk_len_bytes/HARE512-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/hare512-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE512-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_sk_len_bytes/HARE512-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/hare512-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "HARE512-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_get_ss_len_bytes/HARE512-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/hare512-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "HARE-512",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "HARE512-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "HARE512-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/HARE/kem_keygen/HARE512-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/hare512-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/hare512-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

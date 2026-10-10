@@ -4,7 +4,7 @@
   "algorithm": "Polar-KEM",
   "primitive": "kem",
   "source_digest": "077191d44b3a7d68df44015cd668e514e9c82389f00f9883f0d8db11c9df5aa9",
-  "spec_sha256": "2f1f7098a7d57e9a0dcb395be7a8ac13506fc35673cd897a3f4c60e3fae8b5eb",
+  "spec_sha256": "02a274f57e59590f252df19f6e685e8896ea5982c0c05e841050ebb0539b7fd3",
   "instances": [
     {
       "parameter_set": "PolarKEM-128",
@@ -37,6 +37,834 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMENC-P2-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_enc/POLARKEM128-KEMENC-P2-01.md",
+          "oracle": "implement/polarkem128-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ct_len_bytes/POLARKEM128-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem128-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_pk_len_bytes/POLARKEM128-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem128-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_sk_len_bytes/POLARKEM128-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem128-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ss_len_bytes/POLARKEM128-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem128-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-128",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM128-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "POLARKEM128-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_keygen/POLARKEM128-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/polarkem128-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem128-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KAT-01",
+          "version": 1,
+          "claim": "POLARKEM256-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_dec/POLARKEM256-KAT-01.md",
+          "oracle": "implement/kat_polarkem256_oracle.py",
+          "mutator": "implement/mutator/kat_polarkem256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KAT-01",
+          "version": 1,
+          "claim": "POLARKEM512-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_dec/POLARKEM512-KAT-01.md",
+          "oracle": "implement/kat_polarkem512_oracle.py",
+          "mutator": "implement/mutator/kat_polarkem512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMENC-P2-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_enc/POLARKEM256-KEMENC-P2-01.md",
+          "oracle": "implement/polarkem256-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ct_len_bytes/POLARKEM256-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem256-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_pk_len_bytes/POLARKEM256-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem256-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_sk_len_bytes/POLARKEM256-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem256-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ss_len_bytes/POLARKEM256-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem256-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-256",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM256-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "POLARKEM256-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_keygen/POLARKEM256-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/polarkem256-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem256-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMENC-P2-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_enc/POLARKEM512-KEMENC-P2-01.md",
+          "oracle": "implement/polarkem512-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ct_len_bytes/POLARKEM512-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem512-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_pk_len_bytes/POLARKEM512-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem512-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_sk_len_bytes/POLARKEM512-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem512-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_get_ss_len_bytes/POLARKEM512-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/polarkem512-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "PolarKEM-512",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "POLARKEM512-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "POLARKEM512-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Polar-KEM/kem_keygen/POLARKEM512-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/polarkem512-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/polarkem512-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

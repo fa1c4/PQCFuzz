@@ -35,3 +35,23 @@ discussion is on PDF pp. 5, 13; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## TAICHI1024-K — TaiChi-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 5, 13; `TaiChi/Implementations/Reference_Implementation/TaiChi-1024/CryptHash_AlgorithmInstance.h` SHA-256 `9502823b8532d8142ad5bdf58d6e66ba5298d9bb891002212e88c7af3e9c37f6`; `TaiChi/Test_Vectors/KAT_2_12_TaiChi-1024.txt` SHA-256 `b1cab06a69ffe259500199d9ceed3b1cae89e56d726481189f9a2e9f6678828f`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `TaiChi-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## TAICHI768-K — TaiChi-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 5, 13; `TaiChi/Implementations/Reference_Implementation/TaiChi-768/CryptHash_AlgorithmInstance.h` SHA-256 `7db6d4a8afd23e0e67c47ffc3c7e0fc672d4f34c79781e67143b94dd3b78230a`; `TaiChi/Test_Vectors/KAT_2_12_TaiChi-768.txt` SHA-256 `3e30053a633167b50e49dc1e5ce38f0a80d7c3d70a66917547eabb2bb7a63093`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `TaiChi-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

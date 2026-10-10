@@ -4,7 +4,7 @@
   "algorithm": "Aigis-Enc+",
   "primitive": "kem",
   "source_digest": "fab1491992307c011506625c7f4e9dfb45a98a01c41a4504ee8ab1ae7926fa22",
-  "spec_sha256": "d657ee74304475d58d97d598251a3f78220ea81512a0ca4e96d05311836e293d",
+  "spec_sha256": "ce4ccfdd05fae31e89f2f106e803cb8b24659fe94dd61eeede31de4d31e94a79",
   "instances": [
     {
       "parameter_set": "Aigis-Enc+-I",
@@ -37,6 +37,834 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMENC-P2-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_enc/AIGISENCI-KEMENC-P2-01.md",
+          "oracle": "implement/aigisenci-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ct_len_bytes/AIGISENCI-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenci-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_pk_len_bytes/AIGISENCI-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenci-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_sk_len_bytes/AIGISENCI-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenci-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ss_len_bytes/AIGISENCI-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenci-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-I",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCI-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISENCI-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_keygen/AIGISENCI-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/aigisenci-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisenci-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KAT-01",
+          "version": 1,
+          "claim": "AIGISENCII-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_dec/AIGISENCII-KAT-01.md",
+          "oracle": "implement/kat_aigisencii_oracle.py",
+          "mutator": "implement/mutator/kat_aigisencii.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KAT-01",
+          "version": 1,
+          "claim": "AIGISENCIII-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_dec/AIGISENCIII-KAT-01.md",
+          "oracle": "implement/kat_aigisenciii_oracle.py",
+          "mutator": "implement/mutator/kat_aigisenciii.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMENC-P2-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_enc/AIGISENCII-KEMENC-P2-01.md",
+          "oracle": "implement/aigisencii-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ct_len_bytes/AIGISENCII-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/aigisencii-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_pk_len_bytes/AIGISENCII-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisencii-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_sk_len_bytes/AIGISENCII-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisencii-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ss_len_bytes/AIGISENCII-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/aigisencii-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-II",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCII-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISENCII-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_keygen/AIGISENCII-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/aigisencii-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisencii-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMENC-P2-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_enc/AIGISENCIII-KEMENC-P2-01.md",
+          "oracle": "implement/aigisenciii-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ct_len_bytes/AIGISENCIII-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenciii-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_pk_len_bytes/AIGISENCIII-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenciii-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_sk_len_bytes/AIGISENCIII-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenciii-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_get_ss_len_bytes/AIGISENCIII-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/aigisenciii-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Aigis-Enc+-III",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AIGISENCIII-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "AIGISENCIII-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Aigis-Enc+/kem_keygen/AIGISENCIII-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/aigisenciii-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/aigisenciii-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

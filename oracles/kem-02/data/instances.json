@@ -107,6 +107,510 @@
         "SS_Len": 64,
         "expected_ss": "da7dd0b439137730d2b2a585b6895495593249649b2da1c4b785e98add11dbc1df46e8943a082768e00b43a6e5427c528a79c0d10e25be3194fee6d3f2509f53"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Amoeba-1152": {
+    "kat": "Test_Vectors/KAT_KEM_Amoeba256.txt",
+    "kat_sha256": "d55cfeec811a99ab16d1cf1f241714329fc30e8ff0013734d130199ac8973e34",
+    "sources": [
+      "Implementations/Reference_Implementation/Amoeba-1152/src/KAT/KAT_KEM.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/api/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/ccakem.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/cpapke.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/hamming.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/ntt_2s3t.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/poly.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/randombytes.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend/zetas.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/symmetric/auxfunc.c",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/symmetric/drng.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Amoeba-1152/src/KAT",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/api",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/backend",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/symmetric",
+      "Implementations/Reference_Implementation/Amoeba-1152/src/tests"
+    ],
+    "flags": [
+      "-march=native",
+      "-Dinline=static inline",
+      "-DSECURITY_LEVEL=256"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "99643d0792e550417b3184ba1bf434e207172849ec6db6d1fb833a2e08cb1b19afe4cfa909a8035223a04744c2b779c15fa32657aecc7056c2ec48d336fbafe1"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "7e61a1d8fd40cccf16c5151c5d9708a7d6c8cc946011df3e7c667a955b98c0b88825c393cffeadf5df73abcea5a17f8d7f5aad5aa5f9b965b408d4d795964360"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "a028339fd3694eaa959aa2a7cbe79e9090b988bcead932dcd5694ef139baa705b7d8fde778e4707b70b578faceaa80591b47e98defd94de7cfae50545bd077d1"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "28cf752e1e0cc95ac40631d61acfb452e86254c7c1815fdd9d46173b1c0acc3dc16b221dc049190b35c2c00f2895a565933a95b42c33a3d9c94a4a58be02c4ce"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "29b76a8613dc3838e658e80a501c73eb80608ea86d4a6fb1478f5d5a3babe5ffe00949c5768fee33d93af8053f5804741bce6d6a760df696dad757d0de0f8e77"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "71c3c8acfd01f713bb57a36661ea9100b0513c669e20f3c7bdf4ce162fc102568fd098db7fb269ead1378278bc46da902b2dd28978666a2b14537b8e2c430821"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "8006b698423b5fd22be6bcb3e468136712d076929ce896612cc4b0ff7e17288b56ac9d19f2918b053fa2e501f3442964f45b32fb8e5bc0c5bdd33c29f09e6d2c"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "977f9d205e45f53da70fb91936a387a25f45068d6ca09ff334c17544bea656b9498908b241a5364143ade3960f33ff9d27e057c7ac3b9c475db68e7b047d2cac"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "12efd3b2c1c3cee0d5ce7c18684c8b49eebf157ee236dde4a74d0b019387befcdc17dd0f7ffe115f91fc4ee320d45381e461d735cbe51e006b8c83915f900840"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1648,
+        "SK_Len": 3440,
+        "CT_Len": 1833,
+        "SS_Len": 64,
+        "expected_ss": "ef1529ac3ca67557283049b4d62c5a65c40f10ee02b1311f88ef93042f38d75bbc46b326129a55b3c404daa1ac9f46319b21f8f3512f3c21f71c6bbb9267e812"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Amoeba-1728": {
+    "kat": "Test_Vectors/KAT_KEM_Amoeba384.txt",
+    "kat_sha256": "bfa2f968cfe402fbc78ea5ce05d6d425cf4602c2b270bba7abfa2e11d93063ca",
+    "sources": [
+      "Implementations/Reference_Implementation/Amoeba-1728/src/KAT/KAT_KEM.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/api/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/ccakem.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/cpapke.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/hamming.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/ntt_2s3t.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/poly.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/randombytes.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend/zetas.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/symmetric/auxfunc.c",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/symmetric/drng.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Amoeba-1728/src/KAT",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/api",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/backend",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/symmetric",
+      "Implementations/Reference_Implementation/Amoeba-1728/src/tests"
+    ],
+    "flags": [
+      "-march=native",
+      "-Dinline=static inline",
+      "-DSECURITY_LEVEL=384"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "6dca6aa7344ea29ade39a74ce33cd3fc91cd6a8fb4ef64f479efd1b918c82e75b3c79d4b449bfccebb6975894c4ba14a9ecf5a22fb896639f53d22eee8a79f3a"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "5488c05c8a1a698aefafde800c11dcb74235dadf42b1eca69b4575bb1570c7fb1ef76fc0ab4098bcb509576c06e85a27d3a42fa00b0d7956027e0fd796085b76"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "4fc183bf6b03af79fd54a4c178a206b44e1f736119d2a4c08cddeee2df3b2b0983ffdf5eedf8908259b3d49ac649a3cf5802e93b2aa61ddc94ccd03ea7fecbd9"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "2f6d785316e1e2c61627ea2673b961f352b3b9e81f737dfd64c82340878bb0ed5312340dda31a6e801c23c06a6a97e86c99e90908ddd2421bbc60ae3c6370a64"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "3706b246685312d31484d0088026cddfe59d9804518372bc2d132d1c3e20c6199a922fa596a3e3492824b7168bfe690533204fb0e6387aa7731fbf6ac73fa36c"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "589c9bf726dc6cb413056ce95812b47cacfce1563fe8a8a8d82bb5f423a14f0e821bc464ed50570d94acad87f5affaad6f6cb75847578aaed4420e31ab26289d"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "1b397810ba0e9685aa90272ec1d68d35e966b4f0ed90cf82f758a21c838b29ef7541becd92fd5f4c116207d3317638d4d8eedb3526ce423577b674b8418b38f5"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "e89f082a261e76c457d65fd80368bc414442b521acd98c3849b99623b849bff3c53b4e3b9ab1e80d72e6f5d76e0d324b0a582511ae7483b9fc60c754115ddf1d"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "6a4cf44adc24e14bafc21391b74f243c2d1809b9b8248354bb213291fbdc514eefc82ded690577550d3b03668766e9ff19abff9f0900281320f4eb357729346b"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2440,
+        "SK_Len": 5096,
+        "CT_Len": 2769,
+        "SS_Len": 64,
+        "expected_ss": "8f5918c457abe1f611f48787798a20c565fa203ddd8953a618214afad18917ea5e7e052b1e592c6c2401d46ee62cde00761cf253d666a44c520c91ed9fd3e414"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Amoeba-2304": {
+    "kat": "Test_Vectors/KAT_KEM_Amoeba512.txt",
+    "kat_sha256": "08d4f43a29be52118fc3a5f5b0c495f66c25be031e7f837b8749c4521039dfc6",
+    "sources": [
+      "Implementations/Reference_Implementation/Amoeba-2304/src/KAT/KAT_KEM.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/api/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/ccakem.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/cpapke.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/hamming.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/ntt_2s3t.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/poly.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/randombytes.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend/zetas.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/symmetric/auxfunc.c",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/symmetric/drng.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Amoeba-2304/src/KAT",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/api",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/backend",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/symmetric",
+      "Implementations/Reference_Implementation/Amoeba-2304/src/tests"
+    ],
+    "flags": [
+      "-march=native",
+      "-Dinline=static inline",
+      "-DSECURITY_LEVEL=512"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "22e60e723e4418a40250ff91a050146b206730d014a200105d89c0e4894b95d8fe6cc9072d67efbf8032c95ae3fe037d023f07df6a3e0dda0e83df80af2ba6fa"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "8253791ac9d688bb13893ff3c6c0a1023fbd8b393a7bb5c6a77a39717293f36b15f85780bf9d99e422b5b311359321fb6fc37af63e1f1249f80a2cbe5947d11d"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "47fc74e65bfa5ed45c3bba65e5224652e12bcf067e5bbbaf08595ff7d1df56b765b50da360b4d46b7dafe5ea7ea4aea2b83febc1b57cde1395673bd71177c5ae"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "620fa712dd420ec437083b637c09801152faf752860803f4bb8dd2beb4ee9faa4b25bf64915ada16045de8cf456ff159425edd5b40477a9ed440005b53109557"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "e0b2fa98a243b337edaea95cade1cb13e650be5e47a9aac221d561f00a5489994ee92181e69bd68ee3c507fc8b1993fe4e28d5df8c12bdf431ed259162d247af"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "f04cae1e0078fd94ab391eebdacd4399c4a67d6e72aaf102551f2cd249bb7868874fa25cc3db8732b57b94dc9c775f2971264c48e4cad84a23a2bfafca9b7da7"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "51fd395130e971e26967e35a3313464e9578d18d0d5b41d5ecf669c033c194de45a8b505447599870a11cc56213b9e211922d761512ef1f56c328be8e1ffd80f"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "ded46f5aa1c9eff9657ce9034cf2b9d8bcfcfb02a8422d8d87c5c686677df0243da13b99f1277b0f64443fc3ccc8a20f8d1f8af81187c1b38d47af7a23fbc624"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "e60802cc8e04ceab6526f49b028910101e4e4de580cc851b66888d9add9061e7fa59d569d6969b31733e76433407814af6c1f9b6617215288486b3b81a117756"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3520,
+        "SK_Len": 7040,
+        "CT_Len": 3914,
+        "SS_Len": 64,
+        "expected_ss": "4c0413823a6be00463945f2c0925a03f125ec81f83feadcd5febf52754b68b1bfd9064dcc09aeb98f14d0e9245fadd5655ec2df06c0bdd0f86403a727be16e94"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Amoeba-864": {
+    "kat": "Test_Vectors/KAT_KEM_Amoeba192.txt",
+    "kat_sha256": "10440a828ae85edbecd129d1a070eb8b2f820cddb37ade5abe4627eaf1183878",
+    "sources": [
+      "Implementations/Reference_Implementation/Amoeba-864/src/KAT/KAT_KEM.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/api/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/ccakem.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/cpapke.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/hamming.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/ntt_2s3t.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/poly.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/randombytes.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend/zetas.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/symmetric/auxfunc.c",
+      "Implementations/Reference_Implementation/Amoeba-864/src/symmetric/drng.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Amoeba-864/src/KAT",
+      "Implementations/Reference_Implementation/Amoeba-864/src/api",
+      "Implementations/Reference_Implementation/Amoeba-864/src/backend",
+      "Implementations/Reference_Implementation/Amoeba-864/src/symmetric",
+      "Implementations/Reference_Implementation/Amoeba-864/src/tests"
+    ],
+    "flags": [
+      "-march=native",
+      "-Dinline=static inline",
+      "-DSECURITY_LEVEL=192"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "9d20198b9481ccc791552928b7a1c58677aa49552ae9b038a0ad55f9699c5a336f578ebcb6d1134632ad7540529616c3775c5fb2e797f654049dc468139f9377"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "2141769b02c4ac453d86289112b06e3cf2109c51245af2a6d9072ab7b0bb9ea85ad818ef90ae6e1b4d28243be11878ebaab690f73d23de4697c216580b7aedf5"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "9994787bfa3182010b47af3898a8542ab9453ed1357164902905755fdac099cce0f6868129007f5b0ef09aef58f1f9f535398ce5b3586550acb1352e8e8b356b"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "c267795651242d2ff09ea1a171706960cfa8a5fc120c790fc3963c8a1d77395227e7c8aef7c30debc1606c23e133f87db9264bf807fbcfd862ad2dfacb72e64b"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "ee6ed6fce93ab079d0af9647f4f66764f7a8e45cd56565a702d02d668afd7c9f10250765f78e969d66ca8a1fe192985b728489cb188e73fd950ebbae66df465e"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "6a0693c52b5df2aae002aec28ec5c6ea9803339d080b18426c6383344f8de33caf4ff7d7f522743a477ff6b55df2be7aad3e1b5f99aa6fb94482738401191340"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "e25b9097732d52a19cb7db90f941cc7519ac15197ee1c2b1bf5ffbf766272ce3813a2682faa1f3679dc3bee6f8022967730848a6265f4cd7647ea8d8b9c883c1"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "3d3dc2802ae869ca0c974ac55da11565b6be7752e37becd35496a23c28a7c374fb0f55ec52f231110a8e92109608c3acb6a7b95358e77db05831f7e6ac8e8f78"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "68258082c6fda057e1aae64a5b0b9c5150dfde612ce4d35cd77b0113e5df70920b3c972f7110a7c8ec4040dfb49c5591e9a54f2e4c371a86be4379221e5781f6"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1144,
+        "SK_Len": 2504,
+        "CT_Len": 1581,
+        "SS_Len": 64,
+        "expected_ss": "496302b0158b1df71997359ea2c74f7ddb16506329dc44b392d2be9ebd00bf46a07e908b73a3e707afcde3d924b51b4da1f476ef59bec9d8c66b77b262be134e"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

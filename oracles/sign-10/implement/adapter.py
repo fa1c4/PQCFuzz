@@ -43,7 +43,10 @@ def invoke(structured_input, source_root, profile):
     index = structured_input.get("record_index")
     if not isinstance(index, int) or isinstance(index, bool) or not 0 <= index < 10:
         return invalid("invalid record index")
-    path = source / config[instance]["kat"]
+    cfg = config[instance]
+    kat_root = (source.parent / "build" if cfg.get("kat_origin") == "build" else
+                package if cfg.get("kat_origin") == "package" else source)
+    path = kat_root / cfg["kat"]
     offsets_path = source.parent / "build" / f"{instance}-offsets.json"
     lib_path = source.parent / "build" / f"{instance}.so"
     if not offsets_path.is_file() or not lib_path.is_file():

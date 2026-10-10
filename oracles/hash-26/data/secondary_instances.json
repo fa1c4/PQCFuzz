@@ -1,0 +1,12 @@
+{
+  "CHIME-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "CHIME/Implementations/Reference_Implementation/CHIME-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "CHIME/Implementations/Reference_Implementation/CHIME-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "120bc1b7e6cc991f2359fbbb263e9e6b76a6e7e3af1da23c936660b52c5c2dbd",
+    "kat": "CHIME/Test_Vectors/Test_Vector/KAT_2_12_CHIME-1024.txt",
+    "kat_sha256": "f3eee2c88625d1ee95762e757966dd51e8d3353bdcd86a3420d4fe55420b6720"
+  }
+}

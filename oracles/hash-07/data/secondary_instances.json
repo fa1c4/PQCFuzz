@@ -1,0 +1,52 @@
+{
+  "Dragon-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "7c736caa59bf8ea30da200877a65d91b89ce7c4c0ec67eadd4f6a137d5b57ad7",
+    "kat": "Dragon/Implementations and Test_vector/Dragon-ARM/Test_Vector/KAT_2_12_Dragon-1024.txt",
+    "kat_sha256": "c58ddbfda4740304f72247dfb7ef92f57cb73dc6fad1c291f37218cc65e00748"
+  },
+  "Dragon-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "a523f44d56252e27d2276057feb96cc3a7f12b3e6ca63f27aa70228eece5fe0f",
+    "kat": "Dragon/Implementations and Test_vector/Dragon-ARM/Test_Vector/KAT_2_12_Dragon-768.txt",
+    "kat_sha256": "3661777eb35d496e0ed203c5f6a4a508e1a50a0c53add967b69b7b1e4d5352f8"
+  },
+  "Dragon-XOF-256": {
+    "digest_bits": 1280,
+    "sources": [
+      "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-256/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-256/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "af8edc23237e25758349c3e6330c83f3176c2644c3f06961e294cb2c9cf26fc4",
+    "kat": "Dragon/Implementations and Test_vector/Dragon-ARM/Test_Vector/KAT_2_12_Dragon-XOF-256.txt",
+    "kat_sha256": "a70bbac199ca8a8eb394e4d864b7d79795abd42f37abb90f5bb522cb4c226da8"
+  },
+  "Dragon-XOF-384": {
+    "digest_bits": 1152,
+    "sources": [
+      "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-384/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-384/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "c07b2186daf6fc8d2bef8c4011b99561669a9ea9d5318f42adf69a9f523d0fbe",
+    "kat": "Dragon/Implementations and Test_vector/Dragon-ARM/Test_Vector/KAT_2_12_Dragon-XOF-384.txt",
+    "kat_sha256": "e6c582b5368610210bdfc77d31e30a602a0be915a9226c03ab359270f1e0ec0e"
+  },
+  "Dragon-XOF-512": {
+    "digest_bits": 1024,
+    "sources": [
+      "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-512/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Dragon/Implementations and Test_vector/Dragon-ARM/Implementations/Reference_Implementation/Dragon-XOF-512/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "c4157bf496f16fc3433638bab0b56b75d6b8f423399c5b20c3bb8d0921ab3b12",
+    "kat": "Dragon/Implementations and Test_vector/Dragon-ARM/Test_Vector/KAT_2_12_Dragon-XOF-512.txt",
+    "kat_sha256": "b2056e396f79f9c92d623708dfb579b68b68af6def2c0021206b3aaecc0d4a98"
+  }
+}

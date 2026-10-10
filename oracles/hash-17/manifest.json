@@ -4,7 +4,7 @@
   "algorithm": "MasterCube",
   "primitive": "hash",
   "source_digest": "0198b80f2c280ae85223f6b60a617f39b7a9a40a5dd195bbd39eeb82a15634ea",
-  "spec_sha256": "92fd3bfa9d6763de7e423e74a5f90a5b87f0f3b70aca521214c50adca692e6a8",
+  "spec_sha256": "c840b8d86cb3e934e1dd4a767f8dcfe29cba42102bf013ff14160c72f8dae175",
   "instances": [
     {
       "parameter_set": "MasterCube-512",
@@ -55,6 +55,86 @@
           "design": "design/MasterCube/CryptHash/MasterCube512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "MasterCube-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "MASTERCUBE1024-KAT-01",
+          "version": 1,
+          "claim": "MASTERCUBE1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/MasterCube/CryptHash/MASTERCUBE1024-KAT-01.md",
+          "oracle": "implement/mastercube1024_kat_oracle.py",
+          "mutator": "implement/mutator/mastercube1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "MasterCube-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "MASTERCUBE768-KAT-01",
+          "version": 1,
+          "claim": "MASTERCUBE768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/MasterCube/CryptHash/MASTERCUBE768-KAT-01.md",
+          "oracle": "implement/mastercube768_kat_oracle.py",
+          "mutator": "implement/mutator/mastercube768_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

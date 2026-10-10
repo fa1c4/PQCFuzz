@@ -35,7 +35,11 @@ leak-*
 oom-*
 timeout-*
 
-results/
+/results/*
+!/results/hash-15/
+!/results/hash-34/
+/results/hash-15/build/
+/results/hash-34/build/
 third_party/
 configs/
 plans/

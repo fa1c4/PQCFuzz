@@ -116,6 +116,280 @@
         "SS_Len": 16,
         "expected_ss": "d5886ab5fd8f8248b128b5ce146ae47b"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Aigis-Enc+-II": {
+    "kat": "Test_Vectors/KAT_KEM_Aigis-enc2.txt",
+    "kat_sha256": "f6d8bad8e531512c6feee2a488b00b7e3ccf3d5318462154b9afb7701b06b527",
+    "sources": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/cbd.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/fips202.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/poly.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/speed_test/cpucycles.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/reduce.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/precomp.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/ntt.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/polyvec.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/owcpa.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kem.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/verify.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/hashkdf.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/gen_a.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/speed_test/speed_print.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test/auxfunc.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test/drng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/pack.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test/rng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-II",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/kat_test",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/keccak4x",
+      "Implementations/Reference_Implementation/Aigis-Enc+-II/speed_test"
+    ],
+    "flags": [
+      "-march=native",
+      "-DPARAMS=2",
+      "-DUSE_NICCS_API"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "18a8aee87321d6a2f32a063a4331b6067888210edbd1ab01d6216c0df1ffaf4d"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "95329fc1708c619b416d07165a988ad87af919437f805b6f85a7960265e8fd45"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "ee7d8b2851fa931b5c2c10fb4ae27fb9f73c87203484d6a157748d3d76d9778a"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "c4c8e70f2974eb4644930d9d9119fdf47bb135a817297e529e9941d20be05394"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "6bc16fd0c05e0c29b7d6a126038b589a5387485cb00776ec789c1aedad687297"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "b5a4bbce85c2866cc8072e6457782dfce51a5a587ce497bd2cda065514960fd9"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "b220a0b9b34a3d50ae17ab1a3eabc297a38dd7c551d615463b32f9789bfe37a1"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "b93e9ebc94c831a1a8583f741c90d89e99016d17e61cc9c3fec4ad5585478982"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "ad25a139c4207b9364fa8e3404c5b3f8c127e9b2fce7892b315cd326d900161f"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1312,
+        "SK_Len": 2912,
+        "CT_Len": 1664,
+        "SS_Len": 32,
+        "expected_ss": "633fa57fc42dfecda21388c7a82c9eb5632dc219013d75592d0c49e801961844"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Aigis-Enc+-III": {
+    "kat": "Test_Vectors/KAT_KEM_Aigis-enc3.txt",
+    "kat_sha256": "1c7be3d27d749b6cb4ae83983799f5f1ea4cc6ca0d386967f9448943ab1c393c",
+    "sources": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/cbd.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/fips202.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/poly.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/speed_test/cpucycles.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/reduce.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/precomp.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/ntt.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/polyvec.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/owcpa.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kem.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/verify.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/hashkdf.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/gen_a.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/speed_test/speed_print.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test/auxfunc.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test/drng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/pack.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test/rng.c",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test/KAT_KEM.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/Aigis-Enc+-III",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/kat_test",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/keccak4x",
+      "Implementations/Reference_Implementation/Aigis-Enc+-III/speed_test"
+    ],
+    "flags": [
+      "-march=native",
+      "-DPARAMS=3",
+      "-DUSE_NICCS_API"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "3de64bdd2e6a228067732f2ad8ab67abed4eb03f2a6b0713ab8d073de64bf37d95a2ae9395c1336191d12d6e323113e220e28d0c5c04fca84635b4cfb632d49c"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "a26e95182c25fe1136c1111d9044d3a943887af2f01fd1db5baef3da7519f86fa10b87575cc90259d6ebfad4512fc494f84cf4a2af89b481418517bee7731d53"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "287f463b292ee98ef2b512fb91f791b5ed726993e9f95448d3973690288bd79c7d7b164919023ee241263b75e6e5c06e71786b8de04a278058b36dd4c1e831d2"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "24d0c429f2515740d0fe2fe7bba252fe45ffcdd4a86a13b7e02a85ecc952899466e9cbdfb5429b0b9518140eb9da66dbdf68560c807f7bc197833df203c711ab"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "b20bbfa58a895decc724fa665247a0164440d142cd4f29435d3cd35112a70783c84805a9c14e491869fcd90541767efbfeae91bcf4719fc9b626986473f46374"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "944d947027854f4b72fb829ca69cc33fb351baf1ac74a6aa61ceaa01e689030a72ceb18773cd3fd5022b8b11829d5f24ab38f2c3c228fcd250e4af0a8e0c0d83"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "54bc2c8c1638b5d7495bbedb36b2e741c5429e2bb617894466ee3a4553551a93a0f9187f274980c11d02d320fa0b24fadc75cd547e436e3354f0f20401f5e30a"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "0009481109d3945b15a145256dfb3cc703b5cd0e26cdf7bc5d5ce978efbd8b2fe03fce1b94fc2c5619e1df8af3e657788ba0b84b3845e8995e2534eb3dc7aa74"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "e802a4ae45840881a8be9eafb2d62d3cfc19a80507c3400564334048e9067a5128c7aeff1fcf903e270daf9aeafd9f85eafb68397b598c7b0bd12cc51fe955d4"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2624,
+        "SK_Len": 5824,
+        "CT_Len": 3584,
+        "SS_Len": 64,
+        "expected_ss": "6bb7238db7cab226ebe527c1d9b9b024d3a86009ad7f67dc31a35773471f7f8c2adea6d28004e1516f169af74864164e94c135a044b5094b55b565af3963408d"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

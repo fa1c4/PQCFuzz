@@ -99,6 +99,246 @@
         "SS_Len": 16,
         "expected_ss": "01b0c626f6800ed163ba1c8a0ed27394"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "PolarKEM-256": {
+    "kat": "Submission_Package/Test_Vectors/KAT_KEM_PolarKEM-256.txt",
+    "kat_sha256": "2b0b827c53fa82bf8cef7ceb29868c40f08882b37be8088a7b3d0c820b88195b",
+    "sources": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/KAT_KEM.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/KEM_AlgorithmInstance.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/auxfunc.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/drng.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/polarkem_core.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/polarkem_ct.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/polarkem_pack.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256/polarkem_polar.c"
+    ],
+    "includes": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-256"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "6099639225ac35d928ed8f6fe7423be9f4412a2c3b39e95218a8242f8d168b07"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "17119d8f8d6de313ba882ddec8bbb286f52b730be2cdc20580534df4bf22ee0e"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "a2be37bfe95921aa2f2844ffba5fa3b4e8c9b954fa95f1e3ae9e54e8f243acef"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "1515ae0bc7908a7d828f660e1c62dfbb77eb4c0c384b079bac4d7a0b54f60340"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "a5084020364996d0cbe349c37af10ab51f56ed78e123f97931029582d024a767"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "45ee4c1eb5261af78175618bf7b95e2495013f5fc93fc91eea418dc166c1907d"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "ca3f2e76d0fcb38bcf5d26226eaf41f7ec8c91337d3cb54ce53a05195d507eca"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "e49bcaec8818fe1252c758152095656e33d4177ee4e15f2bb5ee2cd78a8a4dbd"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "29c0f6e3ca30696e2798771cb392426710a4fbd26fde72c767a0a7a6c4e97040"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2048,
+        "SK_Len": 4096,
+        "CT_Len": 1280,
+        "SS_Len": 32,
+        "expected_ss": "f2741c8047e2e8d3230d6ddc88e02b0c08c991fe41ce05560419aef2561b6373"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "PolarKEM-512": {
+    "kat": "Submission_Package/Test_Vectors/KAT_KEM_PolarKEM-512.txt",
+    "kat_sha256": "4f0aaf3430199e17af2e758b37219f2615bfc7ea810bffa2b8fe5078d1175f47",
+    "sources": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/KAT_KEM.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/KEM_AlgorithmInstance.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/auxfunc.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/drng.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/polarkem_core.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/polarkem_ct.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/polarkem_pack.c",
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512/polarkem_polar.c"
+    ],
+    "includes": [
+      "Submission_Package/Implementations/Reference_Implementation/PolarKEM-512"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "0ea205a6709a71a0cd8744b56d19c5d75d6aa28c7b04a7141fcc7de4e64a16d976f61b160db7734e5a8ef6c0bc65240fbb80d86e73fdf4d1a81e236b23990264"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "389fbfd2581274b0c6ac51290f944a1d32ce2a5eba57a349fa395398a06a87bfb38d853c747b19b8d53eb37a53e09a4e12caa89fb9f48fda7c08911d5b8a4fb7"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "f694f664e487dd4cdbeb2099b423185d657ee65dff3599bed01b1fda77b06f328ce521c90f5791ca6866d4d0f84bf17eb72f2734aed0f780f75aa3601f1250d7"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "c97b694f4e1d630787f129126d2e1fa5656f053bbd3491017bd5608755667b2bd972a59ac8947bc2a5ba3a4d76b093d959727d6ca083e3c32155f15b6047a2b9"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "81ab734b449d1d58e49f2d524ceb20dd918bdbdbe06e034cc702c6d2a98b702a5427f102aff9f0d8f5e9509f61f5199e07a3ccbcfb0cff3b731ff1917c7f9c29"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "827060e66857325a23cad2af87a4887f909fe8b4cfc046de04cf9b8d4a02218a2c423d4e13b4d57456aedf9c19968f10d7758c4fea2637cccc6ffd0831719d16"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "5c5b0723f1e3f3179b04a28a24a2eab7347634835b91a0e470eebf6e54a9c8bfd82637b341a111e585d2b4c43c5801fd9171f6ddd4057dda64164bf2ab21bdac"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "bfb18a2695accd9b9510b58807f525ddc441ba3b98c66591ff531d9e5752392ab4182e90325e12a22d1c60e9364141ad34d430fc7717b55035c0ef5a23162d3c"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "57af0f155646437036e8f28f2d8c3f65127c7c62f2b01b6dc43ac9442a96324c501c43b72e8b530141d3aaeade913da2226a62c6126e0a03166ce5c07df9b7e4"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 4096,
+        "SK_Len": 8192,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "762396078eb9600995181cf1750440b131df49fe5a70e59ed436723c388dc1bb3078d5f105c68bceca5dd075422c452e748e7f9402a8129183bd60c88174fcbc"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

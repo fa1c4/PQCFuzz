@@ -35,3 +35,13 @@ discussion is on PDF pp. 6, 11; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## JUZIHASH1024-K — JuziHash-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 6, 11; `Juzi/Implementations/Implementation/Reference_Implementation/JuziHash-1024/CryptHash_AlgorithmInstance.h` SHA-256 `7a2b5af6b24c700263f3f0ad811bb3bf2a11b159e10fc3b607b23e5f1046bafa`; `Juzi/Test_Vectors/KAT_2_12_JuziHash-1024.txt` SHA-256 `b2984c25da27d0601e5d705ce5ff75cfc3822a7dbc295b343cc593dada0a8e03`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `JuziHash-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

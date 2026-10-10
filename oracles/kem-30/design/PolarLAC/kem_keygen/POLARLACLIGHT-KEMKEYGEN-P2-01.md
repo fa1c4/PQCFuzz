@@ -1,0 +1,16 @@
+# POLARLACLIGHT-KEMKEYGEN-P2-01: kem_keygen public API relation
+
+- Claim: `POLARLACLIGHT-KEMKEYGEN-C` in `oracles/spec/kem-30-PolarLAC.md`; locator PDF pp. 14–16; `Implementations/Reference_Implementation/x86/POLARLAC-Light/KEM_AlgorithmInstance.h` SHA-256 `3077e9413e7b9f13203ec9cd7f863d8e77d2186356176c97f40af03c1b48e29d`; `Test_Vectors/Reference_Implementation/x86/KAT_KEM_POLARLAC-Light.txt` SHA-256 `58ce4ca2e4822bf6ce99f59a465598b1dd620ffb20b7afcdb974572381c2a849`.
+- Property: K03 version 1; pattern: P2 version 1; extraction: draft (`unverified_spec`).
+- Scope/preconditions: Exact `POLARLAC-Light` `kem_keygen` public function, pinned primary reference source and ten KAT records; valid submitted key/seed and matching declared capacities.
+- Baseline: KAT record 0, with its public seed, key pair and/or length field.
+- Intervention: Select a distinct record and distinct seed (record 1 in smoke); unrelated fields and selected API remain fixed.
+- Expected relation: For a valid submitted key pair or a freshly generated key pair, the submitted complementary public operations complete an honest roundtrip.
+- Observable: `kem_keygen` reachability, API/status, length or inverse result, return codes and output guards; no secret bytes in ordinary report summaries.
+- Positive control: Two distinct valid records through the real submitted API.
+- Negative control: Repeating one record is ineffective and yields `inconclusive`.
+- Fault control: Change the observed length/roundtrip outcome after target invocation; the predicate rejects it.
+- Adapter capabilities: submitted_kat, indexed_public_vector, honest_roundtrip, rng_control, output_canary.
+- Predicate: Both reachable calls must satisfy exact submitted length or successful honest roundtrip; any discrepancy remains candidate-only after gates.
+- Paired mutator: `implement/mutator/polarlaclight-kemkeygen-p2-01.py`.
+- Limitations: Same-lineage KAT and construction inference; finite testing proves no security game and this oracle does not test other parameter sets or malformed inputs.

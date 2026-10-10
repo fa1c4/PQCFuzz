@@ -119,6 +119,420 @@
         "SS_Len": 16,
         "expected_ss": "cd05a9a8ba252756cc791381cbec2896"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "bag_piglet256": {
+    "kat": "Test_Vectors/KAT_KEM_bag_piglet_256.txt",
+    "kat_sha256": "5a0ee6161e598617226ab976048ce992516eb804a25c3590f2a15ef731cc4952",
+    "sources": [
+      "Implementations/Reference_Implementation/bag_piglet256/lib/api_pkc/auxfunc.c",
+      "Implementations/Reference_Implementation/bag_piglet256/lib/api_pkc/drng.c",
+      "Implementations/Reference_Implementation/bag_piglet256/lib/randombytes/randombytes.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/aes256ctr.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/augabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/ccakem.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/ccapke.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/gabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/parsing.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/q_polynomial.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common/tools.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/ffi/ffi_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/ffi/ffi_field.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/ffi/ffi_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/kat/KAT_KEM.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/kat/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc/rbc_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc/rbc_poly.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc/rbc_qre.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc/rbc_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc/rbc_vspace.c",
+      "Implementations/Reference_Implementation/bag_piglet256/src/scheme/bag_piglet.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/bag_piglet256/lib/api_pkc",
+      "Implementations/Reference_Implementation/bag_piglet256/lib/randombytes",
+      "Implementations/Reference_Implementation/bag_piglet256/src/common",
+      "Implementations/Reference_Implementation/bag_piglet256/src/ffi",
+      "Implementations/Reference_Implementation/bag_piglet256/src/kat",
+      "Implementations/Reference_Implementation/bag_piglet256/src/rbc",
+      "Implementations/Reference_Implementation/bag_piglet256/src/scheme"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "8acfe6e3a3056dde511d7ead13b032ddc80edd75e75526e09fdfec5a3a893be6"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "d3a0273ad75860f7cb09267329f3ff2e1b3ce3aaa615a6c003055c6e3d9667de"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "4669ca136654dc8da758eb87f146e62e1993bfa719d180b612af7128db276a0d"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "bea6f257b6f2f78b1cf4bc5f53f96e15e4ff3b04dfb08d7a2afe0d56dac5bd17"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "5057c3d7abf92d62f034ea2550ef44a74e0c4767ba7aee5504155187e9288e7a"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "788cebf174564d3580062fb458089771e49e65eb164119951aeb066594546feb"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "02f607789761d782e171d0329c9d5bea2c5fa3c00456d8e919519a58794b8924"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "feb34536479319727ce333ee4f0dc7027191fe8fefa033363f71e0b53b0b69cd"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "5fa683df18458cb9afaf77005c4c8bf876ba0ac3365681fabf51eea0ffb8f2da"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1573,
+        "SK_Len": 32,
+        "CT_Len": 3097,
+        "SS_Len": 32,
+        "expected_ss": "8a2d218428433b07b3c85c516d0717b579ff1ba534f83be68f8c76102e89dee7"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "bag_piglet384": {
+    "kat": "Test_Vectors/KAT_KEM_bag_piglet_384.txt",
+    "kat_sha256": "26293e3c85763b06d5bd8cc896fb150fb3032099ebce2bb6d96997793933420b",
+    "sources": [
+      "Implementations/Reference_Implementation/bag_piglet384/lib/api_pkc/auxfunc.c",
+      "Implementations/Reference_Implementation/bag_piglet384/lib/api_pkc/drng.c",
+      "Implementations/Reference_Implementation/bag_piglet384/lib/randombytes/randombytes.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/aes256ctr.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/augabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/ccakem.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/ccapke.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/gabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/parsing.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/q_polynomial.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common/tools.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/ffi/ffi_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/ffi/ffi_field.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/ffi/ffi_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/kat/KAT_KEM.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/kat/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc/rbc_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc/rbc_poly.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc/rbc_qre.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc/rbc_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc/rbc_vspace.c",
+      "Implementations/Reference_Implementation/bag_piglet384/src/scheme/bag_piglet.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/bag_piglet384/lib/api_pkc",
+      "Implementations/Reference_Implementation/bag_piglet384/lib/randombytes",
+      "Implementations/Reference_Implementation/bag_piglet384/src/common",
+      "Implementations/Reference_Implementation/bag_piglet384/src/ffi",
+      "Implementations/Reference_Implementation/bag_piglet384/src/kat",
+      "Implementations/Reference_Implementation/bag_piglet384/src/rbc",
+      "Implementations/Reference_Implementation/bag_piglet384/src/scheme"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "30fde73fa734e9fdd7798d37e8daf1b55a696e719ff13784297548d30db0a076b8a586ab1a42e2bc139fba349e65dca4"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "7f8845824dc86d8ead66ce3823aa94f26c9dc30914414f1c4044e83c80f917758ca3395cad86d0ec89843e3f143d1e58"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "6706a9c0e60a48ce7e57cd37d1e31aaeed8e99d34ed4e360b7627ce3fb364ea2d3782d06f4e965bfd9f4ce1e9e3f548e"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "6539e62589f559f563728d2736f8730ceee25143befeb560649362b744159599e0d555e07e621fe10f5aa96080686864"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "1e610c42dec670f5fa1fa3f04dab8ba14588ea69e24fbf0a2aa8965d90cd2e609ea5c4134784c86b04b443df477fee19"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "384b63a46409b6ae8cce0b5c3f8c0e94210c2da9dcf6917843db0fa65238526101133544d2a3d8f6b282202caa828ca4"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "9fc81b289311fb29b2c61ecdcfd1833b51b589526d34f99a5c334ea1f4f27c897140ad7e3159d8a6eb3c2262565e637f"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "131b10eb5bff2c1b1f7ec3d9ecb7860b54fe21e2c885c54bbbaed720195d5fc240908f943e7ca7dce59e5c31a296018e"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "525f3dcb6470320da2b6b0b546a2fdd4f98f4e27a360c5b7b093e8526e19f5e6344083badf6f155ceeac48b3d2dbf55f"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2778,
+        "SK_Len": 48,
+        "CT_Len": 5475,
+        "SS_Len": 48,
+        "expected_ss": "c3a6c44cd2fd38d1157a250e60dfedc485e97a46251acd1e357b518c9d1db95e14c05913a275fa4253bcd285de2bf2f5"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "bag_piglet512": {
+    "kat": "Test_Vectors/KAT_KEM_bag_piglet_512.txt",
+    "kat_sha256": "9a4ec3639ac1002b28a879ec31eaf8ac21e945661a7276aa1db184bfe1c9a335",
+    "sources": [
+      "Implementations/Reference_Implementation/bag_piglet512/lib/api_pkc/auxfunc.c",
+      "Implementations/Reference_Implementation/bag_piglet512/lib/api_pkc/drng.c",
+      "Implementations/Reference_Implementation/bag_piglet512/lib/randombytes/randombytes.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/aes256ctr.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/augabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/ccakem.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/ccapke.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/gabidulin.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/parsing.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/q_polynomial.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common/tools.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/ffi/ffi_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/ffi/ffi_field.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/ffi/ffi_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/kat/KAT_KEM.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/kat/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc/rbc_elt.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc/rbc_poly.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc/rbc_qre.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc/rbc_vec.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc/rbc_vspace.c",
+      "Implementations/Reference_Implementation/bag_piglet512/src/scheme/bag_piglet.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/bag_piglet512/lib/api_pkc",
+      "Implementations/Reference_Implementation/bag_piglet512/lib/randombytes",
+      "Implementations/Reference_Implementation/bag_piglet512/src/common",
+      "Implementations/Reference_Implementation/bag_piglet512/src/ffi",
+      "Implementations/Reference_Implementation/bag_piglet512/src/kat",
+      "Implementations/Reference_Implementation/bag_piglet512/src/rbc",
+      "Implementations/Reference_Implementation/bag_piglet512/src/scheme"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "27f4911e0d9e1193dfa34f9ec50f0bbd3d71185e404c86e16759fac76c5c1d2f293fe47a053d642862d3aba735358d0b707215f96b5dcfdb5cd192bb24ad7416"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "3cb5896fac711312b793d1cba07e6682aedf31e73b31eb5edfeb61de461fcb71db9c69d4dc1c700fa74c6b4c336cf60967df7386c2e22bfa7a02357f321071c4"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "a273d5d5ad77a12023a7ae42ec58133c411c0798311e9b8045543cac1980da4755f40dd12d51df143ead92eefd10a5fccd014c8641fba2b042ea34f4a393ed69"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "c95430496a527da933c6d4e3d404f31c41b2857121a5abe9c64a74f89a8770f149d46a014c8983704ad68d5a1ee56affad809b285c8aedaff0030456402dde5e"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "b467ea667482bec4bc29ecbfef04c57379ad2a994eb22839442a8358ec96f4fbfa6f8cc974b9d4856a7bf97e81eaca9bf23a183ea90adc667656434d41ac8ebf"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "5731119e6344e18412e5a898cccb3162f58a592e97fe618ec21c5a75a0a18bc3c5270e0d39f5a3bc4a0df5cea7848635d923f511c216b4482e4b22782834b960"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "93878c8f5f73e2514fad3e398be58c5fb7c324ba4586c7a12b6829aa122e6a0c093c565fda49864eb4b73b60f751a6e6324955c43683a35c80c0cae6911a51cf"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "7cb10277db869b3c1a7d7bdec81a460c471efc09f34b6172d0488d7e26e4ecdc26c299a69f272d3b731ab777c83e7a81c8ee3c5b5b4e790531970283ae26e6c1"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "7dc4a3828f173320be6f3a40ad7b06dba0641e677e3b6433aa88cd84532c81a52bab2acbbe704e4bcf432b23068548fa2aad884202164b81fda400c7dd87dbfc"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 4158,
+        "SK_Len": 64,
+        "CT_Len": 8204,
+        "SS_Len": 64,
+        "expected_ss": "554ca7afb5129fb63151d13faf982cc41c0b32816ab74f907d40fd3e6b9de54a3b208f47461cdad4c6284fc5f028e46ac918a23cbfd75ad5dfe91f8ce1913c0e"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

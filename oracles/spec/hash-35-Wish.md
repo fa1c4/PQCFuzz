@@ -35,3 +35,13 @@ discussion is on PDF pp. 5–8; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## WISH1024-K — Wish1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 5–8; `Wish/Implementations/Reference_Implementation/Wish1024_reference/CryptHash_AlgorithmInstance.h` SHA-256 `21229b8c17554f71fd1b044d601ef605baf278122f4a8fde5873a1ab57721528`; `Wish/Test_Vectors/Test_Vector/Wish1024/KAT_2_12_Wish1024.txt` SHA-256 `33ea939b4b699cc1e49b54cfed2173d1db3c454f230704dcb817dff278b7326c`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Wish1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

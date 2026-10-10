@@ -18,8 +18,23 @@ def main():
     if instance not in data:
         raise SystemExit("unknown instance")
     cfg = data[instance]
-    kat = (source / cfg["kat"]).resolve()
-    if not kat.is_file() or not kat.is_relative_to(source):
+    build = run / "build"
+    build.mkdir(exist_ok=True)
+    if cfg.get("kat_origin") == "build":
+        generator = build / "generator"
+        generator.mkdir(exist_ok=True)
+        inputs = [(source / item).resolve() for item in cfg["kat_generator_sources"]]
+        if any(not item.is_file() or not item.is_relative_to(source) for item in inputs):
+            raise SystemExit("invalid submitted KAT generator sources")
+        binary = generator / "kat_sig"
+        subprocess.run(["gcc", "-std=c99", "-O2", "-o", str(binary),
+                        *(str(item) for item in inputs)], check=True)
+        subprocess.run([str(binary)], cwd=generator, check=True)
+        kat_root = build
+    else:
+        kat_root = (run / "package") if cfg.get("kat_origin") == "package" else source
+    kat = (kat_root / cfg["kat"]).resolve()
+    if not kat.is_file() or not kat.is_relative_to(kat_root):
         raise SystemExit("missing or escaping KAT path")
     h = hashlib.sha256()
     offsets = []
@@ -35,8 +50,6 @@ def main():
         offsets.append(stream.tell())
     if h.hexdigest() != cfg["kat_sha256"] or len(offsets) != 11:
         raise SystemExit("submitted KAT digest or row count changed")
-    build = run / "build"
-    build.mkdir(exist_ok=True)
     (build / f"{instance}-offsets.json").write_text(json.dumps(offsets))
     files = [(source / item).resolve() for item in cfg["sources"]]
     includes = [(source / item).resolve() for item in cfg["includes"]]

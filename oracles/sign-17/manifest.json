@@ -4,7 +4,7 @@
   "algorithm": "OPS Digital Signature Algorithm",
   "primitive": "signature",
   "source_digest": "3fe57e1c750c03f843a39740bc596615017cf20b8d06b1ccd08a68c898fc4291",
-  "spec_sha256": "28e20d4d6e0ff29f39701d70b696d775131bfcddc79aca37487fdb44e9aa2195",
+  "spec_sha256": "7badc03e54f5694513f32d3c3255b34bbeddf3c2f9c80ffdb29e9cce85f1be53",
   "instances": [
     {
       "parameter_set": "OPSsig-128",
@@ -37,6 +37,709 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-128",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG128-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG128-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_pk_len_bytes/OPSSIG128-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig128-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig128-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-128",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG128-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG128-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sk_len_bytes/OPSSIG128-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig128-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig128-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-128",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG128-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG128-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sn_len_bytes/OPSSIG128-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/opssig128-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig128-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-128",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG128-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG128-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_keygen/OPSSIG128-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/opssig128-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig128-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-128",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG128-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG128-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_sign/OPSSIG128-SIGSIGN-P2-01.md",
+          "oracle": "implement/opssig128-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig128-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-KAT-01",
+          "version": 1,
+          "claim": "OPSSIG256-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_verify/OPSSIG256-KAT-01.md",
+          "oracle": "implement/kat_opssig256_oracle.py",
+          "mutator": "implement/mutator/kat_opssig256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-KAT-01",
+          "version": 1,
+          "claim": "OPSSIG512-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_verify/OPSSIG512-KAT-01.md",
+          "oracle": "implement/kat_opssig512_oracle.py",
+          "mutator": "implement/mutator/kat_opssig512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG256-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_pk_len_bytes/OPSSIG256-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig256-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig256-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG256-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sk_len_bytes/OPSSIG256-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig256-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig256-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG256-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sn_len_bytes/OPSSIG256-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/opssig256-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig256-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG256-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_keygen/OPSSIG256-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/opssig256-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig256-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-256",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG256-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG256-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_sign/OPSSIG256-SIGSIGN-P2-01.md",
+          "oracle": "implement/opssig256-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig256-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG512-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_pk_len_bytes/OPSSIG512-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig512-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig512-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG512-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sk_len_bytes/OPSSIG512-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/opssig512-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig512-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OPSSIG512-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_get_sn_len_bytes/OPSSIG512-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/opssig512-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/opssig512-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG512-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_keygen/OPSSIG512-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/opssig512-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig512-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OPSsig-512",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OPSSIG512-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "OPSSIG512-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OPS Digital Signature Algorithm/sig_sign/OPSSIG512-SIGSIGN-P2-01.md",
+          "oracle": "implement/opssig512-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/opssig512-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
           ],
           "applicable_primitives": [
             "signature"

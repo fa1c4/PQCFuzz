@@ -35,3 +35,23 @@ discussion is on PDF p. 5; the exact source and PDF files are authoritative.
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## NEULASER1024-K — Neulaser-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 5; `Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-1024/CryptHash_AlgorithmInstance.h` SHA-256 `7650b1fe33b1e6dcf58ee84afc02e7b1cae2ad8393e5d83f6b9e805b17d19e95`; `Neulaser/Implementations and Test_Vectors/API_CryptHash/Test_Vector/KAT_2_12_Neulaser-1024.txt` SHA-256 `0059202e68c267fc76ec6ffff4c607ef2b02a2d757fb0934960d01acab75ab89`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Neulaser-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## NEULASER768-K — Neulaser-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 5; `Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-768/CryptHash_AlgorithmInstance.h` SHA-256 `e3c9b136eff6e07b3ca83d6bc451e77cefa327509419ab116c4c0f824c9ba13e`; `Neulaser/Implementations and Test_Vectors/API_CryptHash/Test_Vector/KAT_2_12_Neulaser-768.txt` SHA-256 `46b89e05bfc95dc5ce8bacbb8e8b366aea921d46970614e9af0dc891b0eec4f6`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Neulaser-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

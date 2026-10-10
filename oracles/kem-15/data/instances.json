@@ -105,6 +105,258 @@
         "SS_Len": 32,
         "expected_ss": "56892c33be4038aed689f41220298d1863b7b2ca72bfe21f0ae2a2d4e95a7a4e"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "FLIT256": {
+    "kat": "Test_Vectors/KAT_KEM_FLIT256_REF.txt",
+    "kat_sha256": "0788e13e3a0c0ff0c8ada4defab0ea4213bf7980bcb6099dba1a2e35b05ea618",
+    "sources": [
+      "Implementations/Reference_Implementation/FLIT256/KAT_KEM.c",
+      "Implementations/Reference_Implementation/FLIT256/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/FLIT256/auxfunc.c",
+      "Implementations/Reference_Implementation/FLIT256/decode.c",
+      "Implementations/Reference_Implementation/FLIT256/drng.c",
+      "Implementations/Reference_Implementation/FLIT256/indcpa.c",
+      "Implementations/Reference_Implementation/FLIT256/kem.c",
+      "Implementations/Reference_Implementation/FLIT256/ntt.c",
+      "Implementations/Reference_Implementation/FLIT256/packing.c",
+      "Implementations/Reference_Implementation/FLIT256/poly.c",
+      "Implementations/Reference_Implementation/FLIT256/reduce.c",
+      "Implementations/Reference_Implementation/FLIT256/test/cpucycles.c",
+      "Implementations/Reference_Implementation/FLIT256/verify.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/FLIT256",
+      "Implementations/Reference_Implementation/FLIT256/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "697fefe45f2dc62cb784058d1b3cd563ad69a930d4721a34dad8748ea7d88e4b"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "ac1fa6d0bcee4afa8758efa4e799a1dd8ad9ccff377fef57232ef7e3287e7f69"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "e3dbef0d7e67d4cca70f010d8fe8445ff9936b091648b59d95d05c4919144249"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "233c3c62689e8e3cb44f6cab9617743b2af1c31b131bf5910f7e947b58bb155b"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "8daca405ee15000516d733dc87965e7408a1bdac1c43dd697e62dce5f8a6c3ab"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "025564c6af1b273ab38b4eed1ead2687b23e28772c8258579e73ea2129cc3b25"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "d1980ed52c309016e25111a7a0e9ec0e2d6b3cc40036df1d0683994fa2aeae79"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "83418b2b20660dd5df0bb8b873b7d30c8a9367829467fee87399f6b86342498f"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "4c5c3212b8b4017170d363ae64324ddf5fe5e2739f4a910f1cca637d36cb7fa3"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1229,
+        "SK_Len": 2605,
+        "CT_Len": 1024,
+        "SS_Len": 32,
+        "expected_ss": "55c690d87db58feb10e178fd45112383b64688bf24e877b41a0c74ed67bec4cb"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "FLIT512": {
+    "kat": "Test_Vectors/KAT_KEM_FLIT512_REF.txt",
+    "kat_sha256": "e4019117230dc2ef5983e8c2c252f08189e8004e3b7db595a66eec3aa8d9820c",
+    "sources": [
+      "Implementations/Reference_Implementation/FLIT512/KAT_KEM.c",
+      "Implementations/Reference_Implementation/FLIT512/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/FLIT512/auxfunc.c",
+      "Implementations/Reference_Implementation/FLIT512/decode.c",
+      "Implementations/Reference_Implementation/FLIT512/drng.c",
+      "Implementations/Reference_Implementation/FLIT512/indcpa.c",
+      "Implementations/Reference_Implementation/FLIT512/kem.c",
+      "Implementations/Reference_Implementation/FLIT512/ntt.c",
+      "Implementations/Reference_Implementation/FLIT512/packing.c",
+      "Implementations/Reference_Implementation/FLIT512/poly.c",
+      "Implementations/Reference_Implementation/FLIT512/reduce.c",
+      "Implementations/Reference_Implementation/FLIT512/test/cpucycles.c",
+      "Implementations/Reference_Implementation/FLIT512/verify.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/FLIT512",
+      "Implementations/Reference_Implementation/FLIT512/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "c75f5f6fce9a4133110dd736baf042281693cee59f00d8b12655dd515997bb94e2d598e5cd6b73aacf7f09888d85e91c647d9ffd52efc275d266d5e5d2974430"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "4aa0641f97fe4b5ae5dd3aa41ce96319a23b7b10f9bb6e2028e11f6c9d4cf7395b6979b89ed659beafe814c9d428d0b69c2c2d3cdf6628647e16178443941534"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "eab275dd0a79a178e28d6c0cedd6ebbef37ab634bb19c566868b8e6da9d6473d4fb38beeef82ed2be34f8eb516cabb451e3dca840b515efddcfde96ad9300837"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "1a3d09e39f0b0eb575cd68da2e09ce2dc940af9648ae17317c8f0671fe83288b32fcf727c7296e04793c27906aa3c0a950de5bb653884b0ee4a32a87d2c4e598"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "f758d15e9991bb41cf7e4130c579428de4ce38c04b650ce282742055c95898527258a50f3a538d483e524506a5cd039be74344e1bc6db4f007fbdf9f07900217"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "413d524d215ae717d32e6b47cc889ad5d904c6982ca6da3ff332cc9bfee103d31ef6de67f0a8a632cd1b03c1d09630f48a8742b6f151fd507f4ad0ea369c11ac"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "678fdcd18b1c7001b2ebb28a0c4f1264197fdb047acb8f65e4ea5ef2ec55d093aa7e5ce56bb5faa8e3b4af16336f70d0db9cfd8fc09291031a0b5c6de856ee07"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "d5627843dd0f79cb330adc60f188e6ba73288c2586e5d932963fdd4f39821ac7d6af1e89ca9c203c87e0871cf874ca905200585592545d7f1905be92ed564b12"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "c5dfd30ce4755d293fd3a197c323d78c8d1b4213ded4ebfbb73bfae2076317fc4d9080ffb7bb8dae54b1b2a7470be265c7b662b6a92276e9d024dc2111027109"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3072,
+        "SK_Len": 6336,
+        "CT_Len": 2304,
+        "SS_Len": 64,
+        "expected_ss": "a78baf545d1e886dd01b4469b5d003d47c444c91efcc32204c714fceed32183e57e9993b03e8cef8427498437c90215245952146e7ad5847f08587ee4cce1e2e"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

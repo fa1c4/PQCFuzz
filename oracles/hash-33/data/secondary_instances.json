@@ -1,0 +1,52 @@
+{
+  "Thunder-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "6492838db1d4e1520325c1a642712f9479d0015c31ccfae2684a63a4b79facad",
+    "kat": "Thunder/Implementations and Test_vector/Thunder-ARM/Test_Vector/KAT_2_12_Thunder-1024.txt",
+    "kat_sha256": "c7a6875584c99d98e9bbc591a6844945020ce2304b325215da4925b53b2fb6cf"
+  },
+  "Thunder-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "766e1c51851d289d0b0f595fb7002d68c7770a942bb68f95f9b7da7b7588f62f",
+    "kat": "Thunder/Implementations and Test_vector/Thunder-ARM/Test_Vector/KAT_2_12_Thunder-768.txt",
+    "kat_sha256": "815e70e81ce3820a5429e6e73e6e82ce6eefe6040170994f48acb9c5a80ddc9d"
+  },
+  "Thunder-XOF-256": {
+    "digest_bits": 1280,
+    "sources": [
+      "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-256/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-256/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "c1b93ca286c43902f92849bbf6e31446884c074be443944832f8b85788c234bd",
+    "kat": "Thunder/Implementations and Test_vector/Thunder-ARM/Test_Vector/KAT_2_12_Thunder-XOF-256.txt",
+    "kat_sha256": "bf800da64fb07f77b508784bcbe6a0ea6513688ab7930d12f2925a12ade7e512"
+  },
+  "Thunder-XOF-384": {
+    "digest_bits": 1152,
+    "sources": [
+      "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-384/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-384/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "2eb6a22d73cb05e27237b53701d53fb66d8d4f0f13599e952cd281d9a6bff301",
+    "kat": "Thunder/Implementations and Test_vector/Thunder-ARM/Test_Vector/KAT_2_12_Thunder-XOF-384.txt",
+    "kat_sha256": "07c3a5ad56c2c1e52259d1f78c68d867910c77b435c00bb0be3473ff89b9dc85"
+  },
+  "Thunder-XOF-512": {
+    "digest_bits": 1024,
+    "sources": [
+      "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-512/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Thunder/Implementations and Test_vector/Thunder-ARM/Implementations/Reference_Implementation/Thunder-XOF-512/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "bf3a197f010de106a7e324d23b71dcf41400b03830ba66ca405ee722e03028f3",
+    "kat": "Thunder/Implementations and Test_vector/Thunder-ARM/Test_Vector/KAT_2_12_Thunder-XOF-512.txt",
+    "kat_sha256": "9a86aa91faf0a622b456a0968f821c68661d59fe39a83289f23ea963b7f3ca20"
+  }
+}

@@ -96,10 +96,11 @@ def observe(library, primitive, row, queue):
         queue.put({"error": repr(exc)})
 
 
-def probe(target, instance, kat_relative, matrix):
+def probe(target, instance, kat_relative, matrix, *, header_override=None,
+          parameter_set=None):
     source = ROOT / "third_party" / target / "source"
-    header = next((entry["path"] for entry in matrix["primary_reference_headers"]
-                   if "/" + instance + "/" in entry["path"]), None)
+    header = header_override or next((entry["path"] for entry in matrix["primary_reference_headers"]
+                                      if "/" + instance + "/" in entry["path"]), None)
     if header is None:
         raise RuntimeError("primary reference header not found")
     root_relative = header.split("/" + instance + "/")[0] + "/" + instance
@@ -128,7 +129,7 @@ def probe(target, instance, kat_relative, matrix):
                                 for flag in ("-I", str(directory))),
             "-o", str(library), *(str(path) for path in files)]
     build = subprocess.run(argv, capture_output=True, text=True, timeout=180)
-    report = {"target": target, "parameter_set": instance,
+    report = {"target": target, "parameter_set": parameter_set or instance,
               "primitive": matrix["primitive"], "header": header,
               "kat": kat_relative,
               "kat_sha256": hashlib.sha256(kat.read_bytes()).hexdigest(),

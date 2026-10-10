@@ -1,0 +1,22 @@
+{
+  "Cuishen-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Cuishen/Implementations/Reference_Implementation/Cuishen-1024/CryptHash_Cuishen-1024.c"
+    ],
+    "header": "Cuishen/Implementations/Reference_Implementation/Cuishen-1024/CryptHash_Cuishen-1024.h",
+    "header_sha256": "47969954ffee6230e5bc8203d68470e45776c5f7198d49f53a23acd3e0500887",
+    "kat": "Cuishen/Test_Vectors/KAT_2_12_Cuishen-1024.txt",
+    "kat_sha256": "fee17c0fbe2c5638f008ec36ede2858a1ee8009d95279fc2880b7da2e397a9c1"
+  },
+  "Cuishen-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Cuishen/Implementations/Reference_Implementation/Cuishen-768/CryptHash_Cuishen-768.c"
+    ],
+    "header": "Cuishen/Implementations/Reference_Implementation/Cuishen-768/CryptHash_Cuishen-768.h",
+    "header_sha256": "e236cebc8824394fc0488d1652c106cf0fec5b90ec0e289c2d45fe4bc59a33a0",
+    "kat": "Cuishen/Test_Vectors/KAT_2_12_Cuishen-768.txt",
+    "kat_sha256": "18dcee6282ccd8171fc68aa848a04993ae21ff742efd2e70eaf01a4555c2c935"
+  }
+}

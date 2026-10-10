@@ -35,3 +35,23 @@ discussion is on PDF pp. 13–14, 18; the exact source and PDF files are authori
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## DUET1024-K — Duet-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 13–14, 18; `Duet/Implementations/Reference_Implementation/Duet-1024/CryptHash_Duet-1024.h` SHA-256 `a89a8ca4e2c7c2d2ea22ed6a869f63f9db47b632732992a23b08f972d0ae5534`; `Duet/Test_Vectors/KAT_2_12_Duet-1024.txt` SHA-256 `6e3366423a2026b0be18ec762a0f8703676c4cb450e8cb621534becaeec29a4b`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Duet-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## DUET768-K — Duet-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 13–14, 18; `Duet/Implementations/Reference_Implementation/Duet-768/CryptHash_Duet-768.h` SHA-256 `812d676cfb48aedd1a6599d70d50663fc1cf8effd9a8d7e9836d049944b66d3d`; `Duet/Test_Vectors/KAT_2_12_Duet-768.txt` SHA-256 `506abf4ae7a571da6fc0aeb372e556a4e5a0c7f97352c400ce20367a3729c50f`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Duet-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

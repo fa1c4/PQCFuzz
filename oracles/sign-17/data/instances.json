@@ -83,6 +83,214 @@
         "SK_Len": 3840,
         "Sn_Len": 4349
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "OPSsig-256": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/reference/OPSsig-256/KAT_SIG_OPSsig-256-reference.txt",
+    "kat_sha256": "61881f46ecea283f08cf7e3ca51da570b856e80064b719209743e4c8a6b25f1c",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/mult.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/packing.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/rounding.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256/sign.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-256"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3392,
+        "SK_Len": 5056,
+        "Sn_Len": 5540
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "OPSsig-512": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/reference/OPSsig-512/KAT_SIG_OPSsig-512-reference.txt",
+    "kat_sha256": "2a7f1e29f2b8c2f43cc1bad56220ec936a3de4051e04686e0dbd19826d569263",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/KAT_SIG.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/SIG_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/mult.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/packing.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/rounding.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512/sign.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/OPSsig-512"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 1,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 2,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 3,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 4,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 5,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 6,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 7,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 8,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      },
+      {
+        "Count": 9,
+        "PK_Len": 6720,
+        "SK_Len": 9920,
+        "Sn_Len": 12021
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

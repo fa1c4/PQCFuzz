@@ -100,6 +100,248 @@
         "SS_Len": 64,
         "expected_ss": "a6c50ca8d29e51cea3f3b95b9dc874c6b3b2930dc8d37da09850ad7e09aabdd5f10660d0496835dff8092bf89d3577c01bbe50987b2f2a40bc67c46ddddca0e9"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "NTRE-256": {
+    "kat": "Implementations/Reference_Implementation/NTRE-256/output/KAT_KEM_NTRE-256.txt",
+    "kat_sha256": "b46885a10bc6931aad20390b23aba3a630991948242f379cc41e72710145157a",
+    "sources": [
+      "Implementations/Reference_Implementation/NTRE-256/KAT_KEM.c",
+      "Implementations/Reference_Implementation/NTRE-256/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/NTRE-256/auxfunc.c",
+      "Implementations/Reference_Implementation/NTRE-256/drng.c",
+      "Implementations/Reference_Implementation/NTRE-256/src/ntt.c",
+      "Implementations/Reference_Implementation/NTRE-256/src/poly.c",
+      "Implementations/Reference_Implementation/NTRE-256/src/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/NTRE-256",
+      "Implementations/Reference_Implementation/NTRE-256/src",
+      "Implementations/Reference_Implementation/NTRE-256/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "1c28576882fedb48e50108542cf1d0df73f4ed0eedb4826de39ef43cc2f241a5f688d0d6e63f69f7d4ba8e16d273828792bd27adf198cfe98e7f484c9bd2dce2"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "791b762c337a92619b55e279a7b225cc2ddd95c094254f8dc1cc3d3dbb7870c0cb5ef6315adc8b47ff2300d4a2059c567cc1b05fc07a4fc6d021963eb8d78b20"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "8354f8a0aac5259c08071238de0f6bf337708e20e88c592acdbe0de7147c897d9d138a55126e49bef1d21aadfd5dc6c542cf288e5b10ca96f6aa002ba0a33f19"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "d8c2fd418f73d21f855e02752c95e3547ce13b558f0fbe24bcf09da3d639aa3d0df78a699271f03f4ab0db970c3503f1ec6df6ff29e78e89cddf26220801911b"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "2232c8d8d6b80ee7e10e36c736d2955e9b4421fcfa97292ac46c707342b9088afb65b4c008dbbf39fb5a6945ce4cba647cbb26fe7ddc6419728f000985282edf"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "39a197c235b662760e02becbb58355936862dc3c463146f9651330f77c4a4e964154a26eee7cb2caa9db672547934e57bffc5efcb58d6ec0c72eb564297b4c81"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "c21e7b861e363d8e23ebd2cdfacd7101d65378a0008d18f968e5c04a92377320d5a9132cb223d1420908e54cb9595cea34278ad9371f06cae883c6fdeaafc594"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "676d05bac28bd9fb11ce41eee7760b92b898c04fa53f3ef255b076c6c08f2e2edd0b6831b80669739864ae0a459a774b7309f5891c54a64b483c962bc579b0bd"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "8060823659ee7d61ebdd471efdf9abda4543b78a3f324c91069046da414fab1c095bc3cf4706b5887c3615a6062947b4068ce66c3d1d8f816a1a3d3a206093e9"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1944,
+        "SK_Len": 3920,
+        "CT_Len": 1944,
+        "SS_Len": 64,
+        "expected_ss": "f2b553b5b69ad645a434cbff502f7ccd6347339542bf253f1bb36a773743a5e52c21634d60b1cf9aa760e9f8cf77e706fb13619f866aadc8444348177a2c8a18"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "NTRE-512": {
+    "kat": "Implementations/Reference_Implementation/NTRE-512/output/KAT_KEM_NTRE-512.txt",
+    "kat_sha256": "b3608ede368d63bf002e4819139f748c1e387e1354d98de93420d5db99e24402",
+    "sources": [
+      "Implementations/Reference_Implementation/NTRE-512/KAT_KEM.c",
+      "Implementations/Reference_Implementation/NTRE-512/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/NTRE-512/auxfunc.c",
+      "Implementations/Reference_Implementation/NTRE-512/drng.c",
+      "Implementations/Reference_Implementation/NTRE-512/src/ntt.c",
+      "Implementations/Reference_Implementation/NTRE-512/src/poly.c",
+      "Implementations/Reference_Implementation/NTRE-512/src/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/NTRE-512",
+      "Implementations/Reference_Implementation/NTRE-512/src",
+      "Implementations/Reference_Implementation/NTRE-512/test"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "a6d2635fdf41cacbccd18b68a9dd075ab63e5631956b3096a8cdd149c592f94f01c5c6866b1cfc9b5bda3f9d00d03d9f03742d58218d4f105a8e28a757b0be8e"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "793cc1beb54e6366c6b8bdde168da7de0774c06a32866c035757b730026b844a573a8a500ae95721d89de0f0cedcb3d3d975130d433aa9cbc1fc863ed9342661"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "c8fe3d4e2f0ef75681110c9527fcfe6f93ac5e4ecc9c3735bb4f7faafb5d239f1499bf7b319395fc6d7d1fc286c3e36ab7461e9a4dc08fab088fce0d305fe57c"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "57134a0a513559270bbb9bbda1dd75fbee63eb4aaa2bf7d84e224ff1b640aecbfdc759f381d5e8f447b8d0bd014113e5b9bb6fb1a567b4fdffe40caaffbf2963"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "4c4d65701ac657fb6266dcf31f43de8a86f913b80a33c096f49d614fdebbf59d10739bb8791bb2f902f073b2a1b3064d4f197c39d944b235c87835fd95e97b50"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "ec6d86ed5bde16b26253037c23b35d6b9d8b504ce3400ae0b120541e6c6dfa528d5a6bb9da3d0ce09301fd895dffb1db3b5cebc7690ff9fcbc81c90f7eb51f2d"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "80645f4e7feb626f80875ae50a1b48ebfffb35df31d55135a06a8cc62dffe4aa1982974f2035eb5a2c1c9bc5140f8e37fbf2f3aa4663e8ce2b41e613784af900"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "4ed4d30a74bf5ed6d0f486d2b67c6360b3b7b6fd0113c25966f0b76c4628f0307e0f55d3bde43d4079e2c96e4b7372c4f978aa0e477964cb917fc7188223f132"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "7fa89403c25bb28112de5e9f0e73415e2b7bb8c9f727158f7ad779079b8f8539a2b6321d2e485e9e02bffceff0aefdc968bae964d0c0983dded663348a86d547"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 3456,
+        "SK_Len": 6944,
+        "CT_Len": 3456,
+        "SS_Len": 64,
+        "expected_ss": "767ca1992e29ea3c4d04c529a96f90343ca112a04c170aea636c4d9e3ce1da969e99a29a1464c2a5fdd020b1c4a93f78a320f273c6d859663293a55e389119ef"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

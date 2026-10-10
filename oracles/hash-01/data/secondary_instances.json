@@ -1,0 +1,30 @@
+{
+  "AFS-TrEDM-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/CryptHash_AlgorithmInstance.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/afs_lmds1600_s6.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/afs_p1600.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/afs_sbox64.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/afs_tredm.c"
+    ],
+    "header": "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "b7a0ee100abeb882ec13ff8748f65ec98da88231c6b6ba61f02e0320a3eaea92",
+    "kat": "AFS-TrEDM/Test_Vectors/KAT_2_12_AFS-TrEDM-1024.txt",
+    "kat_sha256": "60c18a919b6fece8d1e3df350347c7de41be2fad3ec8a0398177b5c7fed05a39"
+  },
+  "AFS-TrEDM-768": {
+    "digest_bits": 768,
+    "sources": [
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/CryptHash_AlgorithmInstance.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/afs_lmds1600_s6.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/afs_p1600.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/afs_sbox64.c",
+      "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/afs_tredm.c"
+    ],
+    "header": "AFS-TrEDM/Implementations/Reference_Implementation/AFS-TrEDM-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "f696fde04fe207968800e31758fa39763e3ab5cb4cc77072b4921bc559916d6a",
+    "kat": "AFS-TrEDM/Test_Vectors/KAT_2_12_AFS-TrEDM-768.txt",
+    "kat_sha256": "b267eb72b1ce2a7e2f162f7fddcdafaade51b052f661ec1e1bc5779cd4851b3b"
+  }
+}

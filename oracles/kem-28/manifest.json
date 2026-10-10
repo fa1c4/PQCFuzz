@@ -4,7 +4,7 @@
   "algorithm": "OAEP-NTRU",
   "primitive": "kem",
   "source_digest": "545aedbcde743760adb7522a5e8eeca1d40ed4b35c98a713d251831285b92bbd",
-  "spec_sha256": "0f3438beb40f696e6ad412769c174e3ec0ca9e9473bb0dec5764cfb899ce23a7",
+  "spec_sha256": "99adb2b4c7a321acef74799235ce000902f9d585fd3302c1c11c01bbd8214f8c",
   "instances": [
     {
       "parameter_set": "OAEP-NTRU-648",
@@ -37,6 +37,834 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMENC-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_enc/OAEPNTRU648-KEMENC-P2-01.md",
+          "oracle": "implement/oaepntru648-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ct_len_bytes/OAEPNTRU648-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru648-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_pk_len_bytes/OAEPNTRU648-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru648-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_sk_len_bytes/OAEPNTRU648-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru648-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ss_len_bytes/OAEPNTRU648-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru648-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-648",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU648-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU648-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_keygen/OAEPNTRU648-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/oaepntru648-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru648-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KAT-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_dec/OAEPNTRU1296-KAT-01.md",
+          "oracle": "implement/kat_oaepntru1296_oracle.py",
+          "mutator": "implement/mutator/kat_oaepntru1296.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_dec",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KAT-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-K",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_dec/OAEPNTRU2592-KAT-01.md",
+          "oracle": "implement/kat_oaepntru2592_oracle.py",
+          "mutator": "implement/mutator/kat_oaepntru2592.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMENC-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_enc/OAEPNTRU1296-KEMENC-P2-01.md",
+          "oracle": "implement/oaepntru1296-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ct_len_bytes/OAEPNTRU1296-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru1296-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_pk_len_bytes/OAEPNTRU1296-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru1296-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_sk_len_bytes/OAEPNTRU1296-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru1296-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ss_len_bytes/OAEPNTRU1296-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru1296-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-1296",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU1296-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU1296-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_keygen/OAEPNTRU1296-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/oaepntru1296-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru1296-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_enc",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMENC-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMENC-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_enc/OAEPNTRU2592-KEMENC-P2-01.md",
+          "oracle": "implement/oaepntru2592-kemenc-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemenc-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_get_ct_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMGETCTLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMGETCTLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ct_len_bytes/OAEPNTRU2592-KEMGETCTLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru2592-kemgetctlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemgetctlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_pk_len_bytes/OAEPNTRU2592-KEMGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru2592-kemgetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemgetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_sk_len_bytes/OAEPNTRU2592-KEMGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru2592-kemgetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemgetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_get_ss_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMGETSSLENBYTES-P1-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMGETSSLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_get_ss_len_bytes/OAEPNTRU2592-KEMGETSSLENBYTES-P1-01.md",
+          "oracle": "implement/oaepntru2592-kemgetsslenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemgetsslenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "kem"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "OAEP-NTRU-2592",
+      "api": "kem_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "OAEPNTRU2592-KEMKEYGEN-P2-01",
+          "version": 1,
+          "claim": "OAEPNTRU2592-KEMKEYGEN-C",
+          "property": "K03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/OAEP-NTRU/kem_keygen/OAEPNTRU2592-KEMKEYGEN-P2-01.md",
+          "oracle": "implement/oaepntru2592-kemkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/oaepntru2592-kemkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
             "output_canary"
           ],
           "applicable_primitives": [

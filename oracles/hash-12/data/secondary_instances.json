@@ -1,0 +1,22 @@
+{
+  "Iphe-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Iphe/Implementations/Reference_Implementation/Iphe-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Iphe/Implementations/Reference_Implementation/Iphe-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "948d42ebff121dc79a1bdc83d5d12ef1f53f99b83ea7b44537ec5ecba48d5c10",
+    "kat": "Iphe/Test_Vectors/KAT_2_12_Iphe-1024.txt",
+    "kat_sha256": "a451150e557a015ff5c183912141ae94b0239f9205e9c1fa3b996870c546b7d5"
+  },
+  "Iphe-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Iphe/Implementations/Reference_Implementation/Iphe-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Iphe/Implementations/Reference_Implementation/Iphe-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "9daacbb3aca1e0773e0ad2cfad100429105d36b2e3d42f591d75c0e81a0ac067",
+    "kat": "Iphe/Test_Vectors/KAT_2_12_Iphe-768.txt",
+    "kat_sha256": "722e09ec85dba2125998f926a42d3d9fc5d2f4750bc06c5720332863e1e04f23"
+  }
+}

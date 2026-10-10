@@ -109,6 +109,894 @@
         "SS_Len": 32,
         "expected_ss": "bd4227e51765b8fef224f4bcf2adde1c4e6a4a873324515da691811fba303022"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-L2": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SHAKE/KAT_KEM_Lore-L2.txt",
+    "kat_sha256": "3735ec4f854bd1230b63a0502b03b845fb3c8af04f3fba872455fb92ed961b8a",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/fips202.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/symmetric-shake.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L2"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=2"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "8fb8b8b0e5e08dd2d526174a178be338aa2fc1f670ffb3335f35daea48ef9f63"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "782bfc7483509acc80845dbfb69c693ec969fea95e0ad7fa713011b7ec53206a"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "d9de50b451d575698cfa693e75cdd0efee50ae1f32f6ef8cee20604865fa28be"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "99da79cc534f24e11d531c35f43752cbe7f447195d3a96a57f2a96f073162528"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "fdca812e18bc4c8abd4dfc5253d9df1b00996ee57934ce33c0019ca8923a7f7d"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "b37f5bf8bf1c7ceb4208ce0f8e5754a1ee5f96c735eb808ba5b94d55a873ca48"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "1c9a8f6727ba040d8a7f27ce06fc5323bac6194bd775370cb4f45807db65c32e"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "5086adccd6e1d1278b39518bfa2fa1606f7a331a5bc148da3f382af2602e991c"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "f9cac8951954f5834f3f195f9aafff260f13466afc3d4959cbce7e683b56a9d9"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "a6dba7ef518f81f52cf40929f277eb66fbe46aac81a1e8ab1846b0b36919d5aa"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-L3": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SHAKE/KAT_KEM_Lore-L3.txt",
+    "kat_sha256": "d79252a2fddf5930b617f5f476a18ad460ee9db8f31aa282306a62a4d5feb18d",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/fips202.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/symmetric-shake.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L3"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=3"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "2b73d472b8543e1734390935f020676c2e37b44c58d7aa11c92b5c6152cd8ad7"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "2be2af995813e0dfb83195a03f3ad1d4acf96eb1d369b3befe38312f7182732f"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "132dcedb1102c99c84ccb1fbc1278054ccb28a753efeb60cf4c8268a723be2c0"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "fca0038ac136c21f453d7a0f1564f637b8a671ded014b3abf517f8109074bc0b"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "69d109a4a967975861206e772ea563ec9647d2c2d9abf98c75ed3464e9b0668f"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "754a72a0c6aa719dc41177c8b7c50a899cdfbe73ca2c27446f6a488c088e6943"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "782090501fee592731beeebbf9fb2266484233ec988577aecc4ce26001ac3581"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "259be46c15b90c101230d8a1117e4934df0d5c556dbc621359735baaf189221e"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "4d8eff47f39fbc1d9148844b958db231c8fcec9da9b9ff7a4ff35041e4e9ead8"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "6520e6d48decb61a920ac3ae1ba51f29af1b846b1ffe42be08208502c1edc471"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-L4": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SHAKE/KAT_KEM_Lore-L4.txt",
+    "kat_sha256": "f6d34f27b027a8e8a13ddc537bfd3d3d576d839b3d91a6921c1dc724b2694592",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/fips202.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/symmetric-shake.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SHAKE/Lore-L4"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=4"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "9f030c5111f2f37fcfb6e6c96bf7030a5b39353e32701419a92d1d5c0fcd451d"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "6178593611b043f6f4ac174c82ce7fa045e59a1823796dc19b883903ed7e1819"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "0e704025202f5becdb010307caa8fcd61c1ee94ae7ad19a9667d469bf6b993c6"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "913f2f50654e037adc93890320f49d73e815d9738bb3d634518d8aa70cfbedef"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "a199e8270d4c13d04b1426dcdf0971df0018d6000d4914e596fc98a9ebdd442b"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "35a9f7e6954c4229417c853881f033a25525aa7c757272d67d82af5ce0d41c01"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "693effb2db542649c9067fd92b9255e8dfcc26f78347380687de1d54f7e80262"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "40f049792cce7955aeaddc1e03381f8ac8932c42a05e10d1be5f58da860b13d2"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "fe771a1259179b9e1889bae64473cbb36946071d31ccea8f3fffe7dd0af675da"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "80bca5873499eb4e41ae948ec2d138aaa918bf96269f12ca3311c73b4c16fb2f"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-SM3-L1": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SM3/KAT_KEM_Lore-L1.txt",
+    "kat_sha256": "74bdbeda5c9e37a7d1347cf51fd31424be457d2fee9a68b3e303b6fcc6afd95e",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/sm3_xof.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/symmetric-sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L1"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=1"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "778320bc199e8291ae9f0a540c298ba7dd30fd5d75e08d15806a520ebb0d4b88"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "fffe20579162c8554fada6c0ae785945167ff6a165460ee59423a2832cf6b181"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "88155b3fcff596eebf00e48b59403380fc5e4ee4431cc554e231abd18ed9cd12"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "6fb9711965a356af3c288cf074702172baa6da96f8b07dae9d2646d0c610ca9e"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "7d8cb7dfbd80bd10683f1ca45cd984685e82db99ccb4ae62fede2f2cfe3d93d8"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "0ef00511b55fff124a3677afc9d05716647f99dfbfe4a16658e3b75bef689800"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "3147b007cea466da963e42127cf5979b496e16401ca13e557d4d4e541d7c32f3"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "0676040dc5ef3be040924baee3f98c3c57d0fe4974e7016f127f315c75d948db"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "27e799acee7a24f9dafbf2fb9fd669c0abc4b0b3e54a36b456a10c34411871d9"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 610,
+        "SK_Len": 2108,
+        "CT_Len": 706,
+        "SS_Len": 32,
+        "expected_ss": "cd089beefda2c6b978ea6dcd93e1b294d876b9ab8925171dfc1bd886e1d8dbd5"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-SM3-L2": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SM3/KAT_KEM_Lore-L2.txt",
+    "kat_sha256": "fda1ee46e86b1c487a5b0c60f49707471c6eda0d7f89e5903e2e6d1ebd1e7e61",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/sm3_xof.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/symmetric-sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L2"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=2"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "3772ffa638be8dec37462054d617ba53b2a0b336eeb1d635fc129e7ce30c05a8"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "6e4d5fce2dac65937495e0b1d8fc0cb327ed6e3e8c0829f472ca7ff1d85de1bb"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "290f1a21f224f52d040cc5b11539334b8c23e89b04ea7ffc7a52adab7f57da9e"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "dfe879d71bda24932297fa684a476a5aecd5e2ee3832a4a138e39311b0f63ca9"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "73a4f5d536cd4e0d45d9c13e9167216fe6ececa2231c627391d0600bed2ea03f"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "e0529b9b8506cba2ee1aab49252bc2f6e1eadd50174ab7624cad7e00e2dbad61"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "89a12acf445518239fb5967cebbcd6ee086b4ff56f58f0ab90bc2c19bf4ca500"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "0a10c677bc3b305819253a445a5491a6e3d4eb3644640e95aab6b3c558f4106e"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "bbe0a6c790e71dfc15b10b81a5ab09222d45645842630b1bce4bb383b80b7631"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1186,
+        "SK_Len": 4518,
+        "CT_Len": 1282,
+        "SS_Len": 32,
+        "expected_ss": "aac3151c7d77bad101d084dcc38e3639b16b461afe8d419d796e24d408c2027e"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-SM3-L3": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SM3/KAT_KEM_Lore-L3.txt",
+    "kat_sha256": "aebe78f3a3c48c56bf925626cd133a43bacfa23cdcf28666f36efce1abe11d93",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/sm3_xof.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/symmetric-sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L3"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=3"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "a9cfd03e12ed8901ad931e064c38c7b889f0d759fea2327ae889ca8b7ebdeaac"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "413c18ad9ce7748b9ad936ea4f4e59ebdc9f241b0eedc3e8bc098c44bd3768e0"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "524d8989132de009e4c7071a5b4edb072f37f4e5ae61a5b9bc50810a4d89698a"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "483bb4f107308d611b6c25f66a006b23e366ac85ef1bbc5de69b369266b214ad"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "b391af6bf38bf0b92b89d4c06e99325530d0a998fd4f5b902a3aaf9ea5d75889"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "e3630df721aa14923f67c5d806d1285ba80ee4ae176894dc88ef0f281cf9ba87"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "66349b97a5bbcaa241d1b300b1ae7c17b88d7c7f8c3219533d37799fc0d714f8"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "e98f76bc061c61702c07d255554fcbc5b8e71a46b73309cf40fd4412d88220fe"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "11333cc5b1163adcc5c8ff4bad323d088c8711fb4fc485e1cadcc7ed25cc930f"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 1954,
+        "SK_Len": 7736,
+        "CT_Len": 2114,
+        "SS_Len": 32,
+        "expected_ss": "a42ead3aff016b53cb304e460de5094303dbfaf2c39cc6130b564b0201283145"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "Lore-SM3-L4": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/Lore-SM3/KAT_KEM_Lore-L4.txt",
+    "kat_sha256": "924e2d5d0b8109a08c5ea99f4879cc345b649b61b7a212e60454794dd3850fd3",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/bch_codec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/drng.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/indcpa.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/kem.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/ntt.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/pke.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/poly.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/polyvec.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/randombytes.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/reduce.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/sampler.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/sm3_xof.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/symmetric-sm3.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/toomcook.c",
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4/verify.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/Lore-SM3/Lore-L4"
+    ],
+    "flags": [
+      "-march=native",
+      "-DLORE_LEVEL=4"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "7574109345216538daf62ae427389ea9b55f7c888ea044cb3697034802294f35"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "5b5bbf0966e7fe9ad40cf6e933eeb82e22fc581c6f05af98901e40379146e17d"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "15adffd02c44f75a25aa0db7e8cce72f2ca7398dc26df095c001645df5a1dd7f"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "2fef79658983f0c067d87463296ff88a32c1abf5d5cb75abb89562eb214ef805"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "ebdbb35607f902982499c1912b5d85300fde731489d7168dd17c2fafeef0f89d"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "b28e592ee5f96ab297b046ff09010ff816b5e9468dfdbacaa81de9f59d391d58"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "598aaa0fc1e777d22ec7728b52ed6ed676ffc19c952d5ad39bb678d90f052717"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "14c947a4d36777bf45eae505c9c51ae021dd87586a51c23e9eeb7d8943563f8b"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "38cb6120bc9b7a21262268c8cf62e9c8321e9983f708dca05d48efba29ace95e"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2914,
+        "SK_Len": 11432,
+        "CT_Len": 3170,
+        "SS_Len": 32,
+        "expected_ss": "406c14db55a91e87a7a6bb2aa447fdba3368edd20b7181550b9684223cac86d6"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

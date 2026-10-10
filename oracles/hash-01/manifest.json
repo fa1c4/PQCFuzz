@@ -4,7 +4,7 @@
   "algorithm": "AFS-TrEDM",
   "primitive": "hash",
   "source_digest": "662c16fed66079fae51f975b7aa46e207e475278ec4e2808a7a1626f108f0945",
-  "spec_sha256": "4f3f5e107f37f20113c77df3418cc7deb877bec7f5f67f71665b01d773407a80",
+  "spec_sha256": "f2d292b54333d2021f3306e8a1e210fba8a36f834ba612e2788d57fde1adbd83",
   "instances": [
     {
       "parameter_set": "AFS-TrEDM-512",
@@ -55,6 +55,86 @@
           "design": "design/AFS-TrEDM/CryptHash/AFS-TrEDM512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "AFS-TrEDM-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AFSTREDM1024-KAT-01",
+          "version": 1,
+          "claim": "AFSTREDM1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/AFS-TrEDM/CryptHash/AFSTREDM1024-KAT-01.md",
+          "oracle": "implement/afstredm1024_kat_oracle.py",
+          "mutator": "implement/mutator/afstredm1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "AFS-TrEDM-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "AFSTREDM768-KAT-01",
+          "version": 1,
+          "claim": "AFSTREDM768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/AFS-TrEDM/CryptHash/AFSTREDM768-KAT-01.md",
+          "oracle": "implement/afstredm768_kat_oracle.py",
+          "mutator": "implement/mutator/afstredm768_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

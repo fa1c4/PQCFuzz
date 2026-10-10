@@ -4,7 +4,7 @@
   "algorithm": "Duet",
   "primitive": "hash",
   "source_digest": "d7980d98d29bfcde4525625b6fd3a78d206d64e45bba19e2fe242122f4f25cbd",
-  "spec_sha256": "0ff22a07a36c021760cfcb533e770d5af5f304ebc29f64b8bf67845e2a2bc915",
+  "spec_sha256": "5d032f42a04203a4fc438164382312c6a54ddf0b4e20b27003a65854fb7738f9",
   "instances": [
     {
       "parameter_set": "Duet-512",
@@ -55,6 +55,86 @@
           "design": "design/Duet/CryptHash/Duet512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Duet-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DUET1024-KAT-01",
+          "version": 1,
+          "claim": "DUET1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Duet/CryptHash/DUET1024-KAT-01.md",
+          "oracle": "implement/duet1024_kat_oracle.py",
+          "mutator": "implement/mutator/duet1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "Duet-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "DUET768-KAT-01",
+          "version": 1,
+          "claim": "DUET768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Duet/CryptHash/DUET768-KAT-01.md",
+          "oracle": "implement/duet768_kat_oracle.py",
+          "mutator": "implement/mutator/duet768_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

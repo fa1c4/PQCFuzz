@@ -1,0 +1,22 @@
+{
+  "Neulaser-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "7650b1fe33b1e6dcf58ee84afc02e7b1cae2ad8393e5d83f6b9e805b17d19e95",
+    "kat": "Neulaser/Implementations and Test_Vectors/API_CryptHash/Test_Vector/KAT_2_12_Neulaser-1024.txt",
+    "kat_sha256": "0059202e68c267fc76ec6ffff4c607ef2b02a2d757fb0934960d01acab75ab89"
+  },
+  "Neulaser-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "Neulaser/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/Neulaser-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "e3c9b136eff6e07b3ca83d6bc451e77cefa327509419ab116c4c0f824c9ba13e",
+    "kat": "Neulaser/Implementations and Test_Vectors/API_CryptHash/Test_Vector/KAT_2_12_Neulaser-768.txt",
+    "kat_sha256": "46b89e05bfc95dc5ce8bacbb8e8b366aea921d46970614e9af0dc891b0eec4f6"
+  }
+}

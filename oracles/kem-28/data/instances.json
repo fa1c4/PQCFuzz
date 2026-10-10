@@ -98,6 +98,244 @@
         "SS_Len": 32,
         "expected_ss": "f2372ca67b4a3ff31d9a5109b2faf97d0a12a53d88fcbf26133cb7822f689b53"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "OAEP-NTRU-1296": {
+    "kat": "Test_Vectors/KAT_KEM_OAEP-NTRU-1296.txt",
+    "kat_sha256": "1617e724930e407e96069c5280b219b4c189bc02ba992cb6ca688aa118d52dd0",
+    "sources": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/KAT_KEM.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/auxfunc.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/drng.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/ntt.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/poly.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-1296"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "03c8ad4db4396e66fb002b4625dbf87231d46b07047f9c5da81bd7bf176a11d2"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "47f164bfc09b9ba4770e028edc6db8fcff5255c01928fcbd593893e520b6c4bb"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "65295aa4eedd64804c5e960e300811db8b4732f9a40462549b97addd20cfc7b6"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "cb95f258652ffa03b9ee61b640779ebee05eb4462eb7a800a9bf0ae51c0ae179"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "cb8fa70a5a3bb7377594b17b1ba95872d27f1f95272d53ee105becd9d8f848e6"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "28dce6190e726b005d53b4cf74d5e5b0a0d82af5dab42631cd845898484307b6"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "eeb46d9ba42fb1043a771af435f8c9efec545da38533ab838b836799c48a3518"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "82e62e86b4da2d228b51b72ce92eda4afed932ce8085373382fbec99649af917"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "83e3ffdf54dec72f09cce0e12c0dcec7ad943f35e6f726ac762e13f8cef651f6"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 2430,
+        "SK_Len": 4924,
+        "CT_Len": 2494,
+        "SS_Len": 32,
+        "expected_ss": "8aa5c479f55acb2191282c4065d1e50cf744480989594f64c23fb4aab5c1b3fb"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "OAEP-NTRU-2592": {
+    "kat": "Test_Vectors/KAT_KEM_OAEP-NTRU-2592.txt",
+    "kat_sha256": "4b8026ebc6f901358feafb811211be535b4a862a8e5b062d0a9cda865b0bc034",
+    "sources": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/KAT_KEM.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/KEM_AlgorithmInstance.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/auxfunc.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/drng.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/ntt.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/poly.c",
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592/symmetric.c"
+    ],
+    "includes": [
+      "Implementations/Reference_Implementation/OAEP-NTRU-2592"
+    ],
+    "flags": [
+      "-march=native"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "2eefdd1371b58b9451833427142c8655ebce1e71a472c3cd4af2882dce785da0c92cfad6e09098ff456c225271612af4d9c205bf6c70580f030a88e2ba1cef59"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "2603a855b7f1ba8f538c215fa2f894a7efba07f2082935b552f3a9312ee9f68bd0fbd20eea80405713131bf94f861c709aa56b36ca2e179fe388aa063ccac463"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "2813a1c24b528dd7ce47ae8f76f159f4d6f98eabc500aa8ed4e17aebc48548c19c3920f9601315e66b420938067fb934f63800de4868228dbb20874c3dde26cb"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "a1b9332bf69d5fc1f4cdd16bdd6e5deaa97347adfbba0e4a1e36451f6deb2d456520fe5e06de2929d21eac0182e0326d5216014a446700e70f9771d8e39ed2bf"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "f05838c35fa8355df18b8e704fe4c8be07b7f29cb1e58d2b5fc2eb7886b45321232133d9d12f04b9903d865b08be8ffb6dcccc2b901aa0f6961610f66a077702"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "1b9d486a8d0ad9e83b56c75e771597b451685748df177cab8e1269fce562921b15c2d922db5b3aee17494b7f0674382e866ca4898688b86e3ea343adb0cd6ab4"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "80d15415a2e868bee194254cda40d7c5349ec7d54af13f158d8ab6847d19c1b48fd2104f9c40b09de14f15eba2f386bc02decee449cf32e5ebcc3f07389b0688"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "6657d052dc4eaab9ddef6d6a563123625d9af29cd2125e115cc4c9c67c44426d335e75fdd68360abf83e89a5a3592c7e0b0690d090cb43ebe494b049517ac161"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "70cc55da4f62c9ad552fd03d8e24331f2a5184586bf18f7283ff04da9f30b0544e1b74f9ce2d54c34c6195cdfb21cbdc7a688f1740069940548a82346d3a22fd"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 4860,
+        "SK_Len": 9848,
+        "CT_Len": 4988,
+        "SS_Len": 64,
+        "expected_ss": "7f4e35454422baa4c187cea5e6c24c53623a60196a092f37cf2d92a8ed6cd04ae895bbaf31c1ef1c3e0b2e8f12ab9b15344b4f4eb69f10eb3b66f951f70734ae"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

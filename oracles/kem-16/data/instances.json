@@ -114,6 +114,405 @@
         "SS_Len": 16,
         "expected_ss": "27663b4a36103cabc11ad3f51860b048"
       }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "HARE-256": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_KEM_HARE-256-kr.txt",
+    "kat_sha256": "543e2ac2ec9a9d6267e11125fd0683f53920a0a71a3ab54df1ff198f29716221",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-256/kr/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/code.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/crypto_memset.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/fft.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/kem.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/parameter_contract.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/symmetric_api_pkc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/compression_kr.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf2x.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/hqc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/parsing.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_muller.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_solomon.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/vector.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-256/kr",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref"
+    ],
+    "flags": [
+      "-march=native",
+      "-DHARE_BACKEND_KR",
+      "-DHARE_SYMMETRIC_MODE_B"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "181054dd27e2532ba700ed1b4e3098454cd6ea0ba00343c932f78886184843a0"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "e7a987fd0cb1ddbd54f16fc34ab0266ef81c2f73021ab5948f1efcb896ac7e6e"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "5d42bfb0d224d3d63462da7077a36a375037293a53a3c8f714a968cbba541482"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "280d6260b1f459749e511539281b869c917ec4f55c119245e88d150f4d345535"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "b77edcdc28767c34f2e4c5a675658849c5994ff72e647e737da1f38e975b2261"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "c6b8ccf38eec47dbf145fd5e96e2114849735c248752a927e60b25b36a071c1c"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "548c20385c838f559f1ca60cb0b70f53aed9f922bb787eefe270da8961e57dd4"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "cc8f6ec2c2572fb601473e049b885ab13410dd43578c60dd57a7165446999fe5"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "9e15f3932a5137ca8b21ad35f38a6d0c19e3fdb1a46389f9e0b22004b308537c"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 6580,
+        "SK_Len": 6676,
+        "CT_Len": 11790,
+        "SS_Len": 32,
+        "expected_ss": "ed3980b36cc7779277c22d341bace5a85eab5fd8c0305b4dce261c4034da469a"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "HARE-384": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_KEM_HARE-384-kr.txt",
+    "kat_sha256": "9cd639973258bd9269093ffed7ccb1641ca51d74e01bd94094c26c671bb3c230",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-384/kr/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/code.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/crypto_memset.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/fft.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/kem.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/parameter_contract.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/symmetric_api_pkc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/compression_kr.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf2x.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/hqc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/parsing.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_muller.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_solomon.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/vector.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-384/kr",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref"
+    ],
+    "flags": [
+      "-march=native",
+      "-DHARE_BACKEND_KR",
+      "-DHARE_SYMMETRIC_MODE_B"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "dabf2810b50ad2a10f4105f289f3aad7c3c1a67954372fe79596d738c282468d281b1961d4dcee8149a6197b580c54c5"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "c5b9c358bf6af9358b0a3b2722370977f26a8231f7aafcdcc8808211b37d387753d3845d5f9351cc3baf99c1ac8a2397"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "73b18eddf97353dc8328635ff23aaf20e7cf9d52761894308c27529585cdf6a541d4f26f7d1f71edf57c886fedf164db"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "5a917efd439bb8980b18e0ec7f44eb2eb1ffb58fa46d102814c07be759933dd3e806f0a054d64679a915c102141127e6"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "7c8b9fb666be3fbeacb1a4a70195e718b8130a21e5cde0ca1f0bf68d7efd8285e16a1e6fd2d42eafe6303ff8aa79ef13"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "8e1bfc0a421c6a789d16ca715939349992866389efded30d0bfb46dff572eac9e13f0a98184831a33a2750b6643e7c3e"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "2daa4cbc4ec9cb451754ea2d6426eb08ca1fe04a7fedda235d04f483327f00ab65501ec6bb946114c8dd6a3e63ad93f7"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "779e2f280a0ae370156bdf5f4e111bb8a7de8c29279c94712ea5256f30c99d96d2b762004e9fe8d6252b94a4e60b186f"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "c1d39150156bbafec891185941610475c2a8ec073628ea233cec89aa0827aeb5b31234757f113632a89669e75bc15739"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 13157,
+        "SK_Len": 13301,
+        "CT_Len": 23693,
+        "SS_Len": 48,
+        "expected_ss": "c83aca61236edaa017bc110a95e9f355553cc82e4cbb878fb9c06554497c086abc9f24b630ab659664d7b5afd69f1d15"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
+    ]
+  },
+  "HARE-512": {
+    "kat": "Implementations and Test_Vectors/Test_Vectors/KAT_KEM_HARE-512-kr.txt",
+    "kat_sha256": "a5ec74c424e0f0408c31811ec847b1f71f4582ebe0b45fd696ffb3964ed1ddc6",
+    "sources": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-512/kr/KEM_AlgorithmInstance.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/code.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/crypto_memset.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/fft.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/kem.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/parameter_contract.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common/symmetric_api_pkc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/compression_kr.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/gf2x.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/hqc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/parsing.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_muller.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/reed_solomon.c",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref/vector.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/KAT_KEM.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/auxfunc.c",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc/drng.c"
+    ],
+    "includes": [
+      "Implementations and Test_Vectors/Implementations/Reference_Implementation/HARE-512/kr",
+      "Implementations and Test_Vectors/Implementations/_shared/api_pkc",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/common",
+      "Implementations and Test_Vectors/Implementations/_shared/hare_core/ref"
+    ],
+    "flags": [
+      "-march=native",
+      "-DHARE_BACKEND_KR",
+      "-DHARE_SYMMETRIC_MODE_B"
+    ],
+    "records": [
+      {
+        "Count": 0,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "699c65b42a74d02c58861a07b9fbd9909e5d9ab31e5f75290992061e75f4d5c01fd9f4266cccfe2af42a24a5dd641a4d4165590b3ca09068732e96481108248d"
+      },
+      {
+        "Count": 1,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "2160b2ed6f35522431dfc434b6b524aa346f0666194bdd9a74ac916b8ff47842e45f5e2ad7cd0fff0a153fabfd2b7b30535d53a1d2f41c93e9b202ae74b07b20"
+      },
+      {
+        "Count": 2,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "47cbfb1b5a0ab0a6b1082d6086623bdb15d631e7b26baad68b0289b2cf22351908b62e0a34fb498bc824411b28c7be503bea5d6e2da30874295176f836f73c0b"
+      },
+      {
+        "Count": 3,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "da6bd76487975757ba0e1111d2d13e67f8088af9201e05c1b51bbb8d0e10c26b2dab5d3e1ac42479e0d7137a4451e04a77d5af71f2cd6dc6a92c7fcb4870d67a"
+      },
+      {
+        "Count": 4,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "f660954bb4a5526dddda65cc76162a64caf5ac88c1c02090e3c956c77aa12f73cabd3dfed54054205cfd642eab5412b46819327218b76f4d44cb3b62a981d17a"
+      },
+      {
+        "Count": 5,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "948b089ae788c80353901ad598a3b75ef2de7e79f432ab9a4afbf702817aa488a1557fc9162c5eea98d9b2f4d2d1dc2c1d25c2f4d9c58e2f99a751e293183ee2"
+      },
+      {
+        "Count": 6,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "96119ab67c03447d63735f69f75d5194d90c1fc56d02747071a452b7472c5fe1ea2ed85ef2f008151753f587b1063d226bb803fdf8f081bcaceb9ec926ba18fa"
+      },
+      {
+        "Count": 7,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "3abb7c58478e370db8f9acc2a6a0467325dda4f60c7e254a17d15e79473b9520b022d621cbda7a87aefd540593b37764407833a759829773bc049898ab887f35"
+      },
+      {
+        "Count": 8,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "21cf1d570228c4e3edaeb41a5ca77cb2703593ff257bc59428733f7b049ad89806aae78c04bda73525ec28648aaefb35bbbd9f529883467b377109666398005b"
+      },
+      {
+        "Count": 9,
+        "PK_Len": 21812,
+        "SK_Len": 22004,
+        "CT_Len": 39294,
+        "SS_Len": 64,
+        "expected_ss": "6e6ab21df3b7e6d5032397079a2c7db02889ad20b8c205eff2107c9846f763f5424cbf8de94729c96e8898957f1ad6558662d2802c57022a29f97cab5f6d2e45"
+      }
+    ],
+    "record_seed_sha256": [
+      "1e6bf6cb32a869ab7695e65b8358c96319a80b5660b89455407900942d7e771f",
+      "4dbd501a28d57767be2e3ed3782ab24887af634012d04ee0d54597cab73202be",
+      "1af540c436020a1bfed1d408bcaef826a58eb21147053545c2d7070f0036d6d9",
+      "76d74dfac36e5b9952228323ff286ce3d84daae632bceef875d485dd1d917ada",
+      "a80a243709fec19afafd3f131cd44974aee5c427f90a7300af9430c34c4c91ce",
+      "50fa0a51f49a38f0b8556068a1f4a42376d0079461dccf79060a26b4c4e23d8e",
+      "230b413072a805f7ec8347c224d5d12cc4118f4bc92c76d8fc081d262a26bef8",
+      "bc582473e1b2a4871ae62b9e5aeaf47fc32e8f7e2719702261c7e896135d9b93",
+      "f6dcc4cf4890cbb58af523a168826b12d72dad5f3ad49531112cb42d40f77ed3",
+      "67e91047ab8c44b480a1b900774a0fadb2678d1fbe46e81384e3b12a917409e5"
     ]
   }
 }

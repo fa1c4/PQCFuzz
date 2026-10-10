@@ -4,7 +4,7 @@
   "algorithm": "CHAMP",
   "primitive": "hash",
   "source_digest": "f8b2d7e5de33360fe72713a3d23fbcefc6e70ae917d28a88d8f26e19458edb21",
-  "spec_sha256": "50b95c52821fc00ad955bc94124c3207f991ebe6ada581e30d9322c915030cf6",
+  "spec_sha256": "9fa9f50fba7125cf24f50fde20a4fbf0953c3a289afcd67544007aa7b58ce552",
   "instances": [
     {
       "parameter_set": "CHAMP-512",
@@ -55,6 +55,46 @@
           "design": "design/CHAMP/CryptHash/CHAMP512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "CHAMP-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "CHAMP1024-KAT-01",
+          "version": 1,
+          "claim": "CHAMP1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/CHAMP/CryptHash/CHAMP1024-KAT-01.md",
+          "oracle": "implement/champ1024_kat_oracle.py",
+          "mutator": "implement/mutator/champ1024_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

@@ -1,0 +1,22 @@
+{
+  "Duet-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Duet/Implementations/Reference_Implementation/Duet-1024/CryptHash_Duet-1024.c"
+    ],
+    "header": "Duet/Implementations/Reference_Implementation/Duet-1024/CryptHash_Duet-1024.h",
+    "header_sha256": "a89a8ca4e2c7c2d2ea22ed6a869f63f9db47b632732992a23b08f972d0ae5534",
+    "kat": "Duet/Test_Vectors/KAT_2_12_Duet-1024.txt",
+    "kat_sha256": "6e3366423a2026b0be18ec762a0f8703676c4cb450e8cb621534becaeec29a4b"
+  },
+  "Duet-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Duet/Implementations/Reference_Implementation/Duet-768/CryptHash_Duet-768.c"
+    ],
+    "header": "Duet/Implementations/Reference_Implementation/Duet-768/CryptHash_Duet-768.h",
+    "header_sha256": "812d676cfb48aedd1a6599d70d50663fc1cf8effd9a8d7e9836d049944b66d3d",
+    "kat": "Duet/Test_Vectors/KAT_2_12_Duet-768.txt",
+    "kat_sha256": "506abf4ae7a571da6fc0aeb372e556a4e5a0c7f97352c400ce20367a3729c50f"
+  }
+}

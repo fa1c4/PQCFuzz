@@ -1,0 +1,22 @@
+{
+  "TaiChi-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "TaiChi/Implementations/Reference_Implementation/TaiChi-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "TaiChi/Implementations/Reference_Implementation/TaiChi-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "9502823b8532d8142ad5bdf58d6e66ba5298d9bb891002212e88c7af3e9c37f6",
+    "kat": "TaiChi/Test_Vectors/KAT_2_12_TaiChi-1024.txt",
+    "kat_sha256": "b1cab06a69ffe259500199d9ceed3b1cae89e56d726481189f9a2e9f6678828f"
+  },
+  "TaiChi-768": {
+    "digest_bits": 768,
+    "sources": [
+      "TaiChi/Implementations/Reference_Implementation/TaiChi-768/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "TaiChi/Implementations/Reference_Implementation/TaiChi-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "7db6d4a8afd23e0e67c47ffc3c7e0fc672d4f34c79781e67143b94dd3b78230a",
+    "kat": "TaiChi/Test_Vectors/KAT_2_12_TaiChi-768.txt",
+    "kat_sha256": "3e30053a633167b50e49dc1e5ce38f0a80d7c3d70a66917547eabb2bb7a63093"
+  }
+}

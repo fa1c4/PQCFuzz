@@ -35,3 +35,23 @@ discussion is on PDF pp. 7–9; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## CUISHEN1024-K — Cuishen-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 7–9; `Cuishen/Implementations/Reference_Implementation/Cuishen-1024/CryptHash_Cuishen-1024.h` SHA-256 `47969954ffee6230e5bc8203d68470e45776c5f7198d49f53a23acd3e0500887`; `Cuishen/Test_Vectors/KAT_2_12_Cuishen-1024.txt` SHA-256 `fee17c0fbe2c5638f008ec36ede2858a1ee8009d95279fc2880b7da2e397a9c1`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Cuishen-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## CUISHEN768-K — Cuishen-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 7–9; `Cuishen/Implementations/Reference_Implementation/Cuishen-768/CryptHash_Cuishen-768.h` SHA-256 `e236cebc8824394fc0488d1652c106cf0fec5b90ec0e289c2d45fe4bc59a33a0`; `Cuishen/Test_Vectors/KAT_2_12_Cuishen-768.txt` SHA-256 `18dcee6282ccd8171fc68aa848a04993ae21ff742efd2e70eaf01a4555c2c935`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `Cuishen-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

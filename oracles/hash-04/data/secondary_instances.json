@@ -1,0 +1,12 @@
+{
+  "CHAMP-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "CHAMP/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/CHAMP-1024/CryptHash_AlgorithmInstance.c"
+    ],
+    "header": "CHAMP/Implementations and Test_Vectors/API_CryptHash/Implementations/Reference_Implementation/CHAMP-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "0b3181b842b82713fea38e2ac42c72e22da65178e3e544de80c1ac7dfa08e94d",
+    "kat": "CHAMP/Implementations and Test_Vectors/API_CryptHash/Test_Vectors/KAT_2_12_CHAMP-1024.txt",
+    "kat_sha256": "7609a32270418bac434daade83837177fbf01984099f9262b18a15a361690d5f"
+  }
+}

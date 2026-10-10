@@ -35,3 +35,23 @@ discussion is on PDF pp. 4, 10; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## AXIS1024-K — AXIS-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4, 10; `AXIS/Implementations/Reference_Implementation/AXIS-1024/CryptHash_AlgorithmInstance.h` SHA-256 `eefb77d6ccfe39777da23b05696e0c0d5ad437e2c2d07bb3b8489bf9bce05621`; `AXIS/Test_Vectors/KAT_2_12_AXIS-1024.txt` SHA-256 `281c71da5a2c4d851a79c45c90fe28a9096d0bb4a7e8f94419f871dba4d52204`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `AXIS-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## AXIS768-K — AXIS-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4, 10; `AXIS/Implementations/Reference_Implementation/AXIS-768/CryptHash_AlgorithmInstance.h` SHA-256 `b2c5f3ec59048a0ddfc32857d0f462d8f88ae9056670ad3e4bdd973a76a04f52`; `AXIS/Test_Vectors/KAT_2_12_AXIS-768.txt` SHA-256 `4298d5cae8e9946392cd1b96099156115c6ad3f3a2458720a0bf9f9d1007cac3`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `AXIS-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

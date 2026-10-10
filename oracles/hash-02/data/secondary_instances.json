@@ -1,0 +1,24 @@
+{
+  "AXIS-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "AXIS/Implementations/Reference_Implementation/AXIS-1024/CryptHash_AlgorithmInstance.c",
+      "AXIS/Implementations/Reference_Implementation/AXIS-1024/axis_core.c"
+    ],
+    "header": "AXIS/Implementations/Reference_Implementation/AXIS-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "eefb77d6ccfe39777da23b05696e0c0d5ad437e2c2d07bb3b8489bf9bce05621",
+    "kat": "AXIS/Test_Vectors/KAT_2_12_AXIS-1024.txt",
+    "kat_sha256": "281c71da5a2c4d851a79c45c90fe28a9096d0bb4a7e8f94419f871dba4d52204"
+  },
+  "AXIS-768": {
+    "digest_bits": 768,
+    "sources": [
+      "AXIS/Implementations/Reference_Implementation/AXIS-768/CryptHash_AlgorithmInstance.c",
+      "AXIS/Implementations/Reference_Implementation/AXIS-768/axis_core.c"
+    ],
+    "header": "AXIS/Implementations/Reference_Implementation/AXIS-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "b2c5f3ec59048a0ddfc32857d0f462d8f88ae9056670ad3e4bdd973a76a04f52",
+    "kat": "AXIS/Test_Vectors/KAT_2_12_AXIS-768.txt",
+    "kat_sha256": "4298d5cae8e9946392cd1b96099156115c6ad3f3a2458720a0bf9f9d1007cac3"
+  }
+}

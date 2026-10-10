@@ -4,7 +4,7 @@
   "algorithm": "Shuttle",
   "primitive": "signature",
   "source_digest": "2eecc9fd1797f6084634abbd027dacc5a1f2ba29d5abf5cb6bf3b203c2f686d5",
-  "spec_sha256": "e899f64bac7f5e6d0e93a36ceb5416823e14cb261d48407675bd5ae2ae4b8161",
+  "spec_sha256": "b1658ad2ab820a83c9ca42c3d4df4dc13316944e6d90244215275a2722b30efd",
   "instances": [
     {
       "parameter_set": "SHUTTLE-128",
@@ -37,6 +37,709 @@
           "required_capabilities": [
             "submitted_kat",
             "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE128-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_pk_len_bytes/SHUTTLE128-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle128-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle128-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE128-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sk_len_bytes/SHUTTLE128-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle128-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle128-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE128-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sn_len_bytes/SHUTTLE128-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle128-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle128-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE128-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_keygen/SHUTTLE128-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/shuttle128-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle128-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-128",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE128-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE128-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_sign/SHUTTLE128-SIGSIGN-P2-01.md",
+          "oracle": "implement/shuttle128-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle128-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-KAT-01",
+          "version": 1,
+          "claim": "SHUTTLE256-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_verify/SHUTTLE256-KAT-01.md",
+          "oracle": "implement/kat_shuttle256_oracle.py",
+          "mutator": "implement/mutator/kat_shuttle256.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_verify",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "output_canary": false,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-KAT-01",
+          "version": 1,
+          "claim": "SHUTTLE512-K",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_verify/SHUTTLE512-KAT-01.md",
+          "oracle": "implement/kat_shuttle512_oracle.py",
+          "mutator": "implement/mutator/kat_shuttle512.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE256-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_pk_len_bytes/SHUTTLE256-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle256-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle256-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE256-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sk_len_bytes/SHUTTLE256-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle256-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle256-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE256-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sn_len_bytes/SHUTTLE256-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle256-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle256-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE256-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_keygen/SHUTTLE256-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/shuttle256-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle256-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-256",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE256-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE256-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_sign/SHUTTLE256-SIGSIGN-P2-01.md",
+          "oracle": "implement/shuttle256-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle256-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_get_pk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-SIGGETPKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE512-SIGGETPKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_pk_len_bytes/SHUTTLE512-SIGGETPKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle512-siggetpklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle512-siggetpklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_get_sk_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-SIGGETSKLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE512-SIGGETSKLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sk_len_bytes/SHUTTLE512-SIGGETSKLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle512-siggetsklenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle512-siggetsklenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_get_sn_len_bytes",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": true,
+        "honest_roundtrip": false,
+        "rng_control": false,
+        "output_canary": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-SIGGETSNLENBYTES-P1-01",
+          "version": 1,
+          "claim": "SHUTTLE512-SIGGETSNLENBYTES-C",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_get_sn_len_bytes/SHUTTLE512-SIGGETSNLENBYTES-P1-01.md",
+          "oracle": "implement/shuttle512-siggetsnlenbytes-p1-01_oracle.py",
+          "mutator": "implement/mutator/shuttle512-siggetsnlenbytes-p1-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "submitted_lengths"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_keygen",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-SIGKEYGEN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE512-SIGKEYGEN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_keygen/SHUTTLE512-SIGKEYGEN-P2-01.md",
+          "oracle": "implement/shuttle512-sigkeygen-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle512-sigkeygen-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "signature"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "SHUTTLE-512",
+      "api": "sig_sign",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/full_api_adapter.py",
+      "capabilities": {
+        "submitted_kat": true,
+        "indexed_public_vector": true,
+        "submitted_lengths": false,
+        "honest_roundtrip": true,
+        "rng_control": true,
+        "output_canary": true,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "SHUTTLE512-SIGSIGN-P2-01",
+          "version": 1,
+          "claim": "SHUTTLE512-SIGSIGN-C",
+          "property": "S03",
+          "property_version": 1,
+          "pattern": "P2",
+          "pattern_version": 1,
+          "design": "design/Shuttle/sig_sign/SHUTTLE512-SIGSIGN-P2-01.md",
+          "oracle": "implement/shuttle512-sigsign-p2-01_oracle.py",
+          "mutator": "implement/mutator/shuttle512-sigsign-p2-01.py",
+          "required_capabilities": [
+            "submitted_kat",
+            "indexed_public_vector",
+            "honest_roundtrip",
+            "rng_control",
+            "output_canary"
           ],
           "applicable_primitives": [
             "signature"

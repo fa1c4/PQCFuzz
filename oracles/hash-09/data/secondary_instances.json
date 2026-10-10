@@ -1,0 +1,46 @@
+{
+  "Eijen-1024": {
+    "digest_bits": 1024,
+    "sources": [
+      "Eijen/Implementations/Reference_Implementation/Eijen-1024/CryptHash_AlgorithmInstance.c",
+      "Eijen/Implementations/Reference_Implementation/Eijen-1024/eijen_ref.c"
+    ],
+    "header": "Eijen/Implementations/Reference_Implementation/Eijen-1024/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "346f5af34e8057aac3c236294e408a11e5fa75176e16a80131d5140b8da5bdb9",
+    "kat": "Eijen/Test_Vectors/KAT_2_12_Eijen-1024.txt",
+    "kat_sha256": "cb71785e899ba51fcf7e955f9cfec453827f871af0b3415cce648726e334f61e"
+  },
+  "Eijen-256": {
+    "digest_bits": 256,
+    "sources": [
+      "Eijen/Implementations/Reference_Implementation/Eijen-256/CryptHash_AlgorithmInstance.c",
+      "Eijen/Implementations/Reference_Implementation/Eijen-256/eijen_ref.c"
+    ],
+    "header": "Eijen/Implementations/Reference_Implementation/Eijen-256/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "f12869355a847875c7bddd4d64323946e598343624317d0010779991e5fed1bd",
+    "kat": "Eijen/Test_Vectors/KAT_2_12_Eijen-256.txt",
+    "kat_sha256": "ae96fba851ae851a91718eeedcac88f6fc5305ee1d6ea74ccdc5ecd54baedb18"
+  },
+  "Eijen-384": {
+    "digest_bits": 384,
+    "sources": [
+      "Eijen/Implementations/Reference_Implementation/Eijen-384/CryptHash_AlgorithmInstance.c",
+      "Eijen/Implementations/Reference_Implementation/Eijen-384/eijen_ref.c"
+    ],
+    "header": "Eijen/Implementations/Reference_Implementation/Eijen-384/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "8d66605bfad0003d10fd46f9954ebf5f7d8260c9093dc21e1c8a3c08b13d853b",
+    "kat": "Eijen/Test_Vectors/KAT_2_12_Eijen-384.txt",
+    "kat_sha256": "30afffe48c8ba4e1defd7b0a169820cde1a014f52283da24bd788e2c1fcaeaee"
+  },
+  "Eijen-768": {
+    "digest_bits": 768,
+    "sources": [
+      "Eijen/Implementations/Reference_Implementation/Eijen-768/CryptHash_AlgorithmInstance.c",
+      "Eijen/Implementations/Reference_Implementation/Eijen-768/eijen_ref.c"
+    ],
+    "header": "Eijen/Implementations/Reference_Implementation/Eijen-768/CryptHash_AlgorithmInstance.h",
+    "header_sha256": "3b1a45ffde4ecfb8e2f286d2c6c3d974ffbb283df98f8648ce18d567feebe36f",
+    "kat": "Eijen/Test_Vectors/KAT_2_12_Eijen-768.txt",
+    "kat_sha256": "aa754d0cab3640e8bbcb346ca758e530d73a9bff47da484e6dec47f63dc2e990"
+  }
+}

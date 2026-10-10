@@ -4,7 +4,7 @@
   "algorithm": "QSH",
   "primitive": "hash",
   "source_digest": "4fd5bcd2bceb7745ebe43568cfdc13645aaec7e8db6e9947333773eaa8ab4f82",
-  "spec_sha256": "9765aaaa88db6a07af7acd1a2ffba9ffef57ef988162a0371035c5bb81140aa8",
+  "spec_sha256": "0f528f0cd3932b4f3350dbb94bb5a52a5be42140def0f442c15fa4e73e13267f",
   "instances": [
     {
       "parameter_set": "QSH-512",
@@ -55,6 +55,86 @@
           "design": "design/QSH/CryptHash/QSH512-KAT-01.md",
           "oracle": "implement/kat_oracle.py",
           "mutator": "implement/mutator/kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "QSH-1024",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "QSH1024-KAT-01",
+          "version": 1,
+          "claim": "QSH1024-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/QSH/CryptHash/QSH1024-KAT-01.md",
+          "oracle": "implement/qsh1024_kat_oracle.py",
+          "mutator": "implement/mutator/qsh1024_kat.py",
+          "required_capabilities": [
+            "bit_input",
+            "submitted_kat",
+            "output_canary"
+          ],
+          "applicable_primitives": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    {
+      "parameter_set": "QSH-768",
+      "api": "CryptHash",
+      "profiles": [
+        "gcc-reference"
+      ],
+      "adapter": "implement/secondary_adapter.py",
+      "capabilities": {
+        "dual_backend": false,
+        "bit_input": true,
+        "submitted_kat": true,
+        "output_canary": true,
+        "rng_control": false,
+        "fault_injection": false,
+        "intermediate_state": false,
+        "decapsulation_failure": false
+      },
+      "oracles": [
+        {
+          "id": "QSH768-KAT-01",
+          "version": 1,
+          "claim": "QSH768-K",
+          "property": "X05",
+          "property_version": 1,
+          "pattern": "P1",
+          "pattern_version": 1,
+          "design": "design/QSH/CryptHash/QSH768-KAT-01.md",
+          "oracle": "implement/qsh768_kat_oracle.py",
+          "mutator": "implement/mutator/qsh768_kat.py",
           "required_capabilities": [
             "bit_input",
             "submitted_kat",

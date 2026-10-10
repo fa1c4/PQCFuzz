@@ -35,3 +35,13 @@ discussion is on PDF p. 4; the exact source and PDF files are authoritative.
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## CHIME1024-K — CHIME-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF p. 4; `CHIME/Implementations/Reference_Implementation/CHIME-1024/CryptHash_AlgorithmInstance.h` SHA-256 `120bc1b7e6cc991f2359fbbb263e9e6b76a6e7e3af1da23c936660b52c5c2dbd`; `CHIME/Test_Vectors/Test_Vector/KAT_2_12_CHIME-1024.txt` SHA-256 `f3eee2c88625d1ee95762e757966dd51e8d3353bdcd86a3420d4fe55420b6720`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `CHIME-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.

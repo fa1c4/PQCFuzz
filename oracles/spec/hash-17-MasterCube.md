@@ -35,3 +35,23 @@ discussion is on PDF pp. 4, 10; the exact source and PDF files are authoritative
 - Preconditions: Exact record index, bytes, bit length, output length and KAT-file digest are bound in the case.
 - Extraction inference/ambiguity: Vector provenance is the archive itself; the vector generator may share implementation lineage.
 - Limitations: A mismatch is candidate consistency evidence requiring review. Finite KAT sampling proves no computational security property.
+
+## MASTERCUBE1024-K — MasterCube-1024 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4, 10; `MasterCube/Implementations/Reference_Implementation/MasterCube-1024/CryptHash_AlgorithmInstance.h` SHA-256 `4c76ed50c0b5fb4b1175487b8fdee4e704861f1bf4da5057f083f2ecfb568f18`; `MasterCube/Test_Vectors/KAT_2_12_MasterCube-1024.txt` SHA-256 `20c32d208cbdc05776af95fdf22c805a105fffa6b2ada30b34d7a38271f99d13`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `MasterCube-1024` reference `CryptHash` at exactly 1024 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
+
+## MASTERCUBE768-K — MasterCube-768 submitted CryptHash known-answer relation
+
+- Source locator: PDF pp. 4, 10; `MasterCube/Implementations/Reference_Implementation/MasterCube-768/CryptHash_AlgorithmInstance.h` SHA-256 `a8bcecc518bf6252c46fd3572cd0d01e06a8bbc56400bbd38bce46734dcb8cef`; `MasterCube/Test_Vectors/KAT_2_12_MasterCube-768.txt` SHA-256 `80e1704ce024cdafe368f539306341bffa345524343a8a19a96c097126824471`.
+- Class: submitted vector observation with PDF algorithm context; vectors are not independent normative truth.
+- Scope: `MasterCube-768` reference `CryptHash` at exactly 768 output bits, with eighteen pinned public KAT records.
+- Claim: Each recorded input bitstring yields its own submitted digest through the selected public API.
+- Preconditions: Exact source/KAT digests, requested output length, canonical message storage, successful public call and intact output guard.
+- Extraction inference/ambiguity: KAT generator and reference implementation may share code lineage.
+- Limitations: Candidate-only; no claim about collision/preimage security or other backends.
